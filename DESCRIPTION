@@ -1,0 +1,28 @@
+Package: ImmersiveAnalysis
+Type: Package
+Title: Analysis modules that communicate to an ImmersiveDataStore
+Version: 0.1.0
+Authors@R: c(
+    person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre")),
+    person("Denali Therapeutics", role = c("cph", "fnd"))
+    )
+Description: Provides modularized versions of analyses that are commonly
+    performed over genomis data. Each analysis module provides an "iplot"
+    method that provides an interactive vizualization appropriate for an 
+    Rmarkdown document, and an "ixplore" function that launches a
+    hyper-interactive version of the analysis using shiny gadgets.
+Depends:
+    dplyr,
+    broom,
+    plotly
+Imports:
+    checkmate,
+    edgeR,
+    matrixStats,
+    broom,
+    tidyr
+License: Denali2bOSS License
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
