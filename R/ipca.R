@@ -93,15 +93,29 @@ iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
     assert_subset(color_aes, colnames(xx))
     xx <- tidyr::unite_(xx, ".color", color_aes, remove = FALSE)
   } else {
-    xx[[".color"]] <- "black"
+    xx[[".color"]] <- I("black")
   }
 
   if (is.character(shape_aes)) {
     assert_subset(shape_aes, colnames(xx))
     xx <- tidyr::unite_(xx, ".shape", shape_aes, remove = FALSE)
   } else {
-    xx[[".shape"]] <- "circle"
+    xx[[".shape"]] <- I("circle")
   }
+
+  if (is.character(hover)) {
+    assert_subset(hover, colnames(xx))
+    hvals <- lapply(hover, function(wut) {
+      vals <- xx[[wut]]
+      if (is.numeric(vals)) vals <- sprintf("%.2f", vals)
+      if (!is.character(vals)) vals <- as.character(vals)
+      paste0(wut, ": ", vals)
+    })
+    xx[[".hover"]] <- do.call(paste, c(hvals, list(sep = "<br>")))
+  } else {
+    xx[[".hover"]] <- ""
+  }
+
 
   # recycle different shpaes to only sample from .shapes.all if there are
   # more unique levels in xx[[".shape"]] then we have shapes to choose from
@@ -123,8 +137,10 @@ iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
     yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
 
-    p <- plot_ly(xx, x = formula(xf), y = formula(yf), color = ~.color,
-                 symbol = ~.shape, symbols = .shapes)
+    p <- plot_ly(xx, x = formula(xf), y = formula(yf), type = "scatter",
+                 color = ~.color, mode = "markers",
+                 symbol = ~.shape, symbols = .shapes,
+                 text = ~.hover)
     p <- layout(p, xaxis = xaxis, yaxis = yaxis)
   } else {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
@@ -133,10 +149,14 @@ iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
     scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
 
     p <- plot_ly(xx, x = formula(xf), z = formula(yf), y = formula(zf),
-                 color = ~.color, symbol = ~.shape, symbols = .shapes)
+                 type = "scatter3d", mode = "markers",
+                 color = ~.color,
+                 symbol = ~.shape, symbols = .shapes,
+                 text = ~.hover)
     p <- layout(p, scene = scene)
   }
 
+  # TODO: Customize the hovertext for the plot using the `hover` argument
   p <- layout(p, title = title)
   p
 }
