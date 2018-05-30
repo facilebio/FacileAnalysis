@@ -7,30 +7,30 @@
 #' * http://factominer.free.fr/graphs/factoshiny.html
 #'
 #' @export
-#' @rdname ipca
+#' @rdname fpca
 #'
 #' @param x a data container
-#' @return an ipca result
-ipca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
+#' @return an fpca result
+fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
-  UseMethod("ipca")
+  UseMethod("fpca")
 }
 
-#' @rdname ipca
-#' @method ipca DGEList
+#' @rdname fpca
+#' @method fpca DGEList
 #' @importFrom edgeR cpm
-ipca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
+fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
-                         prior.count = TRUE, log = TRUE, ...) {
+                         prior.count = 3, log = TRUE, ...) {
   m <- edgeR::cpm(x, prior.count = prior.count, log = log)
-  ipca(m, pcs, ntop, row_covariates, col_covariates, ...)
+  fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
 }
 
-#' @rdname ipca
-#' @method ipca matrix
+#' @rdname fpca
+#' @method fpca matrix
 #' @importFrom matrixStats rowVars
-ipca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL,...) {
+fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
+                        col_covariates = NULL, ...) {
   assert_integerish(pcs, lower = 1L, upper = nrow(x))
   if (is(row_covariates, "data.frame")) {
     assert_true(nrow(x) == nrow(row_covariates))
@@ -60,17 +60,21 @@ ipca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   }
 
   result <- list(tidy = dat, percentVar = percentVar)
-  class(result) <- c("ipca", "iresult")
+  class(result) <- c("FacilePCA", "FacileAnalysis")
   result
 }
 
-# iplot ========================================================================
+# fplot ========================================================================
 
-#' @rdname ipca
-#' @method iplot ipca
+#' @rdname fplot
+#' @method fplot FacilePCA
+#'
 #' @export
-iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
-                       hover = NULL, title = "Immersive PCA", ...) {
+fplot.FacilePCA <- function(x, pcs = 1:3, title = "Facile PCA",
+                            color_aes = NULL, color_map = NULL,
+                            shape_aes = NULL, shape_map = NULL,
+                            size_aes = NULL, size_map = NULL,
+                            hover_aes = NULL, hover_map = NULL, ...) {
   xx <- tidy(x)
   assert_integerish(pcs, lower = 1L)
   assert_int(length(pcs), lower = 1L, upper = 3L)
@@ -89,25 +93,16 @@ iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
   xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
   xx <- xx[, xx.cols, drop = FALSE]
 
-  if (is.character(color_aes)) {
-    assert_subset(color_aes, colnames(xx))
-    xx <- tidyr::unite_(xx, ".color", color_aes, remove = FALSE)
-  } else {
-    xx[[".color"]] <- I("black")
-  }
-
-  if (is.character(shape_aes)) {
-    assert_subset(shape_aes, colnames(xx))
-    xx <- tidyr::unite_(xx, ".shape", shape_aes, remove = FALSE)
-  } else {
-    xx[[".shape"]] <- I("circle")
-  }
+  xx <- with_color(xx, color_aes, ...)
+  xx <- with_shape(xx, shape_aes, ...)
+  xx <- with_size(xx, size_aes, ...)
+  xx <- with_hover(xx, hover_aes, ...)
 
   if (is.character(hover)) {
     assert_subset(hover, colnames(xx))
     hvals <- lapply(hover, function(wut) {
       vals <- xx[[wut]]
-      if (is.numeric(vals)) vals <- sprintf("%.2f", vals)
+      if (is.numeric(vals)) vals <- prettyNum(round(vals, 2), big.mark = ",")
       if (!is.character(vals)) vals <- as.character(vals)
       paste0(wut, ": ", vals)
     })
@@ -148,11 +143,13 @@ iplot.ipca <- function(x, pcs = 1:3, color_aes = NULL, shape_aes = NULL,
     zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
     scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
 
+    colors <-
     p <- plot_ly(xx, x = formula(xf), z = formula(yf), y = formula(zf),
                  type = "scatter3d", mode = "markers",
                  color = ~.color,
                  symbol = ~.shape, symbols = .shapes,
-                 text = ~.hover)
+                 text = ~.hover,
+                 marker = list(color = colors))
     p <- layout(p, scene = scene)
   }
 

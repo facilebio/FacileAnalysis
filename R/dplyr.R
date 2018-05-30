@@ -15,35 +15,35 @@
 #'
 #' @rdname dplyr-api
 #' @export
-#' @method mutate iresult
-mutate.iresult <- function(.data, ...) mutate(tidy(.data), ...)
+#' @method mutate FacileAnalysis
+mutate.FacileAnalysis <- function(.data, ...) mutate(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method select iresult
-select.iresult <- function(.data, ...) select(tidy(.data), ...)
+#' @method select FacileAnalysis
+select.FacileAnalysis <- function(.data, ...) select(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method filter iresult
-filter.iresult <- function(.data, ...) filter(tidy(.data), ...)
+#' @method filter FacileAnalysis
+filter.FacileAnalysis <- function(.data, ...) filter(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method summarise iresult
-summarise.iresult <- function(.data, ...) summarise(tidy(.data), ...)
+#' @method summarise FacileAnalysis
+summarise.FacileAnalysis <- function(.data, ...) summarise(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method summarize iresult
-summarize.iresult <- function(.data, ...) summarise(tidy(.data), ...)
+#' @method summarize FacileAnalysis
+summarize.FacileAnalysis <- function(.data, ...) summarise(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method arrange iresult
-arrange.iresult <- function(.data, ...) arrange(tidy(.data), ...)
+#' @method arrange FacileAnalysis
+arrange.FacileAnalysis <- function(.data, ...) arrange(tidy(.data), ...)
 
 #' @rdname dplyr-api
 #' @export
-#' @method group_by iresult
-group_by.iresult <- function(.data, ...) group_by(tidy(.data), ...)
+#' @method group_by FacileAnalysis
+group_by.FacileAnalysis <- function(.data, ...) group_by(tidy(.data), ...)

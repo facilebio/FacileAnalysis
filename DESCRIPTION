@@ -1,27 +1,28 @@
-Package: ImmersiveAnalysis
+Package: FacileAnalysis
 Type: Package
-Title: Analysis modules that communicate to an ImmersiveDataStore
+Title: Interactive analysis modules for a FacileDataStore
 Version: 0.1.0
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre")),
     person("Denali Therapeutics", role = c("cph", "fnd"))
     )
 Description: Provides modularized versions of analyses that are commonly
-    performed over genomis data. Each analysis module provides an "iplot"
-    method that provides an interactive vizualization appropriate for an 
-    Rmarkdown document, and an "ixplore" function that launches a
+    performed over genomics data. Each analysis module provides an "fplot"
+    (facile plot) method that provides an interactive vizualization appropriate
+    for an  Rmarkdown document, and an "fxplore" function that launches a
     hyper-interactive version of the analysis using shiny gadgets.
 Depends:
+    FacileData,
     dplyr,
-    broom,
     plotly
 Imports:
     checkmate,
     edgeR,
     matrixStats,
     broom,
+    RColorBrewer,
     tidyr
-License: Denali2bOSS License
+License: Apache Version 2.0
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
