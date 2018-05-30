@@ -6,13 +6,13 @@
 \alias{with_color.tbl}
 \title{Augment a facile object with a color aesthetic}
 \usage{
-with_color(x, aesthetic, aes_map = NULL, ..., .default_color = "black")
+with_color(x, aesthetic, aes_map = NULL, ..., .default_color = I("black"))
 
 \method{with_color}{data.frame}(x, aesthetic = NULL, aes_map = NULL,
-  out_column = ".color_aes.", ..., .default_color = "black")
+  out_column = ".color_aes.", ..., .default_color = I("black"))
 
 \method{with_color}{tbl}(x, aesthetic = NULL, aes_map = NULL,
-  out_column = ".color_aes.", ..., .default_color = "black")
+  out_column = ".color_aes.", ..., .default_color = I("black"))
 }
 \arguments{
 \item{x}{an object to colorize (currently just data.frame or tbls)}
@@ -64,7 +64,8 @@ x <- tibble(
   category = sample(c("a", "b", "c"), 20, replace = TRUE),
   subcat = sample(c("y", "z"), 20, replace = TRUE),
   score = rnorm(20))
-x <- with_color(x, aesthetic = "category", )
+x <- with_color(x, aesthetic = "category", "Set3")
+y <- with_color(x, aesthetic = "category", "Set1")
 }
 \seealso{
 \code{\link[=aes_map]{aes_map()}}

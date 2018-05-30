@@ -161,28 +161,23 @@ with_color.default <- function(x, aesthetic, aes_map = NULL, ...,
 #' y <- with_color(x, aesthetic = "category", "Set1")
 with_color.data.frame <- function(x, aesthetic = NULL, aes_map = NULL,
                                   out_column = ".color_aes.", ...,
-                                  .default_color = I("black")) {
+                                  .default_color = "black") {
   stopifnot(is(x, "data.frame") || is(x, "tbl"))
-
   aes_cols <- .aes_varval_colnames(out_column, x)
 
   if (!is.null(aesthetic) && length(aesthetic) > 0L) {
-    # We aren't doing tidyeval yet, so this can only be a character
-    assert_character(aesthetic, min.len = 1L)
-    assert_subset(aesthetic, colnames(x))
-    if (length(aesthetic) == 1L) {
-      x[[aes_cols$variable]] <- x[[aesthetic]]
-    } else {
-      is.cat <- sapply(x[, aesthetic], is.categorical)
-      assert_true(all(is.cat))
-      x <- tidyr::unite_(x, aes_cols$variable, aesthetic, remove = FALSE)
-    }
-
+    x <- .with_aes_columns(x, aesthetic, aes_cols)
     cmap <- create_color_map(x[[aes_cols$variable]], map = aes_map, ...)
-    if (length(cmap) == 1L) {
-      x[[aes_cols$value]] <- .default_color
+    if (is.character(cmap)) {
+      if (length(cmap) == 1L) {
+        x[[aes_cols$value]] <- I(.default_color)
+      } else {
+        x[[aes_cols$value]] <- I(cmap[x[[aes_cols$variable]]])
+      }
     } else {
-      x[[aes_cols$value]] <- cmap[x[[aes_cols$variable]]]
+      # maybe aes_map was some type of colorRamp-like or viridis-likefunction,
+      # then what?
+      stop("colorRamp functions not handled yet")
     }
     aes_map(x, "color") <- cmap
   }
@@ -209,20 +204,24 @@ with_shape <- function(x, aesthetic, aes_map = NULL, ...,
 
 with_shape.data.frame <- function(x, aesthetic, aes_map = NULL,
                                   out_column = ".shape_aes.", ...,
-                                  .default_shape = I("circle")) {
-  if (is.character(aesthetic)) {
-    assert_subset(aesthetic, colnames(x))
-    if (length(aesthetic) > 1L) {
-      is.cat <- sapply(x[, aesthetic], is.categorical)
-      assert_true(all(is.cat))
+                                  .default_shape = "circle") {
+  stopifnot(is(x, "data.frame") || is(x, "tbl"))
+  aes_cols <- .aes_varval_colnames(out_column, x)
+
+  if (!is.null(aesthetic) && length(aesthetic) > 0L) {
+    x <- .with_aes_columns(x, aesthetic, aes_cols)
+    smap <- create_shape_map(x[[aes_cols$variable]], map = aes_map, ...)
+    if (is.character(smap) || is.integerish(smap)) {
+      if (length(smap) == 1L) {
+        x[[aes_cols$value]] <- I(.default_shape)
+      } else {
+        x[[aes_cols$value]] <- I(smap[x[[aes_cols$variable]]])
+      }
     }
-    xx <- tidyr::unite_(xx, ".shape", shape_aes, remove = FALSE)
-  } else {
-    xx[[".shape"]] <- I("circle")
+    aes_map(x, "shape") <- smap
   }
 
-  shape.ints <- 15:18
-  shape.ints <- I(c(shape.ints, setdiff(1:25, shape.ints)))
+  x
 }
 
 with_shape.tbl <- function(x, aesthetic, aes_map = NULL,
@@ -284,13 +283,27 @@ with_hover <- function(x, aesthetic, aes_map = NULL,
 
   if (is.data.frame(dat) || is.tbl(dat)) {
     if (var.name %in% names(dat)) {
-      warning(".aes_varname column `", var.anme,
+      warning(".aes_varname column `", var.name,
               "`already exists in data.frame")
     }
     if (val.name %in% names(dat)) {
-      warning(".aes_valname column `", val.anme,
+      warning(".aes_valname column `", val.name,
               "`already exists in data.frame")
     }
   }
   list(variable = var.name, value = val.name)
+}
+
+.with_aes_columns <- function(x, aesthetic, aes_cols, ...) {
+  # We aren't doing tidyeval yet, so this can only be a character
+  assert_character(aesthetic, min.len = 1L)
+  assert_subset(aesthetic, colnames(x))
+  if (length(aesthetic) == 1L) {
+    x[[aes_cols$variable]] <- x[[aesthetic]]
+  } else {
+    is.cat <- sapply(x[, aesthetic], is.categorical)
+    assert_true(all(is.cat))
+    x <- tidyr::unite_(x, aes_cols$variable, aesthetic, remove = FALSE)
+  }
+  x
 }

@@ -8,8 +8,9 @@
 fplot(x, ...)
 
 \method{fplot}{FacilePCA}(x, pcs = 1:3, title = "Facile PCA",
-  hover = NULL, color_aes = NULL, color_map = NULL, shape_aes = NULL,
-  shape_map = NULL, size_aes = NULL, size_map = NULL, ...)
+  color_aes = NULL, color_map = NULL, shape_aes = NULL,
+  shape_map = NULL, size_aes = NULL, size_map = NULL, hover_aes = NULL,
+  hover_map = NULL, ...)
 }
 \description{
 Creates an interactive plot of the immersive result

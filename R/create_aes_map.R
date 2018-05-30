@@ -1,4 +1,6 @@
-#' Maps colors to values
+# Helper functions to create categorical maps for shapes and colors
+
+#' Maps colors to categorical values
 #'
 #' @section Categorical Map:
 #' Map can be a RColorBrewer name, or a vector of colors. Colors will be
@@ -19,7 +21,18 @@ create_color_map <- function(vals, map = NULL) {
   } else {
     stop("Not mapping real values yet")
   }
+  out
+}
 
+#' Maps shaps to categorical values
+create_shape_map <- function(vals, map = NULL) {
+  stopifnot(is.categorical(vals))
+  if (is.null(map)) {
+    map <- 15:18
+    map <- c(map, setdiff(1:25, map))
+  }
+
+  out <- xref.discrete.map.to.vals(map, vals)
   out
 }
 
@@ -39,9 +52,15 @@ mucho.colors <- function() {
 }
 
 #' @noRd
+#' @param map named character vector, where names are the entries found in
+#'   `vals`
+#' @param vals a categorical vector (character or factor)
+#' @return a character vector like `map` but with recycled entries if the number
+#'   of `length(unique(vals)) > length(map)`
 xref.discrete.map.to.vals <- function(map, vals) {
   stopifnot(is.categorical(vals))
-  stopifnot(is.character(map))
+  stopifnot(is.character(map) || is.integerish(map))
+  map.type <- if (is.character(map)) "char" else "int"
 
   if (is.factor(vals)) {
     uvals <- levels(vals)
@@ -50,7 +69,7 @@ xref.discrete.map.to.vals <- function(map, vals) {
   }
 
   if (is.null(names(map))) {
-    out.map <- character()
+    out.map <- if (map.type == "char") character() else integer()
     rest.map <- map
   } else {
     out.map <- map[names(map) %in% uvals]

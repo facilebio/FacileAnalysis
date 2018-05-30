@@ -1,7 +1,35 @@
-expect_color_map <- function(map, values, info = "unknown color map test") {
-  uvals <- unique(values)
-  expect_equal(length(map), length(uvals), info = info)
+#' Test for a valid discrete aes map
+#'
+#' @noRd
+#' @param expected name of the expected RColorBrewer palette used in map. If
+#'   this is provided, then the colors in map are checked to be the same top n
+#'   colors provided by the given map name
+expect_daes_map <- function(map, values, expected = NULL,
+                             info = "unknown color map test") {
+  stopifnot(is.categorical(values))
+  uvals <- if (is.factor(values)) levels(values) else sort(unique(values))
+  n.cats <- length(unique(uvals))
+
+  expect_equal(length(map), n.cats, info = info)
   expect_true(setequal(names(map), uvals), info = info)
+
+  if (!is.null(expected)) {
+    stopifnot(is.character(expected) || is.integerish(expected))
+    if (is.character(expected)) {
+      if (is.brewer.map.name(expected)) {
+        # percolates a warning if n.cats > maximum color of brewer palette
+        expected <- RColorBrewer::brewer.pal(n.cats, expected)
+        names(expected) <- head(uvals, length(expected))
+      }
+    }
+    expect_equal(length(expected), n.cats)
+    # if (is(map, "AsIs")) {
+    #   nms <- names(map)
+    #   map <- if (is.categorical(map)) as.character(map) else as.numeric(map)
+    #   names(map) <- nms
+    # }
+    expect_equal(map, expected, info = info)
+  }
 }
 
 example_aes_data_table <- function(n = 20, n.cats = 3, seed = 123) {
