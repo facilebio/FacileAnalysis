@@ -70,11 +70,12 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 #' @method fplot FacilePCA
 #'
 #' @export
-fplot.FacilePCA <- function(x, pcs = 1:3, title = "Facile PCA",
+fplot.FacilePCA <- function(x, pcs = 1:3,
                             color_aes = NULL, color_map = NULL,
                             shape_aes = NULL, shape_map = NULL,
                             size_aes = NULL, size_map = NULL,
-                            hover_aes = NULL, hover_map = NULL, ...) {
+                            hover_aes = NULL, hover_map = NULL,
+                            hover = NULL, ...) {
   xx <- tidy(x)
   assert_integerish(pcs, lower = 1L)
   assert_int(length(pcs), lower = 1L, upper = 3L)
@@ -93,67 +94,26 @@ fplot.FacilePCA <- function(x, pcs = 1:3, title = "Facile PCA",
   xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
   xx <- xx[, xx.cols, drop = FALSE]
 
-  xx <- with_color(xx, color_aes, ...)
-  xx <- with_shape(xx, shape_aes, ...)
-  xx <- with_size(xx, size_aes, ...)
-  xx <- with_hover(xx, hover_aes, ...)
-
-  if (is.character(hover)) {
-    assert_subset(hover, colnames(xx))
-    hvals <- lapply(hover, function(wut) {
-      vals <- xx[[wut]]
-      if (is.numeric(vals)) vals <- prettyNum(round(vals, 2), big.mark = ",")
-      if (!is.character(vals)) vals <- as.character(vals)
-      paste0(wut, ": ", vals)
-    })
-    xx[[".hover"]] <- do.call(paste, c(hvals, list(sep = "<br>")))
-  } else {
-    xx[[".hover"]] <- ""
-  }
-
-
-  # recycle different shpaes to only sample from .shapes.all if there are
-  # more unique levels in xx[[".shape"]] then we have shapes to choose from
-  .shapes.all <- c("circle", "x", "o", "+")
-  .shape.lvls <- unique(xx[[".shape"]])
-  if (length(.shape.lvls) > length(.shapes.all)) {
-    warning("There are more unique levels in shape aesthetic than shapes ",
-            "to choose from. Shapes will be recycled", immediate. = TRUE)
-  }
-  .shapes.idx <- seq(length(.shape.lvls)) %% length(.shapes.all)
-  .shapes.idx[.shapes.idx == 0] <- length(.shapes.all)
-  .shapes <- .shapes.all[.shapes.idx]
-
-  xf <- paste0("~", pc.cols[1])
-  yf <- paste0("~", pc.cols[2])
-  zf <- paste0("~", pc.cols[3])
+  p <- fscatterplot(xx, pc.cols,
+                    color_aes = color_aes, color_map = color_map,
+                    shape_aes = shape_aes, shape_map = shape_map,
+                    size_aes = size_aes, size_map = size_map,
+                    hover_aes = hover_aes, hover_map = hover_map,
+                    hover = hover, ...)
 
   if (length(pcs) == 2L) {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
     yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
-
-    p <- plot_ly(xx, x = formula(xf), y = formula(yf), type = "scatter",
-                 color = ~.color, mode = "markers",
-                 symbol = ~.shape, symbols = .shapes,
-                 text = ~.hover)
     p <- layout(p, xaxis = xaxis, yaxis = yaxis)
   } else {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
     yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[3L], x$percentVar[pc.cols[3L]] * 100))
     zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
     scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
-
-    colors <-
-    p <- plot_ly(xx, x = formula(xf), z = formula(yf), y = formula(zf),
-                 type = "scatter3d", mode = "markers",
-                 color = ~.color,
-                 symbol = ~.shape, symbols = .shapes,
-                 text = ~.hover,
-                 marker = list(color = colors))
     p <- layout(p, scene = scene)
   }
 
   # TODO: Customize the hovertext for the plot using the `hover` argument
-  p <- layout(p, title = title)
+  # p <- layout(p, title = title)
   p
 }

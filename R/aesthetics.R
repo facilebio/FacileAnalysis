@@ -179,6 +179,7 @@ with_color.data.frame <- function(x, aesthetic = NULL, aes_map = NULL,
       # then what?
       stop("colorRamp functions not handled yet")
     }
+    attr(cmap, "columns") <- aes_cols
     aes_map(x, "color") <- cmap
   }
 
@@ -218,6 +219,7 @@ with_shape.data.frame <- function(x, aesthetic, aes_map = NULL,
         x[[aes_cols$value]] <- I(smap[x[[aes_cols$variable]]])
       }
     }
+    attr(smap, "columns") <- aes_cols
     aes_map(x, "shape") <- smap
   }
 
@@ -244,7 +246,7 @@ with_size.data.frame <- function(x, aesthetic, aes_map = NULL,
                                  out_column = ".size_aes.", ...,
                                  .default_size = I(1L)) {
   if (!is.null(aesthetic)) {
-    warning("We aren't mapping")
+    warning("We aren't mapping size")
   }
 }
 
@@ -255,7 +257,7 @@ with_size.tbl <- function(x, aesthetic, aes_map = NULL,
                        out_column = out_column, ...,
                        .default_size = .default_size)
   if (!is.null(aesthetic)) {
-    warning("We aren't mapping")
+    warning("We aren't mapping size")
   }
 }
 

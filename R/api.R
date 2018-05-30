@@ -1,8 +1,8 @@
 #' Launch a shiny gadget to explore an immersive result
-fxplore <- function(x, ...) UseMethod("fxplore")
+fxplore <- function(x, ...) UseMethod("fxplore", x)
 
 #' Creates an interactive plot of the immersive result
-fplot <- function(x, ...) UseMethod("fplot")
+fplot <- function(x, ...) UseMethod("fplot", x)
 
 #' Extract a tidy data.frame from an `iresult`
 #'
