@@ -7,6 +7,8 @@ test_that("plot(fpca) is baller", {
   rownames(pdat) <- colnames(m)
 
   res <- fpca(m, col_covariates = pdat)
-  fplot(res, 1:2, color_aes = "category")
-  fplot(res, 1:2, color_aes = "category", shape_aes = "subcat")
+  fp2 <- render(res, 1:2, color_aes = "category")
+  fp3 <- render(res, 1:3, color_aes = "category")
+
 })
+

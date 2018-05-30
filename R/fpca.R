@@ -60,22 +60,22 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   }
 
   result <- list(tidy = dat, percentVar = percentVar)
-  class(result) <- c("FacilePCA", "FacileAnalysis")
+  class(result) <- c("FacilePCA", "FacileAnalysisResult")
   result
 }
 
 # fplot ========================================================================
 
-#' @rdname fplot
-#' @method fplot FacilePCA
+#' @rdname render
+#' @method render FacilePCA
 #'
 #' @export
-fplot.FacilePCA <- function(x, pcs = 1:3,
-                            color_aes = NULL, color_map = NULL,
-                            shape_aes = NULL, shape_map = NULL,
-                            size_aes = NULL, size_map = NULL,
-                            hover_aes = NULL, hover_map = NULL,
-                            hover = NULL, ...) {
+render.FacilePCA <- function(x, pcs = 1:3,
+                             color_aes = NULL, color_map = NULL,
+                             shape_aes = NULL, shape_map = NULL,
+                             size_aes = NULL, size_map = NULL,
+                             hover_aes = NULL, hover_map = NULL,
+                             hover = NULL, ...) {
   xx <- tidy(x)
   assert_integerish(pcs, lower = 1L)
   assert_int(length(pcs), lower = 1L, upper = 3L)
@@ -101,19 +101,20 @@ fplot.FacilePCA <- function(x, pcs = 1:3,
                     hover_aes = hover_aes, hover_map = hover_map,
                     hover = hover, ...)
 
+  p$facile_analysis <- x
+
   if (length(pcs) == 2L) {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
     yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
-    p <- layout(p, xaxis = xaxis, yaxis = yaxis)
+    p$plot <- layout(plot(p), xaxis = xaxis, yaxis = yaxis)
   } else {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
     yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[3L], x$percentVar[pc.cols[3L]] * 100))
     zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
     scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
-    p <- layout(p, scene = scene)
+    p$plot <- layout(plot(p), scene = scene)
   }
 
-  # TODO: Customize the hovertext for the plot using the `hover` argument
-  # p <- layout(p, title = title)
+  class(p) <- c("FacilePCAPlot", class(p))
   p
 }
