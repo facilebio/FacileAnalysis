@@ -1,4 +1,4 @@
-#' Immersive PCA
+#' Runs a facile PCA
 #'
 #' The code here is largely inspired by DESeq2's plotPCA.
 #'
@@ -16,6 +16,7 @@ fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   UseMethod("fpca")
 }
 
+#' @export
 #' @rdname fpca
 #' @method fpca DGEList
 #' @importFrom edgeR cpm
@@ -26,6 +27,7 @@ fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
   fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
 }
 
+#' @export
 #' @rdname fpca
 #' @method fpca matrix
 #' @importFrom matrixStats rowVars
@@ -60,22 +62,41 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   }
 
   result <- list(tidy = dat, percentVar = percentVar)
-  class(result) <- c("FacilePCA", "FacileAnalysisResult")
+  class(result) <- c("FacilePCAResult", "FacileReducedDimResult", "FacileAnalysisResult")
   result
 }
 
+#' @noRd
+#' @export
+#' @method print FacilePCAResult
+print.FacilePCAResult <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+format.FacilePCAResult <- function(x, ...) {
+  out <- paste(
+    "===========================================================\n",
+    sprintf("FacilePCAResult\n"),
+    "-----------------------------------------------------------\n",
+    "  n.observations\n",
+    "  n.dimensions\n",
+    "  % variance explained PC1 ... PCN\n",
+    "===========================================================\n",
+    sep = "")
+  out
+}
 # fplot ========================================================================
 
-#' @rdname render
-#' @method render FacilePCA
+#' @noRd
+#' @method vizualize FacilePCAResult
 #'
 #' @export
-render.FacilePCA <- function(x, pcs = 1:3,
-                             color_aes = NULL, color_map = NULL,
-                             shape_aes = NULL, shape_map = NULL,
-                             size_aes = NULL, size_map = NULL,
-                             hover_aes = NULL, hover_map = NULL,
-                             hover = NULL, ...) {
+vizualize.FacilePCAResult <- function(x, pcs = 1:3,
+                                      color_aes = NULL, color_map = NULL,
+                                      shape_aes = NULL, shape_map = NULL,
+                                      size_aes = NULL, size_map = NULL,
+                                      hover_aes = NULL, hover_map = NULL,
+                                      hover = NULL, ...) {
   xx <- tidy(x)
   assert_integerish(pcs, lower = 1L)
   assert_int(length(pcs), lower = 1L, upper = 3L)
@@ -102,19 +123,20 @@ render.FacilePCA <- function(x, pcs = 1:3,
                     hover = hover, ...)
 
   p$facile_analysis <- x
+  pcv <- x$percentVar * 100
 
   if (length(pcs) == 2L) {
-    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
-    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
+    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], pcv[pc.cols[1L]]))
+    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], pcv[pc.cols[2L]]))
     p$plot <- layout(plot(p), xaxis = xaxis, yaxis = yaxis)
   } else {
-    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], x$percentVar[pc.cols[1L]] * 100))
-    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[3L], x$percentVar[pc.cols[3L]] * 100))
-    zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], x$percentVar[pc.cols[2L]] * 100))
+    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], pcv[pc.cols[1L]]))
+    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[3L], pcv[pc.cols[3L]]))
+    zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], pcv[pc.cols[2L]]))
     scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
     p$plot <- layout(plot(p), scene = scene)
   }
 
-  class(p) <- c("FacilePCAPlot", class(p))
+  class(p) <- c("FacilePCAViz", "FacileReducedDimViz", class(p))
   p
 }

@@ -1,26 +1,26 @@
 Package: FacileAnalysis
 Type: Package
-Title: Interactive analysis modules for a FacileDataStore
+Title: Analysis routines over a FacileDataStore
 Version: 0.1.0
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre")),
     person("Denali Therapeutics", role = c("cph", "fnd"))
     )
 Description: Provides modularized versions of analyses that are commonly
-    performed over genomics data. Each analysis module provides an "fplot"
-    (facile plot) method that provides an interactive vizualization appropriate
-    for an  Rmarkdown document, and an "fxplore" function that launches a
-    hyper-interactive version of the analysis using shiny gadgets.
+    performed over genomics data. The methods and API from the FacileViz package
+    are used within to provide interactive htmlwidget-based vizualizations 
+    for these results via the "vizualize" S3 generic.
 Depends:
-    FacileData,
-    dplyr,
-    plotly
+    R (>= 3.5)
 Imports:
+    broom,
     checkmate,
     edgeR,
+    FacileData,
+    FacileViz,
     matrixStats,
-    broom,
-    RColorBrewer,
+    multiGSEA,
+    plotly,
     tidyr
 Suggests:
     knitr,
@@ -29,4 +29,4 @@ License: Apache Version 2.0
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.0.1.9000

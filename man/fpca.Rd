@@ -4,7 +4,7 @@
 \alias{fpca}
 \alias{fpca.DGEList}
 \alias{fpca.matrix}
-\title{Immersive PCA}
+\title{Runs a facile PCA}
 \usage{
 fpca(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   col_covariates = NULL, ...)

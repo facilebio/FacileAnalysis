@@ -1,3 +1,7 @@
+# These functions sometimes might go into tests/testhat/helper-*.R files, but
+# I like having them available (and not exported) within the package itself
+# in case I want to use them elsewhere.
+
 #' Test for a valid discrete aes map
 #'
 #' @noRd
@@ -5,7 +9,7 @@
 #'   this is provided, then the colors in map are checked to be the same top n
 #'   colors provided by the given map name
 expect_daes_map <- function(map, values, expected = NULL,
-                             info = "unknown color map test") {
+                            info = "unknown color map test") {
   stopifnot(is.categorical(values))
   uvals <- if (is.factor(values)) levels(values) else sort(unique(values))
   n.cats <- length(unique(uvals))
@@ -40,3 +44,4 @@ example_aes_data_table <- function(n = 20, n.cats = 3, seed = 123) {
     score = rnorm(n))
   x
 }
+
