@@ -19,6 +19,8 @@
 #' enumerated by the `(dataset,sample_id)` pair in the `result$covariates`
 #' tibble.
 #'
+#' TODO: check if design matrix is full rank
+#'
 #' @export
 #'
 #' @param x a dataset
@@ -36,15 +38,26 @@
 #'   * `$contrast`: the contrast vector that defines the comparison asked for
 #'   * `$messages`: A character vector of messages generated
 #'   * `$warnings`: A character vector of warnings generated
-#' @examples
+#'   * `$errors`: A character vector of errors generated
 #'
+#' @examples
 #' fds <- FacileData::exampleFacileDataSet()
 #'
 #' # Look for tumor vs normal differences, controling for stage and sex
 #' model_info <- fds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-#'             fixed = c("sex"))
+#'                  fixed = c("sex"))
+#' m2 <- fds %>%
+#'   filter_samples(indication == "BLCA") %>%
+#'   fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'                  fixed = c("sex", "stage"))
+#'
+#' # stageIV vs stageII & stageIII
+#' m3 <- fds %>%
+#'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
+#'   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
+#'                  fixed = "sex")
 fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
                            fixed = NULL, on_missing = c("warning", "error"),
                            ...) {
@@ -63,12 +76,16 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' construction.
 fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                                       fixed = NULL,
-                                      on_missing = c("warning", "error"), ...) {
+                                      on_missing = c("warning", "error"), ...,
+                                      .fds = NULL) {
   on_missing <- match.arg(on_missing)
   assert_subset(c("dataset", "sample_id"), colnames(x))
   assert_choice(covariate, setdiff(colnames(x), c("sample_id")))
   assert_categorical(x[[covariate]])
   assert_subset(fixed, setdiff(colnames(x), c("sample_id")))
+  if (!is.null(.fds)) {
+    assert_facile_data_store(.fds)
+  }
 
   all_test_levels <- as.character(unique(x[[covariate]]))
   test_levels <- assert_subset(c(numer, denom), all_test_levels)
@@ -77,14 +94,15 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   warnings <- character()
   errors <- character()
 
-  test <- if (is.null(test_levels)) "anova" else "ttest"
+  test_type <- if (is.null(test_levels)) "anova" else "ttest"
 
   req.cols <- c("dataset",  "sample_id", covariate, fixed)
   xx <- x[, req.cols]
   incomplete <- !complete.cases(xx)
-  if (any(is.na(incomplete))) {
-    msg <- paste(sum(incomplete), " samples due to NA's in required covariates")
+  if (any(incomplete)) {
+    msg <- paste(sum(incomplete), "samples with NA's in required covariates")
     if (on_missing == "error") stop(msg)
+    warning(msg)
     warnings <- c(warnings, paste("Removed", msg))
     xx <- xx[!incomplete,]
   }
@@ -98,17 +116,19 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   test_covs <- grep(paste0("^", covariate), colnames(design))
   colnames(design) <- sub(paste0("^", covariate), "", colnames(design))
 
-  if (test == "anova") {
+  if (test_type == "anova") {
+    clazz <- "FacileAnovaModelDefinition"
     coef <- 2:max(test_covs)
     contrast <- NULL
   } else {
+    clazz <- "FacileTtestDGEModelDefinition"
     coef <- NULL
     numer. <- paste(numer, collapse = " + ")
     if (length(numer) > 1L) {
       numer. <- sprintf("(%s) / %d", numer., length(numer))
     }
     denom. <- paste(denom, collapse = " + ")
-    if (length(denom.) > 1L) {
+    if (length(denom) > 1L) {
       denom. <- sprintf("(%s) / %d", denom., length(denom))
     }
     contrast <- makeContrasts(
@@ -118,6 +138,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   }
 
   out <- list(
+    test_type = test_type,
     covariates = xx,
     covariate = covariate,
     fixed = fixed,
@@ -130,9 +151,10 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     contrast = contrast,
     messages = messages,
     warnings = warnings,
-    errors = errors)
+    errors = errors,
+    fds = .fds)
 
-  class(out) <- "FacileDGEModelDefinition"
+  class(out) <- c(clazz, "FacileDGEModelDefinition")
   out
 }
 
@@ -189,7 +211,6 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
   assert_character(required.covs)
 
   fetch.covs <- setdiff(required.covs, colnames(x))
-
   if (length(fetch.covs)) {
     x <- with_sample_covariates(x, fetch.covs, custom_key = custom_key,
                                 .fds = .fds)
@@ -199,6 +220,6 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
 
   out <- fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
                                    denom = denom, fixed = fixed,
-                                   on_missing = on_missing, ...)
+                                   on_missing = on_missing, .fds = .fds, ...)
   out
 }
