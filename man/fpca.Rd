@@ -10,11 +10,11 @@ fpca(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   col_covariates = NULL, ...)
 
 \method{fpca}{DGEList}(x, pcs = 1:10, ntop = 500,
-  row_covariates = x$genes, col_covariates = x$samples, prior.count = 3,
-  log = TRUE, ...)
+  row_covariates = x$genes, col_covariates = x$samples,
+  prior.count = 3, log = TRUE, ...)
 
-\method{fpca}{matrix}(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, ...)
+\method{fpca}{matrix}(x, pcs = 1:10, ntop = 500,
+  row_covariates = NULL, col_covariates = NULL, ...)
 }
 \arguments{
 \item{x}{a data container}

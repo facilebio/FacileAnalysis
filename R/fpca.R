@@ -7,6 +7,7 @@
 #' * http://factominer.free.fr/graphs/factoshiny.html
 #'
 #' @export
+#' @importFrom multiGSEA eigenWeightedMean
 #' @rdname fpca
 #'
 #' @param x a data container
@@ -33,6 +34,7 @@ fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                         col_covariates = NULL, ...) {
+  pcs.given <- !missing(pcs)
   assert_integerish(pcs, lower = 1L, upper = nrow(x))
   if (is(row_covariates, "data.frame")) {
     assert_true(nrow(x) == nrow(row_covariates))
@@ -44,24 +46,52 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
     assert_character(rownames(col_covariates))
     assert_true(all(colnames(x) == rownames(col_covariates)))
   }
+  assert_integerish(pcs, lower = 1L, upper = nrow(x))
 
   rv <- matrixStats::rowVars(x)
   take <- head(order(rv, decreasing = TRUE), ntop)
 
-  pca <- prcomp(t(x[take,]))
+  xx <- x[take,]
+  pca <- prcomp(t(xx))
   percentVar <- pca$sdev^2 / sum(pca$sdev^2)
   names(percentVar) <- paste0("PC", seq(percentVar))
 
-  dat <- as.data.frame(lapply(pcs, function(pc) pca$x[, pc]))
-  colnames(dat) <- paste0("PC", pcs)
-  rownames(dat) <- colnames(x)
+  pcs.take <- paste0("PC", pcs)
+  pcs.miss <- setdiff(pcs.take, colnames(pca$x))
+  if (length(pcs.miss) && pcs.given) {
+    warning("The following PCs were not included in the decomposition:\n  ",
+            paste(pcs.miss, collapse = ", "))
+    pcs.take <- intersect(pcs.take, colnames(pca$x))
+  }
+
+  dat <- as.data.frame(pca$x[, pcs.take])
+
+  # Why was I doing this instead?
+  # dat <- as.data.frame(lapply(pcs.take, function(pc) pca$x[, pc]))
+  # colnames(dat) <- pcs.take
+  # rownames(dat) <- colnames(x)
+
   percentVar <- percentVar[colnames(dat)]
 
   if (is(col_covariates, "data.frame")) {
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
   }
 
-  result <- list(tidy = dat, percentVar = percentVar)
+  # Identify the percernt contribution each feature has to the PCs. It's running
+  # a decomposition twice, but ...
+  ewm <- eigenWeightedMean(x[take,,drop=FALSE], scale = FALSE)
+  result <- list(tidy = dat, percent_var = percentVar,
+                 taken = take, factor_contrib = ewm$factor.contrib)
+
+  # Calculate correlation of each gene to PC1 -> PC4
+  pc_cor <- sapply(paste0("PC", head(pcs, 4)), function(pc) {
+    cor(t(xx), dat[[pc]])
+  })
+  pc_cor <- cbind(
+    data.frame(row_name = rownames(xx), row_idx = take,
+               stringsAsFactors = FALSE),
+    pc_cor)
+  result$pc_cor <- pc_cor
   class(result) <- c("FacilePCAResult", "FacileReducedDimResult", "FacileAnalysisResult")
   result
 }
@@ -123,7 +153,7 @@ vizualize.FacilePCAResult <- function(x, pcs = 1:3,
                     hover = hover, ...)
 
   p$facile_analysis <- x
-  pcv <- x$percentVar * 100
+  pcv <- x$percent_var * 100
 
   if (length(pcs) == 2L) {
     xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], pcv[pc.cols[1L]]))
