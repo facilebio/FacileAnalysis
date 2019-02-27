@@ -4,7 +4,7 @@
 #' simple model definitions that are, essentially, functions of a single
 #' covariate. More elaborate models can be analysed, but the user is left to
 #' define the design, coef / contrast to test manually and pass those into
-#' [dge()].
+#' [fdge()].
 #'
 #' Note: actually a (likely) small modification of this can have it support the
 #' "ratio of ratios" model setup.
@@ -18,8 +18,6 @@
 #' The samples that the differential expression should be run on will be
 #' enumerated by the `(dataset,sample_id)` pair in the `result$covariates`
 #' tibble.
-#'
-#' TODO: check if design matrix is full rank
 #'
 #' @export
 #'
@@ -46,11 +44,15 @@
 #' # Look for tumor vs normal differences, controling for stage and sex
 #' model_info <- fds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-#'                  fixed = c("sex"))
+#'   fdge_model_def(covariate = "sample_type",
+#'                  numer = "tumor",
+#'                  denom = "normal",
+#'                  fixed = "sex")
 #' m2 <- fds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'   fdge_model_def(covariate = "sample_type",
+#'                  numer = "tumor",
+#'                  denom = "normal",
 #'                  fixed = c("sex", "stage"))
 #'
 #' # stageIV vs stageII & stageIII
@@ -68,7 +70,7 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname fdge_model_def
 #' @method fdge_model_def data.frame
 #' @importFrom stats model.matrix
-#' @importFrom limma makeContrasts
+#' @importFrom limma makeContrasts nonEstimable
 #' @section data.frame:
 #' The data.frame function definition assumes that `x` is a data.frame of
 #' samples (dataset,sample_id) and the covariates defined on these samples
@@ -115,10 +117,19 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   design <- model.matrix(formula(dformula), data = xx)
   test_covs <- grep(paste0("^", covariate), colnames(design))
   colnames(design) <- sub(paste0("^", covariate), "", colnames(design))
+  rownames(design) <- paste(xx$dataset, xx$sample_id, sep = "__")
+
+  non_estimable <- nonEstimable(design)
+  if (!is.null(non_estimable)) {
+    errors <- c(
+      errors,
+      paste("Design matrix is not full rank: these columns are non-estimable: ",
+            paste(non_estimable, collapse = ",")))
+  }
 
   if (test_type == "anova") {
     clazz <- "FacileAnovaModelDefinition"
-    coef <- 2:max(test_covs)
+    coef <- 2L:max(test_covs)
     contrast <- NULL
   } else {
     clazz <- "FacileTtestDGEModelDefinition"
@@ -149,12 +160,13 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     test_covs = test_covs,
     coef = coef,
     contrast = contrast,
+    # Standard FacileAnalysisResult things
+    fds = .fds,
     messages = messages,
     warnings = warnings,
-    errors = errors,
-    fds = .fds)
+    errors = errors)
 
-  class(out) <- c(clazz, "FacileDGEModelDefinition")
+  class(out) <- c(clazz, "FacileDGEModelDefinition", "FacileAnalysisResult")
   out
 }
 
@@ -184,7 +196,7 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
                  custom_key = custom_key, ...)
 }
 
-#' @section facile_frame
+#' @section facile_frame:
 #' When we define a model off of a facile_frame, we expect this to look like
 #' a wide covariate table. This defines the samples we will build a model on
 #' in its (datset, sample_id) columns, as well as any covaraites defined on
@@ -202,12 +214,12 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
                                         fixed = NULL,
                                         on_missing = c("warning", "error"), ...,
                                         custom_key = NULL) {
-  .fds <- fds(x) %>% assert_class("FacileDataStore")
+  .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
 
   # Retrieve any covariates from the FacileDataStore that are not present
   # in the facile_frame `x`
-  required.covs <- c(covariate, fixed)
+  required.covs <- setdiff(c(covariate, fixed), c("dataset", "sample_id"))
   assert_character(required.covs)
 
   fetch.covs <- setdiff(required.covs, colnames(x))

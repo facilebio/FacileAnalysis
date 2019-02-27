@@ -1,5 +1,11 @@
 # FacileAnalysisResult objects =================================================
 
+#' @export
+#' @rdname getsetdb
+fds.FacileAnalysisResult <- function(x) {
+  return(x[["fds"]])
+}
+
 # dplyr (FacileAnalysisResult) -------------------------------------------------
 #
 # FacileAnalysisReult have data to extract, they should be in tidy forma

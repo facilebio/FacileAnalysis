@@ -18,6 +18,7 @@ Imports:
     edgeR,
     FacileData,
     FacileViz,
+    glue,
     limma,
     matrixStats,
     multiGSEA,

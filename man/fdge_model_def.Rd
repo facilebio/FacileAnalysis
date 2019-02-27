@@ -13,7 +13,7 @@ fdge_model_def(x, covariate, numer = NULL, denom = NULL,
 
 \method{fdge_model_def}{data.frame}(x, covariate, numer = NULL,
   denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
-  ...)
+  ..., .fds = NULL)
 
 \method{fdge_model_def}{tbl}(x, covariate, numer = NULL, denom = NULL,
   fixed = NULL, on_missing = c("warning", "error"), ...)
@@ -47,6 +47,7 @@ a list with:
 \item \code{$contrast}: the contrast vector that defines the comparison asked for
 \item \code{$messages}: A character vector of messages generated
 \item \code{$warnings}: A character vector of warnings generated
+\item \code{$errors}: A character vector of errors generated
 }
 }
 \description{
@@ -54,7 +55,7 @@ This simplifies the design and contrast building process by allowing for
 simple model definitions that are, essentially, functions of a single
 covariate. More elaborate models can be analysed, but the user is left to
 define the design, coef / contrast to test manually and pass those into
-\code{\link[=dge]{dge()}}.
+\code{\link[=fdge]{fdge()}}.
 }
 \details{
 Note: actually a (likely) small modification of this can have it support the
@@ -80,16 +81,39 @@ that contains a superset of the covariates used in the design and contrast
 construction.
 }
 
+\section{facile_frame}{
+
+When we define a model off of a facile_frame, we expect this to look like
+a wide covariate table. This defines the samples we will build a model on
+in its (datset, sample_id) columns, as well as any covaraites defined on
+these samples.
+
+If there are covariates used in the \code{covariate} or \code{fixed} parameters that
+are not found in \code{colnames(x)}, we will attempt to retrieve them from the
+FacileDataStore \code{fds(x)}. If they cannot be found, this function will raise
+an error.
+}
+
 \examples{
 fds <- FacileData::exampleFacileDataSet()
 
 # Look for tumor vs normal differences, controling for stage and sex
 model_info <- fds \%>\%
   filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-                 fixed = c("sex"))
+  fdge_model_def(covariate = "sample_type",
+                 numer = "tumor",
+                 denom = "normal",
+                 fixed = "sex")
 m2 <- fds \%>\%
   filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-            fixed = c("sex", "stage"))
+  fdge_model_def(covariate = "sample_type",
+                 numer = "tumor",
+                 denom = "normal",
+                 fixed = c("sex", "stage"))
+
+# stageIV vs stageII & stageIII
+m3 <- fds \%>\%
+  filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
+  fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
+                 fixed = "sex")
 }
