@@ -2,42 +2,76 @@ context("Differential Gene Expression and GSEA")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
-test_that("Simple treatment vs control analysis runs", {
+test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "sample_type",
                    numer = "tumor",
                    denom = "normal")
 
-  dge_test <- fdge(mdef, method = "qlf", gsea = NULL)
+  # Test edgeR quasilikelihood
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
+  qlf_dge <- qlf_test$dge
 
+  y <- fdge_biocbox(mdef, assay_name = "rnaseq", method = "qlf")
+  design <- model.matrix(~ sample_type, y$samples)
+  y <- edgeR::estimateDisp(y, design, robust = TRUE)
+  qfit <- edgeR::glmQLFit(y, y$design, robust = TRUE)
+  qres <- edgeR::glmQLFTest(qfit, coef = 2)
+  qres <- edgeR::topTags(qres, n = Inf)
+  qres <- edgeR::as.data.frame.TopTags(qres)
+  qres <- qres[qlf_test$dge$feature_id,]
+  expect_equal(qlf_dge$pval, qres$PValue)
+  expect_equal(qlf_dge$padj, qres$FDR)
+  expect_equal(qlf_dge$logFC, qres$logFC)
+
+  # Test voom
+  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
+  vm_dge <- vm_test$dge
+
+  vm <- limma::voom(y, y$design)
+  vres <- limma::lmFit(vm, vm$design) %>%
+    limma::eBayes() %>%
+    limma::topTable(coef = 2, Inf)
+  vres <- vres[vm_dge$feature_id,]
+  expect_equal(vm_dge$pval, vres$P.Value)
+  expect_equal(vm_dge$padj, vres$adj.P.Val)
+  expect_equal(vm_dge$logFC, vres$logFC)
 })
 
-test_that("Correct bioc container built from model def and method spec", {
+test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal")
+    fdge_model_def(covariate = "stage", fixed = "sex")
 
-  # DGEList for quasi-likelihood teseting
-  y <- bioc_container(mdef, "rnaseq", method = "qlf")
-  expect_class(y, "DGEList")
-  # expect dispersions estimated
-  expect_number(y$common.dispersion)
-  expect_numeric(y$trended.dispersion, len = nrow(y))
-  expect_numeric(y$tagwise.dispersion, len = nrow(y))
+  # Test edgeR quasilikelihood
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
+  qlf_dge <- qlf_test$dge
 
-  # EList with $weights matrix for voom
-  vm <- bioc_container(mdef, "rnaseq", method = "voom")
-  expect_class(vm, "EList")
-  expect_matrix(vm$weights, nrows = nrow(vm), ncols = ncol(vm))
-  expect_equal(y$design, vm$design)
+  y <- fdge_biocbox(mdef, assay_name = "rnaseq", method = "qlf")
+  design <- model.matrix(~ stage + sex, y$samples)
+  coefs <- grep("stage", colnames(design))
 
-  # EList without weights for limma-trend analysis
-  e <- bioc_container(mdef, "rnaseq", method = "trended")
-  expect_class(e, "EList")
-  expect_null(e$weights)
-  expect_matrix(e$E, nrows = nrow(e), ncols = ncol(e))
-  expect_equal(e$E, vm$E)
+  y <- edgeR::estimateDisp(y, design, robust = TRUE)
+  qfit <- edgeR::glmQLFit(y, y$design, robust = TRUE)
+  qres <- edgeR::glmQLFTest(qfit, coef = coefs)
+  qres <- edgeR::topTags(qres, n = Inf)
+  qres <- edgeR::as.data.frame.TopTags(qres)
+  qres <- qres[qlf_test$dge$feature_id,]
+  expect_equal(qlf_dge$pval, qres$PValue)
+  expect_equal(qlf_dge$padj, qres$FDR)
+  expect_equal(qlf_dge$F, qres$F)
+
+  # Test voom
+  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
+  vm_dge <- vm_test$dge
+
+  vm <- limma::voom(y, y$design)
+  vres <- limma::lmFit(vm, vm$design) %>%
+    limma::eBayes() %>%
+    limma::topTable(coef = coefs, Inf)
+  vres <- vres[vm_dge$feature_id,]
+  expect_equal(vm_dge$pval, vres$P.Value)
+  expect_equal(vm_dge$padj, vres$adj.P.Val)
+  expect_equal(vm_dge$F, vres$F)
 })

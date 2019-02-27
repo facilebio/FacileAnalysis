@@ -1,6 +1,7 @@
 #' Peforms a differential expression analysis and GSEA.
 #'
 #' @export
+#' @importFrom multiGSEA calculateIndividualLogFC
 #'
 #' @param x a data source
 #' @param numer character vector defining the covariate/groups that
@@ -37,10 +38,15 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   warnings <- character()
   errors <- character()
 
+  if (!xor(is.null(coef), is.null(contrast))) {
+    msg <- "Only either coef or conrtrast can be non-NULL"
+    errors <- c(errors, msg)
+  }
+
   .fds <- assert_class(x$fds, "FacileDataStore")
 
   if (is.null(assay_name)) {
-    assay_name <- default_assay(x)
+    assay_name <- default_assay(.fds)
   }
 
   ainfo <- try(assay_info(.fds, assay_name), silent = TRUE)
@@ -60,102 +66,41 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   }
 
   if (length(errors) == 0L) {
-    y <- bioc_container(x, assay_name, method, dge_methods, filter, ...)
-    messages <- c(messages, attr(y.all, "messages"))
-    warnings <- c(warnings, attr(y.all, "warnings"))
-    errors <- c(errors, attr(y.all, "errors"))
+    y <- fdge_biocbox(x, assay_name, method, dge_methods, filter, ...)
+    messages <- c(messages, attr(y, "messages"))
+    warnings <- c(warnings, attr(y, "warnings"))
+    errors <- c(errors, attr(y, "errors"))
   } else {
+    y <- NULL
     gsea <- NULL
     dge <- NULL
   }
 
+  method <- y$dge_method
+  method_info <- filter(dge_methods, dge_method == method)
+
+  testme <- if (is.null(coef)) contrast else coef
+  dge <- calculateIndividualLogFC(y, y$design, contrast = testme)
+  gsea <- NULL
+
   out <- list(
     # Standard FacileAnalysisResult things
     fds = .fds,
-    y = y,
+    biocbox = y,
+    dge = dge,
+    gsea = gsea,
     messages = messages,
     warnings = warnings,
     errors = errors)
 
+  clazz <- switch(class(x)[1L],
+                  FacileTtestDGEModelDefinition = "FacileTtestResult",
+                  FacileAnovaModelDefinition = "FacileAnovaResult",
+                  NULL)
   class(out) <- c(clazz, "FacileDGEResult", "FacileAnalysisResult")
   out
 }
 
-#' Utility function that returns the bioc expression container for the samples
-#' enumerated in `sample_info` with the covariates defined there.
-#'
-#' TODO: the bioc_container function need to adaptively build the right
-#' container given the assay_name and method combinations
-#'
-#' @noRd
-#' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
-#' @importFrom limma voom
-#' @param sample_info a `facile_frame` that enumerates the samples to fetch
-#'   data for, as well as the covariates used in downstream analysis
-#' @param assay_name the name of the assay to pull data for
-#' @param method the name of the dge method that will be used. This will dictate
-#'   the post-processing of the data
-bioc_container <- function(mdef, assay_name, method, dge_methods = NULL,
-                           filter = NULL, ...) {
-  assert_class(mdef, "FacileDGEModelDefinition")
-  si <- assert_class(mdef$covariates, "facile_frame")
-  .fds <- assert_class(fds(mdef), "FacileDataStore")
-
-  messages <- character()
-  warnings <- character()
-  errors <- character()
-
-  ainfo <- assay_info(.fds, assay_name)
-  if (!ainfo$assay_type %in% c("rnaseq", "umi", "tpm")) {
-    # TODO: We can implement this for microarrays very easily
-    stop("DGE analysis not yet implemented for bulk-rnaseq-like data")
-  }
-
-  if (is.null(dge_methods)) {
-    dge_methods <- fdge_methods(ainfo$assay_type)
-  }
-
-  if (!method %in% dge_methods$dge_method) {
-    default_method <- dge_methods$dge_method[1L]
-    msg <- glue("Requested dge_method `{method}` not found, using ",
-                "`{default_method}` instead")
-    warnings <- c(warnings, msg)
-    method <- default_method
-  }
-
-  y.all <- as.DGEList(si, assay_name = assay_name, covariates = si)
-  y.all <- calcNormFactors(y.all)
-  y.all$design <- mdef$design[colnames(y.all),]
-
-  if (is.null(filter)) {
-    filter <- filterByExpr(y.all, y.all$design, ...)
-  }
-  assert_logical(filter, len = nrow(y.all))
-  fraction_kept <- mean(filter)
-  if (fraction_kept < 0.50 * nrow(y.all)) {
-    msg <- glue("Only {format(fraction_kept * 100, digits = 4)}% ",
-                "({sum(filter)}) of features are retained ",
-                "after filtering.")
-    warnings <- c(warnings, msg)
-  }
-
-  out <- y.all[filter,,keep.lib.sizes = FALSE]
-  out <- calcNormFactors(out)
-
-  if (method %in% c("voom", "trended")) {
-    out <- voom(out, out$design)
-    if (method == "trended") {
-      out$weights <- NULL
-    }
-  } else if (method == "qlf") {
-    out <- estimateDisp(out, out$design, rovbust = TRUE)
-  }
-
-  attr(out, "messages") <- messages
-  attr(out, "warnings") <- warnings
-  attr(out, "errors") <- errors
-  out
-}
 
 tidy.FacileDGEResult <- function(x, result = "dge") {
 
@@ -206,14 +151,19 @@ fdge.EList <- function(x, design = NULL, coef = NULL, contrast = NULL,
 
 .dge_methods <- c("voom", "qlf", "trended", "limma")
 
-#' A table of assay_type to valid dge methods
+#' A table of assay_type,dge_method combination parameters
+#'
+#' This table is used to match the assay_type,dge_method combination with
+#' the appropriate bioc container class `bioc_class`, and default edgeR/limma
+#' model fitting params.
+#'
 #' @noRd
 fdge_methods <- function(assay_type = NULL) {
   # assay_type values : rnaseq, umi, affymrna, affymirna, log2
 
   # This is a table of assay_type : dge_method possibilites. The first row
   # for each assay_type is the default analysis method
-  info <- tribble(
+  assay_methods <- tribble(
     ~assay_type, ~dge_method, ~bioc_class,
     "rnaseq",    "voom",      "DGEList",
     "rnaseq",    "qlf",       "DGEList",
@@ -225,6 +175,15 @@ fdge_methods <- function(assay_type = NULL) {
     "affymrna",  "limma",     "EList",
     "affymirna", "limma",     "EList",
     "log2",      "limma",     "EList")
+
+  method_params <- tribble(
+    ~dge_method,  ~robust_fit,  ~robust_ebayes,  ~trend_ebayes,
+    "voom",       FALSE,        FALSE,           FALSE,
+    "qlf",        TRUE,         FALSE,           FALSE,
+    "trended",    FALSE,        FALSE,           TRUE,
+    "limma",      FALSE,        FALSE,           FALSE)
+
+  info <- left_join(assay_methods, method_params, by = "dge_method")
 
   if (!is.null(assay_type)) {
     assert_choice(assay_type, info[["assay_type"]])

@@ -109,7 +109,11 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     xx <- xx[!incomplete,]
   }
 
-  dformula <- paste("~ 0 +", covariate)
+  dformula <- paste(
+    "~",
+    if (test_type == "anova") "" else "0 +",
+    covariate)
+
   if (!is.null(fixed)) {
     dformula <- paste(dformula, "+", paste(fixed, collapse = " + "))
   }

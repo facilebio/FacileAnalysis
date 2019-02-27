@@ -17,7 +17,8 @@ test_that("fdge_model_def supports ANOVA specification", {
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "stage", fixed = "sex")
   expect_is(mdef, "FacileAnovaModelDefinition")
-  expect_equal(colnames(mdef$design)[mdef$coef], c("II", "III", "IV"))
+  expect_equal(colnames(mdef$design)[1], "(Intercept)")
+  expect_equal(mdef$coef, match(c("II", "III", "IV"), colnames(mdef$design)))
 })
 
 test_that("fdge_model_def removes samples with NA in covariates", {
