@@ -51,7 +51,7 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   rv <- matrixStats::rowVars(x)
   take <- head(order(rv, decreasing = TRUE), ntop)
 
-  xx <- x[take,]
+  xx <- x[take,,drop = FALSE]
   pca <- prcomp(t(xx))
   percentVar <- pca$sdev^2 / sum(pca$sdev^2)
   names(percentVar) <- paste0("PC", seq(percentVar))
@@ -79,19 +79,27 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 
   # Identify the percernt contribution each feature has to the PCs. It's running
   # a decomposition twice, but ...
-  ewm <- eigenWeightedMean(x[take,,drop=FALSE], scale = FALSE)
-  result <- list(tidy = dat, percent_var = percentVar,
-                 taken = take, factor_contrib = ewm$factor.contrib)
+  ewm <- eigenWeightedMean(xx, scale = FALSE)
 
   # Calculate correlation of each gene to PC1 -> PC4
   pc_cor <- sapply(paste0("PC", head(pcs, 4)), function(pc) {
     cor(t(xx), dat[[pc]])
   })
-  pc_cor <- cbind(
-    data.frame(row_name = rownames(xx), row_idx = take,
-               stringsAsFactors = FALSE),
-    pc_cor)
-  result$pc_cor <- pc_cor
+
+  rnames <- rownames(xx)
+  if (is.null(rnames)) rnames <- as.character(seq(nrow(xx)))
+
+  pc_cor <- bind_cols(
+    tibble(row_name = rnames, row_idx = take),
+    as.data.frame(pc_cor))
+
+  result <- list(
+    tidy = dat,
+    factor_contrib = rename(ewm$factor.contrib, feature_id = "featureId"),
+    percent_var = percentVar,
+    pc_cor = pc_cor,
+    taken = take)
+
   class(result) <- c("FacilePCAResult", "FacileReducedDimResult", "FacileAnalysisResult")
   result
 }
@@ -121,12 +129,12 @@ format.FacilePCAResult <- function(x, ...) {
 #' @method vizualize FacilePCAResult
 #'
 #' @export
-vizualize.FacilePCAResult <- function(x, pcs = 1:3,
-                                      color_aes = NULL, color_map = NULL,
-                                      shape_aes = NULL, shape_map = NULL,
-                                      size_aes = NULL, size_map = NULL,
-                                      hover_aes = NULL, hover_map = NULL,
-                                      hover = NULL, ...) {
+vizualize.FacilePCAResult <- function(x, pcs = 1:3, ...) {
+                                      # color_aes = NULL, color_map = NULL,
+                                      # shape_aes = NULL, shape_map = NULL,
+                                      # size_aes = NULL, size_map = NULL,
+                                      # hover_aes = NULL, hover_map = NULL,
+                                      # hover = NULL, ...) {
   xx <- tidy(x)
   assert_integerish(pcs, lower = 1L)
   assert_int(length(pcs), lower = 1L, upper = 3L)
@@ -145,12 +153,14 @@ vizualize.FacilePCAResult <- function(x, pcs = 1:3,
   xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
   xx <- xx[, xx.cols, drop = FALSE]
 
-  p <- fscatterplot(xx, pc.cols,
-                    color_aes = color_aes, color_map = color_map,
-                    shape_aes = shape_aes, shape_map = shape_map,
-                    size_aes = size_aes, size_map = size_map,
-                    hover_aes = hover_aes, hover_map = hover_map,
-                    hover = hover, ...)
+  # p <- fscatterplot(xx, pc.cols,
+  #                   color_aes = color_aes, color_map = color_map,
+  #                   shape_aes = shape_aes, shape_map = shape_map,
+  #                   size_aes = size_aes, size_map = size_map,
+  #                   hover_aes = hover_aes, hover_map = hover_map,
+  #                   hover = hover, ...)
+
+  p <- fscatterplot(xx, pc.cols, ...)
 
   p$facile_analysis <- x
   pcv <- x$percent_var * 100
