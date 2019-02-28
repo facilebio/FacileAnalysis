@@ -174,7 +174,6 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   out
 }
 
-
 #' @export
 #' @rdname fdge_model_def
 fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,

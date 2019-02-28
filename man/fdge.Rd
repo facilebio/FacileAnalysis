@@ -2,21 +2,21 @@
 % Please edit documentation in R/fdge.R
 \name{fdge}
 \alias{fdge}
+\alias{fdge.FacileAnovaModelDefinition}
 \alias{report.FacileTtestDGEResult}
 \title{Peforms a differential expression analysis and GSEA.}
 \usage{
-fdge(x, design = NULL, contrast = NULL, covariates = NULL,
-  filter = NULL, method = .dge_methods, gsea = "camera",
-  gdb = NULL, ...)
+fdge(x, ...)
+
+\method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
+  method = NULL, gsea = NULL, filter = "default", treat_lfc = NULL,
+  ...)
 
 \method{report}{FacileTtestDGEResult}(x, result = "dge",
   max_padj = 0.01, min_abs_logFC = 1, event_source = "A", ...)
 }
 \arguments{
 \item{x}{a data source}
-
-\item{covariates}{a data.frame of covariates (columns) for each
-sample (rows) in \code{x}}
 
 \item{numer}{character vector defining the covariate/groups that
 make up the numerator}
@@ -26,6 +26,9 @@ make up the denominator}
 
 \item{fixed}{character vector defining the covariate/groups to
 use as fixed effects}
+
+\item{covariates}{a data.frame of covariates (columns) for each
+sample (rows) in \code{x}}
 }
 \description{
 Peforms a differential expression analysis and GSEA.

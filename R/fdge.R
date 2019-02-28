@@ -20,7 +20,7 @@ fdge <- function(x, ...) {
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                             gsea = NULL, filter = "default",
-                                            ...) {
+                                            treat_lfc = NULL, ...) {
   res <- NextMethod(coef = x$coef)
   res
 }
@@ -28,14 +28,15 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
 #' @export
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                method = NULL, gsea = "cameraPR",
-                                               filter = "default", ...) {
+                                               filter = "default",
+                                               treat_lfc = NULL, ...) {
   res <- NextMethod(contrast = x$contrast)
   res
 }
 
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                           gsea = NULL, filter = "default",
-                                          ...) {
+                                          treat_lfc = NULL, ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -80,7 +81,21 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
     # dge <- calculateIndividualLogFC(y, y$design, contrast = testme)
     gdb <- GeneSetDb(list(dummy = list(dummy = head(rownames(y), 5))))
-    mg <- multiGSEA(gdb, y, y$design, contrast = testme, methods = "logFC")
+
+    if (test_number(treat_lfc)) {
+      treat_lfc <- abs(treat_lfc)
+      use.treat <- TRUE
+    } else {
+      if (!is.null(treat_lfc)) {
+        warnings <- c(
+          warnings,
+          "Illegal parameter passed to `treat_lfc`. It is being ignored")
+      }
+      treat_lfc <- 1
+      use.treat <- FALSE
+    }
+    mg <- multiGSEA(gdb, y, y$design, contrast = testme, methods = "logFC",
+                    use.treat = use.treat, feature.min.logFC = treat_lfc)
   } else {
     mg <- NULL
   }
@@ -90,6 +105,7 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     assay_name = assay_name,
     method = method,
     model_def = x,
+    treat_lfc = treat_lfc,
     # Standard FacileAnalysisResult things
     fds = .fds,
     messages = messages,
@@ -107,36 +123,34 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 #' @export
 biocbox.FacileDGEResult <- function(x, ...) {
   res <- biocbox(x[["model_def"]], x[["assay_name"]], x[["method"]],
-                 filter = dge(x)$feature_id, ...)
+                 filter = dge_stats(x)$feature_id, ...)
   res
 }
 
 #' @noRd
 #' @export
-dge <- function(x, ...) {
+dge_stats <- function(x, ...) {
   assert_class(x, "FacileDGEResult")
   multiGSEA::logFC(x[["result"]])
 }
 
-#' @noRd
-#' @export
-tidy.FacileDGEResult <- function(x, result = "dge") {
-  # result <- match.arg(result, c("dge", multiGSEA::resultNames(result$gsea)))
-  result <- match.arg(result, c("dge", multiGSEA::resultNames(x$gsea)))
-  if (result == "dge") {
-    out <- x[["dge"]]
-  } else {
-    # out <- multiGSEA::result(x$gsea, result)
-  }
-  out
-}
+# Interactivity and Vizualization ==============================================
 
 #' @noRd
 #' @export
-vizualize.FacileTtestDGEResult <- function(x, type = c("volcano", "feature"),
+vizualize.FacileTtestDGEResult <- function(x, result = c("features", "gsea"),
+                                           with_boxplot = TRUE, topn = 100,
                                            max_padj = 0.01, min_abs_logFC = 1,
                                            feature = NULL, event_source = "A",
                                            ...) {
+  if (FALSE) {
+    result <- "features"
+    with_boxplot <- TRUE
+    topn <- 100
+    max_padj <- 0.01
+    min_abs_logFC <- 1
+  }
+  result <- match.arg(result)
   type <- match.arg(type)
 
 }
@@ -169,7 +183,13 @@ report.FacileTtestDGEResult <- function(x, result = "dge",
 #' the appropriate bioc container class `bioc_class`, and default edgeR/limma
 #' model fitting params.
 #'
-#' @noRd
+#' @export
+#' @param assay_type An optional string specifying the valid dge methods for
+#'   a given assay type.
+#' @return A tibble of assay_type -> method and parameter associtiations. If
+#'   `assay_type`is not `NULL`, this will be filtered to the associations
+#'   valid only for that `assay_type`. If none are found, this will be a
+#'   0-row tibble.
 fdge_methods <- function(assay_type = NULL) {
   # assay_type values : rnaseq, umi, affymrna, affymirna, log2
 
@@ -203,4 +223,19 @@ fdge_methods <- function(assay_type = NULL) {
   }
 
   info
+}
+
+# Other Helpers ================================================================
+
+#' @noRd
+#' @export
+tidy.FacileDGEResult <- function(x, result = "dge") {
+  # result <- match.arg(result, c("dge", multiGSEA::resultNames(result$gsea)))
+  result <- match.arg(result, c("dge", multiGSEA::resultNames(x$gsea)))
+  if (result == "dge") {
+    out <- x[["dge"]]
+  } else {
+    # out <- multiGSEA::result(x$gsea, result)
+  }
+  out
 }
