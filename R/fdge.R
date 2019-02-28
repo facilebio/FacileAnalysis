@@ -1,7 +1,7 @@
 #' Peforms a differential expression analysis and GSEA.
 #'
 #' @export
-#' @importFrom multiGSEA calculateIndividualLogFC
+#' @importFrom multiGSEA GeneSetDb calculateIndividualLogFC logFC multiGSEA
 #'
 #' @param x a data source
 #' @param numer character vector defining the covariate/groups that
@@ -12,36 +12,38 @@
 #'   use as fixed effects
 #' @param covariates a data.frame of covariates (columns) for each
 #'   sample (rows) in `x`
-fdge <- function(x, design = NULL, contrast = NULL, covariates = NULL,
-                filter = NULL, method = .dge_methods,
-                gsea = "camera", gdb = NULL, ...) {
+fdge <- function(x, ...) {
   UseMethod("fdge", x)
 }
 
 #' @export
+#' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                            gsea = NULL, ...) {
+                                            gsea = NULL, filter = "default",
+                                            ...) {
   res <- NextMethod(coef = x$coef)
+  res
 }
 
 #' @export
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                method = NULL, gsea = "cameraPR",
-                                               ...) {
+                                               filter = "default", ...) {
   res <- NextMethod(contrast = x$contrast)
+  res
 }
 
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                          gsea = NULL, coef = NULL,
-                                          contrast = NULL, filter = NULL, ...) {
+                                          gsea = NULL, filter = "default",
+                                          ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
 
-  if (!xor(is.null(coef), is.null(contrast))) {
-    msg <- "Only either coef or conrtrast can be non-NULL"
-    errors <- c(errors, msg)
-  }
+  clazz <- switch(class(x)[1L],
+                  FacileTtestDGEModelDefinition = "FacileTtestDGEResult",
+                  FacileAnovaModelDefinition = "FacileAnovaDGEResult",
+                  NULL)
 
   .fds <- assert_class(x$fds, "FacileDataStore")
 
@@ -66,84 +68,94 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   }
 
   if (length(errors) == 0L) {
-    y <- fdge_biocbox(x, assay_name, method, dge_methods, filter, ...)
+    y <- biocbox(x, assay_name, method, dge_methods, filter, ...)
     messages <- c(messages, attr(y, "messages"))
     warnings <- c(warnings, attr(y, "warnings"))
     errors <- c(errors, attr(y, "errors"))
+
+    method <- y$dge_method
+
+    # Do DGE and GSEA
+    testme <- if (is.null(x[["coef"]])) x[["contrast"]] else x[["coef"]]
+
+    # dge <- calculateIndividualLogFC(y, y$design, contrast = testme)
+    gdb <- GeneSetDb(list(dummy = list(dummy = head(rownames(y), 5))))
+    mg <- multiGSEA(gdb, y, y$design, contrast = testme, methods = "logFC")
   } else {
-    y <- NULL
-    gsea <- NULL
-    dge <- NULL
+    mg <- NULL
   }
 
-  method <- y$dge_method
-  method_info <- filter(dge_methods, dge_method == method)
-
-  testme <- if (is.null(coef)) contrast else coef
-  dge <- calculateIndividualLogFC(y, y$design, contrast = testme)
-  gsea <- NULL
-
   out <- list(
+    result = mg,
+    assay_name = assay_name,
+    method = method,
+    model_def = x,
     # Standard FacileAnalysisResult things
     fds = .fds,
-    biocbox = y,
-    dge = dge,
-    gsea = gsea,
     messages = messages,
     warnings = warnings,
     errors = errors)
 
-  clazz <- switch(class(x)[1L],
-                  FacileTtestDGEModelDefinition = "FacileTtestResult",
-                  FacileAnovaModelDefinition = "FacileAnovaResult",
-                  NULL)
   class(out) <- c(clazz, "FacileDGEResult", "FacileAnalysisResult")
   out
 }
 
+#' @section FacileDGEResult:
+#' Given a FacileDGEResult, we can re-materialize the Bioconductor assay
+#' container used within the differential testing pipeline used from [fdge()].
+#'
+#' @export
+biocbox.FacileDGEResult <- function(x, ...) {
+  res <- biocbox(x[["model_def"]], x[["assay_name"]], x[["method"]],
+                 filter = dge(x)$feature_id, ...)
+  res
+}
 
+#' @noRd
+#' @export
+dge <- function(x, ...) {
+  assert_class(x, "FacileDGEResult")
+  multiGSEA::logFC(x[["result"]])
+}
+
+#' @noRd
+#' @export
 tidy.FacileDGEResult <- function(x, result = "dge") {
+  # result <- match.arg(result, c("dge", multiGSEA::resultNames(result$gsea)))
+  result <- match.arg(result, c("dge", multiGSEA::resultNames(x$gsea)))
+  if (result == "dge") {
+    out <- x[["dge"]]
+  } else {
+    # out <- multiGSEA::result(x$gsea, result)
+  }
+  out
+}
+
+#' @noRd
+#' @export
+vizualize.FacileTtestDGEResult <- function(x, type = c("volcano", "feature"),
+                                           max_padj = 0.01, min_abs_logFC = 1,
+                                           feature = NULL, event_source = "A",
+                                           ...) {
+  type <- match.arg(type)
 
 }
 
-fdge.matrix <- function(x, design = NULL, coef = NULL, contrast = NULL,
-                        covariates = NULL, filter = rep(TRUE, nrow(x)),
-                        method = .dge_methods,
-                        gsea = "camera", gdb = NULL, ...) {
-  stopifnot(
-    is.data.frame(covariates),
-    nrow(covariates) == ncol(x))
-  stopifnot(
-    all(numer %in% colnames(covariates)),
-    all(denom %in% colnames(covariates)),
-  )
-}
-
-fdge.DGEGLM <- function(x, design = NULL, coef = NULL, contrast = NULL,
-                        covariates = NULL, filter = rep(TRUE, nrow(x)),
-                        method = .dge_methods,
-                        gsea = "camera", gdb = NULL, ...) {
-
-}
-
-fdge.DGEList <- function(x, design = NULL, coef = NULL, contrast = NULL,
-                         covariates = NULL, filter = rep(TRUE, nrow(x)),
-                         method = .dge_methods,
-                         gsea = "camera", gdb = NULL, ...) {
-
-}
-
-fdge.MArrayLM <- function(x, design = NULL, coef = NULL, contrast = NULL,
-                          covariates = NULL, filter = rep(TRUE, nrow(x)),
-                          method = .dge_methods,
-                          gsea = "camera", gdb = NULL, ...) {
-
-}
-
-fdge.EList <- function(x, design = NULL, coef = NULL, contrast = NULL,
-                       covariates = NULL, filter = rep(TRUE, nrow(x)),
-                       method = .dge_methods,
-                       gsea = "camera", gdb = NULL, ...) {
+#' @section Interacting with results:
+#'
+#' The `report` function will create an htmlwidget which can be explored by
+#' the analyst or dropped into an Rmarkdown report.
+#'
+#' `report(result, "dge", max_padj = 0.05, min_abs_logFC = 1)` will create a
+#' side-by-side volcano and datatable for differential expression results.
+#'
+#' @export
+#' @rdname fdge
+report.FacileTtestDGEResult <- function(x, result = "dge",
+                                        max_padj = 0.01, min_abs_logFC = 1,
+                                        event_source = "A", ...) {
+  # result <- match.arg(result, c("dge", multiGSEA::resultNames(result$gsea)))
+  result <- match.arg(result, "dge")
 
 }
 

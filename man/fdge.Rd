@@ -2,11 +2,15 @@
 % Please edit documentation in R/fdge.R
 \name{fdge}
 \alias{fdge}
+\alias{report.FacileTtestDGEResult}
 \title{Peforms a differential expression analysis and GSEA.}
 \usage{
 fdge(x, design = NULL, contrast = NULL, covariates = NULL,
   filter = NULL, method = .dge_methods, gsea = "camera",
   gdb = NULL, ...)
+
+\method{report}{FacileTtestDGEResult}(x, result = "dge",
+  max_padj = 0.01, min_abs_logFC = 1, event_source = "A", ...)
 }
 \arguments{
 \item{x}{a data source}
@@ -26,3 +30,13 @@ use as fixed effects}
 \description{
 Peforms a differential expression analysis and GSEA.
 }
+\section{Interacting with results}{
+
+
+The \code{report} function will create an htmlwidget which can be explored by
+the analyst or dropped into an Rmarkdown report.
+
+\code{report(result, "dge", max_padj = 0.05, min_abs_logFC = 1)} will create a
+side-by-side volcano and datatable for differential expression results.
+}
+

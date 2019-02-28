@@ -1,62 +1,74 @@
+# Vizualization and Rmarkdon reporting =========================================
+
+#' Methods to interactively explore and report FacileAnalysisResults.
+#'
+#' The `vizualize`, `shine`, and `report` triumverate provide the analyst with
+#' the tools required to interact and explore the results of a FacileAnalysis.
+#'
+#' @section Vizualize:
+#' The `vizualize` functions generate an analysis-specific interactive
+#' htmlwidget for the analysist to explore.
+#'
+#' @export
+#' @rdname FacileAnalysisResultViz
+#'
+#' @param x A `FacileAnalysisResult` object
+#' @param ... passed down to the `x`-specific `vizualize.*`, `report.*`, and
+#'   `shine.*` functions.
+vizualize <- function(x, ...) {
+  UseMethod("vizualize", x)
+}
+
+#' @section Shine:
+#' The `shine` functions generate shiny gadgets that provide a more interactive
+#' view over a `FacileAnalysisResult`. This empowers the analyst to provide more
+#' context around the results, likely by leveraging all of the data available
+#' within the FacileDataStore.
+#'
+#' The respective `shine` functions must return a `FacileAnalysisShine` object
+#' invisibly to the caller. These should be able to be past into an overladed
+#' `report` function, the result of which can be embedded into an Rmarkdown
+#' report. In this way the analyst can embed a feature-reduced version of what
+#' was observed in the gadget into an Rmarkdown report.
+#'
+#' I'm not sure how exactly we can do this, but perhaps this will require some
+#' code generation that the analyst can copy and paste paste into the Rmarkdown
+#' document. This might simply be a parameterized version of the `report`
+#' function call.
+#'
+#' @export
+#' @rdname FacileAnalysisResultViz
+#' @aliases shine
+shine <- function(x, ...) {
+  UseMethod("shine", x)
+}
+
+#' @section Report:
+#' The `report` function produces an object that can be embedded into an
+#' Rmarkdown document. The implementation of these functions will likely
+#' result in a parameterized call to the respective `vizualize` function.
+#'
+#' Two `report` functions should be created per FacileAnalysis. One that accepts
+#' the `FacileAnalysisResult` object itself, and another that accepts the
+#' analysis-specific `FacileAnalysisShine` object, which should parameterize
+#' the final `visualize` call so that it can be embedded seamlessly into
+#' an Rmarkdown report for "offline" viewing.
+#'
+#' @export
+#' @rdname FacileAnalysisResultViz
+#' @aliases report
+report <- function(x, ...) {
+  UseMethod("report", x)
+}
+
+
 # FacileAnalysisResult objects =================================================
 
 #' @export
-#' @rdname getsetdb
+#' @noRd
 fds.FacileAnalysisResult <- function(x) {
   return(x[["fds"]])
 }
-
-# dplyr (FacileAnalysisResult) -------------------------------------------------
-#
-# FacileAnalysisReult have data to extract, they should be in tidy forma
-# is a data.frame, therefore the results should be chainable to a dplyr function
-
-# According to the documentation (http://dplyr.tidyverse.org/) the dplyr
-# API is defined by these functions, so let's see if we can do something
-# useful with them
-#
-# * mutate(): adds new variables that are functions of existing variables
-# * select(): picks variables based on their names.
-# * filter(): picks cases based on their values.
-# * summarise(): reduces multiple values down to a single summary.
-# * arrange(): changes the ordering of the rows.
-
-#' ImmersiveAnalysis result objects can be maniuplated with dplyr verbs
-#'
-#' @rdname dplyr-api
-#' @export
-#' @method mutate FacileAnalysisResult
-mutate.FacileAnalysisResult <- function(.data, ...) mutate(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method select FacileAnalysisResult
-select.FacileAnalysisResult <- function(.data, ...) select(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method filter FacileAnalysisResult
-filter.FacileAnalysisResult <- function(.data, ...) filter(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method summarise FacileAnalysisResult
-summarise.FacileAnalysisResult <- function(.data, ...) summarise(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method summarize FacileAnalysisResult
-summarize.FacileAnalysisResult <- function(.data, ...) summarise(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method arrange FacileAnalysisResult
-arrange.FacileAnalysisResult <- function(.data, ...) arrange(tidy(.data), ...)
-
-#' @rdname dplyr-api
-#' @export
-#' @method group_by FacileAnalysisResult
-group_by.FacileAnalysisResult <- function(.data, ...) group_by(tidy(.data), ...)
 
 # broom (FacileAnalysisResult) -------------------------------------------------
 
@@ -67,5 +79,5 @@ group_by.FacileAnalysisResult <- function(.data, ...) group_by(tidy(.data), ...)
 #'
 #' @param x an immersive result object (`iresult`)
 #' @return a tidy data.frame of the results from an immersive analysis
-tidy.FacileAnalysisResult <- function(x, ...) x$tidy
+tidy.FacileAnalysisResult <- function(x, ...) x[["tidy"]]
 

@@ -1,5 +1,16 @@
 #' Materializes the bioc assay container to use to run a dge test.
 #'
+#' Bioconductor assay containers need to be materialized for certain analyses,
+#' like differential gene expression. They also may need to be materialized
+#' from a result of something generated within some FacileAnalysis.
+#'
+#' @export
+#' @param x The FacileAnalysisResult
+biocbox <- function(x, ...) {
+  UseMethod("biocbox", x)
+}
+
+#' @section Linear Model Definitions:
 #' This function accepts a model defined using using [fdge_model_def()] and
 #' creates the appropriate Bioconductor assay container to test the model
 #' given the `assay_name` and dge `method` specified by the user.
@@ -11,9 +22,11 @@
 #' * `umi`: data from bulk rnaseq, UMI data, like quantseq
 #' * `tpm`: TPM values. These will be `log2(TPM + prior_count)` transformed,
 #'          then differentially tested using the limma-trended pipeline
+#'
 #' TODO: support affymrna, affymirna, etc. assay types
 #'
 #' @export
+#' @rdname biocbox
 #'
 #' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
 #' @importFrom limma voom
@@ -22,14 +35,20 @@
 #' @param assay_name the name of the assay to pull data for
 #' @param method the name of the dge method that will be used. This will dictate
 #'   the post-processing of the data
+#' @param filter A filtering policy to remove unintereesting genes.
+#'   If `"default"` (which is the default), then [edgeR::filterByExpr()] is
+#'   used if we are materializing a `DGEList`, otherwise lowly expressed
+#'   features are removed. If `FALSE`, then no filtering is done.
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
-fdge_biocbox <- function(mdef, assay_name, method, dge_methods = NULL,
-                         filter = NULL, prior_count = 1, ...) {
-  assert_class(mdef, "FacileDGEModelDefinition")
-  si <- assert_class(mdef$covariates, "facile_frame")
-  .fds <- assert_class(fds(mdef), "FacileDataStore")
+biocbox.FacileDGEModelDefinition <- function(x, assay_name, method,
+                                             dge_methods = NULL,
+                                             filter = "default",
+                                             prior_count = 1, ...) {
+  assert_class(x, "FacileDGEModelDefinition")
+  si <- assert_class(x$covariates, "facile_frame")
+  .fds <- assert_class(fds(x), "FacileDataStore")
 
   messages <- character()
   warnings <- character()
@@ -54,22 +73,32 @@ fdge_biocbox <- function(mdef, assay_name, method, dge_methods = NULL,
   }
 
   y.all <- as.DGEList(si, assay_name = assay_name, covariates = si)
-  y.all <- calcNormFactors(y.all)
-  y.all$design <- mdef$design[colnames(y.all),]
+  # The roughly approximated norm.factors already present in a faciledatastore
+  # should be good enough for initial low-pass filtering.
+  # y.all <- calcNormFactors(y.all)
+  y.all$design <- x$design[colnames(y.all),]
 
-  if (is.null(filter)) {
-    filter <- filterByExpr(y.all, y.all$design, ...)
+  # Remove genes according to `filter` specificaiton
+  if (is.character(filter)) {
+    if (length(filter) == 1L && filter == "default") {
+      keep <- filterByExpr(y.all, y.all$design, ...)
+    } else {
+      keep <- rownames(y.all) %in% filter
+    }
+  } else {
+    keep <- rep(TRUE, nrow(y.all))
   }
-  assert_logical(filter, len = nrow(y.all))
-  fraction_kept <- mean(filter)
-  if (fraction_kept < 0.50 * nrow(y.all)) {
-    msg <- glue("Only {format(fraction_kept * 100, digits = 4)}% ",
-                "({sum(filter)}) of features are retained ",
-                "after filtering.")
+
+  keep_fraction <- mean(keep)
+  keep_n <- sum(keep)
+
+  if (keep_fraction < 0.50 * nrow(y.all)) {
+    msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
+                "({keep_n}) of features are retained after filtering.")
     warnings <- c(warnings, msg)
   }
 
-  out <- y.all[filter,,keep.lib.sizes = FALSE]
+  out <- y.all[keep,,keep.lib.sizes = FALSE]
   out <- calcNormFactors(out)
 
   if (method %in% c("voom", "trended")) {
@@ -78,12 +107,12 @@ fdge_biocbox <- function(mdef, assay_name, method, dge_methods = NULL,
       out$weights <- NULL
     }
   } else if (method == "qlf") {
-    out <- estimateDisp(out, out$design, rovbust = TRUE)
+    out <- estimateDisp(out, out$design, robust = TRUE)
   }
 
   attr(out, "messages") <- messages
   attr(out, "warnings") <- warnings
   attr(out, "errors") <- errors
   out$dge_method <- method
-  set_fds(out, .fds)
+  out
 }
