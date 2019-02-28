@@ -24,11 +24,6 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
     edgeR::topTags(n = Inf, sort.by = "none") %>%
     edgeR::as.data.frame.TopTags()
 
-  if (FALSE) {
-    plot(qlf_dge$logFC, qres$logFC, pch = 16, col = "#3f3f3f33")
-    abline(0, 1, col = "red")
-  }
-
   expect_equal(qres$feature_id, qlf_dge$feature_id)
   expect_equal(qlf_dge$pval, qres$PValue)
   expect_equal(qlf_dge$padj, qres$FDR)
@@ -48,11 +43,6 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
     limma::eBayes() %>%
     limma::topTable(coef = 2, Inf, sort.by = "none")
   expect_equal(vres$feature_id, vm_dge$feature_id)
-
-  if (FALSE) {
-    plot(vm_dge$logFC, vres$logFC, pch = 16, col = "#3f3f3f33")
-    abline(0, 1, col = "red")
-  }
 
   expect_equal(vm_dge$pval, vres$P.Value)
   expect_equal(vm_dge$padj, vres$adj.P.Val)
