@@ -1,3 +1,48 @@
+# Universal FacileAnalysisResult methods =======================================
+
+#' Retrieves the main (or alternative) result from a FacileAnalysis
+#'
+#' This should always return a tidy data frame of one sort or another.
+#'
+#' FacileAnalysisResults should should all aslo have a top-level result
+#' accessible via obj[["result"]]
+#'
+#' @export
+#' @param x A FacileAnalysisResult
+#' @param name the name of the result to retrieve. Default is `"result"`, which
+#'   should represent the top-level result for all FacileAnalysisResult objects.
+result <- function(x, name = "result", ...) {
+  UseMethod("result", x)
+}
+
+#' @export
+#' @noRd
+result.FacileAnalysisResult <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
+#' Extracts feature or sample ranks from a FacileAnalysis
+#'
+#' Among other thigns, analyses can often provide rankings over features or
+#' samples. For instance, a differential expression result may provide ranking
+#' over the genes. This generic extract ranks of one type or another.
+#'
+#' @export
+#' @param x A FacileAnalysisResult
+ranks <- function(x, ...) {
+  UseMethod("ranks", x)
+}
+
+#' FacileAnalysisResult objects should be able to fetch the FacileDataStore
+#' they were created from.
+#'
+#' @export
+#' @noRd
+fds.FacileAnalysisResult <- function(x) {
+  return(x[["fds"]])
+}
+
 # Vizualization and Rmarkdon reporting =========================================
 
 #' Methods to interactively explore and report FacileAnalysisResults.
@@ -60,24 +105,4 @@ shine <- function(x, ...) {
 report <- function(x, ...) {
   UseMethod("report", x)
 }
-
-
-# FacileAnalysisResult objects =================================================
-
-#' @export
-#' @noRd
-fds.FacileAnalysisResult <- function(x) {
-  return(x[["fds"]])
-}
-
-# broom (FacileAnalysisResult) -------------------------------------------------
-
-#' Extract a tidy data.frame from an `iresult`
-#'
-#' @export
-#' @method tidy FacileAnalysisResult
-#'
-#' @param x an immersive result object (`iresult`)
-#' @return a tidy data.frame of the results from an immersive analysis
-tidy.FacileAnalysisResult <- function(x, ...) x[["tidy"]]
 

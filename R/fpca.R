@@ -12,9 +12,22 @@
 #'
 #' @param x a data container
 #' @return an fpca result
+#' @examples
+#' # Generate a data matrix with a sister covariate table
+#' m <- matrix(rnorm(100 * 10), nrow = 100)
+#' colnames(m) <- letters[1:10]
+#' rownames(m) <- head(unique(
+#'   replicate(200, paste(sample(letters, 5), collapse = ""))),
+#'   nrow(m))
+#' pdat <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
+#' pdat <- as.data.frame(pdat)
+#' rownames(pdat) <- colnames(m)
+#'
+#' res <- fpca(m, col_covariates = pdat)
+#' vizualize(res, color_aes = "category")
 fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
-  UseMethod("fpca")
+  UseMethod("fpca", x)
 }
 
 #' @export
@@ -36,11 +49,17 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                         col_covariates = NULL, ...) {
   pcs.given <- !missing(pcs)
   assert_integerish(pcs, lower = 1L, upper = nrow(x))
-  if (is(row_covariates, "data.frame")) {
-    assert_true(nrow(x) == nrow(row_covariates))
-    assert_character(rownames(row_covariates))
-    assert_true(all(rownames(x) == rownames(row_covariates)))
+
+  if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
+  if (is.null(row_covariates)) {
+    row_covariates <- data.frame(symbol = rownames(x), row.names = rownames(x),
+                                 stringsAsFactors = FALSE)
   }
+  assert_data_frame(row_covariates)
+  assert_true(nrow(x) == nrow(row_covariates))
+  assert_character(rownames(row_covariates))
+  assert_true(all(rownames(x) == rownames(row_covariates)))
+
   if (is(col_covariates, "data.frame")) {
     assert_true(ncol(x) == nrow(col_covariates))
     assert_character(rownames(col_covariates))
@@ -77,8 +96,8 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
   }
 
-  # Identify the percernt contribution each feature has to the PCs. It's running
-  # a decomposition twice, but ...
+  # Identify the percernt contribution each feature has to the PCs.
+  # We are the same decomposition twice, but convenience wins for now.
   ewm <- eigenWeightedMean(xx, scale = FALSE)
 
   # Calculate correlation of each gene to PC1 -> PC4
@@ -94,14 +113,39 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
     as.data.frame(pc_cor))
 
   result <- list(
-    tidy = dat,
+    result = dat,
     factor_contrib = rename(ewm$factor.contrib, feature_id = "featureId"),
     percent_var = percentVar,
     pc_cor = pc_cor,
+    row_covariates = row_covariates,
     taken = take)
 
-  class(result) <- c("FacilePCAResult", "FacileReducedDimResult", "FacileAnalysisResult")
+  class(result) <- c("FacilePCAResult", "FacileReducedDimResult",
+                     "FacileAnalysisResult")
   result
+}
+
+#' Extracts the genes that contribute most to each PC
+#'
+#' @export
+#' @noRd
+#' @param report the column in x$row_covariates to use as the listing of the
+#'   feature in the table of ranks
+ranks.FacilePCAResult <- function(x, report = NULL, ...) {
+  fcontrib <- x[["factor_contrib"]]
+  rdata <- x[["row_covariates"]]
+
+  if (is.null(report)) report <- colnames(rdata)[1L]
+  assert_choice(report, colnames(rdata))
+
+  pc.cols <- colnames(fcontrib)[grepl("PC\\d+", colnames(fcontrib))]
+  out <- tibble(rank = seq(nrow(fcontrib)))
+  for (pc in pc.cols) {
+    o <- order(fcontrib[[pc]], decreasing = TRUE)
+    xref <- match(fcontrib[["feature_id"]][o], rownames(rdata))
+    out[[pc]] <- rdata[[report]][xref]
+  }
+  out
 }
 
 #' @noRd
@@ -112,71 +156,20 @@ print.FacilePCAResult <- function(x, ...) {
 }
 
 format.FacilePCAResult <- function(x, ...) {
+  n.features <- nrow(x[["factor_contrib"]])
+  pcv <- x$percent_var * 100
+  pcvs <- paste(names(pcv), sprintf("%.2f%%", pcv), sep = ": ")
+  pcvu <- paste(head(pcvs, 5), collapse = "\n  ")
+
   out <- paste(
     "===========================================================\n",
     sprintf("FacilePCAResult\n"),
     "-----------------------------------------------------------\n",
-    "  n.observations\n",
-    "  n.dimensions\n",
-    "  % variance explained PC1 ... PCN\n",
+    "Number of features used:", n.features, "\n",
+    "Number of PCs:", length(pcv), "\n",
+    "Variance explained:\n  ", pcvu, "\n",
     "===========================================================\n",
     sep = "")
   out
 }
-# fplot ========================================================================
 
-#' @noRd
-#' @method vizualize FacilePCAResult
-#'
-#' @export
-vizualize.FacilePCAResult <- function(x, pcs = 1:3, ...) {
-                                      # color_aes = NULL, color_map = NULL,
-                                      # shape_aes = NULL, shape_map = NULL,
-                                      # size_aes = NULL, size_map = NULL,
-                                      # hover_aes = NULL, hover_map = NULL,
-                                      # hover = NULL, ...) {
-  xx <- tidy(x)
-  assert_integerish(pcs, lower = 1L)
-  assert_int(length(pcs), lower = 1L, upper = 3L)
-  pcs <- unique(pcs)
-
-  pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
-  pc.cols.req <- paste0("PC", pcs)
-  pc.cols <- intersect(pc.cols.req, pc.cols.all)
-
-  if (length(pc.cols) != length(pcs)) {
-    stop("There's something awry with the pc columns you requested")
-  }
-
-  # slimdown the data.frame to only include the PCs user asked for and rest
-  # of the covariate data.
-  xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
-  xx <- xx[, xx.cols, drop = FALSE]
-
-  # p <- fscatterplot(xx, pc.cols,
-  #                   color_aes = color_aes, color_map = color_map,
-  #                   shape_aes = shape_aes, shape_map = shape_map,
-  #                   size_aes = size_aes, size_map = size_map,
-  #                   hover_aes = hover_aes, hover_map = hover_map,
-  #                   hover = hover, ...)
-
-  p <- fscatterplot(xx, pc.cols, ...)
-
-  p$facile_analysis <- x
-  pcv <- x$percent_var * 100
-
-  if (length(pcs) == 2L) {
-    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], pcv[pc.cols[1L]]))
-    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], pcv[pc.cols[2L]]))
-    p$plot <- layout(plot(p), xaxis = xaxis, yaxis = yaxis)
-  } else {
-    xaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[1L], pcv[pc.cols[1L]]))
-    yaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[3L], pcv[pc.cols[3L]]))
-    zaxis <- list(title = sprintf("%s (%.2f%%)", pc.cols[2L], pcv[pc.cols[2L]]))
-    scene <- list(xaxis = xaxis, yaxis = yaxis, zaxis = zaxis)
-    p$plot <- layout(plot(p), scene = scene)
-  }
-
-  class(p) <- c("FacilePCAViz", "FacileReducedDimViz", class(p))
-  p
-}
