@@ -131,6 +131,10 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
   sdat <- viz[["datatable"]][["data"]]
   mdef <- x[["model_def"]]
 
+  if (!is.null(caption)) {
+    caption <- tags$p(caption)
+  }
+
   if (type == "dge") {
     title <- viz[["title"]]
     details <- tagList(
