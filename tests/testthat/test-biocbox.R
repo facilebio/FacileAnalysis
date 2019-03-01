@@ -1,4 +1,4 @@
-context("Building bioconductor assay containers with biocbox")
+context("Building bioconductor assay containers with biocbox (biocbox)")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 

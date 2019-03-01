@@ -18,7 +18,7 @@
 #'  fdge_model_def(covariate = "sample_type",
 #'                 numer = "tumor",
 #'                 denom = "normal")
-#' dge <- fdge(mdef, method = "voom", gsea = NULL)
+#' dge <- fdge(mdef, method = "voom")
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
 }
@@ -26,15 +26,14 @@ fdge <- function(x, ...) {
 #' @export
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                            gsea = NULL, filter = "default",
-                                            treat_lfc = NULL, ...) {
+                                            filter = "default", ...) {
   res <- NextMethod(coef = x$coef)
   res
 }
 
 #' @export
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
-                                               method = NULL, gsea = "cameraPR",
+                                               method = NULL,
                                                filter = "default",
                                                treat_lfc = NULL, ...) {
   res <- NextMethod(contrast = x$contrast)
@@ -42,8 +41,8 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 }
 
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                          gsea = NULL, filter = "default",
-                                          treat_lfc = NULL, ...) {
+                                          filter = "default", treat_lfc = NULL,
+                                          ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -86,9 +85,6 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     # Do DGE and GSEA
     testme <- if (is.null(x[["coef"]])) x[["contrast"]] else x[["coef"]]
 
-    # dge <- calculateIndividualLogFC(y, y$design, contrast = testme)
-    gdb <- GeneSetDb(list(dummy = list(dummy = head(rownames(y), 5))))
-
     if (test_number(treat_lfc)) {
       treat_lfc <- abs(treat_lfc)
       use.treat <- TRUE
@@ -101,18 +97,24 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
       treat_lfc <- 1
       use.treat <- FALSE
     }
-    mg <- multiGSEA(gdb, y, y$design, contrast = testme, methods = "logFC",
-                    use.treat = use.treat, feature.min.logFC = treat_lfc)
+
+    result <- calculateIndividualLogFC(y, y$design, contrast = testme,
+                                       use.treat = use.treat,
+                                       feature.min.logFC = treat_lfc)
+    axe.cols <- c("featureId", "x.idx")
+    for (col in axe.cols) {
+      if (col %in% names(result)) result[[col]] <- NULL
+    }
   } else {
-    mg <- NULL
+    result <- result
   }
 
   out <- list(
-    result = mg,
+    result = as.tbl(result),
     assay_name = assay_name,
     method = method,
     model_def = x,
-    treat_lfc = treat_lfc,
+    treat_lfc = if (use.treat) treat_lfc else NULL,
     # Standard FacileAnalysisResult things
     fds = .fds,
     messages = messages,
@@ -130,15 +132,8 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 #' @export
 biocbox.FacileDGEResult <- function(x, ...) {
   res <- biocbox(x[["model_def"]], x[["assay_name"]], x[["method"]],
-                 filter = dge_stats(x)$feature_id, ...)
+                 filter = result(x)[["feature_id"]], ...)
   res
-}
-
-#' @noRd
-#' @export
-dge_stats <- function(x, ...) {
-  assert_class(x, "FacileDGEResult")
-  as.tbl(multiGSEA::logFC(x[["result"]]))
 }
 
 #' @noRd
@@ -152,18 +147,20 @@ format.FacileDGEResult <- function(x, ...) {
   test_type <- if (is(x, "FacileTtestDGEResult")) "t-test" else "ANOVA"
   formula <- x$model_def$design_formula
   if (test_type == "t-test") {
-    test <- sprintf("(%s) - (%s)", x$model_def$numer, x$model_def$denom)
+    test <- sprintf("%s: (%s) - (%s)",
+                    x$model_def$coef, x$model_def$numer, x$model_def$denom)
   } else {
     test <- x$model_def$covariate
   }
-  ntested <- nrow(dge_stats(x))
-  nsig <- sum(dge_stats(x)$significant)
+  res <- result(x)
+  ntested <- nrow(res)
+  nsig <- sum(!is.na(res[["padj"]]) & res[["padj"]] < 0.10)
   nsamples <- nrow(x$model_def$covariates)
   out <- paste(
     "===========================================================\n",
     sprintf("FacileDGEResult (%s)\n", test_type),
     "-----------------------------------------------------------\n",
-    sprintf("Significant results: (%d / %d)", nsig, ntested), "\n",
+    glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})\n"),
     "Formula: ", formula, "\n",
     "Tested: ", test, "\n",
     "Number of samples: ", nsamples, "\n",

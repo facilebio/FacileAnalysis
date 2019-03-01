@@ -1,4 +1,4 @@
-context("Differential Gene Expression and GSEA")
+context("Differential Expression (fdge)")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
@@ -11,7 +11,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
-  qlf_dge <- dge_stats(qlf_test)
+  qlf_dge <- result(qlf_test)
 
   y <- biocbox(qlf_test)
   expect_equal(nrow(y), nrow(qlf_dge))
@@ -31,7 +31,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
-  vm_dge <- dge_stats(vm_test)
+  vm_dge <- result(vm_test)
 
   vm <- biocbox(vm_test)
   expect_equal(nrow(vm), nrow(vm_dge))
@@ -56,7 +56,7 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
-  qlf_dge <- dge_stats(qlf_test)
+  qlf_dge <- result(qlf_test)
 
   y <- biocbox(qlf_test)
   expect_equal(nrow(y), nrow(qlf_dge))
@@ -78,7 +78,7 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
-  vm_dge <- dge_stats(vm_test)
+  vm_dge <- result(vm_test)
 
   vm <- biocbox(vm_test)
   expect_equal(nrow(vm), nrow(vm_dge))

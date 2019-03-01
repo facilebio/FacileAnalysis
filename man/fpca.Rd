@@ -32,3 +32,26 @@ You should look at factominer:
 \item http://factominer.free.fr/graphs/factoshiny.html
 }
 }
+\examples{
+# Generate a data matrix with a sister covariate table
+mat <- local({
+  m <- matrix(rnorm(100 * 10), nrow = 100)
+  colnames(m) <- letters[1:10]
+  rownames(m) <- head(unique(
+    replicate(200, paste(sample(letters, 5), collapse = ""))),
+    nrow(m))
+  m
+})
+
+# generate some sample (column) covariates
+pdat <- local({
+  pd <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
+  pd <- as.data.frame(pd)
+  rownames(pd) <- colnames(mat)
+  pd
+})
+
+# analyze and vizualize
+res <- fpca(mat, col_covariates = pdat)
+vizualize(res, color_aes = "category")
+}

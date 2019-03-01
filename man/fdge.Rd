@@ -6,14 +6,14 @@
 \alias{fdge.FacileAnovaModelDefinition}
 \title{Peforms a differential expression analysis and GSEA.}
 \usage{
-\method{report}{FacileTtestDGEResult}(x, result = "dge",
-  max_padj = 0.01, min_abs_logFC = 1, event_source = "A", ...)
+\method{report}{FacileTtestDGEResult}(x, result = c("features", "dge"),
+  ntop = 200, max_padj = 0.1, min_logFC = 1, features = NULL,
+  round_digits = 3, event_source = "A", caption = NULL, ...)
 
 fdge(x, ...)
 
 \method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
-  method = NULL, gsea = NULL, filter = "default", treat_lfc = NULL,
-  ...)
+  method = NULL, filter = "default", ...)
 }
 \arguments{
 \item{x}{a data source}
@@ -39,7 +39,15 @@ Peforms a differential expression analysis and GSEA.
 The \code{report} function will create an htmlwidget which can be explored by
 the analyst or dropped into an Rmarkdown report.
 
-\code{report(result, "dge", max_padj = 0.05, min_abs_logFC = 1)} will create a
+\code{report(result, "dge", max_padj = 0.05, min_logFC = 1)} will create a
 side-by-side volcano and datatable for differential expression results.
 }
 
+\examples{
+mdef <- FacileData::exampleFacileDataSet() \%>\%
+ filter_samples(indication == "BLCA") \%>\%
+ fdge_model_def(covariate = "sample_type",
+                numer = "tumor",
+                denom = "normal")
+dge <- fdge(mdef, method = "voom")
+}

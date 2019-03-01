@@ -1,4 +1,4 @@
-context("Model definition for Gene Expression and GSEA")
+context("Model definition for Gene Expression and GSEA (fdge_model_def)")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
