@@ -52,12 +52,13 @@
   # Title
   .title <- "Differential Expression Results"
   if (!is.null(treat_lfc)) .title <- paste(.title, "(TREAT)")
-  title <- tags$p(
+  title <- tagList(
     tags$strong(.title),
-    tags$span(glue(" (Top %d [FDR %.2f, abs(logFC) >= %.2f])",
-                   nrow(sdat), max_padj, min_logFC)))
+    tags$br(),
+    tags$span(sprintf("Top %d [FDR %.2f, abs(logFC) >= %.2f]",
+                   nrow(dat), max_padj, min_logFC)))
 
-  list(datatable = dat, volcano = p, title = title)
+  list(datatable = dtable, volcano = p, title = title)
 }
 
 .vizualize.dge_features <- function(x, ...) {
@@ -68,24 +69,24 @@
 #' @export
 #' @importFrom crosstalk bscols
 #' @importFrom DT datatable formatRound
-vizualize.FacileTtestDGEResult <- function(x, result = c("features", "dge"),
+vizualize.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
                                            ntop = 200, max_padj = 0.10,
                                            min_logFC = 1,
                                            features = NULL, round_digits = 3,
                                            event_source = "A", ...) {
-  result <- match.arg(result)
+  type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
     warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
     min_logFC <- treat_lfc
   }
 
-  fn <- if (result == "dge") .vizualize.dge_ttest else .vizualize.dge_features
+  fn <- if (type == "dge") .vizualize.dge_ttest else .vizualize.dge_features
   viz <- fn(x, ntop = ntop, max_padj = max_padj, min_logFC = min_logFC,
             features = features, round_digits = round_digits,
             event_source = event_source, ...)
 
-  if (result == "dge") {
+  if (type == "dge") {
     out <- suppressWarnings({
       bscols(viz[["title"]], viz[["volcano"]], viz[["datatable"]],
              widths = c(12, 4, 8))
@@ -109,20 +110,20 @@ vizualize.FacileTtestDGEResult <- function(x, result = c("features", "dge"),
 #' @importFrom crosstalk bscols
 #' @importFrom htmltools browsable tagList tags
 #' @rdname fdge
-report.FacileTtestDGEResult <- function(x, result = c("features", "dge"),
+report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
                                         ntop = 200, max_padj = 0.10,
                                         min_logFC = 1,
                                         features = NULL, round_digits = 3,
                                         event_source = "A",
                                         caption = NULL, ...) {
-  result <- match.arg(result)
+  type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
     warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
     min_logFC <- treat_lfc
   }
 
-  fn <- if (result == "dge") .vizualize.dge_ttest else .vizualize.dge_features
+  fn <- if (type == "dge") .vizualize.dge_ttest else .vizualize.dge_features
   viz <- fn(x, ntop = ntop, max_padj = max_padj, min_logFC = min_logFC,
             features = features, round_digits = round_digits,
             event_source = event_source, treat_lfc = treat_lfc, ...)
@@ -130,14 +131,14 @@ report.FacileTtestDGEResult <- function(x, result = c("features", "dge"),
   sdat <- viz[["datatable"]][["data"]]
   mdef <- x[["model_def"]]
 
-  if (report == "dge") {
+  if (type == "dge") {
     title <- viz[["title"]]
     details <- tagList(
       tags$p(
         tags$strong("Design: "),
         tags$code(mdef[["design_formula"]])),
       tags$p(
-        tag$strong("Tested: "),
+        tags$strong("Tested: "),
         tags$code(glue("{covariate}: ({numer}) - ({denom})", .envir = mdef))))
 
     header <- tagList(title, details, caption)

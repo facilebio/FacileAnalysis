@@ -19,6 +19,9 @@
 #'                 numer = "tumor",
 #'                 denom = "normal")
 #' dge <- fdge(mdef, method = "voom")
+#' if (interactive()) {
+#'   vizualize(dge)
+#' }
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
 }
