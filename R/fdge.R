@@ -12,6 +12,13 @@
 #'   use as fixed effects
 #' @param covariates a data.frame of covariates (columns) for each
 #'   sample (rows) in `x`
+#' @examples
+#' mdef <- FacileData::exampleFacileDataSet() %>%
+#'  filter_samples(indication == "BLCA") %>%
+#'  fdge_model_def(covariate = "sample_type",
+#'                 numer = "tumor",
+#'                 denom = "normal")
+#' dge <- fdge(mdef, method = "voom", gsea = NULL)
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
 }
@@ -131,8 +138,40 @@ biocbox.FacileDGEResult <- function(x, ...) {
 #' @export
 dge_stats <- function(x, ...) {
   assert_class(x, "FacileDGEResult")
-  multiGSEA::logFC(x[["result"]])
+  as.tbl(multiGSEA::logFC(x[["result"]]))
 }
+
+#' @noRd
+#' @export
+#' @method print FacilePCAResult
+print.FacileDGEResult <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+format.FacileDGEResult <- function(x, ...) {
+  test_type <- if (is(x, "FacileTtestDGEResult")) "t-test" else "ANOVA"
+  formula <- x$model_def$design_formula
+  if (test_type == "t-test") {
+    test <- sprintf("(%s) - (%s)", x$model_def$numer, x$model_def$denom)
+  } else {
+    test <- x$model_def$covariate
+  }
+  ntested <- nrow(dge_stats(x))
+  nsig <- sum(dge_stats(x)$significant)
+  nsamples <- nrow(x$model_def$covariates)
+  out <- paste(
+    "===========================================================\n",
+    sprintf("FacileDGEResult (%s)\n", test_type),
+    "-----------------------------------------------------------\n",
+    sprintf("Significant results: (%d / %d)", nsig, ntested), "\n",
+    "Formula: ", formula, "\n",
+    "Tested: ", test, "\n",
+    "Number of samples: ", nsamples, "\n",
+    "===========================================================\n",
+    sep = "")
+  out
+}
+
 
 # Helpers ======================================================================
 

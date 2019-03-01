@@ -8,11 +8,13 @@
 #' @importFrom DT datatable
 #'
 #' @param x The `FacilePCAResult`
-#' @param pcs The PC's to show (min 2, max 3). Default is `1:2`
+#' @param pcs The PC's to show (min 2, max 3). If a single integer is provided,
+#'   PC's 1:`pcs` will be shown. If a vector is provided, then the PCs
+#'   specified will be shown. Defaults is `3`, to show first 3 PCs
 #' @param topn the number of top genes to enumerate that drive direction of PCs
 #' @param feature_id_col the column name in `x[["row_covariates"]]` to use
 #'   in the feature table.
-vizualize.FacilePCAResult <- function(x, pcs = 1:2, ntop = 100,
+vizualize.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
                                       with_features = TRUE,
                                       feature_id_col = NULL, ...,
                                       xlabel = "default",
@@ -20,6 +22,10 @@ vizualize.FacilePCAResult <- function(x, pcs = 1:2, ntop = 100,
                                       zlabel = "default") {
   xx <- result(x)
   assert_integerish(pcs, lower = 1L)
+  if (length(pcs) == 1L) {
+    assert_int(pcs, lower = 2, upper = 3L)
+    pcs <- 1:pcs
+  }
   assert_int(length(pcs), lower = 1L, upper = 3L)
   pcs <- unique(pcs)
 

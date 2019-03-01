@@ -14,16 +14,25 @@
 #' @return an fpca result
 #' @examples
 #' # Generate a data matrix with a sister covariate table
-#' m <- matrix(rnorm(100 * 10), nrow = 100)
-#' colnames(m) <- letters[1:10]
-#' rownames(m) <- head(unique(
-#'   replicate(200, paste(sample(letters, 5), collapse = ""))),
-#'   nrow(m))
-#' pdat <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
-#' pdat <- as.data.frame(pdat)
-#' rownames(pdat) <- colnames(m)
+#' mat <- local({
+#'   m <- matrix(rnorm(100 * 10), nrow = 100)
+#'   colnames(m) <- letters[1:10]
+#'   rownames(m) <- head(unique(
+#'     replicate(200, paste(sample(letters, 5), collapse = ""))),
+#'     nrow(m))
+#'   m
+#' })
 #'
-#' res <- fpca(m, col_covariates = pdat)
+#' # generate some sample (column) covariates
+#' pdat <- local({
+#'   pd <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
+#'   pd <- as.data.frame(pd)
+#'   rownames(pd) <- colnames(mat)
+#'   pd
+#' })
+#'
+#' # analyze and vizualize
+#' res <- fpca(mat, col_covariates = pdat)
 #' vizualize(res, color_aes = "category")
 fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
