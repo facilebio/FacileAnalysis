@@ -1,7 +1,7 @@
 # Interactivity and vizualization over FacilePCAResults ========================
 
 #' @noRd
-#' @method vizualize FacilePCAResult
+#' @method viz FacilePCAResult
 #'
 #' @export
 #' @importFrom crosstalk bscols SharedData
@@ -14,12 +14,69 @@
 #' @param topn the number of top genes to enumerate that drive direction of PCs
 #' @param feature_id_col the column name in `x[["row_covariates"]]` to use
 #'   in the feature table.
-vizualize.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
+viz.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
                                       with_features = TRUE,
                                       feature_id_col = NULL, ...,
+                                      event_source = "A",
                                       xlabel = "default",
                                       ylabel = "default",
-                                      zlabel = "default") {
+                                      zlabel = "default",
+                                      webgl = FALSE) {
+  viz. <- .viz.fpca(x, pcs = pcs, ntop = ntop,
+                    with_features = with_features,
+                    feature_id_col = feature_id_col, ...,
+                    event_source = event_source, xlabel = xlabel,
+                    ylabel = ylabel, zlabel = zlabel)
+  if (with_features) {
+    out <- bscols.(viz.[["title"]], viz.[["plot"]], viz.[["datatable"]],
+                   widths = c(12, 8, 4))
+  } else {
+    out <- bscols.(viz.[["title"]], viz.[["plot"]], widths = c(12, 12))
+  }
+
+  out
+}
+
+#' @export
+#' @noRd
+report.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
+                                   with_features = TRUE,
+                                   feature_id_col = NULL,
+                                   caption = NULL, webgl = FALSE,
+                                   ...) {
+  viz. <- .viz.fpca(x, pcs = pcs, ntop = ntop,
+                          with_features = with_features,
+                          feature_id_col = feature_id_col, webgl = webgl, ...,
+                          event_source = event_source, xlabel = xlabel,
+                          ylabel = ylabel, zlabel = zlabel)
+
+  if (!is.null(caption)) {
+    caption <- tags$p(caption)
+  }
+
+  header <- tagList(viz.[["title"]], caption)
+
+  if (with_features) {
+    out <- bscols.(header, viz.$plot, viz.$datatable,
+                   widths = c(12, 8, 4))
+  } else {
+    out <- bscols.(header, viz.$plot, widths = c(12, 12))
+  }
+
+  out
+}
+
+# Internal =====================================================================
+
+#' Internal worker vizualization function
+#' @noRd
+.viz.fpca <- function(x, pcs = 3, ntop = 100, with_features = TRUE,
+                      feature_id_col = NULL, webgl = FALSE, ...,
+                      event_source = "A",
+                      xlabel = "default",
+                      ylabel = "default",
+                      zlabel = "default") {
+
   xx <- result(x)
   assert_integerish(pcs, lower = 1L)
   if (length(pcs) == 1L) {
@@ -55,9 +112,9 @@ vizualize.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
   }
 
   p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
-                    zlabel = zlabel, ...)
-
-  p$analysis <- x
+                    zlabel = zlabel, event_source = event_source,
+                    webgl = webgl, ...)
+  p <- p$plot
 
   if (with_features) {
     franks <- head(ranks(x, feature_id_col, ...), ntop)
@@ -65,16 +122,19 @@ vizualize.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
     dtable <- datatable(
       franks, extensions = "Scroller", style = "bootstrap",
       class = "compact", width = "100%", rownames = FALSE,
-      options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-    out <- bscols(p$plot, dtable, widths = c(8, 4))
-  } else {
-    out <- p$plot
-  }
-  out
-}
+      options = list(deferRender = TRUE, scrollY = 300, scroller = TRUE))
 
-#' @export
-#' @noRd
-report.FacilePCAResult <- function(x, ...) {
-  vizualize(x, ...)
+  } else {
+    dtable <- NULL
+  }
+
+  nfeatures <- nrow(x[["factor_contrib"]])
+
+  title <- tagList(
+    tags$strong("PCA Dimensionality Reduction"),
+    tags$br(),
+    tags$span(sprintf("Top %d features", nfeatures)))
+
+  out <- list(datatable = dtable, plot = p, title = title)
+  out
 }

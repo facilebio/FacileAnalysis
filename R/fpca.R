@@ -33,7 +33,7 @@
 #'
 #' # analyze and vizualize
 #' res <- fpca(mat, col_covariates = pdat)
-#' vizualize(res, color_aes = "category")
+#' viz(res, color_aes = "category")
 fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
   UseMethod("fpca", x)

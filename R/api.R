@@ -1,5 +1,22 @@
 # Universal FacileAnalysisResult methods =======================================
 
+#' Compares two (or more(?)) FacileAnalysisResults against each other.
+#'
+#' This was initially motivated by the desire to compare the results of two
+#' differential expressio analyses against each other. Extending the idea
+#' to comparing GSEA results (using Thomas' enrichmentmap idea) is a natural
+#' extension. There may be othres.
+#'
+#' Not every FacileAnalysisResult can be compared, I guess, in which case it
+#' we will throw an error
+compare <- function(x, y, ...) {
+  UseMethod("compare", x)
+}
+
+compare.FacileAnalysisResult <- function(x, y, ...) {
+  msg <- glue("No `compare` method defined for `{class(x)[1L]}` result type.")
+}
+
 #' Retrieves the main (or alternative) result from a FacileAnalysis
 #'
 #' This should always return a tidy data frame of one sort or another.
@@ -34,6 +51,8 @@ ranks <- function(x, ...) {
   UseMethod("ranks", x)
 }
 
+
+
 #' FacileAnalysisResult objects should be able to fetch the FacileDataStore
 #' they were created from.
 #'
@@ -60,8 +79,8 @@ fds.FacileAnalysisResult <- function(x) {
 #' @param x A `FacileAnalysisResult` object
 #' @param ... passed down to the `x`-specific `vizualize.*`, `report.*`, and
 #'   `shine.*` functions.
-vizualize <- function(x, ...) {
-  UseMethod("vizualize", x)
+viz <- function(x, ...) {
+  UseMethod("viz", x)
 }
 
 #' @section Shine:

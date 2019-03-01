@@ -4,16 +4,21 @@
 \alias{report.FacileTtestDGEResult}
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
+\alias{fdge.FacileDGEModelDefinition}
 \title{Peforms a differential expression analysis and GSEA.}
 \usage{
-\method{report}{FacileTtestDGEResult}(x, result = c("features", "dge"),
+\method{report}{FacileTtestDGEResult}(x, type = c("dge", "features"),
   ntop = 200, max_padj = 0.1, min_logFC = 1, features = NULL,
-  round_digits = 3, event_source = "A", caption = NULL, ...)
+  round_digits = 3, event_source = "A", webgl = TRUE,
+  caption = NULL, ...)
 
 fdge(x, ...)
 
 \method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", ...)
+
+\method{fdge}{FacileDGEModelDefinition}(x, assay_name = NULL,
+  method = NULL, filter = "default", treat_lfc = NULL, ...)
 }
 \arguments{
 \item{x}{a data source}
@@ -50,4 +55,7 @@ mdef <- FacileData::exampleFacileDataSet() \%>\%
                 numer = "tumor",
                 denom = "normal")
 dge <- fdge(mdef, method = "voom")
+if (interactive()) {
+  viz(dge)
+}
 }

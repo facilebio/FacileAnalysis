@@ -53,5 +53,5 @@ pdat <- local({
 
 # analyze and vizualize
 res <- fpca(mat, col_covariates = pdat)
-vizualize(res, color_aes = "category")
+viz(res, color_aes = "category")
 }

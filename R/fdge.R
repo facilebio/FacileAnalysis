@@ -20,7 +20,7 @@
 #'                 denom = "normal")
 #' dge <- fdge(mdef, method = "voom")
 #' if (interactive()) {
-#'   vizualize(dge)
+#'   viz(dge)
 #' }
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
@@ -43,6 +43,8 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
   res
 }
 
+#' @export
+#' @rdname fdge
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                           filter = "default", treat_lfc = NULL,
                                           ...) {

@@ -19,7 +19,6 @@ NULL
 #' @export tidy
 #' @importFrom graphics plot
 #' @export plot
-#' @export vizualize
 NULL
 
 # dplyr API
