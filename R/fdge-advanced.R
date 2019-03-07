@@ -1,5 +1,14 @@
 # Manual analyst intervention to run any type of model
 
+#' FacileAnalysis wrapper for a manually performed differential expression.'
+#'
+#' This allows an analyst to perform a differential expression analysis
+#' outside of the facileverse, and wrap it into an object that can be used
+#' with the viz,report,shine functions.
+as_fdge <- function(x, ...) {
+
+}
+
 if (FALSE) {
 fdge.matrix <- function(x, design = NULL, coef = NULL, contrast = NULL,
                         covariates = NULL, filter = rep(TRUE, nrow(x)),

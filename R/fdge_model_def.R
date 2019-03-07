@@ -60,6 +60,11 @@
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
 #'   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
 #'                  fixed = "sex")
+#'
+#' # ANOVA across stage in BLCA, control for sex
+#' m3 <- fds %>%
+#'   filter_samples(indication == "BLCA") %>%
+#'   fdge_model_def(covariate = "stage", fixed = "sex")
 fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
                            fixed = NULL, on_missing = c("warning", "error"),
                            ...) {
@@ -71,11 +76,12 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @method fdge_model_def data.frame
 #' @importFrom stats model.matrix
 #' @importFrom limma makeContrasts nonEstimable
+#'
 #' @section data.frame:
 #' The data.frame function definition assumes that `x` is a data.frame of
 #' samples (dataset,sample_id) and the covariates defined on these samples
-#' that contains a superset of the covariates used in the design and contrast
-#' construction.
+#' (ie. all the other columns of `x`) contain a superset of the variable names
+#' used in the construction of hte design matrix for the model definition.
 fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                                       fixed = NULL,
                                       on_missing = c("warning", "error"), ...,
@@ -84,12 +90,26 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   assert_subset(c("dataset", "sample_id"), colnames(x))
   assert_choice(covariate, setdiff(colnames(x), c("sample_id")))
   assert_categorical(x[[covariate]])
+
+  if (unselected(numer)) numer <- NULL
+  if (unselected(denom)) denom <- NULL
+  if (unselected(fixed)) fixed <- NULL
+
   assert_subset(fixed, setdiff(colnames(x), c("sample_id")))
   if (!is.null(.fds)) {
     assert_facile_data_store(.fds)
   }
 
-  all_test_levels <- as.character(unique(x[[covariate]]))
+  all_test_levels <- local({
+    vals <- x[[covariate]]
+    if (is.factor(vals)) levels(droplevels(vals)) else sort(unique(vals))
+  })
+  if (length(all_test_levels) == 2L) {
+    # Even if this is an ANOVA, we run it as a t-test
+    numer <- all_test_levels[2L]
+    denom <- all_test_levels[1L]
+  }
+
   test_levels <- assert_subset(c(numer, denom), all_test_levels)
 
   messages <- character()
@@ -180,23 +200,13 @@ fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
                           fixed = NULL, on_missing = c("warning", "error"),
                           ...) {
   x <- collect(x, n = Inf)
+  if (unselected(numer)) numer <- NULL
+  if (unselected(denom)) denom <- NULL
+  if (unselected(fixed)) fixed <- NULL
+
   fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
                             denom = denom, fixed = fixed,
                             on_missing = on_missing, ...)
-}
-
-#' @export
-#' @rdname fdge_model_def
-fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
-                                           denom = NULL, fixed = NULL,
-                                           on_missing = c("warning", "error"),
-                                           ...,
-                                           samples = active_samples(x),
-                                           custom_key = NULL) {
-  samples <- collect(samples, n = Inf)
-  fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
-                 fixed = fixed, on_missing = on_missing,
-                 custom_key = custom_key, ...)
 }
 
 #' @section facile_frame:
@@ -220,6 +230,10 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
 
+  if (unselected(numer)) numer <- NULL
+  if (unselected(denom)) denom <- NULL
+  if (unselected(fixed)) fixed <- NULL
+
   # Retrieve any covariates from the FacileDataStore that are not present
   # in the facile_frame `x`
   required.covs <- setdiff(c(covariate, fixed), c("dataset", "sample_id"))
@@ -238,3 +252,83 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
                                    on_missing = on_missing, .fds = .fds, ...)
   out
 }
+
+#' @export
+#' @rdname fdge_model_def
+fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
+                                           denom = NULL, fixed = NULL,
+                                           on_missing = c("warning", "error"),
+                                           ...,
+                                           samples = NULL,
+                                           custom_key = NULL) {
+  if (is.null(samples)) samples <- samples(x)
+  samples <- collect(samples, n = Inf)
+
+  if (unselected(numer)) numer <- NULL
+  if (unselected(denom)) denom <- NULL
+  if (unselected(fixed)) fixed <- NULL
+
+  fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
+                 fixed = fixed, on_missing = on_missing,
+                 custom_key = custom_key, ...)
+}
+
+#' @export
+#' @rdname fdge_model_def
+fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
+                                                   denom = NULL, fixed = NULL,
+                                                   on_missing = c("warning", "error"),
+                                                   ...,
+                                                   samples = active_samples(x),
+                                                   custom_key = user(x)) {
+  samples <- collect(samples, n = Inf)
+  if (unselected(numer)) numer <- NULL
+  if (unselected(denom)) denom <- NULL
+  if (unselected(fixed)) fixed <- NULL
+
+  fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
+                 fixed = fixed, on_missing = on_missing,
+                 custom_key = custom_key, ...)
+}
+
+# Accessor Functions ===========================================================
+
+#' @noRd
+#' @export
+samples.FacileDGEModelDefinition <- function(x, ...) {
+  x[["covariates"]]
+}
+
+# Printing =====================================================================\
+
+#' @noRd
+#' @export
+print.FacileDGEModelDefinition <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+#' @noRd
+#' @export
+format.FacileDGEModelDefinition <- function(x, ...) {
+  testtype <- x$test_type
+  if (testtype == "ttest") {
+    testing <- "contrast"
+    thetest <- paste(names(x$contrast), x$contrast,
+                     sep = ": ", collapse = " || ")
+  } else {
+    testing <- "coefficient"
+    thetest <- paste(colnames(x$design)[x$coef], collapse = "|")
+  }
+  out <- paste(
+    "===========================================================\n",
+    sprintf("%s\n", class(x)[1L]),
+    "-----------------------------------------------------------\n",
+    "Design: ", x[["design_formula"]], "\n",
+    sprintf("Testing `%s` (%s):\n    %s\n", x[["covariate"]],
+            testing, thetest),
+    "===========================================================\n",
+    sep = "")
+  out
+
+}
+

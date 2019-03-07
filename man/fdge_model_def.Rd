@@ -4,8 +4,9 @@
 \alias{fdge_model_def}
 \alias{fdge_model_def.data.frame}
 \alias{fdge_model_def.tbl}
-\alias{fdge_model_def.FacileDataStore}
 \alias{fdge_model_def.facile_frame}
+\alias{fdge_model_def.FacileDataStore}
+\alias{fdge_model_def.ReactiveFacileDataStore}
 \title{Builds (simple) design and contrast matrices for use with \code{\link[=fdge]{fdge()}}}
 \usage{
 fdge_model_def(x, covariate, numer = NULL, denom = NULL,
@@ -18,13 +19,18 @@ fdge_model_def(x, covariate, numer = NULL, denom = NULL,
 \method{fdge_model_def}{tbl}(x, covariate, numer = NULL, denom = NULL,
   fixed = NULL, on_missing = c("warning", "error"), ...)
 
-\method{fdge_model_def}{FacileDataStore}(x, covariate, numer = NULL,
-  denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
-  ..., samples = active_samples(x), custom_key = NULL)
-
 \method{fdge_model_def}{facile_frame}(x, covariate, numer = NULL,
   denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
   ..., custom_key = NULL)
+
+\method{fdge_model_def}{FacileDataStore}(x, covariate, numer = NULL,
+  denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
+  ..., samples = NULL, custom_key = NULL)
+
+\method{fdge_model_def}{ReactiveFacileDataStore}(x, covariate,
+  numer = NULL, denom = NULL, fixed = NULL,
+  on_missing = c("warning", "error"), ..., samples = active_samples(x),
+  custom_key = user(x))
 }
 \arguments{
 \item{x}{a dataset}
@@ -77,8 +83,8 @@ tibble.
 
 The data.frame function definition assumes that \code{x} is a data.frame of
 samples (dataset,sample_id) and the covariates defined on these samples
-that contains a superset of the covariates used in the design and contrast
-construction.
+(ie. all the other columns of \code{x}) contain a superset of the variable names
+used in the construction of hte design matrix for the model definition.
 }
 
 \section{facile_frame}{
@@ -116,4 +122,9 @@ m3 <- fds \%>\%
   filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
                  fixed = "sex")
+
+# ANOVA across stage in BLCA, control for sex
+m3 <- fds \%>\%
+  filter_samples(indication == "BLCA") \%>\%
+  fdge_model_def(covariate = "stage", fixed = "sex")
 }

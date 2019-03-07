@@ -24,6 +24,7 @@ Imports:
     htmltools,
     limma,
     matrixStats,
+    miniUI,
     multiGSEA,
     plotly,
     tidyr

@@ -42,7 +42,7 @@ biocbox <- function(x, ...) {
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
-biocbox.FacileDGEModelDefinition <- function(x, assay_name, method,
+biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
                                              prior_count = 1, ...) {
@@ -62,6 +62,9 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method,
 
   if (is.null(dge_methods)) {
     dge_methods <- fdge_methods(ainfo$assay_type)
+  }
+  if (is.null(method)) {
+    method <- dge_methods$dge_method[1L]
   }
 
   if (!method %in% dge_methods$dge_method) {

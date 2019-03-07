@@ -19,8 +19,10 @@
 #'                 numer = "tumor",
 #'                 denom = "normal")
 #' dge <- fdge(mdef, method = "voom")
+#'
 #' if (interactive()) {
 #'   viz(dge)
+#'   shine(dge)
 #' }
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
@@ -130,11 +132,18 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   out
 }
 
+#' @noRd
+#' @export
+samples.FacileDGEResult <- function(x, ...) {
+  samples(x[["model_def"]])
+}
+
 #' @section FacileDGEResult:
 #' Given a FacileDGEResult, we can re-materialize the Bioconductor assay
 #' container used within the differential testing pipeline used from [fdge()].
 #'
 #' @export
+#' @rdname biocbox
 biocbox.FacileDGEResult <- function(x, ...) {
   res <- biocbox(x[["model_def"]], x[["assay_name"]], x[["method"]],
                  filter = result(x)[["feature_id"]], ...)

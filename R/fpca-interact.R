@@ -4,8 +4,6 @@
 #' @method viz FacilePCAResult
 #'
 #' @export
-#' @importFrom crosstalk bscols SharedData
-#' @importFrom DT datatable
 #'
 #' @param x The `FacilePCAResult`
 #' @param pcs The PC's to show (min 2, max 3). If a single integer is provided,
@@ -15,13 +13,13 @@
 #' @param feature_id_col the column name in `x[["row_covariates"]]` to use
 #'   in the feature table.
 viz.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
-                                      with_features = TRUE,
-                                      feature_id_col = NULL, ...,
-                                      event_source = "A",
-                                      xlabel = "default",
-                                      ylabel = "default",
-                                      zlabel = "default",
-                                      webgl = FALSE) {
+                                with_features = TRUE,
+                                feature_id_col = NULL, ...,
+                                event_source = "A",
+                                xlabel = "default",
+                                ylabel = "default",
+                                zlabel = "default",
+                                webgl = FALSE) {
   viz. <- .viz.fpca(x, pcs = pcs, ntop = ntop,
                     with_features = with_features,
                     feature_id_col = feature_id_col, ...,
@@ -39,16 +37,17 @@ viz.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
 
 #' @export
 #' @noRd
+#' @importFrom shiny tagList tags
 report.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
                                    with_features = TRUE,
                                    feature_id_col = NULL,
                                    caption = NULL, webgl = FALSE,
                                    ...) {
   viz. <- .viz.fpca(x, pcs = pcs, ntop = ntop,
-                          with_features = with_features,
-                          feature_id_col = feature_id_col, webgl = webgl, ...,
-                          event_source = event_source, xlabel = xlabel,
-                          ylabel = ylabel, zlabel = zlabel)
+                    with_features = with_features,
+                    feature_id_col = feature_id_col, webgl = webgl, ...,
+                    event_source = event_source, xlabel = xlabel,
+                    ylabel = ylabel, zlabel = zlabel)
 
   if (!is.null(caption)) {
     caption <- tags$p(caption)
@@ -70,6 +69,9 @@ report.FacilePCAResult <- function(x, pcs = 3, ntop = 100,
 
 #' Internal worker vizualization function
 #' @noRd
+#' @importFrom DT datatable
+#' @importFrom FacileViz fscatterplot
+#' @importFrom shiny tagList tags
 .viz.fpca <- function(x, pcs = 3, ntop = 100, with_features = TRUE,
                       feature_id_col = NULL, webgl = FALSE, ...,
                       event_source = "A",

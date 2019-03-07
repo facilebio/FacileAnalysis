@@ -4,7 +4,6 @@
 #' @import dplyr
 #' @import checkmate
 #' @import FacileData
-#' @import FacileViz
 #' @import plotly
 #' @import tidyr
 NULL

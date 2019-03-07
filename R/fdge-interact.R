@@ -2,6 +2,33 @@
 
 #' @noRd
 #' @export
+#' @importFrom shiny runGadget
+#' @importFrom miniUI gadgetTitleBar miniPage miniContentPanel
+shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"), ...) {
+  ui <- miniPage(
+    gadgetTitleBar(class(x)[1L]),
+    miniContentPanel(fdgeViewResultUI("view")),
+    NULL)
+
+  server <- function(input, output, session) {
+    rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
+    view <- callModule(fdgeViewResult, "view", rfds, x)
+
+    observeEvent(input$done, {
+      stopApp(invisible(NULL))
+    })
+    observeEvent(input$cancel, {
+      stopApp(invisible(NULL))
+    })
+  }
+
+  viewer <- dialogViewer("Differential Expression Results",
+                         height = 600, width = 800)
+  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+}
+
+#' @noRd
+#' @export
 #' @importFrom DT datatable formatRound
 viz.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
                                            ntop = 200, max_padj = 0.10,
@@ -140,7 +167,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 
   dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
   dtable <- sdat %>%
-    datatable(extensions = "Scroller", style = "bootstrap",
+    datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
               class = "compact", width = "100%", rownames = FALSE,
               options = dtopts) %>%
     formatRound(c("logFC", "FDR", "pval"), round_digits)

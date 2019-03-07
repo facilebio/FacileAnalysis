@@ -55,7 +55,9 @@ mdef <- FacileData::exampleFacileDataSet() \%>\%
                 numer = "tumor",
                 denom = "normal")
 dge <- fdge(mdef, method = "voom")
+
 if (interactive()) {
   viz(dge)
+  shine(dge)
 }
 }
