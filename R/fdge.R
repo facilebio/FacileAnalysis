@@ -54,17 +54,18 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   warnings <- character()
   errors <- character()
 
-  clazz <- switch(class(x)[1L],
-                  FacileTtestDGEModelDefinition = "FacileTtestDGEResult",
-                  FacileAnovaModelDefinition = "FacileAnovaDGEResult",
-                  NULL)
+  test_type <- assert_choice(x[["test_type"]], c("ttest", "anova"))
+  .fds <- assert_facile_data_store(fds(x))
 
-  .fds <- assert_class(x$fds, "FacileDataStore")
-
-  if (is.null(assay_name)) {
-    assay_name <- default_assay(.fds)
+  if (test_type == "ttest") {
+    testme <- x[["contrast"]]
+    clazz <- "FacileTtestDGEResult"
+  } else {
+    testme <- x[["coef"]]
+    clazz <- "FacileAnovaDGEResult"
   }
 
+  if (is.null(assay_name)) assay_name <- default_assay(.fds)
   ainfo <- try(assay_info(.fds, assay_name), silent = TRUE)
   if (is(ainfo, "try-error")) {
     msg <- glue("assay_name `{assay_name}` not present in FacileDataStore")
@@ -89,9 +90,6 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
     method <- y$dge_method
 
-    # Do DGE and GSEA
-    testme <- if (is.null(x[["coef"]])) x[["contrast"]] else x[["coef"]]
-
     if (test_number(treat_lfc)) {
       treat_lfc <- abs(treat_lfc)
       use.treat <- TRUE
@@ -112,12 +110,19 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     for (col in axe.cols) {
       if (col %in% names(result)) result[[col]] <- NULL
     }
+    result <- as.tbl(result)
+    if (test_type == "ttest") {
+      result <- arrange(result, desc(logFC))
+    } else {
+      result <- arrange(result, pval)
+    }
   } else {
-    result <- result
+    result <- NULL
   }
 
   out <- list(
-    result = as.tbl(result),
+    test_type = test_type,
+    result = result,
     assay_name = assay_name,
     method = method,
     model_def = x,
@@ -158,13 +163,19 @@ print.FacileDGEResult <- function(x, ...) {
 }
 
 format.FacileDGEResult <- function(x, ...) {
-  test_type <- if (is(x, "FacileTtestDGEResult")) "t-test" else "ANOVA"
-  formula <- x$model_def$design_formula
-  if (test_type == "t-test") {
+  test_type <- if (is(x, "FacileTtestDGEResult")) "ttest" else "ANOVA"
+  mdef <- x[["model_def"]]
+  formula <- mdef[["design_formula"]]
+
+  if (test_type == "ttest") {
     test <- sprintf("%s: (%s) - (%s)",
-                    x$model_def$coef, x$model_def$numer, x$model_def$denom)
+                    mdef[["covariate"]],
+                    paste(mdef[["numer"]], collapse = "+"),
+                    paste(mdef[["denom"]], collapse = "+"))
   } else {
-    test <- x$model_def$covariate
+    des <- mdef[["design"]]
+    test <- sprintf("%s (%s)", mdef[["covariate"]],
+                    paste(colnames(des)[mdef[["coef"]]], collapse = "|"))
   }
   res <- result(x)
   ntested <- nrow(res)
@@ -174,7 +185,7 @@ format.FacileDGEResult <- function(x, ...) {
     "===========================================================\n",
     sprintf("FacileDGEResult (%s)\n", test_type),
     "-----------------------------------------------------------\n",
-    glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})\n"),
+    glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})"), "\n",
     "Formula: ", formula, "\n",
     "Tested: ", test, "\n",
     "Number of samples: ", nsamples, "\n",

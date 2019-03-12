@@ -11,7 +11,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
-  qlf_dge <- dge(qlf_test)
+  qlf_dge <- result(qlf_test)
 
   y <- biocbox(qlf_test)
   expect_equal(nrow(y), nrow(qlf_dge))
@@ -36,7 +36,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
-  vm_dge <- dge(vm_test)
+  vm_dge <- result(vm_test)
 
   vm <- limma::voom(y, y$design)
   vres <- limma::lmFit(vm, vm$design) %>%
@@ -61,7 +61,7 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
-  qlf_dge <- dge(qlf_test)
+  qlf_dge <- result(qlf_test)
 
   y <- biocbox(qlf_test)
   design <- model.matrix(~ stage + sex, y$samples)
@@ -72,14 +72,14 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   qres <- edgeR::glmQLFTest(qfit, coef = coefs)
   qres <- edgeR::topTags(qres, n = Inf)
   qres <- edgeR::as.data.frame.TopTags(qres)
-  qres <- qres[qlf_test$dge$feature_id,]
+  qres <- qres[qlf_dge$feature_id,]
   expect_equal(qlf_dge$pval, qres$PValue)
   expect_equal(qlf_dge$padj, qres$FDR)
   expect_equal(qlf_dge$F, qres$F)
 
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
-  vm_dge <- vm_test$dge
+  vm_dge <- result(vm_test)
 
   vm <- limma::voom(y, y$design)
   vres <- limma::lmFit(vm, vm$design) %>%

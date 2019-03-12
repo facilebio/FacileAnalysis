@@ -144,21 +144,26 @@ fdgeViewResult <- function(input, output, session, rfds, fdge_run, ...) {
   })
 
   dge.stats <- reactive({
-    req(dge.result()) %>%
-      result() %>%
-      select(symbol, feature_id, logFC, FDR = padj, pval) %>%
-      arrange(desc(logFC))
+    .fdge <- req(dge.result())
+    .result <- result(.fdge)
+    if (.fdge[["test_type"]] == "ttest") {
+      out <- select(.result, symbol, feature_id, logFC, FDR = padj, pval)
+    } else {
+      out <- select(.result, symbol, feature_id, F, FDR = padj, pval)
+    }
+    out
   })
 
   output$stats <- DT::renderDT({
     dat <- req(dge.stats())
+    num.cols <- colnames(dat)[sapply(dat, is.numeric)]
 
     dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
     dtable <- dat %>%
       datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
                 class = "compact", width = "100%", rownames = FALSE,
                 options = dtopts) %>%
-      formatRound(c("logFC", "FDR", "pval"), 3)
+      formatRound(num.cols, 3)
     dtable
   }, server = TRUE)
 }

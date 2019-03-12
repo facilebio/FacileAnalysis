@@ -10,6 +10,25 @@ test_that("fdge_model_def supports simple t-test specification", {
                    fixed = "sex")
   expect_is(mdef, "FacileTtestDGEModelDefinition")
   expect_equal(mdef$contrast, c(normal = -1, tumor = 1, sexf = 0))
+
+  # Flip numerator and denominator
+  mdef <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def(covariate = "sample_type",
+                   numer = "normal", denom = "tumor",
+                   fixed = "sex")
+  expect_is(mdef, "FacileTtestDGEModelDefinition")
+  expect_equal(mdef$contrast, c(normal = 1, tumor = -1, sexf = 0))
+})
+
+test_that("Partial t-test spec is not allowed (no numer or denom)", {
+  mdef <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def(covariate = "sample_type",
+                   numer = "normal", denom = NULL,
+                   fixed = "sex")
+  expect_is(mdef, "FacileFailedModelDefinition")
+  expect_true(length(mdef$errors) == 1L)
 })
 
 test_that("fdge_model_def supports ANOVA specification", {

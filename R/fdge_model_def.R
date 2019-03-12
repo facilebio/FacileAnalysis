@@ -104,8 +104,9 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     vals <- x[[covariate]]
     if (is.factor(vals)) levels(droplevels(vals)) else sort(unique(vals))
   })
-  if (length(all_test_levels) == 2L) {
-    # Even if this is an ANOVA, we run it as a t-test
+  if (length(all_test_levels) == 2L && is.null(numer) && is.null(denom)) {
+    # If this is specified as an ANOVA (no numer or denom), we still run it as a
+    # t-test
     numer <- all_test_levels[2L]
     denom <- all_test_levels[1L]
   }
@@ -117,6 +118,11 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   errors <- character()
 
   test_type <- if (is.null(test_levels)) "anova" else "ttest"
+  if (test_type == "ttest" && (unselected(numer) || unselected(denom))) {
+    errors <- c(
+      errors,
+      "T-test requires both numerator and denominator to be specified")
+  }
 
   req.cols <- c("dataset",  "sample_id", covariate, fixed)
   xx <- x[, req.cols]
@@ -151,7 +157,11 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
             paste(non_estimable, collapse = ",")))
   }
 
-  if (test_type == "anova") {
+  if (length(errors)) {
+    clazz <- "FacileFailedModelDefinition"
+    coef <- NULL
+    contrast <- NULL
+  } else if (test_type == "anova") {
     clazz <- "FacileAnovaModelDefinition"
     coef <- 2L:max(test_covs)
     contrast <- NULL
