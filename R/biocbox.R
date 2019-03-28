@@ -38,26 +38,53 @@ biocbox <- function(x, ...) {
 #' @param filter A filtering policy to remove unintereesting genes.
 #'   If `"default"` (which is the default), then [edgeR::filterByExpr()] is
 #'   used if we are materializing a `DGEList`, otherwise lowly expressed
-#'   features are removed. If `FALSE`, then no filtering is done.
+#'   features are removed in a similarly "naive" manner. This can,
+#'   alternatively, be a character vector that holds the names of the features
+#'   that should be kept. Default value: `"default"`.
+#' @param with_sample_weights Some methods that leverage the limma pipeline,
+#'   like `"voom"`, `"limma"`, and `"limma-trend"` can leverage sample (array)
+#'   quality weights to downweight outlier samples. In the case of
+#'   `method == "voom"`, we use [limma::voomWithQualityWeights()], while the
+#'   rest use [limma::arrayWeights()]. The choice of `method` determines which
+#'   sample weighting function to sue. Defaults to `FALSE`.
+#' @param prior_count The pseudo-count to add to count data. Used primarily
+#'   when running the `limma-trend` method on count (RNA-seq) data.
+#' @param ... passed down to modeling functions where appropriate.
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
 biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
-                                             prior_count = 1, ...) {
+                                             with_sample_weights = FALSE,
+                                             prior_count = 3, ...) {
   assert_class(x, "FacileDGEModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
 
+  out <- list(biocbox = NULL)
   messages <- character()
   warnings <- character()
   errors <- character()
 
+  on.exit({
+    out[["messages"]] <- messages
+    out[["warnings"]] <- warnings
+    out[["errors"]] <- errors
+    return(out)
+  })
+
   ainfo <- assay_info(.fds, assay_name)
   if (!ainfo$assay_type %in% c("rnaseq", "umi", "tpm")) {
-    # TODO: We can implement this for microarrays very easily
-    stop("DGE analysis not yet implemented for bulk-rnaseq-like data")
+    errors <- "DGE analysis not yet implemented for bulk-rnaseq-like data"
+    return(out)
+  }
+
+  if (test_string(filter) && filter != "default") {
+    errors <- c(
+      glue("Invalid `filter` value (`{filter}`). The only valid string value ",
+            "the `filter` argument is 'default'"))
+    return(out)
   }
 
   if (is.null(dge_methods)) {
@@ -101,21 +128,27 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
     warnings <- c(warnings, msg)
   }
 
-  out <- y.all[keep,,keep.lib.sizes = FALSE]
-  out <- calcNormFactors(out)
+  y <- y.all[keep,,keep.lib.sizes = FALSE]
+  y <- calcNormFactors(y)
 
-  if (method %in% c("voom", "trended")) {
-    out <- voom(out, out$design)
-    if (method == "trended") {
-      out$weights <- NULL
+  if (method == "voom") {
+    if (with_sample_weights) {
+      out[["biocbox"]] <- voomWithQualityWeights(y, y[["design"]], ...)
+    } else {
+      out[["biocbox"]] <- voom(y, y$design, save.plot = TRUE, ...)
     }
-  } else if (method == "qlf") {
-    out <- estimateDisp(out, out$design, robust = TRUE)
+  } else if (method == "limma-trend") {
+    elist <- list()
+    elist[["E"]] <- edgeR::cpm(y, log = TRUE, prior.count = prior_count)
+    elist[["design"]] <- y[["design"]]
+    elist[["genes"]] <- y[["genes"]]
+    elist[["targets"]] <- y[["samples"]]
+    out[["biocbox"]] <- new("EList", elist)
+  } else if (method == "edgeR-qlf") {
+    out[["biocbox"]] <- estimateDisp(y, y[["design"]], robust = TRUE)
   }
 
-  attr(out, "messages") <- messages
-  attr(out, "warnings") <- warnings
-  attr(out, "errors") <- errors
   out$dge_method <- method
+  class(out) <- "FacileBiocBox"
   out
 }

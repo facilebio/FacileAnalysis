@@ -10,10 +10,12 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
                    denom = "normal")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf",
+                   gsea = NULL)
   qlf_dge <- result(qlf_test)
 
-  y <- biocbox(qlf_test)
+  bb <- biocbox(qlf_test)
+  y <- bb[["biocbox"]]
   expect_equal(nrow(y), nrow(qlf_dge))
   expect_equal(rownames(y), qlf_dge$feature_id)
 
@@ -60,10 +62,12 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
     fdge_model_def(covariate = "stage", fixed = "sex")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "qlf", gsea = NULL)
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf",
+                   gsea = NULL)
   qlf_dge <- result(qlf_test)
 
-  y <- biocbox(qlf_test)
+  bb <- biocbox(qlf_test)
+  y <- bb[["biocbox"]]
   design <- model.matrix(~ stage + sex, y$samples)
   coefs <- grep("stage", colnames(design))
 

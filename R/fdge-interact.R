@@ -2,9 +2,12 @@
 
 #' @noRd
 #' @export
-#' @importFrom shiny runGadget
-#' @importFrom miniUI gadgetTitleBar miniPage miniContentPanel
-shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"), ...) {
+#' @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
+#' @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
+#' @importFrom FacileShine reactiveFacileDataStore
+shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
+                                  title = "Differential Expression Results",
+                                  height = 600, width = 800, ...) {
   ui <- miniPage(
     gadgetTitleBar(class(x)[1L]),
     miniContentPanel(fdgeViewResultUI("view")),
@@ -13,7 +16,6 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"), ...) {
   server <- function(input, output, session) {
     rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
     view <- callModule(fdgeViewResult, "view", rfds, x)
-
     observeEvent(input$done, {
       stopApp(invisible(NULL))
     })
@@ -22,8 +24,7 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"), ...) {
     })
   }
 
-  viewer <- dialogViewer("Differential Expression Results",
-                         height = 600, width = 800)
+  viewer <- dialogViewer(title, height = height, width = width)
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
@@ -31,11 +32,11 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"), ...) {
 #' @export
 #' @importFrom DT datatable formatRound
 viz.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
-                                           ntop = 200, max_padj = 0.10,
-                                           min_logFC = 1,
-                                           features = NULL, round_digits = 3,
-                                           event_source = "A", webgl = TRUE,
-                                           ...) {
+                                     ntop = 200, max_padj = 0.10,
+                                     min_logFC = 1,
+                                     features = NULL, round_digits = 3,
+                                     event_source = "A", webgl = TRUE,
+                                     ...) {
   type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
@@ -50,7 +51,7 @@ viz.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 
   if (type == "dge") {
     out <- bscols.(viz.[["title"]], viz.[["volcano"]], viz.[["datatable"]],
-                   widths = c(12, 4, 8))
+                   widths = c(12, 5, 7))
   } else {
     out <- viz.[["datatable"]]
   }
@@ -108,7 +109,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 
     header <- tagList(title, details, caption)
     out <- bscols.(header, viz.[["volcano"]], viz.[["datatable"]],
-                   widths = c(12, 4, 8))
+                   widths = c(12, 5, 7))
   } else {
 
   }
@@ -127,7 +128,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 .viz.dge_ttest <- function(x, ntop = 200, max_padj = 0.10,
                            min_logFC = 1, round_digits = 3,
                            event_source = "A", treat_lfc = NULL,
-                           webgl = TRUE, ...) {
+                           webgl = TRUE, link_feature = TRUE, ...) {
   # Extract datatable
   dat.all <- result(x) %>%
     select(symbol, feature_id, logFC, padj, pval)
@@ -146,6 +147,19 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
     bind_rows(dat.down) %>%
     rename(FDR = padj)
 
+  # Add link for gene and axe feature_id
+  # We assume ensembl ids for now
+  is.ensid <- all(substr(dat[["feature_id"]], 1, 3) == "ENS")
+  link_feature <- link_feature && is.ensid
+  if (link_feature) {
+    org <- gsub(" ", "_", organism(fds(x)))
+    url <- sprintf("http://uswest.ensembl.org/%s/Gene/Summary?g=%s",
+                   org, dat[["feature_id"]])
+    html <- sprintf('<a href="%s" target="_blank">%s</a>',
+                    url, dat[["symbol"]])
+    dat <- mutate(dat, symbol = html, feature_id = NULL)
+  }
+
   sdat <- SharedData$new(dat)
 
   # Generate volcano given the filtered data
@@ -153,7 +167,11 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
   p <- sdat %>%
     plot_ly(x = ~logFC, y = ~-log10(pval),
             type = "scatter", mode = "markers",
-            hoverinfo = "text", source = event_source,
+            hoverinfo = "text",
+            # hoverlabel = list(bgcolor = "#3f3f3f"),
+            hoverlabel = list(bgcolor = "#B3B2B3"),
+            source = event_source,
+            marker = list(color = "#838588"),
             text = ~paste0(
               "Symbol: ", symbol, "<br>",
               sprintf(paste0("logFC: %.", round_digits, "f<br>"), logFC),
@@ -169,7 +187,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
   dtable <- sdat %>%
     datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
               class = "compact", width = "100%", rownames = FALSE,
-              options = dtopts) %>%
+              options = dtopts, escape = !link_feature) %>%
     formatRound(c("logFC", "FDR", "pval"), round_digits)
 
   # Title

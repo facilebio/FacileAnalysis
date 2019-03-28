@@ -10,7 +10,8 @@ test_that("Correct bioc container built from model def and method spec", {
                    denom = "normal")
 
   # DGEList for quasi-likelihood teseting
-  y <- biocbox(mdef, "rnaseq", method = "qlf")
+  bb <- biocbox(mdef, "rnaseq", method = "edgeR-qlf")
+  y <- bb[["biocbox"]]
   expect_class(y, "DGEList")
   expect_subset("sample_type", colnames(y$samples))
 
@@ -21,15 +22,20 @@ test_that("Correct bioc container built from model def and method spec", {
 
 
   # EList with $weights matrix for voom
-  vm <- biocbox(mdef, "rnaseq", method = "voom")
+  bb <- biocbox(mdef, "rnaseq", method = "voom")
+  vm <- bb[["biocbox"]]
   expect_class(vm, "EList")
   expect_matrix(vm$weights, nrows = nrow(vm), ncols = ncol(vm))
   expect_equal(y$design, vm$design)
 
   # EList without weights for limma-trend analysis
-  e <- biocbox(mdef, "rnaseq", method = "trended")
+  bb <- biocbox(mdef, "rnaseq", method = "limma-trend")
+  e <- bb[["biocbox"]]
   expect_class(e, "EList")
   expect_null(e$weights)
   expect_matrix(e$E, nrows = nrow(e), ncols = ncol(e))
-  expect_equal(e$E, vm$E)
+
+  # the expression matrices returned from voom and limma-trended are the same
+  cors <- cor(e$E, vm$E, method = "spearman")
+  expect_true(all(diag(cors) > 0.999))
 })

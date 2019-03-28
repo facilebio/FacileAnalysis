@@ -83,12 +83,12 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   }
 
   if (length(errors) == 0L) {
-    y <- biocbox(x, assay_name, method, dge_methods, filter, ...)
-    messages <- c(messages, attr(y, "messages"))
-    warnings <- c(warnings, attr(y, "warnings"))
-    errors <- c(errors, attr(y, "errors"))
+    bb <- biocbox(x, assay_name, method, dge_methods, filter, ...)
+    messages <- c(messages, bb[["messages"]])
+    warnings <- c(warnings, bb[["warnings"]])
+    errors <- c(errors, bb[["errors"]])
 
-    method <- y$dge_method
+    method <- bb[["dge_method"]]
 
     if (test_number(treat_lfc)) {
       treat_lfc <- abs(treat_lfc)
@@ -103,19 +103,20 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
       use.treat <- FALSE
     }
 
-    result <- calculateIndividualLogFC(y, y$design, contrast = testme,
+    y <- bb[["biocbox"]]
+    result <- calculateIndividualLogFC(y, y[["design"]], contrast = testme,
                                        use.treat = use.treat,
                                        feature.min.logFC = treat_lfc)
+    # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
+    # featureId, let's put the features back in the order they are in y
+    rownames(result) <- result[["featureId"]]
+    result <- result[rownames(y),]
+
     axe.cols <- c("featureId", "x.idx")
     for (col in axe.cols) {
       if (col %in% names(result)) result[[col]] <- NULL
     }
     result <- as.tbl(result)
-    if (test_type == "ttest") {
-      result <- arrange(result, desc(logFC))
-    } else {
-      result <- arrange(result, pval)
-    }
   } else {
     result <- NULL
   }
@@ -134,6 +135,20 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     errors = errors)
 
   class(out) <- c(clazz, "FacileDGEResult", "FacileAnalysisResult")
+  out
+}
+
+#' @noRd
+#' @export
+result.FacileDGEResult <- function(x, name = "result", sort = FALSE, ...) {
+  out <- x[["result"]]
+  if (sort) {
+    if (x[["test_type"]] == "ttest") {
+      out <- arrange(out, desc(logFC))
+    } else {
+      out <- arrange(out, pval)
+    }
+  }
   out
 }
 
@@ -218,24 +233,24 @@ fdge_methods <- function(assay_type = NULL) {
   # This is a table of assay_type : dge_method possibilites. The first row
   # for each assay_type is the default analysis method
   assay_methods <- tribble(
-    ~assay_type, ~dge_method, ~bioc_class,
-    "rnaseq",    "voom",      "DGEList",
-    "rnaseq",    "qlf",       "DGEList",
-    "rnaseq",    "trended",   "DGEList",
-    "umi",       "voom",      "DGEList",
-    "umi",       "qlf",       "DGEList",
-    "umi",       "trended",   "DGEList",
-    "tpm",       "trended",   "EList",
-    "affymrna",  "limma",     "EList",
-    "affymirna", "limma",     "EList",
-    "log2",      "limma",     "EList")
+    ~assay_type,   ~dge_method,         ~bioc_class,
+    "rnaseq",      "voom",              "EList",
+    "rnaseq",      "edgeR-qlf",         "DGEList",
+    "rnaseq",      "limma-trend",       "EList",
+    "umi",         "voom",              "EList",
+    "umi",         "edgeR-qlf",         "DGEList",
+    "umi",         "limma-trend",       "EList",
+    "tpm",         "limma-trend",       "EList",
+    "affymrna",    "limma",             "EList",
+    "affymirna",   "limma",             "EList",
+    "log2",        "limma",             "EList")
 
   method_params <- tribble(
-    ~dge_method,  ~robust_fit,  ~robust_ebayes,  ~trend_ebayes,
-    "voom",       FALSE,        FALSE,           FALSE,
-    "qlf",        TRUE,         FALSE,           FALSE,
-    "trended",    FALSE,        FALSE,           TRUE,
-    "limma",      FALSE,        FALSE,           FALSE)
+    ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes,
+    "voom",         FALSE,        FALSE,           FALSE,
+    "edgeR-qlf",    TRUE,         FALSE,           FALSE,
+    "limma-trend",  FALSE,        FALSE,           TRUE,
+    "limma",        FALSE,        FALSE,           FALSE)
 
   info <- left_join(assay_methods, method_params, by = "dge_method")
 

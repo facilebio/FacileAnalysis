@@ -9,12 +9,15 @@
 biocbox(x, ...)
 
 \method{biocbox}{FacileDGEModelDefinition}(x, assay_name, method = NULL,
-  dge_methods = NULL, filter = "default", prior_count = 1, ...)
+  dge_methods = NULL, filter = "default",
+  with_sample_weights = FALSE, prior_count = 3, ...)
 
 \method{biocbox}{FacileDGEResult}(x, ...)
 }
 \arguments{
 \item{x}{The FacileAnalysisResult}
+
+\item{...}{passed down to modeling functions where appropriate.}
 
 \item{assay_name}{the name of the assay to pull data for}
 
@@ -24,7 +27,19 @@ the post-processing of the data}
 \item{filter}{A filtering policy to remove unintereesting genes.
 If \code{"default"} (which is the default), then \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} is
 used if we are materializing a \code{DGEList}, otherwise lowly expressed
-features are removed. If \code{FALSE}, then no filtering is done.}
+features are removed in a similarly "naive" manner. This can,
+alternatively, be a character vector that holds the names of the features
+that should be kept. Default value: \code{"default"}.}
+
+\item{with_sample_weights}{Some methods that leverage the limma pipeline,
+like \code{"voom"}, \code{"limma"}, and \code{"limma-trend"} can leverage sample (array)
+quality weights to downweight outlier samples. In the case of
+\code{method == "voom"}, we use \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}}, while the
+rest use \code{\link[limma:arrayWeights]{limma::arrayWeights()}}. The choice of \code{method} determines which
+sample weighting function to sue. Defaults to \code{FALSE}.}
+
+\item{prior_count}{The pseudo-count to add to count data. Used primarily
+when running the \code{limma-trend} method on count (RNA-seq) data.}
 
 \item{sample_info}{a \code{facile_frame} that enumerates the samples to fetch
 data for, as well as the covariates used in downstream analysis}

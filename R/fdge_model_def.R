@@ -76,6 +76,7 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @method fdge_model_def data.frame
 #' @importFrom stats model.matrix
 #' @importFrom limma makeContrasts nonEstimable
+#' @importFrom FacileShine unselected
 #'
 #' @section data.frame:
 #' The data.frame function definition assumes that `x` is a data.frame of
@@ -206,6 +207,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
 #' @export
 #' @rdname fdge_model_def
+#' @importFrom FacileShine unselected
 fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
                           fixed = NULL, on_missing = c("warning", "error"),
                           ...) {
@@ -231,6 +233,7 @@ fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #' an error.
 #'
 #' @export
+#' @importFrom FacileShine unselected
 #' @rdname fdge_model_def
 fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
                                         denom = NULL,
@@ -265,6 +268,7 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
 
 #' @export
 #' @rdname fdge_model_def
+#' @importFrom FacileShine unselected
 fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
                                            denom = NULL, fixed = NULL,
                                            on_missing = c("warning", "error"),
@@ -285,6 +289,7 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @export
 #' @rdname fdge_model_def
+#' @importFrom FacileShine unselected
 fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
                                                    denom = NULL, fixed = NULL,
                                                    on_missing = c("warning", "error"),

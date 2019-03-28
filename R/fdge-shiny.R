@@ -41,7 +41,7 @@ fdgeAnalysisUI <- function(id, ...) {
 #'
 #' @export
 #' @importFrom shiny callModule reactive eventReactive renderText
-#'
+#' @importFrom FacileShine unselected
 #' @param model A linearm model definition. Can be either a "naked"
 #'   `FacileDGEModelDefinition` that is returned from a call to
 #'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned from
