@@ -13,11 +13,10 @@
 #' @param covariates a data.frame of covariates (columns) for each
 #'   sample (rows) in `x`
 #' @examples
-#' mdef <- FacileData::exampleFacileDataSet() %>%
-#'  filter_samples(indication == "BLCA") %>%
-#'  fdge_model_def(covariate = "sample_type",
-#'                 numer = "tumor",
-#'                 denom = "normal")
+#' efds <- FacileData::exampleFacileDataSet()
+#' samples <- FacileData::filter_samples(efds, indication == "BLCA")
+#' mdef <- fdge_model_def(samples, covariate = "sample_type",
+#'                        numer = "tumor", denom = "normal")
 #' dge <- fdge(mdef, method = "voom")
 #'
 #' if (interactive()) {
@@ -104,7 +103,8 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     }
 
     y <- bb[["biocbox"]]
-    result <- calculateIndividualLogFC(y, y[["design"]], contrast = testme,
+    des <- design(bb)
+    result <- calculateIndividualLogFC(y, des, contrast = testme,
                                        use.treat = use.treat,
                                        feature.min.logFC = treat_lfc)
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
@@ -172,7 +172,6 @@ biocbox.FacileDGEResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-#' @method print FacilePCAResult
 print.FacileDGEResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }

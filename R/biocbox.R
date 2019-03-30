@@ -149,6 +149,26 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
   }
 
   out$dge_method <- method
-  class(out) <- "FacileBiocBox"
+  class(out) <- "BiocBox"
+  out
+}
+
+#' @noRd
+#' @export
+design.BiocBox <- function(x, ...) {
+  box <- x[["biocbox"]]
+  if (is.null(box)) {
+    stop("The bioc assay container not found in the BiocBox")
+  }
+  if (is(box, "DGEList") || is(box, "EList")) {
+    out <- box[["design"]]
+  } else {
+    stop("design.BiocBox not implemented for '", class(box)[1L], "' containers")
+  }
+
+  if (!is.matrix(out)) {
+    stop("Error extracting design matrix")
+  }
+
   out
 }

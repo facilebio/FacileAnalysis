@@ -4,7 +4,6 @@
 #' @import dplyr
 #' @import checkmate
 #' @import FacileData
-#' @import plotly
 #' @import tidyr
 NULL
 
@@ -22,11 +21,11 @@ NULL
 
 # dplyr API
 
-#' @export distinct
-#' @export mutate
-#' @export select
-#' @export filter
-#' @export summarise
-#' @export summarize
-#' @export arrange
-NULL
+# @export distinct
+# @export mutate
+# @export select
+# @export filter
+# @export summarise
+# @export summarize
+# @export arrange
+# NULL

@@ -125,3 +125,9 @@ report <- function(x, ...) {
   UseMethod("report", x)
 }
 
+#' Extract the design matrix from objects used in a linear modeling step
+#'
+#' @export
+design <- function(x, ...) {
+  UseMethod("design", x)
+}

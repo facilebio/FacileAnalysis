@@ -49,11 +49,10 @@ side-by-side volcano and datatable for differential expression results.
 }
 
 \examples{
-mdef <- FacileData::exampleFacileDataSet() \%>\%
- filter_samples(indication == "BLCA") \%>\%
- fdge_model_def(covariate = "sample_type",
-                numer = "tumor",
-                denom = "normal")
+efds <- FacileData::exampleFacileDataSet()
+samples <- FacileData::filter_samples(efds, indication == "BLCA")
+mdef <- fdge_model_def(samples, covariate = "sample_type",
+                       numer = "tumor", denom = "normal")
 dge <- fdge(mdef, method = "voom")
 
 if (interactive()) {

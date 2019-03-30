@@ -1,7 +1,6 @@
 # Interactivity and vizualization over FacilePCAResults ========================
 
 #' @noRd
-#' @method viz FacilePCAResult
 #'
 #' @export
 #'

@@ -41,7 +41,6 @@ fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 
 #' @export
 #' @rdname fpca
-#' @method fpca DGEList
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
@@ -52,7 +51,6 @@ fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
 
 #' @export
 #' @rdname fpca
-#' @method fpca matrix
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                         col_covariates = NULL, ...) {
@@ -159,7 +157,6 @@ ranks.FacilePCAResult <- function(x, report = NULL, ...) {
 
 #' @noRd
 #' @export
-#' @method print FacilePCAResult
 print.FacilePCAResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }

@@ -125,6 +125,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 #' @importFrom crosstalk SharedData
 #' @importFrom DT datatable formatRound
 #' @importFrom htmltools tags
+#' @importFrom plotly config layout plot_ly toWebGL
 .viz.dge_ttest <- function(x, ntop = 200, max_padj = 0.10,
                            min_logFC = 1, round_digits = 3,
                            event_source = "A", treat_lfc = NULL,
