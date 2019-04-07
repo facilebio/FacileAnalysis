@@ -1,6 +1,5 @@
 # Packages imported completely for internal use --------------------------------
 
-#' @import broom
 #' @import dplyr
 #' @import checkmate
 #' @import FacileData
@@ -13,11 +12,6 @@ NULL
 NULL
 
 # Externally defined generics to re-export on package load ---------------------
-
-#' @export tidy
-#' @importFrom graphics plot
-#' @export plot
-NULL
 
 # dplyr API
 

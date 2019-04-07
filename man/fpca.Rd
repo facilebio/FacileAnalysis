@@ -2,16 +2,16 @@
 % Please edit documentation in R/fpca.R
 \name{fpca}
 \alias{fpca}
-\alias{fpca.DGEList}
+\alias{fpca.facile_frame}
 \alias{fpca.matrix}
 \title{Runs a facile PCA}
 \usage{
 fpca(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   col_covariates = NULL, ...)
 
-\method{fpca}{DGEList}(x, pcs = 1:10, ntop = 500,
-  row_covariates = x$genes, col_covariates = x$samples,
-  prior.count = 3, log = TRUE, ...)
+\method{fpca}{facile_frame}(x, pcs = 1:10, ntop = 500,
+  row_covariates = NULL, col_covariates = NULL, assay_name = NULL,
+  custom_key = Sys.getenv("USER"), ...)
 
 \method{fpca}{matrix}(x, pcs = 1:10, ntop = 500,
   row_covariates = NULL, col_covariates = NULL, ...)
@@ -32,6 +32,16 @@ You should look at factominer:
 \item http://factominer.free.fr/graphs/factoshiny.html
 }
 }
+\section{FacileDataStore (facile_frame)}{
+
+We enable the user to supply extra sample covariates that are not found
+in the FacileDataStore associated with these samples \code{x} by adding them as
+extra columns to \code{x}.
+
+If manually provioded col_covariates have the same name as internal sample
+covariates, then the manually provided ones will supersede the internals.
+}
+
 \examples{
 # Generate a data matrix with a sister covariate table
 mat <- local({
@@ -53,5 +63,8 @@ pdat <- local({
 
 # analyze and vizualize
 res <- fpca(mat, col_covariates = pdat)
-viz(res, color_aes = "category")
+if (interactive()) {
+  plot(res, color_aes = "category")
+  report(res, color_aes = "category", caption = "Check this out")
+}
 }

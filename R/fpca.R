@@ -13,34 +13,86 @@
 #' @param x a data container
 #' @return an fpca result
 #' @examples
-#' # Generate a data matrix with a sister covariate table
-#' mat <- local({
-#'   m <- matrix(rnorm(100 * 10), nrow = 100)
-#'   colnames(m) <- letters[1:10]
-#'   rownames(m) <- head(unique(
-#'     replicate(200, paste(sample(letters, 5), collapse = ""))),
-#'     nrow(m))
-#'   m
-#' })
+#' # Entire dataset
+#' efds <- FacileData::exampleFacileDataSet()
+#' pca.all <- fpca(efds)
+#' if (interactive()) {
+#'   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
+#'   report(pca.all, color_aes = "indication", shape_aes = "sample_type")
+#' }
 #'
-#' # generate some sample (column) covariates
-#' pdat <- local({
-#'   pd <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
-#'   pd <- as.data.frame(pd)
-#'   rownames(pd) <- colnames(mat)
-#'   pd
-#' })
+#' # A subset of samples
+#' pca.crc <- efds %>%
+#'   filter_samples(indication == "CRC") %>%
+#'   fpca()
+#' if (interactive()) {
+#'   report(pca.crc, color_aes = "sample_type")
+#' }
 #'
-#' # analyze and vizualize
-#' res <- fpca(mat, col_covariates = pdat)
-#' viz(res, color_aes = "category")
+#' # This works on "normal" DGELists, too.
+#' pca.dgelist <- efds %>%
+#'   filter_samples(indication == "CRC") %>%
+#'   as.DGEList() %>%
+#'   fpca()
+#' if (interactive()) {
+#'   report(pca.dgelist, color_aes = "sample_type")
+#' }
 fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
   UseMethod("fpca", x)
 }
 
+#' @noRd
 #' @export
+fpca.FacileDataStore <- function(x, pcs = 1:10, ntop = 500,
+                                 row_covariates = NULL, col_covariates = NULL,
+                                 assay_name = default_assay(x),
+                                 custom_key = Sys.getenv("USER"), ...) {
+  fpca(samples(x), pcs, ntop, row_covariates, col_covariates, assay_name,
+       custom_key, ...)
+}
+
+#' @section FacileDataStore (facile_frame):
+#' We enable the user to supply extra sample covariates that are not found
+#' in the FacileDataStore associated with these samples `x` by adding them as
+#' extra columns to `x`.
+#'
+#' If manually provioded col_covariates have the same name as internal sample
+#' covariates, then the manually provided ones will supersede the internals.
+#'
 #' @rdname fpca
+#' @export
+fpca.facile_frame <- function(x, pcs = 1:10, ntop = 500,
+                              row_covariates = NULL, col_covariates = NULL,
+                              assay_name = NULL,
+                              custom_key = Sys.getenv("USER"), ...) {
+  .fds <- assert_class(fds(x), "FacileDataStore")
+  assert_sample_subset(x)
+  x <- collect(x, n = Inf)
+
+  if (!is.null(row_covariates)) {
+    warning("Custom row_covariates not yet supported for facile_frame ",
+            "(it's not hard, I'm just lazy right now", immediate. = TRUE)
+  }
+  col.covariates <- with_sample_covs(x, custom_covariates = col_covariates,
+                                     custom_key = custom_key)
+
+  if (is.null(assay_name)) {
+    assay_name <- default_assay(.fds)
+  }
+
+  # (lazily) turning this into a DGEList to leverage the already-implented
+  # feature and sample anntation alignment written up in there.
+  y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
+  out <- fpca(y, pcs, ntop, ...)
+
+  ## add facile stuff
+  out[["fds"]] <- .fds
+  out
+}
+
+#' @noRd
+#' @export
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
@@ -54,6 +106,10 @@ fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
                         col_covariates = NULL, ...) {
+  messages <- character()
+  warnings <- character()
+  errors <- character()
+
   pcs.given <- !missing(pcs)
   assert_integerish(pcs, lower = 1L, upper = nrow(x))
 
@@ -121,37 +177,67 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 
   result <- list(
     result = dat,
+    pcs = pcs.take,
     factor_contrib = rename(ewm$factor.contrib, feature_id = "featureId"),
     percent_var = percentVar,
     pc_cor = pc_cor,
     row_covariates = row_covariates,
-    taken = take)
+    taken = take,
+    # Standard FacileAnalysisResult things
+    # fds = .fds,
+    messages = messages,
+    warnings = warnings,
+    errors = errors)
 
   class(result) <- c("FacilePCAResult", "FacileReducedDimResult",
                      "FacileAnalysisResult")
   result
 }
 
-#' Extracts the genes that contribute most to each PC
+#' Reports the contribution of each gene to the principal components
 #'
 #' @export
 #' @noRd
 #' @param report the column in x$row_covariates to use as the listing of the
 #'   feature in the table of ranks
-ranks.FacilePCAResult <- function(x, report = NULL, ...) {
+ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
+                                  report_feature_as = NULL, ...) {
+  type <- match.arg(type)
   fcontrib <- x[["factor_contrib"]]
   rdata <- x[["row_covariates"]]
 
-  if (is.null(report)) report <- colnames(rdata)[1L]
-  assert_choice(report, colnames(rdata))
-
   pc.cols <- colnames(fcontrib)[grepl("PC\\d+", colnames(fcontrib))]
-  out <- tibble(rank = seq(nrow(fcontrib)))
+  pc.ranks <- fcontrib[, c("feature_id", pc.cols)]
   for (pc in pc.cols) {
-    o <- order(fcontrib[[pc]], decreasing = TRUE)
-    xref <- match(fcontrib[["feature_id"]][o], rownames(rdata))
-    out[[pc]] <- rdata[[report]][xref]
+    pc.ranks[[pc]] <- rank(-pc.ranks[[pc]], ties.method = "random")
   }
+
+  if (!"feature_id" %in% colnames(rdata)) {
+    rdata[["feature_id"]] <- rownames(fcontrib)
+  }
+
+  rankings <- as.tbl(left_join(pc.ranks, rdata, by = "feature_id"))
+
+  if (type == "rankings") {
+    out <- rankings
+  } else {
+    meta.cols <- setdiff(colnames(rankings), pc.cols)
+    if (is.null(report_feature_as)) {
+      opts <- c("name", "symbol", "feature_id", "featureId",
+                "gene_id", "geneId")
+      report_feature_as <- intersect(opts, meta.cols)[1L]
+      if (is.na(report_feature_as)) {
+        report_feature_as <- meta.cols[1L]
+      }
+    }
+    assert_choice(report_feature_as, meta.cols)
+    out <- tibble(rank = seq(nrow(rankings)))
+    for (pc in pc.cols) {
+      ordr <- order(rankings[[pc]])
+      out[[pc]] <- rankings[[report_feature_as]][ordr]
+    }
+  }
+
   out
 }
 

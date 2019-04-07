@@ -79,7 +79,7 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @importFrom FacileShine unselected
 #'
 #' @section data.frame:
-#' The data.frame function definition assumes that `x` is a data.frame of
+#' The `*.data.frame` function definition assumes that `x` is a data.frame of
 #' samples (dataset,sample_id) and the covariates defined on these samples
 #' (ie. all the other columns of `x`) contain a superset of the variable names
 #' used in the construction of hte design matrix for the model definition.

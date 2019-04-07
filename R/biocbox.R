@@ -63,6 +63,8 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
   .fds <- assert_class(fds(x), "FacileDataStore")
 
   out <- list(biocbox = NULL)
+  class(out) <- "BiocBox"
+
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -76,7 +78,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
 
   ainfo <- assay_info(.fds, assay_name)
   if (!ainfo$assay_type %in% c("rnaseq", "umi", "tpm")) {
-    errors <- "DGE analysis not yet implemented for bulk-rnaseq-like data"
+    errors <- "DGE analysis only implemented for bulk-rnaseq-like data"
     return(out)
   }
 
@@ -149,7 +151,6 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
   }
 
   out$dge_method <- method
-  class(out) <- "BiocBox"
   out
 }
 

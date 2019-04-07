@@ -81,7 +81,7 @@ tibble.
 
 \section{data.frame}{
 
-The data.frame function definition assumes that \code{x} is a data.frame of
+The \code{*.data.frame} function definition assumes that \code{x} is a data.frame of
 samples (dataset,sample_id) and the covariates defined on these samples
 (ie. all the other columns of \code{x}) contain a superset of the variable names
 used in the construction of hte design matrix for the model definition.

@@ -260,18 +260,3 @@ fdge_methods <- function(assay_type = NULL) {
 
   info
 }
-
-# Other Helpers ================================================================
-
-#' @noRd
-#' @export
-tidy.FacileDGEResult <- function(x, result = "dge") {
-  # result <- match.arg(result, c("dge", multiGSEA::resultNames(result$gsea)))
-  result <- match.arg(result, c("dge", multiGSEA::resultNames(x$gsea)))
-  if (result == "dge") {
-    out <- x[["dge"]]
-  } else {
-    # out <- multiGSEA::result(x$gsea, result)
-  }
-  out
-}
