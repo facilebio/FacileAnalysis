@@ -1,4 +1,4 @@
-#' Peforms a differential expression analysis and GSEA.
+#' Peform a differential expression analysis.
 #'
 #' @export
 #' @importFrom multiGSEA GeneSetDb calculateIndividualLogFC logFC multiGSEA

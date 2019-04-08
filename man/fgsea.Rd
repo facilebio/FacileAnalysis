@@ -2,11 +2,36 @@
 % Please edit documentation in R/fgsea.R
 \name{fgsea}
 \alias{fgsea}
+\alias{result.FacileGSEAResult}
 \title{Performs Gene Set Enrichment Analyses}
 \usage{
-fgsea(x, ..)
+fgsea(x, gdb, methods, ...)
+
+\method{result}{FacileGSEAResult}(x, name = "result", ...)
+}
+\arguments{
+\item{x}{A \code{FacileAnalysisResult} object}
+
+\item{gdb}{A \code{multiGSEA::GeneSetDb} object}
+
+\item{methods}{the GSEA methods to use on \code{x}.}
+}
+\value{
+A FacileGSEAResult object, which includes a MultiGSEAResult object
+as it's \code{result()}.
 }
 \description{
 For now we only support GSEA methods that can be run from a
 \code{FacileDGETestResult}, such as \code{"cameraPR"} and \code{"goseq"}
 }
+\section{Accessing Results}{
+
+A call to \code{result(fgea.res)} will return the \code{multiGSEA::MultiGSEAResult}
+object. If the user specifies the name of a GSEA method used in the analysis,
+then the summarized results from that method will be returned by passing
+through to the \code{multiGSEA::result}function, ie. \code{r1} and \code{r2} in the code
+below are equivalent:\preformatted{r1 <- result(fgsea.res, name = "cameraPR")
+r2 <- result(fgsea.res) \%>\% multiGSEA::result("cameraPR")
+}
+}
+

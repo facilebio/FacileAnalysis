@@ -111,6 +111,7 @@ report.FacilePCAResult <- function(x, pcs = 3, with_features = TRUE,
   if (with_features) {
     ranked <- ranks(x, type = "ranked", report_feature_as = report_feature_as)
     rtable <- ranked %>%
+      result() %>%
       select(1, !!pc.cols) %>%
       head(ntop)
     dtable <- datatable(

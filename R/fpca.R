@@ -13,23 +13,29 @@
 #' @param x a data container
 #' @return an fpca result
 #' @examples
-#' # Entire dataset
-#' efds <- FacileData::exampleFacileDataSet()
-#' pca.all <- fpca(efds)
-#' if (interactive()) {
-#'   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
-#'   report(pca.all, color_aes = "indication", shape_aes = "sample_type")
-#' }
+#' library(FacileData)
+#' efds <- exampleFacileDataSet()
 #'
-#' # A subset of samples
+#' # A subset of samples ------------------------------------------------------
 #' pca.crc <- efds %>%
 #'   filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' if (interactive()) {
 #'   report(pca.crc, color_aes = "sample_type")
 #' }
+#' pca.gdb <- pca.crc %>%
+#'   ranks() %>%
+#'   as.GeneSetDb(pcs = 1:3)
 #'
-#' # This works on "normal" DGELists, too.
+#' # All samples --------------------------------------------------------------
+#' pca.all <- fpca(efds)
+#' if (interactive()) {
+#'   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
+#'   report(pca.all, color_aes = "indication", shape_aes = "sample_type")
+#' }
+#'
+#'
+#' # This works on "normal" DGELists, too. -----------------------------------
 #' pca.dgelist <- efds %>%
 #'   filter_samples(indication == "CRC") %>%
 #'   as.DGEList() %>%
@@ -85,7 +91,9 @@ fpca.facile_frame <- function(x, pcs = 1:10, ntop = 500,
   # feature and sample anntation alignment written up in there.
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
   out <- fpca(y, pcs, ntop, ...)
-
+  out[["result"]] <- out[["result"]] %>%
+    as.tbl() %>%
+    select(dataset, sample_id, everything())
   ## add facile stuff
   out[["fds"]] <- .fds
   out
@@ -175,10 +183,15 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
     tibble(row_name = rnames, row_idx = take),
     as.data.frame(pc_cor))
 
+  factor_contrib <- ewm$factor.contrib %>%
+    rename(feature_id = "featureId") %>%
+    select(feature_id, !!pcs.take) %>%
+    as.tbl()
+
   result <- list(
     result = dat,
     pcs = pcs.take,
-    factor_contrib = rename(ewm$factor.contrib, feature_id = "featureId"),
+    factor_contrib = factor_contrib,
     percent_var = percentVar,
     pc_cor = pc_cor,
     row_covariates = row_covariates,
@@ -201,12 +214,14 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 #' @param report the column in x$row_covariates to use as the listing of the
 #'   feature in the table of ranks
 ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
-                                  report_feature_as = NULL, ...) {
+                                  report_feature_as = NULL, topn = 10,
+                                  collection_name = "PCA loadings", ...) {
   type <- match.arg(type)
   fcontrib <- x[["factor_contrib"]]
   rdata <- x[["row_covariates"]]
 
-  pc.cols <- colnames(fcontrib)[grepl("PC\\d+", colnames(fcontrib))]
+  # pc.cols <- colnames(fcontrib)[grepl("PC\\d+", colnames(fcontrib))]
+  pc.cols <- x[["pcs"]]
   pc.ranks <- fcontrib[, c("feature_id", pc.cols)]
   for (pc in pc.cols) {
     pc.ranks[[pc]] <- rank(-pc.ranks[[pc]], ties.method = "random")
@@ -215,12 +230,21 @@ ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
   if (!"feature_id" %in% colnames(rdata)) {
     rdata[["feature_id"]] <- rownames(fcontrib)
   }
+  if (!"feature_type" %in% colnames(rdata)) {
+    # TODO: extract the feature_type of these rankings from the
+    # "facile analysis chain"
+    feature_type <- guess_feature_type(rdata[["feature_id"]], summarize = TRUE)
+    rdata[["feature_type"]] <- feature_type[["feature_type"]]
+  }
 
-  rankings <- as.tbl(left_join(pc.ranks, rdata, by = "feature_id"))
+  # rankings <- as.tbl(left_join(pc.ranks, rdata, by = "feature_id"))
+  rankings <- pc.ranks %>%
+    left_join(rdata, by = "feature_id") %>%
+    select(feature_type, feature_id, everything())
 
   if (type == "rankings") {
-    out <- rankings
-  } else {
+    result. <- rankings
+  } else if (type == "ranked") {
     meta.cols <- setdiff(colnames(rankings), pc.cols)
     if (is.null(report_feature_as)) {
       opts <- c("name", "symbol", "feature_id", "featureId",
@@ -231,13 +255,22 @@ ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
       }
     }
     assert_choice(report_feature_as, meta.cols)
-    out <- tibble(rank = seq(nrow(rankings)))
+    result. <- tibble(rank = seq(nrow(rankings)))
     for (pc in pc.cols) {
       ordr <- order(rankings[[pc]])
-      out[[pc]] <- rankings[[report_feature_as]][ordr]
+      result.[[pc]] <- rankings[[report_feature_as]][ordr]
     }
   }
 
+  out <- list(
+    result = as.tbl(result.),
+    # TODO: add faciledatastore to ranks.fpca output?
+    ranking_columns = pc.cols,
+    percent_var = x[["percent_var"]])
+
+  clazz <- paste0("Facile%sFeature", tools::toTitleCase(type))
+  classes <- sprintf(clazz, c("PCA", ""))
+  class(out) <- c(classes, "FacileAnalysisResult")
   out
 }
 
@@ -257,8 +290,8 @@ format.FacilePCAResult <- function(x, ...) {
     "===========================================================\n",
     sprintf("FacilePCAResult\n"),
     "-----------------------------------------------------------\n",
-    "Number of features used:", n.features, "\n",
-    "Number of PCs:", length(pcv), "\n",
+    "Number of features used: ", n.features, "\n",
+    "Number of PCs: ", length(pcv), "\n",
     "Variance explained:\n  ", pcvu, "\n",
     "===========================================================\n",
     sep = "")

@@ -43,28 +43,32 @@ covariates, then the manually provided ones will supersede the internals.
 }
 
 \examples{
-# Generate a data matrix with a sister covariate table
-mat <- local({
-  m <- matrix(rnorm(100 * 10), nrow = 100)
-  colnames(m) <- letters[1:10]
-  rownames(m) <- head(unique(
-    replicate(200, paste(sample(letters, 5), collapse = ""))),
-    nrow(m))
-  m
-})
+library(FacileData)
+efds <- exampleFacileDataSet()
 
-# generate some sample (column) covariates
-pdat <- local({
-  pd <- FacileAnalysis:::example_aes_data_table(10, n.cats = 5)
-  pd <- as.data.frame(pd)
-  rownames(pd) <- colnames(mat)
-  pd
-})
-
-# analyze and vizualize
-res <- fpca(mat, col_covariates = pdat)
+# A subset of samples ------------------------------------------------------
+pca.crc <- efds \%>\%
+  filter_samples(indication == "CRC") \%>\%
+  fpca()
 if (interactive()) {
-  plot(res, color_aes = "category")
-  report(res, color_aes = "category", caption = "Check this out")
+  report(pca.crc, color_aes = "sample_type")
+}
+pca.gdb <- as.GeneSetDb(ranks(pca.crc), 1:3)
+
+# All samples --------------------------------------------------------------
+pca.all <- fpca(efds)
+if (interactive()) {
+  viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
+  report(pca.all, color_aes = "indication", shape_aes = "sample_type")
+}
+
+
+# This works on "normal" DGELists, too. -----------------------------------
+pca.dgelist <- efds \%>\%
+  filter_samples(indication == "CRC") \%>\%
+  as.DGEList() \%>\%
+  fpca()
+if (interactive()) {
+  report(pca.dgelist, color_aes = "sample_type")
 }
 }

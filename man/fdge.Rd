@@ -5,7 +5,7 @@
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
 \alias{fdge.FacileDGEModelDefinition}
-\title{Peforms a differential expression analysis and GSEA.}
+\title{Peform a differential expression analysis.}
 \usage{
 \method{report}{FacileTtestDGEResult}(x, type = c("dge", "features"),
   ntop = 200, max_padj = 0.1, min_logFC = 1, features = NULL,
@@ -36,7 +36,7 @@ use as fixed effects}
 sample (rows) in \code{x}}
 }
 \description{
-Peforms a differential expression analysis and GSEA.
+Peform a differential expression analysis.
 }
 \section{Interacting with results}{
 
