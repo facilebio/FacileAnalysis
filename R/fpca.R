@@ -13,19 +13,20 @@
 #' @param x a data container
 #' @return an fpca result
 #' @examples
-#' library(FacileData)
-#' efds <- exampleFacileDataSet()
+#' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # A subset of samples ------------------------------------------------------
 #' pca.crc <- efds %>%
-#'   filter_samples(indication == "CRC") %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' if (interactive()) {
 #'   report(pca.crc, color_aes = "sample_type")
 #' }
+#'
 #' pca.gdb <- pca.crc %>%
-#'   ranks() %>%
-#'   as.GeneSetDb(pcs = 1:3)
+#'   signature(pcs = 1:3) %>%
+#'   result() %>%
+#'   multiGSEA::GeneSetDb()
 #'
 #' # All samples --------------------------------------------------------------
 #' pca.all <- fpca(efds)
@@ -207,15 +208,26 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
   result
 }
 
+# Ranks and Signatures =========================================================
+
 #' Reports the contribution of each gene to the principal components
+#'
+#' NOTE: type = "ranked" shouldn't be here. It is used by the viz
+#' display the genes loaded on the PCs in a wide format for visual
+#' function. We need to think of a universal function name that will do
+#' this in the "general" sense.
 #'
 #' @export
 #' @noRd
-#' @param report the column in x$row_covariates to use as the listing of the
-#'   feature in the table of ranks
+#' @param x A `FacilePCAResult`
+#' @param type `"rankings"` (default) or `"ranked"` -- note that the idea
+#' of the output for `"ranked"` should be generalized. See `NOTE` in the
+#' function details section.
+#' @param report_feature_as The column used to display in the returned
+#'   table for each feature when `type == "rankded"`
+#' @return A FacilePCAFeature(Rankings|Ranked) object
 ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
-                                  report_feature_as = NULL, topn = 10,
-                                  collection_name = "PCA loadings", ...) {
+                                  report_feature_as = NULL,  ...) {
   type <- match.arg(type)
   fcontrib <- x[["factor_contrib"]]
   rdata <- x[["row_covariates"]]
@@ -264,8 +276,10 @@ ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
 
   out <- list(
     result = as.tbl(result.),
+    feature_weight = gather(fcontrib, PC, weight, -feature_id),
     # TODO: add faciledatastore to ranks.fpca output?
     ranking_columns = pc.cols,
+    ranking_order = "ascending",
     percent_var = x[["percent_var"]])
 
   clazz <- paste0("Facile%sFeature", tools::toTitleCase(type))
@@ -273,6 +287,51 @@ ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
   class(out) <- c(classes, "FacileAnalysisResult")
   out
 }
+
+#' @noRd
+#' @export
+signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
+                                               collection_name = class(x)[1L],
+                                               ranking_columns = x[["ranking_columns"]],
+                                               ...) {
+  res <- result(x)
+  if (is.null(pcs)) {
+    ranking_columns <-  x[["ranking_columns"]]
+  } else if (test_int(pcs)) {
+    ranking_columns <- paste0("PC", 1:pcs)
+  } else if (test_integerish(pcs)) {
+    ranking_columns <- paste0("PC", pcs)
+  }
+  assert_character(ranking_columns)
+  assert_subset(ranking_columns, colnames(res))
+
+  sigs <- signature.MultiDimRankings(x, ranking_columns, ntop = ntop,
+                                     collection_name = collection_name, ...)
+  # Add PCA specific metadata to features
+  pvar <- x[["percent_var"]]
+  sigs <- left_join(sigs, x[["feature_weight"]],
+                    by = c("name" = "PC", "feature_id"))
+  sigs[["percent_var"]] <- pvar[sigs[["name"]]]
+  front.load <- c("collection", "name", "feature_id", "symbol", "rank",
+                  "weight", "percent_var")
+  front.load <- intersect(front.load, colnames(sigs))
+  sigs <- select(sigs, !!front.load, everything())
+  out <- list(
+    result = sigs,
+    params = list(pcs = pcs, ntop = ntop))
+  class(out) <- c("FacilePCAFeatureSignature",
+                  "FacileFeatureSignature",
+                  "FacileAnalysisResult")
+  out
+}
+
+#' @noRd
+#' @export
+signature.FacilePCAResult <- function(x, pcs = NULL, ntop = 20, ...) {
+  signature(ranks(x, "rankings"), pcs = pcs, ntop = ntop, ...)
+}
+
+# Printing =====================================================================
 
 #' @noRd
 #' @export

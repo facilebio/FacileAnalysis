@@ -31,8 +31,9 @@ fgsea.FacileAnovaDGEResult <- function(x, gdb, methods = "goseq",
 
 #' @noRd
 #' @export
-fgsea.FacilePCAResult <- function(x, methods = "cameraPR", pcs = NULL, ...) {
-
+fgsea.FacilePCAResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
+                                  ...) {
+  ranks. <- ranks(x, ...)
 }
 
 #' @section Accessing Results:

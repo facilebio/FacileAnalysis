@@ -15,28 +15,33 @@
 fdge(x, ...)
 
 \method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
-  method = NULL, filter = "default", ...)
+  method = NULL, filter = "default", with_sample_weights = FALSE,
+  ...)
 
 \method{fdge}{FacileDGEModelDefinition}(x, assay_name = NULL,
-  method = NULL, filter = "default", treat_lfc = NULL, ...)
+  method = NULL, filter = "default", with_sample_weights = FALSE,
+  treat_lfc = NULL, ...)
 }
 \arguments{
 \item{x}{a data source}
 
-\item{numer}{character vector defining the covariate/groups that
-make up the numerator}
+\item{assay_name}{the name of the assay that holds the measurements for test.
+Defaults to \code{default_assay(x)}.}
 
-\item{denom}{character vector defining the covariate/groups that
-make up the denominator}
+\item{method}{The differential testing framework to use over the data. The
+valid choices are defined by the type of assay \code{assay_name}is. Refer to the
+\emph{Differential Expression Testing Methods} section for more details.}
 
-\item{fixed}{character vector defining the covariate/groups to
-use as fixed effects}
-
-\item{covariates}{a data.frame of covariates (columns) for each
-sample (rows) in \code{x}}
+\item{filter, with_sample_weights}{Passed into \code{\link[=biocbox]{biocbox()}} to determine which
+features (genes) are removed from the dataset for testing, as well as if
+to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}}
+(where appropriate) when testing (default is not to).}
 }
 \description{
-Peform a differential expression analysis.
+Use \code{\link[=fdge_model_def]{fdge_model_def()}} to define the design matrix and contrast to test and
+pass the \code{FacileDGEModelDefinition} object returned from that to \code{fdge()}
+to run the desired differential testing framework (dictated by the \code{method}
+parameter) over the data. \code{fdge_model_def} accepts a
 }
 \section{Interacting with results}{
 
@@ -48,15 +53,45 @@ the analyst or dropped into an Rmarkdown report.
 side-by-side volcano and datatable for differential expression results.
 }
 
+\section{Differential Expression Testing Methods}{
+
+The appropriate statistical framework to use for differential expression
+testing is defined by the type of data that is recorded in the assay
+\code{assay_name}, ie. \code{assay_info(x, assay_name)$assay_type}.
+
+The \code{fdge_methods()} function returns a tibble of appropriate
+\code{assay_type -> dge_method} associations. The first entry for each
+\code{dge_method} is the default \code{method} used if one isn't provided by the
+caller.
+
+The available methods are:
+\itemize{
+\item \code{"voom"}: For count data, uses \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}} when
+\code{with_sample_weights = TRUE}.
+\item \code{"edgeR-qlf"}: The edgeR quasi-likelihood method, for count data.
+\item \code{"limma-trend"}: Usable for log-transformed data that "looks like" it came
+from count data, or where there is a "trend" of the variance with the
+mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}.
+\item \code{"limma"}: Straightup limma, this expects log2-normal like data, with
+(largely) no trend of the variance to the mean worth modeling. Uses
+\code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}
+}
+}
+
 \examples{
 efds <- FacileData::exampleFacileDataSet()
 samples <- FacileData::filter_samples(efds, indication == "BLCA")
 mdef <- fdge_model_def(samples, covariate = "sample_type",
                        numer = "tumor", denom = "normal")
 dge <- fdge(mdef, method = "voom")
-
+dge.sig <- signature(dge)
 if (interactive()) {
   viz(dge)
   shine(dge)
 }
+
+stage.anova <- samples \%>\%
+  fdge_model_def(covariate = "stage", fixed = "sex") \%>\%
+  fdge(method = "voom")
+anova.sig <- signature(stage.anova)
 }

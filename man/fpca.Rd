@@ -43,17 +43,20 @@ covariates, then the manually provided ones will supersede the internals.
 }
 
 \examples{
-library(FacileData)
-efds <- exampleFacileDataSet()
+efds <- FacileData::exampleFacileDataSet()
 
 # A subset of samples ------------------------------------------------------
 pca.crc <- efds \%>\%
-  filter_samples(indication == "CRC") \%>\%
+  FacileData::filter_samples(indication == "CRC") \%>\%
   fpca()
 if (interactive()) {
   report(pca.crc, color_aes = "sample_type")
 }
-pca.gdb <- as.GeneSetDb(ranks(pca.crc), 1:3)
+
+pca.gdb <- pca.crc \%>\%
+  signature(pcs = 1:3) \%>\%
+  result() \%>\%
+  multiGSEA::GeneSetDb()
 
 # All samples --------------------------------------------------------------
 pca.all <- fpca(efds)

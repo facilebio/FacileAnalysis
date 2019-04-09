@@ -7,7 +7,7 @@
 ranks(x, ...)
 }
 \arguments{
-\item{x}{A FacileAnalysisResult}
+\item{x}{A \code{FacileAnalysisResult}}
 }
 \description{
 Among other thigns, analyses can often provide rankings over features or

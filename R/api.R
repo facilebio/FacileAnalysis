@@ -46,12 +46,46 @@ result.FacileAnalysisResult <- function(x, name = "result", ...) {
 #' over the genes. This generic extract ranks of one type or another.
 #'
 #' @export
-#' @param x A FacileAnalysisResult
+#' @param x A `FacileAnalysisResult`
 ranks <- function(x, ...) {
   UseMethod("ranks", x)
 }
 
+#' Converts an analysis result into a "signature" type of thing.
+#'
+#' This is mainly for feature rankings, but could be something else? Returns
+#' a table of features that can be piped into GeneSetDb() constructor, should
+#' insipiration strike.
+#'
+#' Most of the `signature.*` functions defined over the result of analysis first
+#' passes through a call to `ranks()` first, which then calls the `signature()`
+#' method on those ranks, ie. the two segments below will produce the same
+#' result.
+#'
+#' ```r
+#' sigs1 <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fpca() %>%
+#'   signature()
+#' sigs2 <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fpca() %>%
+#'   ranks() %>%
+#'   signature()
+#' ```
+#'
+#' @export
+#' @param x A `FacileAnalysisResult`.
+#' @examples
+#' pca.sigs <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fpca() %>%
+#'   signature()
+signature <- function(x, ...) {
+  UseMethod("signature", x)
+}
 
+# Facile API Implementations ===================================================
 
 #' FacileAnalysisResult objects should be able to fetch the FacileDataStore
 #' they were created from.

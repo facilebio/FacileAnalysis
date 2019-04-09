@@ -22,13 +22,20 @@
 #' @export
 #'
 #' @param x a dataset
-#' @param covariate the name of the sample_covariate we are performing a
-#'   contrast against
+#' @param covariate the name of the "main effect" sample_covariate we are
+#'   performing a contrast against.
+#' @param numer character vector defining the covariate/groups that
+#'   make up the numerator
+#' @param denom character vector defining the covariate/groups that
+#'   make up the denominator
+#' @param fixed character vector defining the covariate/groups to
+#'   use as fixed effects
 #' @param on_missing when a covariate level is missing (NA) for a sample, the
 #'   setting of this parameter (default `"warn"`) will dictate the behavior
 #'   of this funciton. When `"warning"`, a warning will be raised, and the
 #'   message will be stored in the `$warning` element of the resul. Otherwise,
 #'   when `"error"`. See the "Missing Covariates" section for more information.
+#'
 #' @return a list with:
 #'   * `$test`: "ttest" or "anova"
 #'   * `$covariates`: the pData over the samples (datset,sample_id, ...)

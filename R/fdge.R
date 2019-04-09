@@ -1,28 +1,61 @@
 #' Peform a differential expression analysis.
 #'
+#' Use [fdge_model_def()] to define the design matrix and contrast to test and
+#' pass the `FacileDGEModelDefinition` object returned from that to `fdge()`
+#' to run the desired differential testing framework (dictated by the `method`
+#' parameter) over the data. `fdge_model_def` accepts a
+#'
+#' @section Differential Expression Testing Methods:
+#' The appropriate statistical framework to use for differential expression
+#' testing is defined by the type of data that is recorded in the assay
+#' `assay_name`, ie. `assay_info(x, assay_name)$assay_type`.
+#'
+#' The `fdge_methods()` function returns a tibble of appropriate
+#' `assay_type -> dge_method` associations. The first entry for each
+#' `dge_method` is the default `method` used if one isn't provided by the
+#' caller.
+#'
+#' The available methods are:
+#'
+#' * `"voom"`: For count data, uses [limma::voomWithQualityWeights()] when
+#'   `with_sample_weights = TRUE`.
+#' * `"edgeR-qlf"`: The edgeR quasi-likelihood method, for count data.
+#' * `"limma-trend"`: Usable for log-transformed data that "looks like" it came
+#'    from count data, or where there is a "trend" of the variance with the
+#'    mean, uses  [lima::arrayWeights()] when `with_sample_weights = TRUE`.
+#' * `"limma"`: Straightup limma, this expects log2-normal like data, with
+#'    (largely) no trend of the variance to the mean worth modeling. Uses
+#'    [lima::arrayWeights()] when `with_sample_weights = TRUE`
+#'
 #' @export
 #' @importFrom multiGSEA GeneSetDb calculateIndividualLogFC logFC multiGSEA
 #'
 #' @param x a data source
-#' @param numer character vector defining the covariate/groups that
-#'   make up the numerator
-#' @param denom character vector defining the covariate/groups that
-#'   make up the denominator
-#' @param fixed character vector defining the covariate/groups to
-#'   use as fixed effects
-#' @param covariates a data.frame of covariates (columns) for each
-#'   sample (rows) in `x`
+#' @param assay_name the name of the assay that holds the measurements for test.
+#'   Defaults to `default_assay(x)`.
+#' @param method The differential testing framework to use over the data. The
+#'   valid choices are defined by the type of assay `assay_name`is. Refer to the
+#'   *Differential Expression Testing Methods* section for more details.
+#' @param filter,with_sample_weights Passed into [biocbox()] to determine which
+#'   features (genes) are removed from the dataset for testing, as well as if
+#'   to use [limma::arrayWeights()] or [limma::voomWithQualityWeights()]
+#'   (where appropriate) when testing (default is not to).
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- FacileData::filter_samples(efds, indication == "BLCA")
 #' mdef <- fdge_model_def(samples, covariate = "sample_type",
 #'                        numer = "tumor", denom = "normal")
 #' dge <- fdge(mdef, method = "voom")
-#'
+#' dge.sig <- signature(dge)
 #' if (interactive()) {
 #'   viz(dge)
 #'   shine(dge)
 #' }
+#'
+#' stage.anova <- samples %>%
+#'   fdge_model_def(covariate = "stage", fixed = "sex") %>%
+#'   fdge(method = "voom")
+#' anova.sig <- signature(stage.anova)
 fdge <- function(x, ...) {
   UseMethod("fdge", x)
 }
@@ -30,7 +63,8 @@ fdge <- function(x, ...) {
 #' @export
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                            filter = "default", ...) {
+                                            filter = "default",
+                                            with_sample_weights = FALSE, ...) {
   res <- NextMethod(coef = x$coef)
   res
 }
@@ -39,7 +73,9 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                method = NULL,
                                                filter = "default",
-                                               treat_lfc = NULL, ...) {
+                                               with_sample_weights = FALSE,
+                                               treat_lfc = NULL,
+                                               ...) {
   res <- NextMethod(contrast = x$contrast)
   res
 }
@@ -47,7 +83,9 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 #' @export
 #' @rdname fdge
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                          filter = "default", treat_lfc = NULL,
+                                          filter = "default",
+                                          with_sample_weights = FALSE,
+                                          treat_lfc = NULL,
                                           ...) {
   messages <- character()
   warnings <- character()
@@ -82,7 +120,8 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   }
 
   if (length(errors) == 0L) {
-    bb <- biocbox(x, assay_name, method, dge_methods, filter, ...)
+    bb <- biocbox(x, assay_name, method, dge_methods, filter,
+                  with_sample_weights = with_sample_weights, ...)
     messages <- c(messages, bb[["messages"]])
     warnings <- c(warnings, bb[["warnings"]])
     errors <- c(errors, bb[["errors"]])
@@ -140,17 +179,130 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
 #' @noRd
 #' @export
-result.FacileDGEResult <- function(x, name = "result", sort = FALSE, ...) {
+result.FacileDGEResult <- function(x, name, ...) {
   out <- x[["result"]]
-  if (sort) {
-    if (x[["test_type"]] == "ttest") {
-      out <- arrange(out, desc(logFC))
-    } else {
-      out <- arrange(out, pval)
-    }
+  if (!"feature_type" %in% colnames(out)) {
+    feature_type <- guess_feature_type(out[["feature_id"]], summarize = TRUE)
+    out[["feature_type"]] <- feature_type[["feature_type"]]
+    out <- select(feature_type, everything())
   }
   out
 }
+
+# Ranks and Signatures =========================================================
+
+#' @export
+#' @noRd
+ranks.FacileTtestDGEResult <- function(x, ...) {
+  ranks. <- result(x, ...)
+  ranks. <- arrange(ranks., desc(logFC))
+  out <- list(
+    result = ranks.,
+    ranking_columns = "logFC",
+    ranking_order = "decreasing")
+  class(out) <- c("FacileTtestDGEFeatureRankings",
+                  "FacileFeatureRankings",
+                  "FacileAnalysisResult")
+  out
+}
+
+#' @export
+#' @noRd
+signature.FacileTtestDGEResult <- function(x, min_logFC = x[["treat_lfc"]],
+                                           max_padj = 0.10, ntop = 20,
+                                           name = NULL, collection_name = NULL,
+                                           ...) {
+  signature(ranks(x, ...), min_logFC = min_logFC, max_padj = max_padj,
+            ntop = ntop, name = name, collection_name = collection_name, ...)
+}
+
+#' @export
+#' @noRd
+signature.FacileTtestDGEFeatureRankings <- function(x, min_logFC = x[["treat_lfc"]],
+                                                    max_padj = 0.10,
+                                                    ntop = 20,
+                                                    name = NULL,
+                                                    collection_name = NULL,
+                                                    ...) {
+  if (is.null(name)) name <- "Ttest signature"
+  name. <- assert_string(name)
+
+  if (is.null(collection_name)) collection_name <- class(x)[1L]
+  assert_string(collection_name)
+
+  if (is.null(min_logFC)) min_logFC <- 1
+  up <- result(x) %>%
+    filter(padj <= max_padj, logFC >= min_logFC) %>%
+    mutate(collection = collection_name, name = paste(name., "up"),
+           direction = "up")
+  up <- head(up, ntop)
+
+  down <- result(x) %>%
+    filter(padj <= max_padj, logFC <= min_logFC) %>%
+    mutate(collection = collection_name, name = paste(name., "down"),
+           direction = "down")
+  down <- tail(down, ntop)
+
+  sig <- bind_rows(up, down) %>%
+    select(collection, name, everything())
+
+  out <- list(
+    result = sig,
+    params = list(max_padj = max_padj, min_logFC = min_logFC))
+  class(out) <- sub("Rankings$", "Signature", class(x))
+  out
+}
+
+#' @noRd
+#' @export
+ranks.FacileAnovaDGEResult <- function(x, ...) {
+  ranks. <- result(x, ...)
+  ranks. <- arrange(ranks., pval)
+  out <- list(
+    result = ranks.,
+    ranking_colums = "pval",
+    ranking_order = "ascending")
+  class(out) <- c("FacileAnovaDGEFeatureRankings",
+                  "FacileFeatureRankings",
+                  "FacileAnalysisResult")
+  out
+}
+
+#' @export
+#' @noRd
+signature.FacileAnovaDGEResult <- function(x, max_padj = 0.10, ntop = 20,
+                                           name = NULL, collection_name = NULL,
+                                           ...) {
+  signature(ranks(x, ...), max_padj = max_padj, ntop = ntop, name = name,
+            collectoin_name = collection_name, ...)
+}
+
+#' @export
+#' @noRd
+signature.FacileAnovaDGEFeatureRankings <- function(x, max_padj = 0.10,
+                                                    ntop = 20, name = NULL,
+                                                    collection_name = NULL,
+                                                    ...) {
+  if (is.null(name)) name <- "Anova signature"
+  name. <- assert_string(name)
+
+  if (is.null(collection_name)) collection_name <- class(x)[1L]
+  assert_string(collection_name)
+
+  sig <- result(x) %>%
+    filter(padj <= max_padj) %>%
+    mutate(collection = collection_name, name = name.,
+           direction = "udefined") %>%
+    head(ntop)
+
+  out <- list(
+    result = sig,
+    params = list(ntop = ntop, max_padj = max_padj))
+  class(out) <- sub("Rankings$", "Signature", class(x))
+  sig
+}
+
+# Facile API ===================================================================
 
 #' @noRd
 #' @export
@@ -210,8 +362,6 @@ format.FacileDGEResult <- function(x, ...) {
 
 
 # Helpers ======================================================================
-
-.dge_methods <- c("voom", "qlf", "trended", "limma")
 
 #' A table of assay_type,dge_method combination parameters
 #'

@@ -35,8 +35,17 @@ fdge_model_def(x, covariate, numer = NULL, denom = NULL,
 \arguments{
 \item{x}{a dataset}
 
-\item{covariate}{the name of the sample_covariate we are performing a
-contrast against}
+\item{covariate}{the name of the "main effect" sample_covariate we are
+performing a contrast against.}
+
+\item{numer}{character vector defining the covariate/groups that
+make up the numerator}
+
+\item{denom}{character vector defining the covariate/groups that
+make up the denominator}
+
+\item{fixed}{character vector defining the covariate/groups to
+use as fixed effects}
 
 \item{on_missing}{when a covariate level is missing (NA) for a sample, the
 setting of this parameter (default \code{"warn"}) will dictate the behavior

@@ -26,11 +26,6 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   qres <- edgeR::topTags(qres, n = Inf, sort.by = "none")
   qres <- edgeR::as.data.frame.TopTags(qres)
 
-  if (FALSE) {
-    plot(qlf_dge$logFC, qres$logFC, pch = 16, col = "#3f3f3f33")
-    abline(0, 1, col = "red")
-  }
-
   expect_equal(qres$feature_id, qlf_dge$feature_id)
   expect_equal(qlf_dge$pval, qres$PValue)
   expect_equal(qlf_dge$padj, qres$FDR)
@@ -44,11 +39,6 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   vres <- limma::lmFit(vm, vm$design) %>%
     limma::eBayes() %>%
     limma::topTable(coef = 2, Inf, sort.by = "none")
-
-  if (FALSE) {
-    plot(vm_dge$logFC, vres$logFC, pch = 16, col = "#3f3f3f33")
-    abline(0, 1, col = "red")
-  }
 
   expect_equal(vres$feature_id, vm_dge$feature_id)
   expect_equal(vm_dge$pval, vres$P.Value)
@@ -93,4 +83,32 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$pval, vres$P.Value)
   expect_equal(vm_dge$padj, vres$adj.P.Val)
   expect_equal(vm_dge$F, vres$F)
+})
+
+test_that("ranks returns DGE features in expected order" {
+  ttest.res <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def(covariate = "sample_type",
+                   numer = "tumor",
+                   denom = "normal") %>%
+    fdge(method = "voom")
+  ttest.expected <- ttest.res %>%
+    result() %>%
+    arrange(desc(logFC))
+  ttest.ranks <- ttest.res %>%
+    ranks() %>%
+    result()
+  expect_equal(ttest.ranks[["feature_id"]], ttest.expected[["feature_id"]])
+
+  anova.res <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def(covariate = "stage", fixed = "sex") %>%
+    fdge(method = "voom")
+  anova.expected <- anova.res %>%
+    result() %>%
+    arrange(pval)
+  anova.ranks <- avova.res %>%
+    ranks() %>%
+    result()
+  expect_equal(anova.ranks[["feature_id"]], anova.expected[["feature_id"]])
 })

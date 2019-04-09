@@ -1,31 +1,16 @@
-# Most analyses can induce well defined rankings over the feature space that
-# is analyzed. These are methods that work over such rankings, ie.
-#
-# `ranks(x, type = "rankings")`
-
-#' Convert a feature descriptor into a GeneSetDb
+#' This is a helper function to pull out multiple signature from a ranking table
+#' that provides multiple columns of rankings for the same features, like the
+#' rankings produced by ranks(fpca()), where we have different rankings per PC.
 #'
-#' This is mainly for feature rankings, but could be something else?
+#' I'm not sure if this is generic enough to re-use, but I thought it might be,
+#' so the signature.FacilePCAFeatureRankings function is at least using this
+#' for now.
 #'
-#' @export
-#' @examples
-#' pca.gdb <- FacileData::exampleFacileDataSet() %>%
-#'   filter_samples(indication == "CRC") %>%
-#'   fpca() %>%
-#'   ranks() %>%
-#'   as.GeneSetDb()
-as.GeneSetDb <- function(x, ...) {
-  UseMethod("as.GeneSetDb", x)
-}
-
-#' @export
-#' @importFrom multiGSEA GeneSetDb
 #' @noRd
-#' @method as.GeneSetDb FacileFeatureRankings
-as.GeneSetDb.FacileFeatureRankings <- function(x, topn = 10,
-                                               collection_name = class(x)[1L],
-                                               ranking_columns = x[["ranking_columns"]],
-                                               ...) {
+signature.MultiDimRankings <- function(x, ranking_columns, ntop = 20,
+                                       collection_name = class(x)[1L],
+                                       ...) {
+  assert_class(x, "FacileFeatureRankings")
   res <- result(x)
   assert_string(collection_name)
   assert_character(ranking_columns)
@@ -37,36 +22,14 @@ as.GeneSetDb.FacileFeatureRankings <- function(x, topn = 10,
     out <- mutate(res, rank = res[[col]], collection = collection_name,
                   name = col)
     out <- select(out, rank, everything(), -!!all.rank.cols)
-    out <- rename(out, featureId = "feature_id")
     out <- arrange(out, rank)
-    head(out, topn)
+    head(out, ntop)
   })
   sigs <- bind_rows(sigs)
-  GeneSetDb(sigs)
+  select(sigs, collection, name, rank, everything())
 }
 
-#' @noRd
-#' @export
-#' @method as.GeneSetDb FacilePCAFeatureRankings
-as.GeneSetDb.FacilePCAFeatureRankings <- function(x, pcs = NULL, ...) {
-  res <- result(x)
-  if (is.null(pcs)) {
-    ranking_columns <-  x[["ranking_columns"]]
-  } else if (test_int(pcs)) {
-    ranking_columns <- paste0("PC", 1:pcs)
-  } else if (test_integerish(pcs)) {
-    ranking_columns <- paste0("PC", pcs)
-  }
-  assert_character(ranking_columns)
-  assert_subset(ranking_columns, colnames(res))
-  gdb <- NextMethod(x, ranking_columns = ranking_columns, ...)
-
-  # Let's add the percent_var explained for each PC to the metadata for the
-  # genesets
-  pvar <- x[["percent_var"]]
-  gdb@table[["percent_var"]] <- pvar[gdb@table[["name"]]]
-  gdb
-}
+# Print Rankings ===============================================================
 
 #' @noRd
 #' @export
@@ -75,6 +38,27 @@ print.FacileFeatureRankings <- function(x, ...) {
 }
 
 format.FacileFeatureRankings <- function(x, ...) {
+  out <- paste(
+    "===========================================================\n",
+    class(x)[1L], "\n",
+    "-----------------------------------------------------------\n",
+    "Number of features: ", nrow(result(x)), "\n",
+    "===========================================================\n",
+    sep = "")
+  out
+}
+
+# Print Signatures =============================================================
+
+#' @noRd
+#' @export
+print.FacileFeatureSignature <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+#' @noRd
+#' @export
+format.FacileFeatureSignature <- function(x, ...) {
   out <- paste(
     "===========================================================\n",
     class(x)[1L], "\n",

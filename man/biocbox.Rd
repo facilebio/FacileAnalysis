@@ -8,8 +8,8 @@
 \usage{
 biocbox(x, ...)
 
-\method{biocbox}{FacileDGEModelDefinition}(x, assay_name, method = NULL,
-  dge_methods = NULL, filter = "default",
+\method{biocbox}{FacileDGEModelDefinition}(x, assay_name = NULL,
+  method = NULL, dge_methods = NULL, filter = "default",
   with_sample_weights = FALSE, prior_count = 3, ...)
 
 \method{biocbox}{FacileDGEResult}(x, ...)
