@@ -85,7 +85,7 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$F, vres$F)
 })
 
-test_that("ranks returns DGE features in expected order" {
+test_that("ranks returns DGE features in expected order", {
   ttest.res <- FDS %>%
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "sample_type",
@@ -107,7 +107,7 @@ test_that("ranks returns DGE features in expected order" {
   anova.expected <- anova.res %>%
     result() %>%
     arrange(pval)
-  anova.ranks <- avova.res %>%
+  anova.ranks <- anova.res %>%
     ranks() %>%
     result()
   expect_equal(anova.ranks[["feature_id"]], anova.expected[["feature_id"]])
