@@ -29,7 +29,7 @@ biocbox <- function(x, ...) {
 #' @rdname biocbox
 #'
 #' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
-#' @importFrom limma voom
+#' @importFrom limma arrayWeights voom voomWithQualityWeights
 #' @param sample_info a `facile_frame` that enumerates the samples to fetch
 #'   data for, as well as the covariates used in downstream analysis
 #' @param assay_name the name of the assay to pull data for
@@ -53,7 +53,8 @@ biocbox <- function(x, ...) {
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
-biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
+biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
+                                             method = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
@@ -61,6 +62,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
   assert_class(x, "FacileDGEModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
+  if (is.null(assay_name)) assay_name <- default_assay(.fds)
 
   out <- list(biocbox = NULL)
   class(out) <- "BiocBox"
@@ -104,6 +106,11 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
     method <- default_method
   }
 
+  # Refactor ###################################################################
+  # NOTE: The code from here down assumes we are working with a "count"-like
+  # assay, and defaulting to using a DGEList. This is where we need to start
+  # hacking to support the other types of assay data.
+
   y.all <- as.DGEList(si, assay_name = assay_name, covariates = si)
   # The roughly approximated norm.factors already present in a faciledatastore
   # should be good enough for initial low-pass filtering.
@@ -133,24 +140,30 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
   y <- y.all[keep,,keep.lib.sizes = FALSE]
   y <- calcNormFactors(y)
 
-  if (method == "voom") {
+  if (method == "edgeR-qlf") {
+    out[["biocbox"]] <- estimateDisp(y, y[["design"]], robust = TRUE)
+  } else if (method == "voom") {
     if (with_sample_weights) {
       out[["biocbox"]] <- voomWithQualityWeights(y, y[["design"]], ...)
     } else {
       out[["biocbox"]] <- voom(y, y$design, save.plot = TRUE, ...)
     }
-  } else if (method == "limma-trend") {
+  } else if (method %in% c("limma-trend", "limma")) {
     elist <- list()
     elist[["E"]] <- edgeR::cpm(y, log = TRUE, prior.count = prior_count)
-    elist[["design"]] <- y[["design"]]
     elist[["genes"]] <- y[["genes"]]
     elist[["targets"]] <- y[["samples"]]
-    out[["biocbox"]] <- new("EList", elist)
-  } else if (method == "edgeR-qlf") {
-    out[["biocbox"]] <- estimateDisp(y, y[["design"]], robust = TRUE)
+    elist <- new("EList", elist)
+    elist[["design"]] <- y[["design"]]
+    if (with_sample_weights) {
+      elist <- arrayWeights(elist, elist[["design"]])
+    }
+    out[["biocbox"]] <- elist
+  } else {
+    stop("How did we get here?")
   }
 
-  out$dge_method <- method
+  out[["dge_method"]] <- method
   out
 }
 
@@ -159,7 +172,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name, method = NULL,
 design.BiocBox <- function(x, ...) {
   box <- x[["biocbox"]]
   if (is.null(box)) {
-    stop("The bioc assay container not found in the BiocBox")
+    stop("The bioc assay container is not found in the BiocBox")
   }
   if (is(box, "DGEList") || is(box, "EList")) {
     out <- box[["design"]]
