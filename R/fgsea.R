@@ -60,6 +60,20 @@ fgsea.FacileTtestDGEResult <- function(x, gdb, methods = "cameraPR",
   ranked <- setNames(ranks.[[rank_by]], ranks.[["feature_id"]])
   mg <- multiGSEA(gdb, ranked, method = methods, ...)
 
+  # Hack the mg result until we can send in a data.frame with ranking statistics
+  # and metadata
+  mg@logFC <- local({
+    lfc <- mg@logFC
+    xref <- match(lfc[["featureId"]], ranks.[["feature_id"]])
+    ranks. <- ranks.[xref,]
+    stopifnot(all.equal(lfc[["featureId"]], ranks.[["feature_id"]]))
+    xfer <- c("logFC", "t", "F", "B", "AveExpr", "pval", "padj",
+              "meta", "symbol")
+    xfer <- intersect(xfer, colnames(ranks.))
+    for (cname in xfer) lfc[[cname]] <- ranks.[[cname]]
+    lfc
+  })
+
   out <- list(
     result = mg,
     params = list(methods = methods, min_logFC = min_logFC, max_padj = max_padj,

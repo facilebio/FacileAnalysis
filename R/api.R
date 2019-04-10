@@ -17,20 +17,21 @@ compare.FacileAnalysisResult <- function(x, y, ...) {
   msg <- glue("No `compare` method defined for `{class(x)[1L]}` result type.")
 }
 
-#' Retrieves the main (or alternative) result from a FacileAnalysis
-#'
-#' This should always return a tidy data frame of one sort or another.
-#'
-#' FacileAnalysisResults should should all aslo have a top-level result
-#' accessible via obj[["result"]]
-#'
-#' @export
-#' @param x A FacileAnalysisResult
-#' @param name the name of the result to retrieve. Default is `"result"`, which
-#'   should represent the top-level result for all FacileAnalysisResult objects.
-result <- function(x, name = "result", ...) {
-  UseMethod("result", x)
-}
+# Retrieves the main (or alternative) result from a FacileAnalysis
+#
+# This should always return a tidy data frame of one sort or another.
+#
+# FacileAnalysisResults should should all aslo have a top-level result
+# accessible via obj[["result"]]
+#
+#' @importFrom multiGSEA result
+#' @export result
+NULL
+
+# This is defined in multiGSEA@develop
+# result <- function(x, name = "result", ...) {
+#   UseMethod("result", x)
+# }
 
 #' @export
 #' @noRd
