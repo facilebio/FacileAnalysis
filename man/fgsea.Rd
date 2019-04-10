@@ -2,10 +2,14 @@
 % Please edit documentation in R/fgsea.R
 \name{fgsea}
 \alias{fgsea}
+\alias{fgsea.FacileTtestDGEResult}
 \alias{result.FacileGSEAResult}
 \title{Performs Gene Set Enrichment Analyses}
 \usage{
 fgsea(x, gdb, methods, ...)
+
+\method{fgsea}{FacileTtestDGEResult}(x, gdb, methods = "cameraPR",
+  min_logFC = 1, max_padj = 0.1, rank_by = "logFC", ...)
 
 \method{result}{FacileGSEAResult}(x, name = "result", ...)
 }
@@ -21,9 +25,19 @@ A FacileGSEAResult object, which includes a MultiGSEAResult object
 as it's \code{result()}.
 }
 \description{
-For now we only support GSEA methods that can be run from a
-\code{FacileDGETestResult}, such as \code{"cameraPR"} and \code{"goseq"}
+\strong{For now} only GSEA methods process a pre-ranked feature set work, like
+\code{"cameraPR"} or \code{"fgsea"}.
 }
+\section{Updates required to multiGSEA}{
+
+I need to update multiGSEA to take an input data.frame of differential
+expression statistics to work with goseq as well such that it doesn't have to
+run the differential expression stuff again.
+
+Once this is implemented, the a call to fgsea will also work on an Anova
+result, as well.
+}
+
 \section{Accessing Results}{
 
 A call to \code{result(fgea.res)} will return the \code{multiGSEA::MultiGSEAResult}
@@ -35,3 +49,23 @@ r2 <- result(fgsea.res) \%>\% multiGSEA::result("cameraPR")
 }
 }
 
+\examples{
+gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+
+# GSEA from t-test result ---------------------------------------------------
+ttest.res <- FacileData::exampleFacileDataSet() \%>\%
+  FacileData::filter_samples(indication == "CRC") \%>\%
+  fdge_model_def(covariate = "sample_type",
+                 numer = "tumor", denom = "normal", fixed = "sex") \%>\%
+  fdge(method = "voom")
+ttest.gsea <- fgsea(ttest.res, gdb)
+
+# GSEA from ANOVA result ----------------------------------------------------
+# Not yet implemented, requires small update to multiGSEA
+
+# GSEA over loadings on a Principal Component -------------------------------
+# Not yet implemented, need to get a signed weight out of eigenWeightedMean
+# right now we just have weights. Or, fully extracing the biplot code, I
+# think the weight should be the length on the PC of choice, and the sign is
+# the same.
+}

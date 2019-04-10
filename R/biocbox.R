@@ -169,8 +169,14 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
 
 #' @noRd
 #' @export
+result.BiocBox <- function(x, ...) {
+  x[["biocbox"]]
+}
+
+#' @noRd
+#' @export
 design.BiocBox <- function(x, ...) {
-  box <- x[["biocbox"]]
+  box <- result(x)
   if (is.null(box)) {
     stop("The bioc assay container is not found in the BiocBox")
   }

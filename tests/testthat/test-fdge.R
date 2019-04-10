@@ -10,12 +10,11 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
                    denom = "normal")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf",
-                   gsea = NULL)
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
   qlf_dge <- result(qlf_test)
 
-  bb <- biocbox(qlf_test)
-  y <- bb[["biocbox"]]
+  bbox <- biocbox(qlf_test)
+  y <- result(bbox)
   expect_equal(nrow(y), nrow(qlf_dge))
   expect_equal(rownames(y), qlf_dge$feature_id)
 
@@ -32,10 +31,11 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   expect_equal(qlf_dge$logFC, qres$logFC)
 
   # Test voom
-  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
+  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom")
   vm_dge <- result(vm_test)
 
   vm <- limma::voom(y, y$design)
+  vm.facile <- biocbox(vm_test)$biocbox
   vres <- limma::lmFit(vm, vm$design) %>%
     limma::eBayes() %>%
     limma::topTable(coef = 2, Inf, sort.by = "none")
@@ -52,12 +52,11 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
     fdge_model_def(covariate = "stage", fixed = "sex")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf",
-                   gsea = NULL)
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
   qlf_dge <- result(qlf_test)
 
-  bb <- biocbox(qlf_test)
-  y <- bb[["biocbox"]]
+  bbox <- biocbox(qlf_test)
+  y <- result(bbox)
   design <- model.matrix(~ stage + sex, y$samples)
   coefs <- grep("stage", colnames(design))
 
@@ -72,7 +71,7 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(qlf_dge$F, qres$F)
 
   # Test voom
-  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", gsea = NULL)
+  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom")
   vm_dge <- result(vm_test)
 
   vm <- limma::voom(y, y$design)

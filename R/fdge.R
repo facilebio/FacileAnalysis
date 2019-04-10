@@ -141,7 +141,7 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
       use.treat <- FALSE
     }
 
-    y <- bb[["biocbox"]]
+    y <- result(bb)
     des <- design(bb)
     result <- calculateIndividualLogFC(y, des, contrast = testme,
                                        use.treat = use.treat,
@@ -313,6 +313,8 @@ samples.FacileDGEResult <- function(x, ...) {
 #' @section FacileDGEResult:
 #' Given a FacileDGEResult, we can re-materialize the Bioconductor assay
 #' container used within the differential testing pipeline used from [fdge()].
+#' Currently we have limited our analysis framework to either work over DGEList
+#' (edgeR) or EList (limma) containers.
 #'
 #' @export
 #' @rdname biocbox

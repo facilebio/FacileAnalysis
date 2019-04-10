@@ -76,5 +76,7 @@ TODO: support affymrna, affymirna, etc. assay types
 
 Given a FacileDGEResult, we can re-materialize the Bioconductor assay
 container used within the differential testing pipeline used from \code{\link[=fdge]{fdge()}}.
+Currently we have limited our analysis framework to either work over DGEList
+(edgeR) or EList (limma) containers.
 }
 

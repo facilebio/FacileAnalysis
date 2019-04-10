@@ -1,7 +1,15 @@
 #' Performs Gene Set Enrichment Analyses
 #'
-#' For now we only support GSEA methods that can be run from a
-#' `FacileDGETestResult`, such as `"cameraPR"` and `"goseq"`
+#' **For now** only GSEA methods process a pre-ranked feature set work, like
+#' `"cameraPR"` or `"fgsea"`.
+#'
+#' @section Updates required to multiGSEA:
+#' I need to update multiGSEA to take an input data.frame of differential
+#' expression statistics to work with goseq as well such that it doesn't have to
+#' run the differential expression stuff again.
+#'
+#' Once this is implemented, the a call to fgsea will also work on an Anova
+#' result, as well.
 #'
 #' @export
 #' @importFrom multiGSEA GeneSetDb multiGSEA
@@ -11,15 +19,55 @@
 #' @param methods the GSEA methods to use on `x`.
 #' @return A FacileGSEAResult object, which includes a MultiGSEAResult object
 #'   as it's `result()`.
+#'
+#' @examples
+#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#'
+#' # GSEA from t-test result ---------------------------------------------------
+#' ttest.res <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fdge_model_def(covariate = "sample_type",
+#'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
+#'   fdge(method = "voom")
+#' ttest.gsea <- fgsea(ttest.res, gdb)
+#'
+#' # GSEA from ANOVA result ----------------------------------------------------
+#' # Not yet implemented, requires small update to multiGSEA
+#'
+#' # GSEA over loadings on a Principal Component -------------------------------
+#' # Not yet implemented, need to get a signed weight out of eigenWeightedMean
+#' # right now we just have weights. Or, fully extracing the biplot code, I
+#' # think the weight should be the length on the PC of choice, and the sign is
+#' # the same.
 fgsea <- function(x, gdb, methods, ...) {
   UseMethod("fgsea", x)
 }
 
-#' @noRd
+#' @rdname fgsea
 #' @export
-fgsea.FacileTtestDGEResult <- function(x, gdb, methods = c("cameraPR", "goseq"),
-                                       min_logFC = 1, max_padj = 0.10, ...) {
+fgsea.FacileTtestDGEResult <- function(x, gdb, methods = "cameraPR",
+                                       min_logFC = 1, max_padj = 0.10,
+                                       rank_by = "logFC", ...) {
+  assert_class(gdb, "GeneSetDb")
+  assert_subset(methods, c("cameraPR", "fgsea", "geneSetTest"))
 
+  ranks. <- result(ranks(x))
+  assert_choice(rank_by, colnames(ranks.))
+  assert_numeric(ranks.[[rank_by]], any.missing = FALSE)
+
+  # I can't get `arrange(ranks, desc(!!rank_by))` to work
+  ranks. <- arrange_at(ranks., rank_by, desc)
+  ranked <- setNames(ranks.[[rank_by]], ranks.[["feature_id"]])
+  mg <- multiGSEA(gdb, ranked, method = methods, ...)
+
+  out <- list(
+    result = mg,
+    params = list(methods = methods, min_logFC = min_logFC, max_padj = max_padj,
+                  rank_by = rank_by))
+  class(out) <- c("FacileTtestGSEAResult",
+                  "FacileGSEAResult",
+                  "FacileAnalysisResult")
+  out
 }
 
 #' @noRd
