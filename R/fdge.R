@@ -163,10 +163,12 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
   out <- list(
     test_type = test_type,
     result = result,
-    assay_name = assay_name,
-    method = method,
-    model_def = x,
-    treat_lfc = if (use.treat) treat_lfc else NULL,
+    params = list(
+      assay_name = assay_name,
+      method = bb[["dge_method"]],
+      model_def = x,
+      treat_lfc = if (use.treat) treat_lfc else NULL,
+      with_sample_weights = with_sample_weights),
     # Standard FacileAnalysisResult things
     fds = .fds,
     messages = messages,
@@ -302,6 +304,62 @@ signature.FacileAnovaDGEFeatureRankings <- function(x, max_padj = 0.10,
   sig
 }
 
+# Compare ======================================================================
+
+#' @section Comapring DGE Results:
+#' We can compare two Ttest results
+#'
+#' @rdname fdge
+#' @export
+#' @examples
+#' # Comparing two T-test results ----------------------------------------------
+#' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
+#'
+#' efds <- FacileData::exampleFacileDataSet()
+#' dge.crc <- filter_samples(efds, indication == "CRC") %>%
+#'   fdge_model_def("sample_type", "tumor", "normal", "sex") %>%
+#'   fdge()
+#' dge.blca <- filter_samples(efds, indication == "BLCA") %>%
+#'   fdge_model_def("sample_type", "tumor", "normal", "sex") %>%
+#'   fdge()
+#' dge.comp <- compare(dge.crc, dge.blca)
+compare.FacileTtestDGEResult <- function(x, y, ...) {
+  assert_class(x, "FacileTtestDGEResult")
+  assert_class(y, "FacileTtestDGEResult")
+  assert_equal(x[["params"]][["assay_name"]], y[["params"]][["assay_name"]])
+  assert_equal(x[["params"]][["method"]], y[["params"]][["method"]])
+
+  xdes <- x[["params"]][["model_def"]]
+  ydes <- y[["params"]][["model_def"]]
+
+  do.dge <- xdes[["covariate"]] == ydes[["covariate"]]
+  if (!do.dge) {
+    warning("Covariates used in test are not equal, no dge analysis performed",
+            immediate. = TRUE)
+  }
+
+  xres <- result(x)
+  yres <- result(y)
+
+  meta.cols <- c("feature_type", "feature_id", "symbol", "meta")
+  drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
+                 "source")
+  stat.cols <- setdiff(colnames(xres),  c(meta.cols, drop.cols))
+  xystats <- full_join(
+    select(xres, !!c(meta.cols, stat.cols)),
+    select(yres, !!c(meta.cols, stat.cols)),
+    by = meta.cols)
+
+  # TODO: to interaction design and dge
+  # dgei <- fdge()
+  out <- list(
+    result = xystats,
+    dge = dgei)
+  class(out) <- c("FacileTtestComparison",
+                  "FacileAnalysisComparison",
+                  "FacileAnalysis")
+  out
+}
 # Facile API ===================================================================
 
 #' @noRd
@@ -319,7 +377,9 @@ samples.FacileDGEResult <- function(x, ...) {
 #' @export
 #' @rdname biocbox
 biocbox.FacileDGEResult <- function(x, ...) {
-  res <- biocbox(x[["model_def"]], x[["assay_name"]], x[["method"]],
+  res <- biocbox(x[["params"]][["model_def"]],
+                 x[["params"]][["assay_name"]],
+                 x[["params"]][["method"]],
                  filter = result(x)[["feature_id"]], ...)
   res
 }

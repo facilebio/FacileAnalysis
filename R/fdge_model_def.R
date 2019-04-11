@@ -46,16 +46,16 @@
 #'   * `$errors`: A character vector of errors generated
 #'
 #' @examples
-#' fds <- FacileData::exampleFacileDataSet()
+#' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # Look for tumor vs normal differences, controling for stage and sex
-#' model_info <- fds %>%
+#' model_info <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor",
 #'                  denom = "normal",
 #'                  fixed = "sex")
-#' m2 <- fds %>%
+#' m2 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor",
@@ -63,13 +63,18 @@
 #'                  fixed = c("sex", "stage"))
 #'
 #' # stageIV vs stageII & stageIII
-#' m3 <- fds %>%
+#' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
 #'   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
 #'                  fixed = "sex")
 #'
+#' # Incomplete ttest to help with custom contrast vector
+#' mi <- efds %>%
+#'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
+#'   fdge_model_def(covariate = "stage", fixed = "sex", contrast. = "help")
+#'
 #' # ANOVA across stage in BLCA, control for sex
-#' m3 <- fds %>%
+#' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "stage", fixed = "sex")
 fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
@@ -89,10 +94,14 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' The `*.data.frame` function definition assumes that `x` is a data.frame of
 #' samples (dataset,sample_id) and the covariates defined on these samples
 #' (ie. all the other columns of `x`) contain a superset of the variable names
-#' used in the construction of hte design matrix for the model definition.
+#' used in the construction of the design matrix for the model definition.
+#'
+#' @param contrast. A custom contrast vector can be passed in for extra tricky
+#'   comparisons that we haven't figured out how to put a GUI in front of.
 fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                                       fixed = NULL,
                                       on_missing = c("warning", "error"), ...,
+                                      contrast. = NULL,
                                       .fds = NULL) {
   on_missing <- match.arg(on_missing)
   assert_subset(c("dataset", "sample_id"), colnames(x))
@@ -125,13 +134,26 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   warnings <- character()
   errors <- character()
 
-  test_type <- if (is.null(test_levels)) "anova" else "ttest"
-  if (test_type == "ttest" && (unselected(numer) || unselected(denom))) {
-    errors <- c(
-      errors,
-      "T-test requires both numerator and denominator to be specified")
+  out <- list(
+    # Standard FacileAnalysisResult things
+    fds = .fds)
+  class(out) <- c("FacileDGEModelDefinition", "FacileAnalysisResult")
+  clazz <- "IncompleteModelDefintion"
+  on.exit({
+    out[["messages"]] <- messages
+    out[["warnings"]] <- warnings
+    out[["errors"]] <- errors
+    class(out) <- c(clazz, class(out))
+    return(out)
+  })
+
+  if (is.null(test_levels) && is.null(contrast.)) {
+    test_type <- "anova"
+  } else {
+    test_type <- "ttest"
   }
 
+  # Build the design matrix ----------------------------------------------------
   req.cols <- c("dataset",  "sample_id", covariate, fixed)
   xx <- x[, req.cols]
   incomplete <- !complete.cases(xx)
@@ -165,6 +187,18 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
             paste(non_estimable, collapse = ",")))
   }
 
+  if (test_type == "ttest") {
+    if (is.null(contrast.)) {
+      if (unselected(numer) || unselected(denom)) {
+        errors <- c(
+          errors,
+          "T-test requires both numerator and denominator to be specified")
+      }
+    } else {
+      # User passed in a custom contrast -- do we need to do anything?
+    }
+  }
+
   if (length(errors)) {
     clazz <- "FacileFailedModelDefinition"
     coef <- NULL
@@ -174,42 +208,46 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     coef <- 2L:max(test_covs)
     contrast <- NULL
   } else {
-    clazz <- "FacileTtestDGEModelDefinition"
     coef <- NULL
-    numer. <- paste(numer, collapse = " + ")
-    if (length(numer) > 1L) {
-      numer. <- sprintf("(%s) / %d", numer., length(numer))
+    if (is.null(contrast.)) {
+      numer. <- paste(numer, collapse = " + ")
+      if (length(numer) > 1L) {
+        numer. <- sprintf("(%s) / %d", numer., length(numer))
+      }
+      denom. <- paste(denom, collapse = " + ")
+      if (length(denom) > 1L) {
+        denom. <- sprintf("(%s) / %d", denom., length(denom))
+      }
+      contrast <- makeContrasts(
+        contrasts = sprintf("%s - %s", numer., denom.),
+        levels = design)
+      contrast <- contrast[, 1L]
+      clazz <- "FacileTtestDGEModelDefinition"
+    } else {
+      numer. <- "__undefined__"
+      denom. <- "__undefined__"
+      if (is.character(contrast.)) {
+        warnings <- c(warning, "Incomplete model definition, custom contrast.")
+      } else {
+        stop("TODO: assert_compatabile_contrast()")
+        clazz <- "FacileTtestDGEModelDefinition"
+
+      }
+      contrast <- contrast.
     }
-    denom. <- paste(denom, collapse = " + ")
-    if (length(denom) > 1L) {
-      denom. <- sprintf("(%s) / %d", denom., length(denom))
-    }
-    contrast <- makeContrasts(
-      contrasts = sprintf("%s - %s", numer., denom.),
-      levels = design)
-    contrast <- contrast[, 1L]
   }
 
-  out <- list(
-    test_type = test_type,
-    covariates = xx,
-    covariate = covariate,
-    fixed = fixed,
-    numer = numer,
-    denom = denom,
-    design_formula = dformula,
-    design = design,
-    test_covs = test_covs,
-    coef = coef,
-    contrast = contrast,
-    # Standard FacileAnalysisResult things
-    fds = .fds,
-    messages = messages,
-    warnings = warnings,
-    errors = errors)
-
-  class(out) <- c(clazz, "FacileDGEModelDefinition", "FacileAnalysisResult")
-  out
+  out[["test_type"]] <- test_type
+  out[["covariates"]] <- xx
+  out[["covariate"]] <- covariate
+  out[["fixed"]] <- fixed
+  out[["numer"]] <- numer
+  out[["denom"]] <- denom
+  out[["design_formula"]] <- dformula
+  out[["design"]] <- design
+  out[["test_covs"]] <- test_covs
+  out[["coef"]] <- coef
+  out[["contrast"]] <- contrast
 }
 
 #' @export

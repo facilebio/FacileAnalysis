@@ -5,6 +5,7 @@
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
 \alias{fdge.FacileDGEModelDefinition}
+\alias{compare.FacileTtestDGEResult}
 \title{Peform a differential expression analysis.}
 \usage{
 \method{report}{FacileTtestDGEResult}(x, type = c("dge", "features"),
@@ -21,6 +22,8 @@ fdge(x, ...)
 \method{fdge}{FacileDGEModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", with_sample_weights = FALSE,
   treat_lfc = NULL, ...)
+
+\method{compare}{FacileTtestDGEResult}(x, y, ...)
 }
 \arguments{
 \item{x}{a data source}
@@ -78,6 +81,11 @@ mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{wit
 }
 }
 
+\section{Comapring DGE Results}{
+
+We can compare two Ttest results
+}
+
 \examples{
 efds <- FacileData::exampleFacileDataSet()
 samples <- FacileData::filter_samples(efds, indication == "BLCA")
@@ -94,4 +102,15 @@ stage.anova <- samples \%>\%
   fdge_model_def(covariate = "stage", fixed = "sex") \%>\%
   fdge(method = "voom")
 anova.sig <- signature(stage.anova)
+# Comparing two T-test results ----------------------------------------------
+# Let's compare the tumor vs normal DGE results in CRC vs BLCA
+
+efds <- FacileData::exampleFacileDataSet()
+dge.crc <- filter_samples(efds, indication == "CRC") \%>\%
+  fdge_model_def("sample_type", "tumor", "normal", "sex") \%>\%
+  fdge()
+dge.blca <- filter_samples(efds, indication == "BLCA") \%>\%
+  fdge_model_def("sample_type", "tumor", "normal", "sex") \%>\%
+  fdge()
+dge.comp <- compare(dge.crc, dge.blca)
 }

@@ -35,10 +35,18 @@ fdgeAnalysisUI <- function(id, ...) {
     fdgeViewResultUI(ns("view")))
 }
 
+#' @noRd
 #' @export
+#' @importFrom shiny browserViewer dialogViewer
+#' @examples
+#' if (ineteractive()) {
+#'   FacileData::exampleFacileDataSet() %>%
+#'     filter_samples(indication == "CRC") %>%
+#'     fdgeGadget()
+#' }
 fdgeGadget <- function(x, user = Sys.getenv("USER"),
                        title = "Differential Expression Analysis",
-                       height = 600, width = 800, ...) {
+                       height = 600, width = 800, ..., debug = FALSE) {
   if (is(x, "facile_frame")) {
     fds. <- fds(x)
     samples. <- x
@@ -77,7 +85,12 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
     })
   }
 
-  viewer <- dialogViewer(title, height = height, width = width)
+  if (debug) {
+    viewer <- browserViewer()
+  } else {
+    viewer <- dialogViewer(title, height = height, width = width)
+  }
+
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
@@ -115,7 +128,8 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
   rmodel <- reactive({
     out <- if (is(model, "FacileDGEModelDefinition")) model else model$result()
-    req(is(out, "FacileDGEModelDefinition"))
+    req(is(out, "FacileDGEModelDefinition"),
+        !is(out, "IncompleteModelDefintion"))
     out
   })
 

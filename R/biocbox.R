@@ -164,7 +164,6 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   }
 
   out[["dge_method"]] <- method
-  out
 }
 
 #' @noRd

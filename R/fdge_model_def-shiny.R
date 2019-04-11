@@ -55,9 +55,9 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
     partial <- xor(unselected(numer.), unselected(denom.))
     req(!partial)
 
-    req(
-      fdge_model_def(samples., testcov., numer = numer., denom = denom.,
-                     fixed = fixed.))
+    out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,
+                          fixed = fixed.)
+    out
   })
 
   output$debug <- shiny::renderText({

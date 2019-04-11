@@ -14,7 +14,7 @@ fdge_model_def(x, covariate, numer = NULL, denom = NULL,
 
 \method{fdge_model_def}{data.frame}(x, covariate, numer = NULL,
   denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
-  ..., .fds = NULL)
+  ..., contrast. = NULL, .fds = NULL)
 
 \method{fdge_model_def}{tbl}(x, covariate, numer = NULL, denom = NULL,
   fixed = NULL, on_missing = c("warning", "error"), ...)
@@ -52,6 +52,9 @@ setting of this parameter (default \code{"warn"}) will dictate the behavior
 of this funciton. When \code{"warning"}, a warning will be raised, and the
 message will be stored in the \code{$warning} element of the resul. Otherwise,
 when \code{"error"}. See the "Missing Covariates" section for more information.}
+
+\item{contrast.}{A custom contrast vector can be passed in for extra tricky
+comparisons that we haven't figured out how to put a GUI in front of.}
 }
 \value{
 a list with:
@@ -93,7 +96,7 @@ tibble.
 The \code{*.data.frame} function definition assumes that \code{x} is a data.frame of
 samples (dataset,sample_id) and the covariates defined on these samples
 (ie. all the other columns of \code{x}) contain a superset of the variable names
-used in the construction of hte design matrix for the model definition.
+used in the construction of the design matrix for the model definition.
 }
 
 \section{facile_frame}{
@@ -110,16 +113,16 @@ an error.
 }
 
 \examples{
-fds <- FacileData::exampleFacileDataSet()
+efds <- FacileData::exampleFacileDataSet()
 
 # Look for tumor vs normal differences, controling for stage and sex
-model_info <- fds \%>\%
+model_info <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor",
                  denom = "normal",
                  fixed = "sex")
-m2 <- fds \%>\%
+m2 <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor",
@@ -127,13 +130,18 @@ m2 <- fds \%>\%
                  fixed = c("sex", "stage"))
 
 # stageIV vs stageII & stageIII
-m3 <- fds \%>\%
+m3 <- efds \%>\%
   filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
                  fixed = "sex")
 
+# Incomplete ttest to help with custom contrast vector
+mi <- efds \%>\%
+  filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
+  fdge_model_def(covariate = "stage", fixed = "sex", contrast. = "help")
+
 # ANOVA across stage in BLCA, control for sex
-m3 <- fds \%>\%
+m3 <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
   fdge_model_def(covariate = "stage", fixed = "sex")
 }
