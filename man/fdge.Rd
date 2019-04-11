@@ -82,7 +82,7 @@ mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{wit
 efds <- FacileData::exampleFacileDataSet()
 samples <- FacileData::filter_samples(efds, indication == "BLCA")
 mdef <- fdge_model_def(samples, covariate = "sample_type",
-                       numer = "tumor", denom = "normal")
+                       numer = "tumor", denom = "normal", fixed = "sex")
 dge <- fdge(mdef, method = "voom")
 dge.sig <- signature(dge)
 if (interactive()) {

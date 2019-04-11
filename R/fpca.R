@@ -6,6 +6,12 @@
 #' * http://factominer.free.fr/factomethods/index.html
 #' * http://factominer.free.fr/graphs/factoshiny.html
 #'
+#' @section Teaching and Tutorials:
+#'
+#' This looks like a useful tutorial to use when explaining the utility of
+#' PCA analysis:
+#' http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
+#'
 #' @export
 #' @importFrom multiGSEA eigenWeightedMean
 #' @rdname fpca
@@ -100,14 +106,26 @@ fpca.facile_frame <- function(x, pcs = 1:10, ntop = 500,
   out
 }
 
+#' @section DGEList
+#' By default (`assay_name = "counts"`), the PCA will be performed on
+#' log2 normalized counts. However, you may find that you'd like to store
+#' something like a batch-corrected version of the counts back into the
+#' DGEList, in which case you can provide the name of the element where this
+#' matrix is stored as the `assay_name` parameter.
+#'
 #' @noRd
 #' @export
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
-                         prior.count = 3, log = TRUE, ...) {
-  m <- edgeR::cpm(x, prior.count = prior.count, log = log)
-  fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
+                         prior.count = 3, assay_name = "counts", ...) {
+  if (assay_name == "counts") {
+    m <- edgeR::cpm(x, prior.count = prior.count, log = TRUE)
+  } else {
+    m <- x[[assay_name]]
+    assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
+  }
+  out <- fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
 }
 
 #' @export

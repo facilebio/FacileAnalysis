@@ -32,6 +32,14 @@ You should look at factominer:
 \item http://factominer.free.fr/graphs/factoshiny.html
 }
 }
+\section{Teaching and Tutorials}{
+
+
+This looks like a useful tutorial to use when explaining the utility of
+PCA analysis:
+http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
+}
+
 \section{FacileDataStore (facile_frame)}{
 
 We enable the user to supply extra sample covariates that are not found

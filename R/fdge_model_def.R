@@ -296,7 +296,7 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @export
 #' @rdname fdge_model_def
-#' @importFrom FacileShine unselected
+#' @importFrom FacileShine active_samples unselected
 fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
                                                    denom = NULL, fixed = NULL,
                                                    on_missing = c("warning", "error"),

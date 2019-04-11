@@ -11,8 +11,10 @@
 #'
 #' @export
 #' @importFrom FacileShine
+#'   active_samples
 #'   categoricalSampleCovariateSelect
 #'   categoricalSampleCovariateLevels
+#'   name
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDef <- function(input, output, session, rfds, ...,
@@ -53,8 +55,9 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
     partial <- xor(unselected(numer.), unselected(denom.))
     req(!partial)
 
-    fdge_model_def(samples., testcov., numer = numer., denom = denom.,
-                   fixed = fixed.)
+    req(
+      fdge_model_def(samples., testcov., numer = numer., denom = denom.,
+                     fixed = fixed.))
   })
 
   output$debug <- shiny::renderText({
@@ -73,6 +76,10 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
   vals
 }
 
+#' @noRd
+#' @importFrom FacileShine
+#'   categoricalSampleCovariateSelectUI
+#'   categoricalSampleCovariateLevelsUI
 fdgeModelDefUI <- function(id, ...) {
   ns <- NS(id)
 

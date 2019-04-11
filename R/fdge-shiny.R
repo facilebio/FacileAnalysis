@@ -6,16 +6,15 @@
 #' @importFrom shiny callModule
 #' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ShinyFacileDGEResult`, the output from [fdge()]
-fdgeAnalysis <- function(input, output, session, rfds, with_gsea = FALSE, ...) {
-  model <- callModule(fdgeModelDef, "model", rfds)
-  dge <- callModule(fdgeRun, "dge", rfds, model, with_gsea = with_gsea, ...)
-  interact <- callModule(fdgeViewResult, "view", rfds, dge,
-                         with_gsea = with_gsea)
+fdgeAnalysis <- function(input, output, session, rfds, ...) {
+  model <- callModule(fdgeModelDef, "model", rfds, ...)
+  dge <- callModule(fdgeRun, "dge", rfds, model, ...)
+  view <- callModule(fdgeViewResult, "view", rdfs, dge, ...)
 
   vals <- list(
+    fdge = dge,
     model = model,
-    dge = dge,
-    interact = interact,
+    view = view,
     .ns = session$ns)
   class(vals) <- "ShinyFdgeAnalysis"
   vals
@@ -24,6 +23,7 @@ fdgeAnalysis <- function(input, output, session, rfds, with_gsea = FALSE, ...) {
 #' @noRd
 #' @export
 #' @importFrom shiny NS tagList tags
+#' @importFrom multiGSEA failWith
 fdgeAnalysisUI <- function(id, ...) {
   ns <- NS(id)
 
@@ -35,13 +35,66 @@ fdgeAnalysisUI <- function(id, ...) {
     fdgeViewResultUI(ns("view")))
 }
 
+#' @export
+fdgeGadget <- function(x, user = Sys.getenv("USER"),
+                       title = "Differential Expression Analysis",
+                       height = 600, width = 800, ...) {
+  if (is(x, "facile_frame")) {
+    fds. <- fds(x)
+    samples. <- x
+  } else {
+    fds. <- x
+    samples. <- samples(x)
+  }
+  assert_class(fds., "FacileDataStore")
+  assert_class(samples., "facile_frame")
+
+  ui <- miniPage(
+    gadgetTitleBar(title),
+    miniContentPanel(fdgeAnalysisUI("analysis")),
+    NULL)
+
+  server <- function(input, output, session) {
+    rfds <- callModule(reactiveFacileDataStore, "ds", fds., samples., user)
+    analysis <- callModule(fdgeAnalysis, "analysis", rfds)
+
+    observeEvent(input$done, {
+      result. <- failWith(NULL, analysis$fdge$result())
+      annotation <- tibble(
+        # TODO: Get annotations from brushing on volcano?
+        feature_type = character(),
+        feature_id = character(),
+        annotation = character())
+      out <- list(
+        result = result.,
+        annotation = annotation)
+      class(out) <- c("FacileDGEGadgetResult", "FacileGadgetResult",
+                      "FacileAnalysisResult")
+      stopApp(invisible(out))
+    })
+    observeEvent(input$cancel, {
+      stopApp(invisible(NULL))
+    })
+  }
+
+  viewer <- dialogViewer(title, height = height, width = width)
+  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+}
+
+# fgadget <- function(x, module, ...) {
+#   UseMethod("fgadget", x)
+# }
+
+
 # Just Run fdge ================================================================
 
 #' Shiny module to configure and run fdge over a predefined model.
 #'
 #' @export
 #' @importFrom shiny callModule reactive eventReactive renderText
-#' @importFrom FacileShine unselected
+#' @importFrom FacileShine
+#'   assaySelect
+#'   unselected
 #' @param model A linearm model definition. Can be either a "naked"
 #'   `FacileDGEModelDefinition` that is returned from a call to
 #'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned from
@@ -82,12 +135,14 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     result = dge,
     .ns = session$ns)
 
-  class(vals) <- "ShinyFacileDGEResult"
+  class(vals) <- "FacileShinyDGEResult"
   vals
 }
 
 #' @noRd
 #' @export
+#' @importFrom FacileShine
+#'   assaySelectUI
 #' @importFrom shiny
 #'   actionButton
 #'   column
@@ -131,21 +186,22 @@ fdgeRunUI <- function(id, ...) {
 #' @importFrom shiny req
 #'
 #' @param fdge_result The result from calling [fdge()].
-fdgeViewResult <- function(input, output, session, rfds, fdge_run, ...) {
+fdgeViewResult <- function(input, output, session, rfds, fdge_result, ...) {
 
-  dge.result <- reactive({
-    if (is(fdge_run, "FacileDGEResult")) {
-      out <- fdge_run
+  # The FacileDGEResult object
+  result. <- reactive({
+    if (is(fdge_result, "FacileDGEResult")) {
+      out <- fdge_result
     } else {
-      out <- fdge_run$result()
+      out <- fdge_result$result()
     }
     req(is(out, "FacileDGEResult"))
     out
   })
 
   dge.stats <- reactive({
-    .fdge <- req(dge.result())
-    .result <- result(.fdge)
+    .fdge <- req(result.())
+    .result <- ranks(.fdge) %>% result()
     if (.fdge[["test_type"]] == "ttest") {
       out <- select(.result, symbol, feature_id, logFC, FDR = padj, pval)
     } else {
@@ -176,18 +232,3 @@ fdgeViewResultUI <- function(id, ...) {
   ns <- NS(id)
   DT::DTOutput(ns("stats"))
 }
-
-
-# Gadget to run a differential expression ======================================
-
-fdgeGadget <- function(dataset, samples = NULL, ...) {
-  assert_facile_data_store(dataset)
-  if (is.null(samples)) {
-    samples <- samples(dataset)
-  } else {
-    assert_sample_subset(samples, dataset)
-  }
-
-  # Invoke the fdgeAnalysis module and UI
-}
-

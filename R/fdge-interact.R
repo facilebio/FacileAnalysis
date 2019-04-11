@@ -24,7 +24,8 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
     })
   }
 
-  viewer <- dialogViewer(title, height = height, width = width)
+  # viewer <- dialogViewer(title, height = height, width = width)
+  viewer <- shiny::browserViewer()
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
@@ -129,8 +130,15 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 .viz.dge_ttest <- function(x, ntop = 200, max_padj = 0.10,
                            min_logFC = 1, round_digits = 3,
                            event_source = "A", treat_lfc = NULL,
-                           webgl = TRUE, link_feature = TRUE, ...) {
+                           webgl = TRUE, link_feature = TRUE,
+                           server = FALSE, ...) {
   # Extract datatable
+  if (!server && ntop > 1000) {
+    warning("Non-serverside processing caps ntop to 1000 features",
+            immediate. = TRUE)
+    ntop <- ntop
+  }
+
   dat.all <- result(x) %>%
     select(symbol, feature_id, logFC, padj, pval)
 

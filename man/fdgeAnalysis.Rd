@@ -4,7 +4,7 @@
 \alias{fdgeAnalysis}
 \title{Wrapper module to perform and interact with differential a expression result}
 \usage{
-fdgeAnalysis(input, output, session, rfds, with_gsea = FALSE, ...)
+fdgeAnalysis(input, output, session, rfds, ...)
 }
 \arguments{
 \item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
