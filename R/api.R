@@ -40,6 +40,23 @@ result.FacileAnalysisResult <- function(x, name = "result", ...) {
   x[[name]]
 }
 
+#' Extract the value of a parameter used in a FacileAnalysis result
+#'
+#' @export
+#' @param x A FacileAnalysisResult
+#' @param name the name of the parameter to extract
+param <- function(x, name, ...) {
+  UseMethod("param", x)
+}
+
+#' @noRd
+#' @export
+param.FacileAnalysisResult <- function(x, name, ...) {
+  params. <- assert_list(x[["params"]], names = "unique")
+  assert_choice(name, names(params.))
+  params.[[name]]
+}
+
 #' Extracts feature or sample ranks from a FacileAnalysis
 #'
 #' Among other thigns, analyses can often provide rankings over features or
@@ -160,9 +177,20 @@ report <- function(x, ...) {
   UseMethod("report", x)
 }
 
+# Statistical Modeling Stuff ===================================================
+
 #' Extract the design matrix from objects used in a linear modeling step
 #'
 #' @export
 design <- function(x, ...) {
   UseMethod("design", x)
+}
+
+#' Extract the model used for an analysis
+#'
+#' For a DGE analysis, this is the fdge_model_def object
+#'
+#' @export
+model <- function(x, ...) {
+  UseMethod("model", x)
 }

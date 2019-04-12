@@ -92,7 +92,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
              webgl = webgl, ...)
 
   sdat <- viz.[["datatable"]][["data"]]
-  mdef <- x[["model_def"]]
+  mdef <- model(x)
 
   if (!is.null(caption)) {
     caption <- tags$p(caption)

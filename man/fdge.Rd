@@ -106,7 +106,7 @@ anova.sig <- signature(stage.anova)
 # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 
 efds <- FacileData::exampleFacileDataSet()
-dge.crc <- filter_samples(efds, indication == "CRC") \%>\%
+dge.crc <- FacileData::filter_samples(efds, indication == "CRC") \%>\%
   fdge_model_def("sample_type", "tumor", "normal", "sex") \%>\%
   fdge()
 dge.blca <- filter_samples(efds, indication == "BLCA") \%>\%

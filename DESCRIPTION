@@ -26,7 +26,8 @@ Imports:
     matrixStats,
     miniUI,
     multiGSEA,
-    plotly,
+    plotly (>= 4.9.0),
+    stringr,
     tidyr
 Suggests:
     knitr,

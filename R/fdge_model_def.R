@@ -89,6 +89,7 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @importFrom stats model.matrix
 #' @importFrom limma makeContrasts nonEstimable
 #' @importFrom FacileShine unselected
+#' @importFrom stringr str_detect
 #'
 #' @section data.frame:
 #' The `*.data.frame` function definition assumes that `x` is a data.frame of
@@ -107,6 +108,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   assert_subset(c("dataset", "sample_id"), colnames(x))
   assert_choice(covariate, setdiff(colnames(x), c("sample_id")))
   assert_categorical(x[[covariate]])
+  if (!is.null(contrast.)) assert_string(contrast.)
 
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
@@ -207,47 +209,53 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     clazz <- "FacileAnovaModelDefinition"
     coef <- 2L:max(test_covs)
     contrast <- NULL
+    contrast_string <- NULL
   } else {
     coef <- NULL
     if (is.null(contrast.)) {
       numer. <- paste(numer, collapse = " + ")
       if (length(numer) > 1L) {
-        numer. <- sprintf("(%s) / %d", numer., length(numer))
+        numer. <- sprintf("( %s ) / %d", numer., length(numer))
       }
       denom. <- paste(denom, collapse = " + ")
       if (length(denom) > 1L) {
-        denom. <- sprintf("(%s) / %d", denom., length(denom))
+        denom. <- sprintf("( %s ) / %d", denom., length(denom))
       }
-      contrast <- makeContrasts(
-        contrasts = sprintf("%s - %s", numer., denom.),
-        levels = design)
-      contrast <- contrast[, 1L]
-      clazz <- "FacileTtestDGEModelDefinition"
+      contrast_string <- sprintf("%s - %s", numer., denom.)
     } else {
-      numer. <- "__undefined__"
-      denom. <- "__undefined__"
-      if (is.character(contrast.)) {
-        warnings <- c(warning, "Incomplete model definition, custom contrast.")
-      } else {
-        stop("TODO: assert_compatabile_contrast()")
-        clazz <- "FacileTtestDGEModelDefinition"
-
-      }
-      contrast <- contrast.
+      numer. <- "__inferred__"
+      denom. <- "__inferred__"
+      contrast_string <- contrast.
     }
+    clazz <- "FacileTtestDGEModelDefinition"
+    # Are we testing an interaction term, ie. you can test the differences in
+    # the treatment effect of a drug1 in hek cells vs its effect in hela cells:
+    # (treatment_hek - ctrl_hek) - (treatment_hela - ctrl_hela)
+    # Interaction regex, ie. (treat1_ - ctrl) - (treat2 - ctrl)
+    iregex <- "\\(.+-.+\\)\\W*-\\W*\\(.+-.+\\)"
+    if (str_detect(contrast_string, iregex)) {
+      clazz <- c("FacileInteractionTestDGEModelDefinition", clazz)
+    }
+    contrast <- makeContrasts(contrasts = contrast_string, levels = design)[,1L]
   }
 
+  out[["params"]] <- list(
+    covariate = covariate,
+    numer = numer,
+    denom = denom,
+    fixed = fixed,
+    contrast. = contrast.)
   out[["test_type"]] <- test_type
   out[["covariates"]] <- xx
-  out[["covariate"]] <- covariate
-  out[["fixed"]] <- fixed
-  out[["numer"]] <- numer
-  out[["denom"]] <- denom
+  out[["numer"]] <- numer.
+  out[["denom"]] <- denom.
   out[["design_formula"]] <- dformula
   out[["design"]] <- design
   out[["test_covs"]] <- test_covs
   out[["coef"]] <- coef
   out[["contrast"]] <- contrast
+  out[["contrast_string"]] <- contrast_string
+  out
 }
 
 #' @export
@@ -357,6 +365,12 @@ fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
 #' @export
 samples.FacileDGEModelDefinition <- function(x, ...) {
   x[["covariates"]]
+}
+
+#' @noRd
+#' @export
+design.FacileDGEModelDefinition <- function(x, ...) {
+  x[["design"]]
 }
 
 # Printing =====================================================================\
