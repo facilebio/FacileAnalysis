@@ -17,9 +17,8 @@
 #'   name
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
-fdgeModelDef <- function(input, output, session, rfds, ...,
-                         .reactive = TRUE) {
-
+fdgeModelDefRun <- function(input, output, session, rfds, ...,
+                            debug = FALSE, .reactive = TRUE) {
   isolate. <- if (.reactive) base::identity else shiny::isolate
 
   active.samples <- reactive({
@@ -31,10 +30,10 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
                         .reactive = .reactive)
 
   numer <- callModule(categoricalSampleCovariateLevels, "numer",
-                      rfds, testcov, .reactive = TRUE)
+                      rfds, testcov, .reactive = .reactive)
 
   denom <- callModule(categoricalSampleCovariateLevels, "denom",
-                      rfds, testcov, .reactive = TRUE)
+                      rfds, testcov, .reactive = .reactive)
 
   fixedcov <- callModule(categoricalSampleCovariateSelect, "fixedcov",
                          rfds, ..., .with_none = FALSE, .reactive = .reactive)
@@ -50,8 +49,8 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
     fixed. <- name(fixedcov)
 
     # Ensure that either
-    #   i. neither numer or denom is filled; or
-    #  ii. both are filled
+    #   i. neither numer or denom is filled so that we run an ANOVA;
+    #  ii. both are filled for a propper t-test specification
     partial <- xor(unselected(numer.), unselected(denom.))
     req(!partial)
 
@@ -60,10 +59,12 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
     out
   })
 
-  output$debug <- shiny::renderText({
-    model. <- req(model())
-    format(model.)
-  })
+  if (debug) {
+    output$debug <- shiny::renderText({
+      model. <- req(model())
+      format(model.)
+    })
+  }
 
   vals <- list(
     result = model,
@@ -80,7 +81,7 @@ fdgeModelDef <- function(input, output, session, rfds, ...,
 #' @importFrom FacileShine
 #'   categoricalSampleCovariateSelectUI
 #'   categoricalSampleCovariateLevelsUI
-fdgeModelDefUI <- function(id, ...) {
+fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
   out <- tagList(
@@ -89,7 +90,7 @@ fdgeModelDefUI <- function(id, ...) {
         3,
         categoricalSampleCovariateSelectUI(
           ns("testcov"),
-          label = "Covariate to Test",
+          label = "Grouping Covariate",
           multiple = FALSE)),
       column(
         3,
@@ -111,10 +112,11 @@ fdgeModelDefUI <- function(id, ...) {
           multiple = TRUE)))
   )
 
-  out <- tagList(
-    out,
-    shiny::verbatimTextOutput(ns("debug"), placeholder = TRUE)
-  )
+  if (debug) {
+    out <- tagList(
+      out,
+      shiny::verbatimTextOutput(ns("debug"), placeholder = TRUE))
+  }
 
   out
 }

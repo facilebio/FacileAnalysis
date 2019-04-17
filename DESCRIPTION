@@ -22,6 +22,7 @@ Imports:
     FacileViz,
     glue,
     htmltools,
+    irlba,
     limma,
     matrixStats,
     miniUI,

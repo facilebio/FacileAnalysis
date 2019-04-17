@@ -50,14 +50,14 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
+fpca <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
   UseMethod("fpca", x)
 }
 
 #' @noRd
 #' @export
-fpca.FacileDataStore <- function(x, pcs = 1:10, ntop = 500,
+fpca.FacileDataStore <- function(x, pcs = 5, ntop = 500,
                                  row_covariates = NULL, col_covariates = NULL,
                                  assay_name = default_assay(x),
                                  custom_key = Sys.getenv("USER"), ...) {
@@ -75,7 +75,7 @@ fpca.FacileDataStore <- function(x, pcs = 1:10, ntop = 500,
 #'
 #' @rdname fpca
 #' @export
-fpca.facile_frame <- function(x, pcs = 1:10, ntop = 500,
+fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
                               row_covariates = NULL, col_covariates = NULL,
                               assay_name = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -116,7 +116,7 @@ fpca.facile_frame <- function(x, pcs = 1:10, ntop = 500,
 #' @noRd
 #' @export
 #' @importFrom edgeR cpm
-fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
+fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
                          prior.count = 3, assay_name = "counts", ...) {
   if (assay_name == "counts") {
@@ -130,15 +130,16 @@ fpca.DGEList <- function(x, pcs = 1:10, ntop = 500, row_covariates = x$genes,
 
 #' @export
 #' @rdname fpca
+#' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
-fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL, ...) {
+fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
+                        col_covariates = NULL, use_irlba = pcs < 7, ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
 
-  pcs.given <- !missing(pcs)
-  assert_integerish(pcs, lower = 1L, upper = nrow(x))
+  assert_int(pcs, lower = 3L, upper = min(nrow(x), ncol(x)))
+  assert_flag(use_irbla)
 
   if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
   if (is.null(row_covariates)) {
@@ -155,32 +156,27 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
     assert_character(rownames(col_covariates))
     assert_true(all(colnames(x) == rownames(col_covariates)))
   }
-  assert_integerish(pcs, lower = 1L, upper = nrow(x))
 
   rv <- matrixStats::rowVars(x)
   take <- head(order(rv, decreasing = TRUE), ntop)
 
   xx <- x[take,,drop = FALSE]
-  pca <- prcomp(t(xx))
-  percentVar <- pca$sdev^2 / sum(pca$sdev^2)
-  names(percentVar) <- paste0("PC", seq(percentVar))
 
-  pcs.take <- paste0("PC", pcs)
-  pcs.miss <- setdiff(pcs.take, colnames(pca$x))
-  if (length(pcs.miss) && pcs.given) {
-    warning("The following PCs were not included in the decomposition:\n  ",
-            paste(pcs.miss, collapse = ", "))
-    pcs.take <- intersect(pcs.take, colnames(pca$x))
+  if (use_irlba) {
+    pca <- prcomp_irlba(t(xx), n = pcs)
+    rownames(pca$rotation) <- rownames(xx)
+    rownames(pca$x) <- colnames(xx)
+  } else {
+    pca <- prcomp(t(xx))
+    pca$sdev <- head(pca$sdev, pcs)
+    pca$rotation <- pca$rotation[, 1:pcs, drop = FALSE]
+    pca$x <- pca$x[, 1:pcs, drop = FALSE]
   }
 
-  dat <- as.data.frame(pca$x[, pcs.take])
+  pca$sdev <- setNames(pca$sdev, paste0("PC", seq(pca$sdev)))
+  percentVar <- pca$sdev^2 / sum(pca$sdev^2)
 
-  # Why was I doing this instead?
-  # dat <- as.data.frame(lapply(pcs.take, function(pc) pca$x[, pc]))
-  # colnames(dat) <- pcs.take
-  # rownames(dat) <- colnames(x)
-
-  percentVar <- percentVar[colnames(dat)]
+  dat <- as.data.frame(pca$x)
 
   if (is(col_covariates, "data.frame")) {
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
@@ -188,31 +184,36 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 
   # Identify the percernt contribution each feature has to the PCs.
   # We are the same decomposition twice, but convenience wins for now.
-  ewm <- eigenWeightedMean(xx, scale = FALSE)
+  # ewm <- eigenWeightedMean(xx, scale = FALSE)
 
   # Calculate correlation of each gene to PC1 -> PC4
-  pc_cor <- sapply(paste0("PC", head(pcs, 4)), function(pc) {
-    cor(t(xx), dat[[pc]])
-  })
+  # pc_cor <- sapply(paste0("PC", head(pcs, 4)), function(pc) {
+  #   cor(t(xx), dat[[pc]])
+  # })
+  #
+  # rnames <- rownames(xx)
+  # if (is.null(rnames)) rnames <- as.character(seq(nrow(xx)))
+  #
+  # pc_cor <- bind_cols(
+  #   tibble(row_name = rnames, row_idx = take),
+  #   as.data.frame(pc_cor))
+  #
+  # factor_contrib <- ewm$factor.contrib %>%
+  #   rename(feature_id = "featureId") %>%
+  #   select(1:(pcs + 1)) %>%
+  #   as.tbl()
 
-  rnames <- rownames(xx)
-  if (is.null(rnames)) rnames <- as.character(seq(nrow(xx)))
-
-  pc_cor <- bind_cols(
-    tibble(row_name = rnames, row_idx = take),
-    as.data.frame(pc_cor))
-
-  factor_contrib <- ewm$factor.contrib %>%
-    rename(feature_id = "featureId") %>%
-    select(feature_id, !!pcs.take) %>%
-    as.tbl()
+  # Ordering by the absolute value of the rotation matrix for the given PC
+  # gives you (more or less) the signed weight.
+  # ro <- pca$rotation[order(abs(pca$rotation[, 1]), decreasing = TRUE),]
 
   result <- list(
     result = dat,
-    pcs = pcs.take,
-    factor_contrib = factor_contrib,
+    pcs = pcs,
+    # factor_contrib = factor_contrib,
+    rotation = pca$rotation,
     percent_var = percentVar,
-    pc_cor = pc_cor,
+    # pc_cor = pc_cor,
     row_covariates = row_covariates,
     taken = take,
     # Standard FacileAnalysisResult things
@@ -227,6 +228,8 @@ fpca.matrix <- function(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
 }
 
 # Ranks and Signatures =========================================================
+# TODO: Updage fpca ranks and signature to work with fpca.res[["rotation"]]
+#       matrix, which gives us a signed ranking of the genes.
 
 #' Reports the contribution of each gene to the principal components
 #'

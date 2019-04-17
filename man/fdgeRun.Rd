@@ -5,13 +5,13 @@
 \title{Shiny module to configure and run fdge over a predefined model.}
 \usage{
 fdgeRun(input, output, session, rfds, model, with_gsea = FALSE, ...,
-  .reactive = TRUE)
+  debug = FALSE, .reactive = TRUE)
 }
 \arguments{
-\item{model}{A linearm model definition. Can be either a "naked"
+\item{model}{A linear model definition. Can be either a "naked"
 \code{FacileDGEModelDefinition} that is returned from a call to
 \code{\link[=fdge_model_def]{fdge_model_def()}}, or the \code{ShinyDGEModelDefinition} object returned from
-the \code{\link[=fdgeModelDef]{fdgeModelDef()}} module.}
+the \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.}
 
 \item{with_gsea}{Include option to run a GSEA?}
 

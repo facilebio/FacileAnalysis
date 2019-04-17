@@ -128,24 +128,21 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
     method <- bb[["dge_method"]]
 
-    if (test_number(treat_lfc)) {
-      treat_lfc <- abs(treat_lfc)
-      use.treat <- TRUE
-    } else {
-      if (!is.null(treat_lfc)) {
+    if (!is.null(treat_lfc)) {
+      if (!test_number(treat_lfc, lower = 0) || test_type != "ttest") {
         warnings <- c(
           warnings,
           "Illegal parameter passed to `treat_lfc`. It is being ignored")
+        treat_lfc <- 0
       }
-      treat_lfc <- 1
-      use.treat <- FALSE
+    } else {
+      treat_lfc <- 0
     }
-
+    use.treat <- treat_lfc > 0
     y <- result(bb)
     des <- design(bb)
     result <- calculateIndividualLogFC(y, des, contrast = testme,
-                                       use.treat = use.treat,
-                                       feature.min.logFC = treat_lfc)
+                                       treat.lfc = treat_lfc)
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
     rownames(result) <- result[["featureId"]]
@@ -413,11 +410,11 @@ fdge_methods <- function(assay_type = NULL) {
     "log2",        "limma",             "EList")
 
   method_params <- tribble(
-    ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes,
-    "voom",         FALSE,        FALSE,           FALSE,
-    "edgeR-qlf",    TRUE,         FALSE,           FALSE,
-    "limma-trend",  FALSE,        FALSE,           TRUE,
-    "limma",        FALSE,        FALSE,           FALSE)
+    ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,
+    "voom",         FALSE,        FALSE,           FALSE,          TRUE,
+    "edgeR-qlf",    TRUE,         FALSE,           FALSE,          FALSE,
+    "limma-trend",  FALSE,        FALSE,           TRUE,           TRUE,
+    "limma",        FALSE,        FALSE,           FALSE,          TRUE)
 
   info <- left_join(assay_methods, method_params, by = "dge_method")
 

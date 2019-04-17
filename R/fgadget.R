@@ -14,3 +14,15 @@
 fgadget <- function(x, samples = NULL, module, ui = NULL, ...) {
 
 }
+
+#' @noRd
+#' @importFrom shiny browserViewer dialogViewer paneViewer
+gadget_viewer <- function(type = c("dialog", "browser", "pane"),
+                          title = "Facile Gadget",
+                          width = 800, height = 600, minHeight = height) {
+  type <- match.arg(type)
+  switch(type,
+         dialog = dialogViewer(title, width, height),
+         browser = browserViewer(),
+         pane = paneViewer(minHeight = minHeight))
+}

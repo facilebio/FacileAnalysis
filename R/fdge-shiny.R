@@ -1,52 +1,24 @@
-# Full Differential Expression Wrapper =========================================
-
-#' Wrapper module to perform and interact with differential a expression result
-#'
-#' @export
-#' @importFrom shiny callModule
-#' @param model_def the module returned from [fdgeModelDefModule()]
-#' @return a `ShinyFacileDGEResult`, the output from [fdge()]
-fdgeAnalysis <- function(input, output, session, rfds, ...) {
-  model <- callModule(fdgeModelDef, "model", rfds, ...)
-  dge <- callModule(fdgeRun, "dge", rfds, model, ...)
-  view <- callModule(fdgeViewResult, "view", rdfs, dge, ...)
-
-  vals <- list(
-    fdge = dge,
-    model = model,
-    view = view,
-    .ns = session$ns)
-  class(vals) <- "ShinyFdgeAnalysis"
-  vals
-}
 
 #' @noRd
 #' @export
-#' @importFrom shiny NS tagList tags
-#' @importFrom multiGSEA failWith
-fdgeAnalysisUI <- function(id, ...) {
-  ns <- NS(id)
-
-  tagList(
-    fdgeModelDefUI(ns("model")),
-    tags$hr(),
-    fdgeRunUI(ns("dge")),
-    tags$hr(),
-    fdgeViewResultUI(ns("view")))
-}
-
-#' @noRd
-#' @export
-#' @importFrom shiny browserViewer dialogViewer
+#' @importFrom shiny
+#'   browserViewer
+#'   dialogViewer
+#' @importFrom multiGSEA
+#'   failWith
 #' @examples
-#' if (ineteractive()) {
+#' if (interactive()) {
 #'   FacileData::exampleFacileDataSet() %>%
 #'     filter_samples(indication == "CRC") %>%
 #'     fdgeGadget()
 #' }
 fdgeGadget <- function(x, user = Sys.getenv("USER"),
                        title = "Differential Expression Analysis",
-                       height = 600, width = 800, ..., debug = FALSE) {
+                       height = 600, width = 800,
+                       viewer = "dialog", ...,
+                       debug = FALSE) {
+  viewer <- gadget_viewer(viewer, title, width, height)
+
   if (is(x, "facile_frame")) {
     fds. <- fds(x)
     samples. <- x
@@ -59,20 +31,16 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
 
   ui <- miniPage(
     gadgetTitleBar(title),
-    miniContentPanel(fdgeAnalysisUI("analysis")),
+    miniContentPanel(fdgeAnalysisUI("analysis", debug = debug)),
     NULL)
 
   server <- function(input, output, session) {
     rfds <- callModule(reactiveFacileDataStore, "ds", fds., samples., user)
-    analysis <- callModule(fdgeAnalysis, "analysis", rfds)
+    analysis <- callModule(fdgeAnalysis, "analysis", rfds, debug = debug)
 
     observeEvent(input$done, {
       result. <- failWith(NULL, analysis$fdge$result())
-      annotation <- tibble(
-        # TODO: Get annotations from brushing on volcano?
-        feature_type = character(),
-        feature_id = character(),
-        annotation = character())
+      annotation <- FacileShine:::.empty_feature_annotation_tbl()
       out <- list(
         result = result.,
         annotation = annotation)
@@ -85,46 +53,82 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
     })
   }
 
-  if (debug) {
-    viewer <- browserViewer()
-  } else {
-    viewer <- dialogViewer(title, height = height, width = width)
-  }
-
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
-# fgadget <- function(x, module, ...) {
-#   UseMethod("fgadget", x)
-# }
+#' Wrapper module to perform and interact with a differential expression result.
+#'
+#' This module can be embedded within a shiny app, or called from a gadget.
+#'
+#' @export
+#' @importFrom shiny callModule
+#' @param model_def the module returned from [fdgeModelDefModule()]
+#' @return a `ShinyFacileDGEResult`, the output from [fdge()]
+fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
+  model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
+  dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
+  view <- callModule(fdgeView, "view", rdfs, dge, ..., debug = debug)
 
+  vals <- list(
+    fdge = dge,
+    model = model,
+    view = view,
+    .ns = session$ns)
+  class(vals) <- "ShinyFdgeAnalysis"
+  vals
+}
 
-# Just Run fdge ================================================================
+#' @noRd
+#' @export
+#' @importFrom shiny
+#'   fluidRow
+#'   NS
+#'   tagList
+#'   tags
+#'   wellPanel
+#' @importFrom shinydashboard
+#'   box
+fdgeAnalysisUI <- function(id, ..., debug = FALSE) {
+  ns <- NS(id)
+
+  tagList(
+      box(title = "Model Definition", width = 12,
+          fdgeModelDefRunUI(ns("model"), debug = debug)),
+      box(title = "Testing Parameters", width = 12,
+          fdgeRunUI(ns("dge"), debug = debug)),
+      box(title = "Testing Results", width = 12,
+          fdgeViewUI(ns("view"), debug = debug)))
+}
+
+# Building block fdge shiny modules ============================================
 
 #' Shiny module to configure and run fdge over a predefined model.
 #'
 #' @export
-#' @importFrom shiny callModule reactive eventReactive renderText
+#' @importFrom shiny
+#'   callModule
+#'   eventReactive
+#'   reactive
+#'   renderText
 #' @importFrom FacileShine
 #'   assaySelect
 #'   unselected
-#' @param model A linearm model definition. Can be either a "naked"
+#' @param model A linear model definition. Can be either a "naked"
 #'   `FacileDGEModelDefinition` that is returned from a call to
 #'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned from
-#'   the [fdgeModelDef()] module.
+#'   the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]
 #' @return A list of stuff. `$result` holds the `FacileDGEResult` wrapped in
 #'   a `reactive()`, ie. a `ReactiveDGEResult`.
 fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
-                    .reactive = TRUE) {
+                    debug = FALSE, .reactive = TRUE) {
   kosher <- is(model, "FacileDGEModelDefinition") ||
     is(model, "ShinyDGEModelDefinition")
   if (!kosher) {
+    browser()
     stop("Invalid object passed as `model`: ", class(model)[1L])
   }
-
-  assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
 
   rmodel <- reactive({
     out <- if (is(model, "FacileDGEModelDefinition")) model else model$result()
@@ -133,17 +137,47 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     out
   })
 
-  dge <- eventReactive(input$run, {
-    model. <- req(rmodel())
-    aname <- assay$assay_info()$assay
-    req(!unselected(aname))
-    fdge(model., assay_name = aname)
+  assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
+
+  # Update the dge_methods available given the selected assay
+  observe({
+    assay_type. <- assay$assay_info()$assay_type
+    req(!unselected(assay_type.))
+    method. <- input$dge_method
+    methods. <- fdge_methods(assay_type.)$dge_method
+    selected. <- if (method. %in% methods.) method. else methods.[1L]
+    updateSelectInput(session, "dge_method", choices = methods.,
+                      selected = selected.)
   })
 
-  output$debug <- shiny::renderText({
-    dge. <- req(dge())
-    format(dge.)
+  sample_weights <- reactive({
+    method. <- input$dge_method
+    req(!unselected(method.))
+    can_weight <- fdge_methods() %>%
+      filter(dge_method == method.) %>%
+      pull(can_sample_weight)
+    input$weights && can_weight
   })
+
+  dge <- eventReactive(input$run, {
+    model. <- req(rmodel())
+    assay_name. <- assay$assay_info()$assay
+    method. <- input$dge_method
+    req(
+      !unselected(assay_name.),
+      !unselected(method.))
+    sample_weights. <- sample_weights()
+    treat_lfc. <- log2(input$treatfc)
+    fdge(model., assay_name = assay_name., method = method.,
+         with_sample_weights = sample_weights., treat_lfc = treat_lfc.)
+  })
+
+  if (debug) {
+    output$debug <- shiny::renderText({
+      dge. <- req(dge())
+      format(dge.)
+    })
+  }
 
   vals <- list(
     result = dge,
@@ -159,33 +193,35 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 #'   assaySelectUI
 #' @importFrom shiny
 #'   actionButton
+#'   checkboxInput
 #'   column
 #'   fluidRow
 #'   NS
+#'   numericInput
+#'   selectInput
 #'   tagList
 #'   tags
 #'   verbatimTextOutput
-fdgeRunUI <- function(id, ...) {
+fdgeRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
-  # Need widgets for:
-  # 1. assay_name selection
-  # 2. method selection (voom, qlf, etc.)
-  # 3. treat_lfc
-  # 4. filter criterion (let's leave this blank for now.)
-  # 5. Run button
-
   out <- tagList(
     fluidRow(
-      column(1, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
-      column(1, actionButton(ns("run"), "Run"))
-    ),
-    NULL)
+      column(3, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
+      column(3, selectInput(ns("dge_method"), label = "Method", choices = NULL)),
+      column(3, numericInput(ns("treatfc"), label = "Min. Fold Change",
+                             value = 1, min = 1, max = 10, step = 0.25)),
+      column(2, checkboxInput(ns("weights"), label = "Sample Weights")),
+      column(1, actionButton(ns("run"), "Run")))
+    )
 
-  out <- tagList(
-    out,
-    tags$hr(),
-    shiny::verbatimTextOutput(ns("debug"), placeholder = TRUE)
-  )
+  if (debug) {
+    out <- tagList(
+      out,
+      tags$hr(),
+      verbatimTextOutput(ns("debug"), placeholder = TRUE))
+  }
+
+  out
 }
 
 # Visualize the fdge result ====================================================
@@ -200,7 +236,8 @@ fdgeRunUI <- function(id, ...) {
 #' @importFrom shiny req
 #'
 #' @param fdge_result The result from calling [fdge()].
-fdgeViewResult <- function(input, output, session, rfds, fdge_result, ...) {
+fdgeView <- function(input, output, session, rfds, fdge_result, ...,
+                     debug = FALSE) {
 
   # The FacileDGEResult object
   result. <- reactive({
@@ -242,7 +279,7 @@ fdgeViewResult <- function(input, output, session, rfds, fdge_result, ...) {
 #' @export
 #' @importFrom shiny NS
 #' @importFrom DT DTOutput
-fdgeViewResultUI <- function(id, ...) {
+fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   DT::DTOutput(ns("stats"))
 }

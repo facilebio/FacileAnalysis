@@ -2,9 +2,9 @@
 % Please edit documentation in R/fdge-shiny.R
 \name{fdgeAnalysis}
 \alias{fdgeAnalysis}
-\title{Wrapper module to perform and interact with differential a expression result}
+\title{Wrapper module to perform and interact with a differential expression result.}
 \usage{
-fdgeAnalysis(input, output, session, rfds, ...)
+fdgeAnalysis(input, output, session, rfds, ..., debug = FALSE)
 }
 \arguments{
 \item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
@@ -13,5 +13,5 @@ fdgeAnalysis(input, output, session, rfds, ...)
 a \code{ShinyFacileDGEResult}, the output from \code{\link[=fdge]{fdge()}}
 }
 \description{
-Wrapper module to perform and interact with differential a expression result
+This module can be embedded within a shiny app, or called from a gadget.
 }
