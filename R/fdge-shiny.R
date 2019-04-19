@@ -14,9 +14,13 @@
 #' }
 fdgeGadget <- function(x, user = Sys.getenv("USER"),
                        title = "Differential Expression Analysis",
-                       height = 600, width = 800,
+                       height = 600, width = 1000,
                        viewer = "dialog", ...,
                        debug = FALSE) {
+  bs4dash <- getOption("facile.bs4dash")
+  options(facile.bs4dash = FALSE)
+  on.exit(options(facile.bs4dash = bs4dash))
+
   viewer <- gadget_viewer(viewer, title, width, height)
 
   if (is(x, "facile_frame")) {
@@ -86,18 +90,21 @@ fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
 #'   tagList
 #'   tags
 #'   wellPanel
+#' @importFrom bs4Dash
+#'   bs4Box
 #' @importFrom shinydashboard
 #'   box
-fdgeAnalysisUI <- function(id, ..., debug = FALSE) {
+fdgeAnalysisUI <- function(id, ..., debug = FALSE,
+                           bs4dash = isTRUE(getOption("facile.bs4dash"))) {
   ns <- NS(id)
-
+  box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
   tagList(
-      box(title = "Model Definition", width = 12,
-          fdgeModelDefRunUI(ns("model"), debug = debug)),
-      box(title = "Testing Parameters", width = 12,
-          fdgeRunUI(ns("dge"), debug = debug)),
-      box(title = "Testing Results", width = 12,
-          fdgeViewUI(ns("view"), debug = debug)))
+    box.(title = "Model Definition", width = 12,
+         fdgeModelDefRunUI(ns("model"), debug = debug)),
+    box.(title = "Testing Parameters", width = 12,
+         fdgeRunUI(ns("dge"), debug = debug)),
+    box.(title = "Testing Results", width = 12,
+         fdgeViewUI(ns("view"), debug = debug)))
 }
 
 # Building block fdge shiny modules ============================================
@@ -126,7 +133,6 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   kosher <- is(model, "FacileDGEModelDefinition") ||
     is(model, "ShinyDGEModelDefinition")
   if (!kosher) {
-    browser()
     stop("Invalid object passed as `model`: ", class(model)[1L])
   }
 

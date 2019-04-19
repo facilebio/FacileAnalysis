@@ -201,15 +201,18 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     }
   }
 
+  numer. <- denom. <- contrast_string <- NULL
   if (length(errors)) {
     clazz <- "FacileFailedModelDefinition"
     coef <- NULL
     contrast <- NULL
+
   } else if (test_type == "anova") {
     clazz <- "FacileAnovaModelDefinition"
     coef <- 2L:max(test_covs)
     contrast <- NULL
     contrast_string <- NULL
+    numer. <- denom. <- NULL
   } else {
     coef <- NULL
     if (is.null(contrast.)) {

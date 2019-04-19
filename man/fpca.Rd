@@ -6,15 +6,15 @@
 \alias{fpca.matrix}
 \title{Runs a facile PCA}
 \usage{
-fpca(x, pcs = 1:10, ntop = 500, row_covariates = NULL,
+fpca(x, pcs = 5, ntop = 500, row_covariates = NULL,
   col_covariates = NULL, ...)
 
-\method{fpca}{facile_frame}(x, pcs = 1:10, ntop = 500,
+\method{fpca}{facile_frame}(x, pcs = 5, ntop = 500,
   row_covariates = NULL, col_covariates = NULL, assay_name = NULL,
   custom_key = Sys.getenv("USER"), ...)
 
-\method{fpca}{matrix}(x, pcs = 1:10, ntop = 500,
-  row_covariates = NULL, col_covariates = NULL, ...)
+\method{fpca}{matrix}(x, pcs = 5, ntop = 500, row_covariates = NULL,
+  col_covariates = NULL, use_irlba = pcs < 7, ...)
 }
 \arguments{
 \item{x}{a data container}

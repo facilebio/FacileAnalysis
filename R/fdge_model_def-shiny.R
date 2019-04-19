@@ -14,7 +14,6 @@
 #'   active_samples
 #'   categoricalSampleCovariateSelect
 #'   categoricalSampleCovariateLevels
-#'   name
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
