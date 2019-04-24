@@ -135,6 +135,12 @@ viz <- function(x, ...) {
   UseMethod("viz", x)
 }
 
+#' @noRd
+#' @export
+viz.FacileGadgetResult <- function(x, ...) {
+  viz(result(x), ...)
+}
+
 #' @section Shine:
 #' The `shine` functions generate shiny gadgets that provide a more interactive
 #' view over a `FacileAnalysisResult`. This empowers the analyst to provide more
@@ -175,6 +181,12 @@ shine <- function(x, ...) {
 #' @aliases report
 report <- function(x, ...) {
   UseMethod("report", x)
+}
+
+#' @noRd
+#' @export
+report.FacileGadgetResult <- function(x, ...) {
+  report(result(x), ...)
 }
 
 # Statistical Modeling Stuff ===================================================

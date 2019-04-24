@@ -14,6 +14,7 @@
 #'   active_samples
 #'   categoricalSampleCovariateSelect
 #'   categoricalSampleCovariateLevels
+#'   initialized
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
@@ -21,6 +22,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   isolate. <- if (.reactive) base::identity else shiny::isolate
 
   active.samples <- reactive({
+    req(initialized(rfds))
     isolate.(active_samples(rfds))
   })
 
@@ -39,6 +41,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 
   model <- reactive({
     # TODO: everytime a change is made, this fires twice
+    req(initialized(rfds))
     samples. <- active.samples()
     testcov. <- name(testcov)
     req(!unselected(testcov.))

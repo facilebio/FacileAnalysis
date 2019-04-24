@@ -92,14 +92,14 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   }
 
   if (is.null(dge_methods)) {
-    dge_methods <- fdge_methods(ainfo$assay_type)
+    dge_methods <- fdge_methods(ainfo[["assay_type"]])
   }
   if (is.null(method)) {
-    method <- dge_methods$dge_method[1L]
+    method <- dge_methods[["dge_method"]][1L]
   }
 
-  if (!method %in% dge_methods$dge_method) {
-    default_method <- dge_methods$dge_method[1L]
+  if (!method %in% dge_methods[["dge_method"]]) {
+    default_method <- dge_methods[["dge_method"]][1L]
     msg <- glue("Requested dge_method `{method}` not found, using ",
                 "`{default_method}` instead")
     warnings <- c(warnings, msg)
@@ -110,7 +110,6 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   # NOTE: The code from here down assumes we are working with a "count"-like
   # assay, and defaulting to using a DGEList. This is where we need to start
   # hacking to support the other types of assay data.
-
   y.all <- as.DGEList(si, assay_name = assay_name, covariates = si)
   # The roughly approximated norm.factors already present in a faciledatastore
   # should be good enough for initial low-pass filtering.

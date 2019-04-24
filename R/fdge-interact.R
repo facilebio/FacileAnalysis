@@ -100,13 +100,16 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 
   if (type == "dge") {
     title <- viz.[["title"]]
+    designf <- mdef[["design_formula"]]
+    covariate <- param(mdef, "covariate")
+    cstring <- mdef[["contrast_string"]]
     details <- tagList(
       tags$p(
         tags$strong("Design: "),
-        tags$code(mdef[["design_formula"]])),
+        tags$code(designf)),
       tags$p(
         tags$strong("Tested: "),
-        tags$code(glue("{covariate}: ({numer}) - ({denom})", .envir = mdef))))
+        tags$code(paste(covariate, cstring, sep = ": "))))
 
     header <- tagList(title, details, caption)
     out <- bscols.(header, viz.[["volcano"]], viz.[["datatable"]],
@@ -187,7 +190,7 @@ report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
               sprintf(paste0("FDR: %.", round_digits, "f<br>"), FDR),
               sprintf(paste0("pvalue: %.", round_digits, "f<br>"), pval))) %>%
     layout(yaxis = yaxis, dragmode = "select") %>%
-    config(displaylogo = FALSE, collaborate = FALSE)
+    config(displaylogo = FALSE)
 
   if (webgl) p <- toWebGL(p)
 

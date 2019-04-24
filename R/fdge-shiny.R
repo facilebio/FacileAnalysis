@@ -1,6 +1,7 @@
 
 #' @noRd
 #' @export
+#' @importFrom FacileShine ReactiveFacileDataStore
 #' @importFrom shiny
 #'   browserViewer
 #'   dialogViewer
@@ -15,7 +16,8 @@
 fdgeGadget <- function(x, user = Sys.getenv("USER"),
                        title = "Differential Expression Analysis",
                        height = 600, width = 1000,
-                       viewer = "dialog", ...,
+                       # viewer = "dialog", ...,
+                       viewer = "browser", ...,
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
   options(facile.bs4dash = FALSE)
@@ -30,6 +32,7 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
     fds. <- x
     samples. <- samples(x)
   }
+
   assert_class(fds., "FacileDataStore")
   assert_class(samples., "facile_frame")
 
@@ -39,7 +42,8 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
     NULL)
 
   server <- function(input, output, session) {
-    rfds <- callModule(reactiveFacileDataStore, "ds", fds., samples., user)
+    # rfds <- callModule(reactiveFacileDataStore, "ds", fds., samples., user)
+    rfds <- ReactiveFacileDataStore(fds., "ds", user = user, samples = samples.)
     analysis <- callModule(fdgeAnalysis, "analysis", rfds, debug = debug)
 
     observeEvent(input$done, {
