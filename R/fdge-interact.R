@@ -10,12 +10,14 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
                                   height = 600, width = 800, ...) {
   ui <- miniPage(
     gadgetTitleBar(class(x)[1L]),
-    miniContentPanel(fdgeViewResultUI("view")),
+    miniContentPanel(fdgeViewUI("view")),
     NULL)
 
   server <- function(input, output, session) {
-    rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
-    view <- callModule(fdgeViewResult, "view", rfds, x)
+    rfds <- ReactiveFacileDataStore(fds(x), "ds", user = user,
+                                    samples = samples(x))
+    # rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
+    view <- callModule(fdgeView, "view", rfds, x)
     observeEvent(input$done, {
       stopApp(invisible(NULL))
     })
@@ -24,8 +26,8 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
     })
   }
 
-  # viewer <- dialogViewer(title, height = height, width = width)
-  viewer <- shiny::browserViewer()
+  viewer <- dialogViewer(title, height = height, width = width)
+  # viewer <- shiny::browserViewer()
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 

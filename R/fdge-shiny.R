@@ -9,15 +9,24 @@
 #'   failWith
 #' @examples
 #' if (interactive()) {
-#'   FacileData::exampleFacileDataSet() %>%
-#'     filter_samples(indication == "CRC") %>%
-#'     fdgeGadget()
+#' efds <- exampleFacileDataSet()
+#' # run tumor vs normal comparisons vs each, then run compare9) on the results
+#' dge.crc <- efds %>%
+#'   filter_samples(indication == "CRC") %>%
+#'   fdgeGadget()
+#' dge.blca <- efds %>%
+#'   filter_samples(indication == "BLCA") %>%
+#'   fdgeGadget()
+#' dge.comp <- compare(dge.crc, dge.blca)
+#' if (interactive()) {
+#'   report(dge.comp)
+#'   shine(dge.comp)
 #' }
 fdgeGadget <- function(x, user = Sys.getenv("USER"),
                        title = "Differential Expression Analysis",
                        height = 600, width = 1000,
-                       # viewer = "dialog", ...,
-                       viewer = "browser", ...,
+                       viewer = "dialog", ...,
+                       # viewer = "browser", ...,
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
   options(facile.bs4dash = FALSE)
@@ -48,11 +57,16 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
 
     observeEvent(input$done, {
       result. <- failWith(NULL, analysis$fdge$result())
+      result.[["fds"]] <- fds.
+      result.[["params"]][["model_def"]][["fds"]] <- fds.
+
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
       out <- list(
         result = result.,
-        annotation = annotation)
-      class(out) <- c("FacileDGEGadgetResult", "FacileGadgetResult",
+        annotation = annotation,
+        fds = fds.)
+      class(out) <- c("FacileDGEGadgetResult",
+                      "FacileGadgetResult",
                       "FacileAnalysisResult")
       stopApp(invisible(out))
     })
@@ -62,6 +76,27 @@ fdgeGadget <- function(x, user = Sys.getenv("USER"),
   }
 
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+}
+
+#' @noRd
+report.FacileDGEGadgetResult <- function(x, ...) {
+  report(result(x), ...)
+}
+
+#' @noRd
+viz.FacileDGEGadgetResult <- function(x, ...) {
+  viz(result(x), ...)
+}
+
+#' @noRd
+shine.FacileDGEGadgetResult <- function(x, ...) {
+  shine(result(x), ...)
+}
+
+#' @noRd
+compare.FacileDGEGadgetResult <- function(x, y, ...) {
+  if (is(y, "FacileDGEGadgetResult")) y <- result(y)
+  compare(result(x), y)
 }
 
 #' Wrapper module to perform and interact with a differential expression result.

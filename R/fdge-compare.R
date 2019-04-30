@@ -7,8 +7,8 @@
 #' # Comparing two T-test results ----------------------------------------------
 #' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 #'
-#' efds <- FacileData::exampleFacileDataSet()
-#' dge.crc <- FacileData::filter_samples(efds, indication == "CRC") %>%
+#' efds <- exampleFacileDataSet()
+#' dge.crc <- filter_samples(efds, indication == "CRC") %>%
 #'   fdge_model_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.blca <- filter_samples(efds, indication == "BLCA") %>%
@@ -115,7 +115,8 @@ report.FacileTtestComparison <- function(x, ...) {
   }
   ysamples[[icovariate]] <- paste0("ygrp.", ysamples[[covariate]])
 
-  samples. <- set_fds(bind_rows(xsamples, ysamples), fds(xsamples))
+  samples. <- set_fds(bind_rows(xsamples, ysamples), fds(xmod))
+  browser()
   contrast. <- glue(
     "( {xcon} ) - ( {ycon} )",
     xcon = .prefix_contrast(xmod[["contrast_string"]], "xgrp."),

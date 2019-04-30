@@ -87,6 +87,9 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
     warning("Custom row_covariates not yet supported for facile_frame ",
             "(it's not hard, I'm just lazy right now", immediate. = TRUE)
   }
+
+  # TODO: Now that the result() of this thing is a facile_frame, I don't think
+  # we need to add these covariates
   col.covariates <- with_sample_covs(x, custom_covariates = col_covariates,
                                      custom_key = custom_key)
 
@@ -97,10 +100,20 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
   # (lazily) turning this into a DGEList to leverage the already-implented
   # feature and sample anntation alignment written up in there.
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
+
   out <- fpca(y, pcs, ntop, ...)
   out[["result"]] <- out[["result"]] %>%
     as.tbl() %>%
-    select(dataset, sample_id, everything())
+    select(dataset, sample_id, everything()) %>%
+    as_facile_frame(.fds)
+  out[["feature_stats"]] <- out[["feature_stats"]] %>%
+    as.tbl() %>%
+    as_facile_frame(.fds)
+
+  out[["params"]] <- list(
+    pcs = pcs,
+    ntop = ntop,
+    assay_name = assay_name)
   ## add facile stuff
   out[["fds"]] <- .fds
   out
@@ -126,6 +139,7 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
   out <- fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
+  out
 }
 
 #' @export
@@ -139,11 +153,11 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
   errors <- character()
 
   assert_int(pcs, lower = 3L, upper = min(nrow(x), ncol(x)))
-  assert_flag(use_irbla)
+  assert_flag(use_irlba)
 
   if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
   if (is.null(row_covariates)) {
-    row_covariates <- data.frame(symbol = rownames(x), row.names = rownames(x),
+    row_covariates <- data.frame(feature_id = rownames(x),
                                  stringsAsFactors = FALSE)
   }
   assert_data_frame(row_covariates)
@@ -161,6 +175,7 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
   take <- head(order(rv, decreasing = TRUE), ntop)
 
   xx <- x[take,,drop = FALSE]
+  row_covariates <- row_covariates[take,,drop = FALSE]
 
   if (use_irlba) {
     pca <- prcomp_irlba(t(xx), n = pcs)
@@ -182,38 +197,11 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
   }
 
-  # Identify the percernt contribution each feature has to the PCs.
-  # We are the same decomposition twice, but convenience wins for now.
-  # ewm <- eigenWeightedMean(xx, scale = FALSE)
-
-  # Calculate correlation of each gene to PC1 -> PC4
-  # pc_cor <- sapply(paste0("PC", head(pcs, 4)), function(pc) {
-  #   cor(t(xx), dat[[pc]])
-  # })
-  #
-  # rnames <- rownames(xx)
-  # if (is.null(rnames)) rnames <- as.character(seq(nrow(xx)))
-  #
-  # pc_cor <- bind_cols(
-  #   tibble(row_name = rnames, row_idx = take),
-  #   as.data.frame(pc_cor))
-  #
-  # factor_contrib <- ewm$factor.contrib %>%
-  #   rename(feature_id = "featureId") %>%
-  #   select(1:(pcs + 1)) %>%
-  #   as.tbl()
-
-  # Ordering by the absolute value of the rotation matrix for the given PC
-  # gives you (more or less) the signed weight.
-  # ro <- pca$rotation[order(abs(pca$rotation[, 1]), decreasing = TRUE),]
-
   result <- list(
     result = dat,
     pcs = pcs,
-    # factor_contrib = factor_contrib,
     rotation = pca$rotation,
     percent_var = percentVar,
-    # pc_cor = pc_cor,
     row_covariates = row_covariates,
     taken = take,
     # Standard FacileAnalysisResult things
@@ -224,6 +212,7 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 
   class(result) <- c("FacilePCAResult", "FacileReducedDimResult",
                      "FacileAnalysisResult")
+  result$feature_stats <- .fpca.feature_statistics(result)
   result
 }
 
@@ -247,65 +236,32 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 #' @param report_feature_as The column used to display in the returned
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
-ranks.FacilePCAResult <- function(x, type = c("rankings", "ranked"),
-                                  report_feature_as = NULL,  ...) {
+ranks.FacilePCAResult <- function(x, type = c("features", "samples"),
+                                  signed = TRUE, ...) {
   type <- match.arg(type)
-  fcontrib <- x[["factor_contrib"]]
-  rdata <- x[["row_covariates"]]
+  if (type == "samples") stop("What does sample-ranking even mean?")
 
-  # pc.cols <- colnames(fcontrib)[grepl("PC\\d+", colnames(fcontrib))]
-  pc.cols <- x[["pcs"]]
-  pc.ranks <- fcontrib[, c("feature_id", pc.cols)]
-  for (pc in pc.cols) {
-    pc.ranks[[pc]] <- rank(-pc.ranks[[pc]], ties.method = "random")
+  if (type == "features") {
+    fstats <- x[["feature_stats"]]
+    rcol <- if (signed) "rank_rotation" else "rank_weight"
+    ranks. <- select(fstats, feature_id, feature_type,
+                     dimension = PC, score = rotation,
+                     weight, rank = !!rcol)
+    ranks. <- arrange(ranks., dimension, rank)
+    clazz <- "FacilePCAFeatureRankings"
   }
 
-  if (!"feature_id" %in% colnames(rdata)) {
-    rdata[["feature_id"]] <- rownames(fcontrib)
-  }
-  if (!"feature_type" %in% colnames(rdata)) {
-    # TODO: extract the feature_type of these rankings from the
-    # "facile analysis chain"
-    feature_type <- guess_feature_type(rdata[["feature_id"]], summarize = TRUE)
-    rdata[["feature_type"]] <- feature_type[["feature_type"]]
-  }
-
-  # rankings <- as.tbl(left_join(pc.ranks, rdata, by = "feature_id"))
-  rankings <- pc.ranks %>%
-    left_join(rdata, by = "feature_id") %>%
-    select(feature_type, feature_id, everything())
-
-  if (type == "rankings") {
-    result. <- rankings
-  } else if (type == "ranked") {
-    meta.cols <- setdiff(colnames(rankings), pc.cols)
-    if (is.null(report_feature_as)) {
-      opts <- c("name", "symbol", "feature_id", "featureId",
-                "gene_id", "geneId")
-      report_feature_as <- intersect(opts, meta.cols)[1L]
-      if (is.na(report_feature_as)) {
-        report_feature_as <- meta.cols[1L]
-      }
-    }
-    assert_choice(report_feature_as, meta.cols)
-    result. <- tibble(rank = seq(nrow(rankings)))
-    for (pc in pc.cols) {
-      ordr <- order(rankings[[pc]])
-      result.[[pc]] <- rankings[[report_feature_as]][ordr]
-    }
-  }
+  pvar <- x[["percent_var"]]
+  ranks.[["percent_var"]] <- pvar[ranks.[["dimension"]]]
 
   out <- list(
-    result = as.tbl(result.),
-    feature_weight = gather(fcontrib, PC, weight, -feature_id),
-    # TODO: add faciledatastore to ranks.fpca output?
-    ranking_columns = pc.cols,
-    ranking_order = "ascending",
-    percent_var = x[["percent_var"]])
+    result = ranks.,
+    params = list(type = type, signed = signed),
+    fds = fds(x))
 
-  clazz <- paste0("Facile%sFeature", tools::toTitleCase(type))
-  classes <- sprintf(clazz, c("PCA", ""))
-  class(out) <- c(classes, "FacileAnalysisResult")
+  class(out) <- c(clazz,
+                  "FacileMultiDimensionalRankings",
+                  "FacileAnalysisResult")
   out
 }
 
@@ -315,31 +271,39 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
                                                collection_name = class(x)[1L],
                                                ranking_columns = x[["ranking_columns"]],
                                                ...) {
-  res <- result(x)
-  if (is.null(pcs)) {
-    ranking_columns <-  x[["ranking_columns"]]
-  } else if (test_int(pcs)) {
-    ranking_columns <- paste0("PC", 1:pcs)
-  } else if (test_integerish(pcs)) {
-    ranking_columns <- paste0("PC", pcs)
+  if (isTRUE(x$params$signed)) {
+    sig.up <- result(x) %>%
+      group_by(dimension) %>%
+      arrange(rank) %>%
+      slice(1:min(ntop, n())) %>%
+      mutate(name = paste(dimension, "pos")) %>%
+      ungroup()
+    sig.down <- result(x) %>%
+      group_by(dimension) %>%
+      arrange(desc(rank)) %>%
+      slice(1:min(ntop, n())) %>%
+      mutate(name = paste(dimension, "neg")) %>%
+      ungroup()
+    sig <- sig.up %>%
+      bind_rows(sig.down) %>%
+      arrange(dimension, rank)
+  } else {
+    sig <- result(x) %>%
+      group_by(dimension) %>%
+      arrange(rank) %>%
+      slice(1:min(ntop, n())) %>%
+      mutate(name = paste(dimension, "unsigned")) %>%
+      ungroup()
   }
-  assert_character(ranking_columns)
-  assert_subset(ranking_columns, colnames(res))
 
-  sigs <- signature.MultiDimRankings(x, ranking_columns, ntop = ntop,
-                                     collection_name = collection_name, ...)
-  # Add PCA specific metadata to features
-  pvar <- x[["percent_var"]]
-  sigs <- left_join(sigs, x[["feature_weight"]],
-                    by = c("name" = "PC", "feature_id"))
-  sigs[["percent_var"]] <- pvar[sigs[["name"]]]
-  front.load <- c("collection", "name", "feature_id", "symbol", "rank",
-                  "weight", "percent_var")
-  front.load <- intersect(front.load, colnames(sigs))
-  sigs <- select(sigs, !!front.load, everything())
+  sig <- mutate(sig, collection = collection_name)
+  sig <- select(sig, collection, name, feature_id, everything())
+  sig <- as_facile_frame(sig, fds(x))
+
   out <- list(
-    result = sigs,
+    result = sig,
     params = list(pcs = pcs, ntop = ntop))
+
   class(out) <- c("FacilePCAFeatureSignature",
                   "FacileFeatureSignature",
                   "FacileAnalysisResult")
@@ -348,8 +312,58 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
 
 #' @noRd
 #' @export
-signature.FacilePCAResult <- function(x, pcs = NULL, ntop = 20, ...) {
-  signature(ranks(x, "rankings"), pcs = pcs, ntop = ntop, ...)
+signature.FacilePCAResult <- function(x, type = "features", signed = TRUE,
+                                      pcs = NULL, ntop = 20, ...) {
+  signature(ranks(x, type = type, signed = signed), pcs = pcs, ntop = ntop, ...)
+}
+
+# Utility Functions ============================================================
+
+#' Helper function that creates a long/tidy table of statistics over the
+#' features of a PCA (loadings, weights, ranks)
+#' @noRd
+.fpca.feature_statistics <- function(x, ...) {
+  assert_class(x, "FacilePCAResult")
+
+  pvar <- assert_numeric(x$percent_var, names = "unique")
+  pc.names <- names(pvar)
+  rotation <- expect_matrix(x[["rotation"]], mode = "numeric",
+                            ncols = length(pvar), col.names = "unique")
+  assert_subset(pc.names, colnames(rotation))
+  rotation <- bind_cols(tibble(feature_id = rownames(rotation)),
+                        as.data.frame(rotation))
+
+  rdata <- x[["row_covariates"]]
+  if (!"feature_id" %in% colnames(rdata)) {
+    rdata[["feature_id"]] <- rownames(rdata)
+  }
+  assert_character(rdata[["feature_id"]], unique = TRUE)
+  assert_true(all(rdata[["feature_id"]] == rotation[["feature_id"]]))
+
+
+  meta.cols <- c("feature_id", "feature_type")
+  meta.cols <- intersect(meta.cols, colnames(rdata))
+  assert_character(meta.cols, min.len = 1L)
+  meta <- rdata[, meta.cols, drop = FALSE]
+  assert_character(meta[["feature_id"]])
+
+  if (!is.character(meta[["feature_type"]])) {
+    ftype <- guess_feature_type(meta[["feature_id"]],
+                                with_organism = FALSE,
+                                summarize = TRUE)
+    meta[["feature_type"]] <- ftype[["feature_type"]]
+  }
+
+  rlong <- rotation %>%
+    gather("PC", "rotation", -feature_id) %>%
+    mutate(weight = abs(rotation)) %>%
+    group_by(PC) %>%
+    mutate(rank_rotation = rank(-rotation, ties.method = "random"),
+           rank_weight = rank(-weight, ties.method = "random")) %>%
+    ungroup()
+
+  stats <- inner_join(meta, rlong, by = "feature_id")
+  as.tbl(stats)
 }
 
 # Printing =====================================================================

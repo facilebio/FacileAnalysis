@@ -9,6 +9,8 @@
 #'
 #' Not every FacileAnalysisResult can be compared, I guess, in which case it
 #' we will throw an error
+#'
+#' @export
 compare <- function(x, y, ...) {
   UseMethod("compare", x)
 }
