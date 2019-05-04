@@ -50,14 +50,13 @@ fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
 #'   tagList
 #'   tags
 #'   wellPanel
-#' @importFrom bs4Dash
-#'   bs4Box
 #' @importFrom shinydashboard
 #'   box
 fdgeAnalysisUI <- function(id, ..., debug = FALSE,
                            bs4dash = isTRUE(getOption("facile.bs4dash"))) {
   ns <- NS(id)
-  box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
+  # box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
+  box. <- shinydashboard::box
   tagList(
     box.(title = "Model Definition", width = 12,
          fdgeModelDefRunUI(ns("model"), debug = debug)),
