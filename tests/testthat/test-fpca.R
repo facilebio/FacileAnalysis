@@ -6,11 +6,8 @@ test_that("fpca simply doesn't explode", {
   pdat <- as.data.frame(FacileAnalysis:::example_aes_data_table(10, n.cats = 5))
   rownames(pdat) <- colnames(m)
 
-  res <- fpca(m, col_covariates = pdat)
+  res <- fpca(m, col_covariates = pdat, use_irlba = FALSE)
   expect_equal(nrow(result(res)), ncol(m))
-  expect_equal(nrow(res$factor_contrib), nrow(m))
-  expect_equal(
-    colnames(res$factor_contrib)[1:5],
-    c("feature_id", paste0("PC", 1:4)))
+  expect_setequal(res[["feature_stats"]][["PC"]], colnames(res[["rotation"]]))
 })
 

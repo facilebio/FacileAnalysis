@@ -208,3 +208,26 @@ design <- function(x, ...) {
 model <- function(x, ...) {
   UseMethod("model", x)
 }
+
+# Generic API calls on results from running an analysis through a gadget =======
+
+#' #' @noRd
+#' report.FacileGadgetResult <- function(x, ...) {
+#'   report(result(x), ...)
+#' }
+#'
+#' #' @noRd
+#' viz.FacileGadgetResult <- function(x, ...) {
+#'   viz(result(x), ...)
+#' }
+#'
+#' #' @noRd
+#' shine.FacileGadgetResult <- function(x, ...) {
+#'   shine(result(x), ...)
+#' }
+#'
+#' #' @noRd
+#' compare.FacileGadgetResult <- function(x, y, ...) {
+#'   if (is(y, "FacileGadgetResult")) y <- result(y)
+#'   compare(result(x), y)
+#' }

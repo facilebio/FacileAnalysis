@@ -73,7 +73,8 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     testcov = testcov,
     numer = numer,
     denom = denom,
-    fixedcov = fixedcov)
+    fixedcov = fixedcov,
+    .ns = session$ns)
 
   class(vals) <- c("ShinyDGEModelDefinition", class(vals))
   vals

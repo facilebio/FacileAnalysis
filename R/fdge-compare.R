@@ -116,7 +116,7 @@ report.FacileTtestComparison <- function(x, ...) {
   ysamples[[icovariate]] <- paste0("ygrp.", ysamples[[covariate]])
 
   samples. <- set_fds(bind_rows(xsamples, ysamples), fds(xmod))
-  browser()
+
   contrast. <- glue(
     "( {xcon} ) - ( {ycon} )",
     xcon = .prefix_contrast(xmod[["contrast_string"]], "xgrp."),

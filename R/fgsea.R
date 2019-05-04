@@ -12,7 +12,7 @@
 #' result, as well.
 #'
 #' @export
-#' @importFrom multiGSEA GeneSetDb multiGSEA
+#' @importFrom multiGSEA multiGSEA
 #'
 #' @param x A `FacileAnalysisResult` object
 #' @param gdb A `multiGSEA::GeneSetDb` object

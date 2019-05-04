@@ -28,7 +28,7 @@
 #'    [lima::arrayWeights()] when `with_sample_weights = TRUE`
 #'
 #' @export
-#' @importFrom multiGSEA GeneSetDb calculateIndividualLogFC logFC multiGSEA
+#' @importFrom multiGSEA calculateIndividualLogFC logFC multiGSEA
 #'
 #' @param x a data source
 #' @param assay_name the name of the assay that holds the measurements for test.
@@ -346,22 +346,25 @@ print.FacileDGEResult <- function(x, ...) {
 format.FacileDGEResult <- function(x, ...) {
   test_type <- if (is(x, "FacileTtestDGEResult")) "ttest" else "ANOVA"
   mdef <- model(x)
+  des <- design(mdef)
   formula <- mdef[["design_formula"]]
 
   if (test_type == "ttest") {
-    test <- sprintf("%s: (%s) - (%s)",
-                    mdef[["covariate"]],
-                    paste(param(mdef, "numer"), collapse = "+"),
-                    paste(param(mdef, "denom"), collapse = "+"))
+    test <- mdef[["contrast_string"]]
+    des.cols <- names(mdef$contrast[mdef$contrast != 0])
   } else {
     des <- mdef[["design"]]
     test <- sprintf("%s (%s)", mdef[["covariate"]],
                     paste(colnames(des)[mdef[["coef"]]], collapse = "|"))
+    des.cols <- c(1, mdef$coef)
   }
+
+  nsamples <- sum(colSums(des[, des.cols, drop = FALSE] != 0))
+
   res <- result(x)
   ntested <- nrow(res)
   nsig <- sum(!is.na(res[["padj"]]) & res[["padj"]] < 0.10)
-  nsamples <- nrow(x$model_def$covariates)
+
   out <- paste(
     "===========================================================\n",
     sprintf("FacileDGEResult (%s)\n", test_type),

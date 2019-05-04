@@ -13,7 +13,6 @@
 #' http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
 #'
 #' @export
-#' @importFrom multiGSEA eigenWeightedMean
 #' @rdname fpca
 #'
 #' @param x a data container
