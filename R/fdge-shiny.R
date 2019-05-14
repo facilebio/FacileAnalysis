@@ -17,6 +17,7 @@
 #' shine(dge.comp)
 #' }
 fdgeGadget <- function(x, title = "Differential Expression Analysis", ...) {
+  assert_multi_class(x, c("FacileDataStore", "facile_frame"))
   frunGadget(fdgeAnalysis, fdgeAnalysisUI, x, title = title, ...)
 }
 

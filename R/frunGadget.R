@@ -12,6 +12,19 @@
 #'   callModule
 #'   dialogViewer
 #'   runGadget
+#' @param analysisModule the server function for the gadget
+#' @param analysisUI the UI function for the gadget
+#' @param x the FacileDataStore or a facile sample descriptor from one.
+#' @param user the username/id for the analysis
+#' @param title the title of the gadget
+#' @param height,width height and width of gadget, defaults to 600 and 1000,
+#'   respectively.
+#' @param viewer `"dialog"` (default), `"browser"`, or `"pane"`. See description
+#'   from [shiny::runGadget]
+#' @return a subclass of `FacileAnalysisGadgetResult` which holds the result
+#'   from the `analysisModule`, as well as am `annotation` tibble, that can hold
+#'   information from brushing of smaples (or features) -- depending on what
+#'   the gadget is working over.
 frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
                        title = "Facile Analysis Gadget",
                        height = 600, width = 1000, viewer = "dialog", ...,
@@ -30,7 +43,7 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     samples. <- x
   } else {
     fds. <- x
-    samples. <- samples(x)
+    samples. <- samples(x) %>% collect(n = Inf)
   }
 
   assert_class(fds., "FacileDataStore")
