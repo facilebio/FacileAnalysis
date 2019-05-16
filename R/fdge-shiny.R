@@ -3,14 +3,15 @@
 #' @export
 #' @examples
 #' if (interactive()) {
-#' efds <- exampleFacileDataSet()
 #' # run tumor vs normal comparisons vs each, then run compare() on the results
+#' options(facile.log.level.fshine = "trace")
+#' efds <- exampleFacileDataSet()
 #' dge.crc <- efds %>%
 #'   filter_samples(indication == "CRC") %>%
-#'   fdgeGadget()
+#'   fdgeGadget(viewer = "pane")
 #' dge.blca <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdgeGadget()
+#'   fdgeGadget(viewer = "pane")
 #' dge.comp <- compare(dge.crc, dge.blca)
 #'
 #' report(dge.comp)
@@ -107,7 +108,10 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
   # Update the dge_methods available given the selected assay
   observe({
-    assay_type. <- assay$assay_info()$assay_type
+    ainfo <- req(assay$assay_info())
+    assay_type. <- ainfo$assay_type
+
+
     req(!unselected(assay_type.))
     method. <- input$dge_method
     methods. <- fdge_methods(assay_type.)$dge_method

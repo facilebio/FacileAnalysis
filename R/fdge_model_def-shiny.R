@@ -27,7 +27,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   })
 
   testcov <- callModule(categoricalSampleCovariateSelect, "testcov",
-                        rfds, ..., .with_none = FALSE,
+                        rfds, include1 = FALSE, ..., .with_none = FALSE,
                         .reactive = .reactive)
 
   numer <- callModule(categoricalSampleCovariateLevels, "numer",

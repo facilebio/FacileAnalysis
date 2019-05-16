@@ -14,7 +14,6 @@ devtools::load_all(".")
 # All in one module ============================================================
 shiny::shinyApp(
   ui = shiny::fluidPage(
-    # shiny::wellPanel(filteredReactiveFacileDataStoreUI("ds")),
     reactiveFacileDataStoreUI("rfds"),
     shiny::tags$h2("fdgeAnalysis"),
     fdgeAnalysisUI("analysis"),
