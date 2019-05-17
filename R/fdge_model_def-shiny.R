@@ -15,6 +15,7 @@
 #'   categoricalSampleCovariateSelect
 #'   categoricalSampleCovariateLevels
 #'   initialized
+#'   update_exclude
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
@@ -29,6 +30,13 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   testcov <- callModule(categoricalSampleCovariateSelect, "testcov",
                         rfds, include1 = FALSE, ..., .with_none = FALSE,
                         .reactive = .reactive)
+  # the "fixed" covariate is what I'm calling the extra/batch-level
+  # covariates. the entry selected in the testcov is removed from the
+  # available elemetns to select from here
+  fixedcov <- callModule(categoricalSampleCovariateSelect, "fixedcov",
+                         rfds, ..., .with_none = FALSE,
+                         .exclude = testcov$covariate,
+                         reactive = .reactive)
 
   numer <- callModule(categoricalSampleCovariateLevels, "numer",
                       rfds, testcov, .reactive = .reactive)
@@ -36,8 +44,12 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   denom <- callModule(categoricalSampleCovariateLevels, "denom",
                       rfds, testcov, .reactive = .reactive)
 
-  fixedcov <- callModule(categoricalSampleCovariateSelect, "fixedcov",
-                         rfds, ..., .with_none = FALSE, .reactive = .reactive)
+  # Make the levels available in the numer and denom covariates
+  # mutually exclusive
+  observe({
+    update_exclude(denom, numer$values)
+    update_exclude(numer, denom$values)
+  })
 
   model <- reactive({
     # TODO: everytime a change is made, this fires twice

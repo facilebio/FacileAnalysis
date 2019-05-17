@@ -8,6 +8,29 @@ frunGadget(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   title = "Facile Analysis Gadget", height = 600, width = 1000,
   viewer = "dialog", ..., debug = FALSE)
 }
+\arguments{
+\item{analysisModule}{the server function for the gadget}
+
+\item{analysisUI}{the UI function for the gadget}
+
+\item{x}{the FacileDataStore or a facile sample descriptor from one.}
+
+\item{user}{the username/id for the analysis}
+
+\item{title}{the title of the gadget}
+
+\item{height, width}{height and width of gadget, defaults to 600 and 1000,
+respectively.}
+
+\item{viewer}{\code{"dialog"} (default), \code{"browser"}, or \code{"pane"}. See description
+from \link[shiny:runGadget]{shiny::runGadget}}
+}
+\value{
+a subclass of \code{FacileAnalysisGadgetResult} which holds the result
+from the \code{analysisModule}, as well as am \code{annotation} tibble, that can hold
+information from brushing of smaples (or features) -- depending on what
+the gadget is working over.
+}
 \description{
 We will implement barebones analysis gadgets that delegate down into here.
 }
