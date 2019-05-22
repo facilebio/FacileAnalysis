@@ -175,18 +175,37 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   if (!is.null(fixed)) {
     dformula <- paste(dformula, "+", paste(fixed, collapse = " + "))
   }
-
+# browser()
   design <- model.matrix(formula(dformula), data = xx)
-  test_covs <- grep(paste0("^", covariate), colnames(design))
-  colnames(design) <- sub(paste0("^", covariate), "", colnames(design))
+  # Protect against non-valid column names
+  colnames(design) <- make.names(colnames(design))
+
+  safe_covname <- make.names(covariate)
+  test_covs <- grep(paste0("^", make.names(safe_covname)), colnames(design))
+  colnames(design) <- sub(paste0("^", safe_covname), "", colnames(design))
   rownames(design) <- paste(xx$dataset, xx$sample_id, sep = "__")
 
   non_estimable <- nonEstimable(design)
   if (!is.null(non_estimable)) {
-    errors <- c(
-      errors,
-      paste("Design matrix is not full rank: these columns are non-estimable: ",
-            paste(non_estimable, collapse = ",")))
+    err <- paste("Design matrix is not full rank.",
+                 "Cannot estimate these covariates:",
+                 paste(non_estimable, collapse = ","),
+                 "\n")
+    if (is.null(fixed)) {
+      err <- glue(err, "This is a catastrophic error, please contact ",
+                  "lianoglou@dnli.com for help")
+    } else {
+      check <- sapply(fixed, function(fcov) any(grepl(fcov, non_estimable)))
+      if (length(check)) {
+        err <- glue(err,
+                    "Try removing one of these covariates from the model: ",
+                    paste(fixed[check], collapse = ","))
+      } else {
+        err <- glue(err, "There must be a problem in sample annotation, ",
+                    "please contact lianoglou@dnli.com")
+      }
+    }
+    errors <- c(errors, err)
   }
 
   if (test_type == "ttest") {
@@ -206,7 +225,6 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     clazz <- "FacileFailedModelDefinition"
     coef <- NULL
     contrast <- NULL
-
   } else if (test_type == "anova") {
     clazz <- "FacileAnovaModelDefinition"
     coef <- 2L:max(test_covs)
@@ -216,11 +234,11 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   } else {
     coef <- NULL
     if (is.null(contrast.)) {
-      numer. <- paste(numer, collapse = " + ")
+      numer. <- paste(make.names(numer), collapse = " + ")
       if (length(numer) > 1L) {
         numer. <- sprintf("( %s ) / %d", numer., length(numer))
       }
-      denom. <- paste(denom, collapse = " + ")
+      denom. <- paste(make.names(denom), collapse = " + ")
       if (length(denom) > 1L) {
         denom. <- sprintf("( %s ) / %d", denom., length(denom))
       }
@@ -406,6 +424,5 @@ format.FacileDGEModelDefinition <- function(x, ...) {
     "===========================================================\n",
     sep = "")
   out
-
 }
 

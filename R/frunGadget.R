@@ -12,6 +12,8 @@
 #'   callModule
 #'   dialogViewer
 #'   runGadget
+#' @importFrom shinyjs useShinyjs
+#' @importFrom shinyWidgets useSweetAlert
 #' @param analysisModule the server function for the gadget
 #' @param analysisUI the UI function for the gadget
 #' @param x the FacileDataStore or a facile sample descriptor from one.
@@ -27,7 +29,7 @@
 #'   the gadget is working over.
 frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
                        title = "Facile Analysis Gadget",
-                       height = 600, width = 1000, viewer = "dialog", ...,
+                       height = 600, width = 1000, viewer = "pane", ...,
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
   options(facile.bs4dash = FALSE)
@@ -50,6 +52,8 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   assert_class(samples., "facile_frame")
 
   ui <- miniPage(
+    useShinyjs(),
+    useSweetAlert(),
     gadgetTitleBar(title),
     miniContentPanel(analysisUI("analysis", ..., debug = debug)),
     NULL)

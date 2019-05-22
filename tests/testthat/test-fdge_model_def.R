@@ -95,3 +95,33 @@ test_that("fdge_model_def supports retrieving test covaraites on the fly", {
   expect_numeric(mref$coef)
   expect_equal(mtest$coef, mref$coef)
 })
+
+test_that("fdge_model_def errors on non-fullrank matrices", {
+  samples <- filter_samples(FDS, indication == "CRC")
+
+  good.model <- expect_warning({
+    samples %>%
+      fdge_model_def(covariate = "subtype_crc_cms",
+                     numer = c("CMS1", "CMS2"),
+                     denom = c("CMS3", "CMS4"))
+  }, "NA")
+  expect_class(good.model, "FacileTtestDGEModelDefinition")
+
+  # adding `fixed = "sex"` makes this not full rank
+  bad.model <- expect_warning({
+    samples %>%
+      fdge_model_def(covariate = "subtype_crc_cms",
+                     numer = c("CMS1", "CMS2"),
+                     denom = c("CMS3", "CMS4"),
+                     fixed = "sex")
+  }, "NA")
+  expect_class(bad.model, "FacileFailedModelDefinition")
+  expect_string(bad.model$errors, pattern = "full rank")
+  expect_string(bad.model$errors, pattern = "removing.*model:.*sex$")
+})
+
+test_that("microsatellite instability anova doesn't blow up", {
+  samples <- filter_samples(FDS, indication == "CRC")
+  model <- fdge_model_def(samples, covariate = "subtype_microsatellite_instability")
+
+})

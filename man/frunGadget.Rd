@@ -6,7 +6,7 @@
 \usage{
 frunGadget(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   title = "Facile Analysis Gadget", height = 600, width = 1000,
-  viewer = "dialog", ..., debug = FALSE)
+  viewer = "pane", ..., debug = FALSE)
 }
 \arguments{
 \item{analysisModule}{the server function for the gadget}

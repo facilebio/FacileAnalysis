@@ -141,12 +141,22 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
   out
 }
 
+#' @noRd
+#' @export
+fpca.EList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
+                       col_covariates = x$targets,
+                       prior.count = 3, assay_name = "counts", ...) {
+  out <- fpca(x$E, pcs, ntop, row_covariates, col_covariates, ...)
+  out
+}
+
 #' @export
 #' @rdname fpca
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL, use_irlba = pcs < 7, ...) {
+                        col_covariates = NULL, use_irlba = pcs < 7,
+                        center = TRUE, scale. = FALSE, ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -177,11 +187,11 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
   row_covariates <- row_covariates[take,,drop = FALSE]
 
   if (use_irlba) {
-    pca <- prcomp_irlba(t(xx), n = pcs)
+    pca <- prcomp_irlba(t(xx), n = pcs, center = center, scale. = scale.)
     rownames(pca$rotation) <- rownames(xx)
     rownames(pca$x) <- colnames(xx)
   } else {
-    pca <- prcomp(t(xx))
+    pca <- prcomp(t(xx), center = center, scale. = scale.)
     pca$sdev <- head(pca$sdev, pcs)
     pca$rotation <- pca$rotation[, 1:pcs, drop = FALSE]
     pca$x <- pca$x[, 1:pcs, drop = FALSE]

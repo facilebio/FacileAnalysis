@@ -16,6 +16,9 @@
 #'   categoricalSampleCovariateLevels
 #'   initialized
 #'   update_exclude
+#' @importFrom shiny renderText
+#' @importFrom shinyjs toggleElement
+#' @importFrom shinyWidgets sendSweetAlert
 #' @return A `FacileDGEModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
@@ -46,6 +49,14 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 
   # Make the levels available in the numer and denom covariates
   # mutually exclusive
+  # Note: I can't get categoricalSampleCovariateLevels to work
+  # smoothly like this when `ignoreNULL = FALSE` is set so that
+  # when one selectize drains, its last level is made availalbe
+  # to the other select.
+  # TODO: Use FacileShine::categoricalSampleCovariateLevels
+  #       instead of individual numer and denom selects so that
+  #       the empty select releases its last level to the
+  #       "select pool"
   observe({
     update_exclude(denom, numer$values)
     update_exclude(numer, denom$values)
@@ -66,11 +77,74 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     #   i. neither numer or denom is filled so that we run an ANOVA;
     #  ii. both are filled for a propper t-test specification
     partial <- xor(unselected(numer.), unselected(denom.))
-    req(!partial)
-
-    out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,
-                          fixed = fixed.)
+    if (partial) {
+      out <- NULL
+    } else {
+      out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,
+                            fixed = fixed.)
+    }
     out
+  })
+
+  status <- reactive({
+    req(initialized(rfds))
+    model. <- model()
+    if (!is(model., "FacileDGEModelDefinition")) {
+      out <- "Uninitialized"
+    } else if (is(model., "FacileFailedModelDefinition")) {
+      out <- "error"
+    } else if (length(model.$warnings) == 0) {
+      out <- "warn"
+    } else {
+      out <- "clean"
+    }
+    out
+  })
+
+  observeEvent(status(), {
+    status. <- status()
+    # model. <- model()
+    # show.mbox <- status. != "error" && is(model, "FacileDGEModelDefinition")
+    # toggleElement("messagebox", condition = show.mbox)
+
+    toggleElement("messagebox", condition = status. != "error")
+    if (status. == "error") {
+      sendSweetAlert(session, "Error building model",
+                     text = model()$errors, type = "error")
+    }
+  })
+
+  output$message <- renderText({
+    model. <- model()
+    status. <- isolate(status())
+    clazz <- class(model.)[1L]
+    if (!is.null(model.)) {
+      nsamples <- nrow(samples(model.))
+    }
+
+    msg <- switch(
+      clazz,
+      "NULL" = "Undefined model",
+      FacileAnovaModelDefinition = {
+        sprintf("ANOVA model defined across '%s' covariate on %d samples",
+                param(model., "covariate"), nsamples)
+      },
+      FacileInteractionTestDGEModelDefinition = {
+        sprintf("Interaction model defined on %d samples", nsamples)
+      },
+      FacileTtestDGEModelDefinition = {
+        sprintf("T-test model [%s] defined on %d samples",
+                model.$contrast_string, nsamples)
+      },
+      FacileFailedModelDefinition = {
+        paste("ERROR:", paste(model.$errors, collapse = "\n"))
+      },
+      "Unknown model type defined")
+
+    if (status. == "warn") {
+      msg <- paste(msg, model.$warnings, sep = "\n")
+    }
+    msg
   })
 
   if (debug) {
@@ -96,6 +170,8 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 #' @importFrom FacileShine
 #'   categoricalSampleCovariateSelectUI
 #'   categoricalSampleCovariateLevelsUI
+#' @importFrom shiny textOutput wellPanel
+#' @importFrom shinyjs hidden
 fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
@@ -105,7 +181,7 @@ fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
         3,
         categoricalSampleCovariateSelectUI(
           ns("testcov"),
-          label = "Grouping Covariate",
+          label = "Group to test",
           multiple = FALSE)),
       column(
         3,
@@ -123,8 +199,9 @@ fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
         3,
         categoricalSampleCovariateSelectUI(
           ns("fixedcov"),
-          label = "Fixed",
-          multiple = TRUE)))
+          label = "Control for",
+          multiple = TRUE))),
+    hidden(wellPanel(id = ns("messagebox"), textOutput(ns("message"))))
   )
 
   if (debug) {

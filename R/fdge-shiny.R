@@ -28,12 +28,21 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis", ...) {
 #'
 #' @export
 #' @importFrom shiny callModule
+#' @importFrom shinyjs toggleElement
 #' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ShinyFacileDGEResult`, the output from [fdge()]
 fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
   view <- callModule(fdgeView, "view", rfds, dge, ..., debug = debug)
+
+  observe({
+    # result. <- req(dge$result())
+    # toggleElement("viewbox", condition = is(result., "FacileDGEResult"))
+    model. <- model$result()
+    show <- is(model., "FacileDGEModelDefinition")
+    toggleElement("viewbox", condition = show)
+  })
 
   vals <- list(
     result = dge,
@@ -52,20 +61,23 @@ fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
 #'   tagList
 #'   tags
 #'   wellPanel
-#' @importFrom shinydashboard
-#'   box
+#' @importFrom shinydashboard box
+#' @importFrom shinyjs hidden
 fdgeAnalysisUI <- function(id, ..., debug = FALSE,
                            bs4dash = isTRUE(getOption("facile.bs4dash"))) {
   ns <- NS(id)
   # box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
   box. <- shinydashboard::box
   tagList(
-    box.(title = "Model Definition", width = 12,
-         fdgeModelDefRunUI(ns("model"), debug = debug)),
-    box.(title = "Testing Parameters", width = 12,
-         fdgeRunUI(ns("dge"), debug = debug)),
-    box.(title = "Testing Results", width = 12,
-         fdgeViewUI(ns("view"), debug = debug)))
+    tags$div(id = ns("modelbox"),
+             box.(title = "Model Definition", width = 12,
+                  fdgeModelDefRunUI(ns("model"), debug = debug))),
+    tags$div(id = ns("dgebox"),
+             box.(title = "Testing Parameters", width = 12,
+                  fdgeRunUI(ns("dge"), debug = debug))),
+    hidden(tags$div(id = ns("viewbox"),
+                    box.(title = "Testing Results", width = 12,
+                         fdgeViewUI(ns("view"), debug = debug)))))
 }
 
 # Building block fdge shiny modules ============================================
@@ -78,6 +90,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #'   eventReactive
 #'   reactive
 #'   renderText
+#' @importFrom shinyjs toggleState
 #' @importFrom FacileShine
 #'   assaySelect
 #'   unselected
@@ -99,8 +112,8 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
   rmodel <- reactive({
     out <- if (is(model, "FacileDGEModelDefinition")) model else model$result()
-    req(is(out, "FacileDGEModelDefinition"),
-        !is(out, "IncompleteModelDefintion"))
+    # req(is(out, "FacileDGEModelDefinition"),
+    #     !is(out, "IncompleteModelDefintion"))
     out
   })
 
@@ -129,8 +142,20 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     input$weights && can_weight
   })
 
+  observe({
+    model. <- rmodel()
+    enable <- is(model., "FacileDGEModelDefinition") &&
+      !is(model., "FacileFailedModelDefinition") &&
+      !is(model., "IncompleteModelDefintion")
+    toggleState("run", condition = enable)
+  })
+
   dge <- eventReactive(input$run, {
-    model. <- req(rmodel())
+    model. <- rmodel()
+    cando <- is(model., "FacileDGEModelDefinition") &&
+      !is(model., "FacileFailedModelDefinition") &&
+      !is(model., "IncompleteModelDefintion")
+    req(cando)
     assay_name. <- assay$assay_info()$assay
     method. <- input$dge_method
     req(
@@ -166,23 +191,35 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 #'   checkboxInput
 #'   column
 #'   fluidRow
+#'   icon
 #'   NS
 #'   numericInput
 #'   selectInput
 #'   tagList
 #'   tags
 #'   verbatimTextOutput
+#' @importFrom shinyWidgets dropdownButton prettyCheckbox
 fdgeRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   out <- tagList(
     fluidRow(
       column(3, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
-      column(3, selectInput(ns("dge_method"), label = "Method", choices = NULL)),
-      column(3, numericInput(ns("treatfc"), label = "Min. Fold Change",
-                             value = 1, min = 1, max = 10, step = 0.25)),
-      column(2, checkboxInput(ns("weights"), label = "Sample Weights")),
-      column(1, actionButton(ns("run"), "Run")))
-    )
+      column(
+        1,
+        tags$div(
+          style = "padding-top: 1.7em",
+          dropdownButton(
+            inputId = ns("opts"),
+            icon = icon("sliders"),
+            status = "primary", circle = FALSE,
+            width = "300px",
+            selectInput(ns("dge_method"), label = "Method", choices = NULL),
+            numericInput(ns("treatfc"), label = "Min. Fold Change",
+                         value = 1, min = 1, max = 10, step = 0.25),
+            prettyCheckbox(ns("weights"), label = "Use Sample Weights",
+                           status = "primary")))),
+      column(1, actionButton(ns("run"), "Run", style = "margin-top: 1.7em"))
+    ))
 
   if (debug) {
     out <- tagList(
@@ -248,9 +285,10 @@ fdgeView <- function(input, output, session, rfds, result, ...,
 
 #' @noRd
 #' @export
-#' @importFrom shiny NS
 #' @importFrom DT DTOutput
+#' @importFrom shiny NS
+#' @importFrom shinycssloaders withSpinner
 fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
-  DT::DTOutput(ns("stats"))
+  withSpinner(DT::DTOutput(ns("stats")))
 }

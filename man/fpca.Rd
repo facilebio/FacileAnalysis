@@ -14,7 +14,8 @@ fpca(x, pcs = 5, ntop = 500, row_covariates = NULL,
   custom_key = Sys.getenv("USER"), ...)
 
 \method{fpca}{matrix}(x, pcs = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, use_irlba = pcs < 7, ...)
+  col_covariates = NULL, use_irlba = pcs < 7, center = TRUE,
+  scale. = FALSE, ...)
 }
 \arguments{
 \item{x}{a data container}
