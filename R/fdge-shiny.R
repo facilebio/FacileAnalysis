@@ -17,9 +17,11 @@
 #' report(dge.comp)
 #' shine(dge.comp)
 #' }
-fdgeGadget <- function(x, title = "Differential Expression Analysis", ...) {
+fdgeGadget <- function(x, title = "Differential Expression Analysis",
+                       height = 800, width = 1000, ...) {
   assert_multi_class(x, c("FacileDataStore", "facile_frame"))
-  frunGadget(fdgeAnalysis, fdgeAnalysisUI, x, title = title, ...)
+  frunGadget(fdgeAnalysis, fdgeAnalysisUI, x, title = title,
+             height = height, width = width, ...)
 }
 
 #' Wrapper module to perform and interact with a differential expression result.
@@ -34,11 +36,15 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis", ...) {
 fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
-  view <- callModule(fdgeView, "view", rfds, dge, ..., debug = debug)
+  view <- callModule(fdgeView, "view", rfds, dge, ...,
+                     feature_selection = session$ns("volcano"),
+                     sample_selection = session$ns("samples"),
+                     debug = debug)
 
+  # Only show the view UI when there is (at least) a defined model. When
+  # done this way, the showSpinner() around the view's output datatable works
+  # like a "wait, processing DGE" while it's running.
   observe({
-    # result. <- req(dge$result())
-    # toggleElement("viewbox", condition = is(result., "FacileDGEResult"))
     model. <- model$result()
     show <- is(model., "FacileDGEModelDefinition")
     toggleElement("viewbox", condition = show)
@@ -90,6 +96,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #'   eventReactive
 #'   reactive
 #'   renderText
+#'   withProgress
 #' @importFrom shinyjs toggleState
 #' @importFrom FacileShine
 #'   assaySelect
@@ -163,8 +170,11 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
       !unselected(method.))
     sample_weights. <- sample_weights()
     treat_lfc. <- log2(input$treatfc)
-    fdge(model., assay_name = assay_name., method = method.,
-         with_sample_weights = sample_weights., treat_lfc = treat_lfc.)
+
+    withProgress({
+      fdge(model., assay_name = assay_name., method = method.,
+           with_sample_weights = sample_weights., treat_lfc = treat_lfc.)
+    }, message = "Performing differential expression")
   })
 
   if (debug) {
@@ -203,7 +213,7 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   out <- tagList(
     fluidRow(
-      column(3, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
+      column(3, assaySelectUI(ns("assay"), choices = NULL)),
       column(
         1,
         tags$div(
@@ -239,11 +249,14 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 #' module.
 #'
 #' @export
-#' @importFrom DT datatable renderDT formatRound
+#' @importFrom FacileViz fscatterplot
+#' @importFrom DT datatable dataTableProxy formatRound renderDT replaceData
+#' @importFrom plotly event_data
 #' @importFrom shiny req
-#'
 #' @param result The result from calling [fdge()].
 fdgeView <- function(input, output, session, rfds, result, ...,
+                     feature_selection = session$ns("volcano"),
+                     sample_selection = session$ns("samples"),
                      debug = FALSE) {
 
   # The FacileDGEResult object
@@ -258,7 +271,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     out
   })
 
-  dge.stats <- reactive({
+  dge.stats.all <- reactive({
     .fdge <- req(result.())
     .result <- ranks(.fdge) %>% result()
     if (.fdge[["test_type"]] == "ttest") {
@@ -269,26 +282,86 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     out
   })
 
+  output$volcano <- renderPlotly({
+    dat. <- req(dge.stats.all())
+    dat.$yaxis <- -log10(dat.$pval)
+    fplot <- fscatterplot(dat., c("logFC", "yaxis"),
+                          xlabel = "logFC", ylabel = "-log10(pval)",
+                          width = NULL, height = NULL,
+                          hover = c("symbol", "logFC", "FDR"),
+                          webgl = TRUE, event_source = feature_selection,
+                          key = "feature_id")
+    fplot$plot
+  })
+
+  # NULL or a character vector of feature_ids that are selected
+  selected_features <- reactive({
+    selected <- event_data("plotly_selected", source = feature_selection)
+    if (!is.null(selected)) selected <- selected$key
+    selected
+  })
+
+  dge.stats <- reactive({
+    stats. <- req(dge.stats.all())
+    selected <- selected_features()
+    if (!is.null(selected)) stats. <- filter(stats., feature_id %in% selected)
+    stats.
+  })
+
+  output$boxplot <- renderPlotly({
+
+  })
+
+  selected_samples <- reactive({
+    # return the brushed samples from boxplot
+    NULL
+  })
+
   output$stats <- DT::renderDT({
+    # Triggered when new result comes in
+    res <- req(result.())
     dat <- req(dge.stats())
     num.cols <- colnames(dat)[sapply(dat, is.numeric)]
 
     dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
+    dtopts <- list()
+
     dtable <- dat %>%
-      datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
-                class = "compact", width = "100%", rownames = FALSE,
+      datatable(filter = "top",
+                # extensions = "Scroller",
+                style = "bootstrap",
+                class = "display", width = "100%", rownames = FALSE,
+                selection = "single",
                 options = dtopts) %>%
       formatRound(num.cols, 3)
     dtable
   }, server = TRUE)
+  # dtproxy <- dataTableProxy("stats")
+  # observe({
+  #   stats. <- req(dge.stats())
+  #   replaceData(dtproxy, stats., resetPaging = FALSE)
+  # })
+
+  vals <- list(
+    selected_features = selected_features,
+    selected_samples = selected_samples)
+  return(vals)
 }
 
 #' @noRd
 #' @export
 #' @importFrom DT DTOutput
-#' @importFrom shiny NS
+#' @importFrom plotly plotlyOutput
+#' @importFrom shiny column fluidRow NS
 #' @importFrom shinycssloaders withSpinner
 fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
-  withSpinner(DT::DTOutput(ns("stats")))
+  fluidRow(
+    column(
+      4,
+      # plotlyOutput(ns("boxplot")),
+      withSpinner(plotlyOutput(ns("volcano")))),
+    column(8, withSpinner(DT::DTOutput(ns("stats"))))
+  )
+
 }

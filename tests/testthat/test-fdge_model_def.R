@@ -120,8 +120,7 @@ test_that("fdge_model_def errors on non-fullrank matrices", {
   expect_string(bad.model$errors, pattern = "removing.*model:.*sex$")
 })
 
-test_that("microsatellite instability anova doesn't blow up", {
+test_that("invalid R variable named covariate levels are safe", {
   samples <- filter_samples(FDS, indication == "CRC")
   model <- fdge_model_def(samples, covariate = "subtype_microsatellite_instability")
-
 })

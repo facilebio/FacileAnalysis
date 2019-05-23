@@ -4,7 +4,9 @@
 \alias{fdgeView}
 \title{Shiny module that interacts with result of fdgeRun module}
 \usage{
-fdgeView(input, output, session, rfds, result, ..., debug = FALSE)
+fdgeView(input, output, session, rfds, result, ...,
+  feature_selection = session$ns("volcano"),
+  sample_selection = session$ns("samples"), debug = FALSE)
 }
 \arguments{
 \item{result}{The result from calling \code{\link[=fdge]{fdge()}}.}
