@@ -45,8 +45,10 @@ fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   # done this way, the showSpinner() around the view's output datatable works
   # like a "wait, processing DGE" while it's running.
   observe({
-    model. <- model$result()
-    show <- is(model., "FacileDGEModelDefinition")
+    # model. <- model$result()
+    # show <- is(model., "FacileDGEModelDefinition")
+    res <- req(dge$result())
+    show <- is(res, "FacileDGEResult")
     toggleElement("viewbox", condition = show)
   })
 
@@ -82,7 +84,9 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
              box.(title = "Testing Parameters", width = 12,
                   fdgeRunUI(ns("dge"), debug = debug))),
     hidden(tags$div(id = ns("viewbox"),
-                    box.(title = "Testing Results", width = 12,
+                    box.(title = NULL, #"Testing Results",
+                         solidHeader = TRUE,
+                         width = 12,
                          fdgeViewUI(ns("view"), debug = debug)))))
 }
 
@@ -124,14 +128,19 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     out
   })
 
+  runnable <- reactive({
+    model. <- rmodel()
+    enable <- is(model., "FacileDGEModelDefinition") &&
+      !is(model., "FacileFailedModelDefinition") &&
+      !is(model., "IncompleteModelDefintion")
+  })
+
   assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
 
   # Update the dge_methods available given the selected assay
   observe({
     ainfo <- req(assay$assay_info())
     assay_type. <- ainfo$assay_type
-
-
     req(!unselected(assay_type.))
     method. <- input$dge_method
     methods. <- fdge_methods(assay_type.)$dge_method
@@ -150,19 +159,12 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   })
 
   observe({
-    model. <- rmodel()
-    enable <- is(model., "FacileDGEModelDefinition") &&
-      !is(model., "FacileFailedModelDefinition") &&
-      !is(model., "IncompleteModelDefintion")
-    toggleState("run", condition = enable)
+    toggleState("run", condition = runnable())
   })
 
   dge <- eventReactive(input$run, {
+    req(runnable())
     model. <- rmodel()
-    cando <- is(model., "FacileDGEModelDefinition") &&
-      !is(model., "FacileFailedModelDefinition") &&
-      !is(model., "IncompleteModelDefintion")
-    req(cando)
     assay_name. <- assay$assay_info()$assay
     method. <- input$dge_method
     req(
@@ -249,10 +251,11 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 #' module.
 #'
 #' @export
-#' @importFrom FacileViz fscatterplot
+#' @importFrom FacileViz fscatterplot fboxplot
 #' @importFrom DT datatable dataTableProxy formatRound renderDT replaceData
-#' @importFrom plotly event_data
+#' @importFrom plotly event_data layout
 #' @importFrom shiny req
+#' @importFrom shinyjs toggleElement
 #' @param result The result from calling [fdge()].
 fdgeView <- function(input, output, session, rfds, result, ...,
                      feature_selection = session$ns("volcano"),
@@ -262,15 +265,32 @@ fdgeView <- function(input, output, session, rfds, result, ...,
   # The FacileDGEResult object
   result. <- reactive({
     req(isolate(initialized(rfds)))
-    if (is(result, "FacileDGEResult")) {
-      out <- result
-    } else {
-      out <- result$result()
-    }
+    out <- if (is(result, "FacileDGEResult")) result else result$result()
     req(is(out, "FacileDGEResult"))
     out
   })
 
+  # Only makse sense to show volcano when looking at a ttest result
+  observe({
+    res <- req(result.())
+    toggleElement("volcano", condition = is(res, "FacileTtestDGEResult"))
+  })
+
+  assay_name. <- reactive(param(req(result.()), "assay_name"))
+  samples. <- reactive(samples(req(result.()))) # should have covariate columns
+  model. <- reactive(model(req(result.())))
+  covariate. <- reactive(param(req(model.()), "covariate"))
+  is.ttest <- reactive(is(req(result.()), "FacileTtestDGEResult"))
+
+  observe({
+    toggleElement("volcano", condition = is.ttest())
+  })
+
+  # Two versions of the result table are stored:
+  # 1. `dge.stats.all`: always the full table; and
+  # 2. `dge.stats`: the subset of (1) which corresponds to the currently
+  #    selected features in (1) that are brushed from the volcano. If no
+  #    brushing is active, then (2) == (1)
   dge.stats.all <- reactive({
     .fdge <- req(result.())
     .result <- ranks(.fdge) %>% result()
@@ -282,19 +302,11 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     out
   })
 
-  output$volcano <- renderPlotly({
-    dat. <- req(dge.stats.all())
-    dat.$yaxis <- -log10(dat.$pval)
-    fplot <- fscatterplot(dat., c("logFC", "yaxis"),
-                          xlabel = "logFC", ylabel = "-log10(pval)",
-                          width = NULL, height = NULL,
-                          hover = c("symbol", "logFC", "FDR"),
-                          webgl = TRUE, event_source = feature_selection,
-                          key = "feature_id")
-    fplot$plot
-  })
+  # Visualization of DGE results -----------------------------------------------
 
-  # NULL or a character vector of feature_ids that are selected
+  # Responds to selection events on the volcano plot. If no selection is active,
+  # this is NULL, otherwise its the character vector of the "feature_id" values
+  # that are brushed in the plot.
   selected_features <- reactive({
     selected <- event_data("plotly_selected", source = feature_selection)
     if (!is.null(selected)) selected <- selected$key
@@ -308,15 +320,100 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     stats.
   })
 
+  output$volcano <- renderPlotly({
+    req(is.ttest())
+    dat. <- req(dge.stats.all())
+    dat.$yaxis <- -log10(dat.$pval)
+    fplot <- fscatterplot(dat., c("logFC", "yaxis"),
+                          xlabel = "logFC", ylabel = "-log10(pval)",
+                          width = NULL, height = NULL,
+                          hover = c("symbol", "logFC", "FDR"),
+                          webgl = TRUE, event_source = feature_selection,
+                          key = "feature_id")
+    fplot$plot
+  })
+
+  # Visualization of selected genes across samples -----------------------------
+
+  # The element in the statistics table that is selected, this will be an
+  # assay/feature_id 1-row tibble, or NULL
+  selected_result <- reactive({
+    out <- input$stats_rows_selected
+    aname <- isolate(assay_name.())
+    if (!is.null(out)) {
+      dat <- req(dge.stats())
+      out <- tibble(assay = aname, feature_id = dat[["feature_id"]][out])
+    }
+    out
+  })
+
+  boxdata <- reactive({
+    feature <- req(selected_result())
+    dat <- req(samples.())
+    scov <- covariate.()
+    dat <- fetch_assay_data(rfds, feature, dat, normalized = TRUE)
+    if (!scov %in% colnames(dat)) {
+      dat <- with_sample_covariates(dat, scov)
+    }
+
+    if (is.ttest()) {
+      m <- req(model.())
+      cov.vals <- c(param(m, "numer"), param(m, "denom"))
+      # dat <- filter(dat, !!scov %in% cov.vals)
+      keep <- dat[[scov]] %in% cov.vals # old school, !! isn't working
+      dat <- dat[keep,,drop = FALSE]
+    }
+
+    mutate(dat, .key = seq(nrow(dat)))
+  })
+
   output$boxplot <- renderPlotly({
+    dat <- req(boxdata())
+    scov <- covariate.()
+    if (is.ttest()) {
+      m <- req(model.())
+      numer <- param(m, "numer")
+      denom <- param(m, "denom")
+      if (length(numer) + length(denom) > 2) {
+        is.numer <- dat[[scov]] %in% numer
+        dat[["xaxe."]] <- ifelse(is.numer, "numer", "denom")
+        xaxis <- "xaxe."
+        xlabel <- "group"
+        color.by <- scov
+      } else {
+        xaxis <- scov
+        xlabel <- scov
+        color.by <- scov
+      }
+    } else {
+      xaxis <- scov
+      xlabel <- scov
+      color.by <- scov
+    }
 
+    fplot <- fboxplot(dat, xaxis, "value", with_points = TRUE,
+                      event_source = sample_selection, key = ".key",
+                      color_aes = color.by, hover = c(scov, "value"),
+                      width = NULL, height = NULL, legendside = "bottom",
+                      xlabel = "")
+    out <- fplot$plot
+    # out$width <- NULL
+    # out$height <- NULL
+    out
   })
 
+  # a dataset,sample_id tibble of the selected things, or NULL if none selected
   selected_samples <- reactive({
-    # return the brushed samples from boxplot
-    NULL
+    selected <- event_data("plotly_selected", source = sample_selection)
+    if (!is.null(selected)) {
+      dat <- req(boxdata())
+      selected <- select(filter(dat, .key == selected), dataset, sample_id)
+    }
+    selected
   })
 
+
+  # Stats Table ----------------------------------------------------------------
   output$stats <- DT::renderDT({
     # Triggered when new result comes in
     res <- req(result.())
@@ -324,7 +421,8 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     num.cols <- colnames(dat)[sapply(dat, is.numeric)]
 
     dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
-    dtopts <- list()
+    dtopts <- list(pageLength = 15,
+                   lengthMenu = c(15, 30, 50))
 
     dtable <- dat %>%
       datatable(filter = "top",
@@ -353,15 +451,23 @@ fdgeView <- function(input, output, session, rfds, result, ...,
 #' @importFrom DT DTOutput
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny column fluidRow NS
+#' @importFrom shinyjs hidden
+#' @importFrmo shinydashboard box
 #' @importFrom shinycssloaders withSpinner
 fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
+  box <- shinydashboard::box
   fluidRow(
-    column(
-      4,
-      # plotlyOutput(ns("boxplot")),
-      withSpinner(plotlyOutput(ns("volcano")))),
-    column(8, withSpinner(DT::DTOutput(ns("stats"))))
-  )
-
+    box(
+      width = 4,
+      id = ns("vizbox"),
+      withSpinner(plotlyOutput(ns("volcano"))),
+      # narrower because of legend
+      withSpinner(plotlyOutput(ns("boxplot")))),# , width = "300px"))),
+    box(
+      width = 8, height = "600px",
+      id = ns("statbox"),
+      title = "Differential Expression Statistics",
+      solidHeader = TRUE,
+      withSpinner(DT::DTOutput(ns("stats")))))
 }
