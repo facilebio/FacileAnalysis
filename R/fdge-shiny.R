@@ -454,7 +454,7 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
     column(
       width = 4,
       id = ns("vizcolumn"),
-      style = "padding: 2px; margin: 5px",
+      # style = "padding: 2px; margin: 5px",
       # volcano
       tags$div(id = ns("volcanobox"),
                box(
@@ -469,7 +469,7 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
     column(
       width = 8,
       id = ns("statscolumn"),
-      style = "padding: 2px; margin: 5px",
+      # style = "padding: 2px; margin: 5px",
       box(
         width = 12,
         id = ns("statbox"),
