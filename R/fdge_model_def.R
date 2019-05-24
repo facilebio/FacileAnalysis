@@ -175,7 +175,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   if (!is.null(fixed)) {
     dformula <- paste(dformula, "+", paste(fixed, collapse = " + "))
   }
-# browser()
+
   design <- model.matrix(formula(dformula), data = xx)
   # Protect against non-valid column names
   colnames(design) <- make.names(colnames(design))
@@ -209,6 +209,14 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   }
 
   if (test_type == "ttest") {
+    dup.terms <- intersect(numer, denom)
+    if (length(dup.terms)) {
+      warnings <- c(
+        warnings,
+        glue("Warning: the same term(s) apper in both numerator and ",
+             "denominator (", paste(dup.terms, collapse = ","), ")")
+      )
+    }
     if (is.null(contrast.)) {
       if (unselected(numer) || unselected(denom)) {
         errors <- c(

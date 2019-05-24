@@ -27,7 +27,9 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 
   active.samples <- reactive({
     req(initialized(rfds))
-    isolate.(active_samples(rfds))
+    # isolate.(active_samples(rfds))
+    ftrace("Updating active samples")
+    active_samples(rfds)
   })
 
   testcov <- callModule(categoricalSampleCovariateSelect, "testcov",
@@ -57,13 +59,12 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   #       instead of individual numer and denom selects so that
   #       the empty select releases its last level to the
   #       "select pool"
-  observe({
-    update_exclude(denom, numer$values)
-    update_exclude(numer, denom$values)
-  })
+  # observe({
+  #   update_exclude(denom, numer$values)
+  #   update_exclude(numer, denom$values)
+  # })
 
   model <- reactive({
-    # TODO: everytime a change is made, this fires twice
     req(initialized(rfds))
     samples. <- active.samples()
     testcov. <- name(testcov)
@@ -77,7 +78,9 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     #   i. neither numer or denom is filled so that we run an ANOVA;
     #  ii. both are filled for a propper t-test specification
     partial <- xor(unselected(numer.), unselected(denom.))
-    if (partial) {
+    all.dups <- !unselected(numer.) && setequal(numer., denom.)
+
+    if (partial || all.dups) {
       out <- NULL
     } else {
       out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,

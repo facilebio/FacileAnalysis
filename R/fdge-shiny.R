@@ -122,9 +122,8 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   }
 
   rmodel <- reactive({
+    req(initialized(rfds))
     out <- if (is(model, "FacileDGEModelDefinition")) model else model$result()
-    # req(is(out, "FacileDGEModelDefinition"),
-    #     !is(out, "IncompleteModelDefintion"))
     out
   })
 
@@ -264,16 +263,10 @@ fdgeView <- function(input, output, session, rfds, result, ...,
 
   # The FacileDGEResult object
   result. <- reactive({
-    req(isolate(initialized(rfds)))
+    req(initialized(rfds))
     out <- if (is(result, "FacileDGEResult")) result else result$result()
     req(is(out, "FacileDGEResult"))
     out
-  })
-
-  # Only makse sense to show volcano when looking at a ttest result
-  observe({
-    res <- req(result.())
-    toggleElement("volcano", condition = is(res, "FacileTtestDGEResult"))
   })
 
   assay_name. <- reactive(param(req(result.()), "assay_name"))
@@ -283,7 +276,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
   is.ttest <- reactive(is(req(result.()), "FacileTtestDGEResult"))
 
   observe({
-    toggleElement("volcano", condition = is.ttest())
+    toggleElement("volcanobox", condition = is.ttest())
   })
 
   # Two versions of the result table are stored:
@@ -342,7 +335,8 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     aname <- isolate(assay_name.())
     if (!is.null(out)) {
       dat <- req(dge.stats())
-      out <- tibble(assay = aname, feature_id = dat[["feature_id"]][out])
+      out <- tibble(assay = aname, feature_id = dat[["feature_id"]][out],
+                    symbol = dat[["symbol"]][out])
     }
     out
   })
@@ -368,6 +362,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
   })
 
   output$boxplot <- renderPlotly({
+    feature <- req(selected_result())
     dat <- req(boxdata())
     scov <- covariate.()
     if (is.ttest()) {
@@ -397,9 +392,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
                       width = NULL, height = NULL, legendside = "bottom",
                       xlabel = "")
     out <- fplot$plot
-    # out$width <- NULL
-    # out$height <- NULL
-    out
+    layout(out, title = sprintf("<b>%s</b>", feature[["symbol"]]))
   })
 
   # a dataset,sample_id tibble of the selected things, or NULL if none selected
@@ -429,7 +422,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
                 # extensions = "Scroller",
                 style = "bootstrap",
                 class = "display", width = "100%", rownames = FALSE,
-                selection = "single",
+                selection = list(mode = "single", selected = 1, target = "row"),
                 options = dtopts) %>%
       formatRound(num.cols, 3)
     dtable
@@ -452,22 +445,34 @@ fdgeView <- function(input, output, session, rfds, result, ...,
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny column fluidRow NS
 #' @importFrom shinyjs hidden
-#' @importFrmo shinydashboard box
+#' @importFrom shinydashboard box
 #' @importFrom shinycssloaders withSpinner
 fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
   fluidRow(
-    box(
+    column(
       width = 4,
-      id = ns("vizbox"),
-      withSpinner(plotlyOutput(ns("volcano"))),
-      # narrower because of legend
-      withSpinner(plotlyOutput(ns("boxplot")))),# , width = "300px"))),
-    box(
-      width = 8, height = "600px",
-      id = ns("statbox"),
-      title = "Differential Expression Statistics",
-      solidHeader = TRUE,
-      withSpinner(DT::DTOutput(ns("stats")))))
+      id = ns("vizcolumn"),
+      style = "padding: 2px; margin: 5px",
+      # volcano
+      tags$div(id = ns("volcanobox"),
+               box(
+                 width = 12,
+                 # id = ns("volcanobox"),
+                 withSpinner(plotlyOutput(ns("volcano"))))),
+      # boxplot
+      box(
+        width = 12,
+        id = ns("boxplotbox"),
+        withSpinner(plotlyOutput(ns("boxplot"))))),
+    column(
+      width = 8,
+      id = ns("statscolumn"),
+      style = "padding: 2px; margin: 5px",
+      box(
+        width = 12,
+        id = ns("statbox"),
+        title = "Differential Expression",
+        withSpinner(DT::DTOutput(ns("stats"))))))
 }

@@ -96,6 +96,27 @@ test_that("fdge_model_def supports retrieving test covaraites on the fly", {
   expect_equal(mtest$coef, mref$coef)
 })
 
+test_that("Errors gracefully with duplicate entries in numer and denom", {
+  samples <- filter_samples(FDS, indication == "CRC")
+  good.model <- expect_warning({
+    samples %>%
+      fdge_model_def(covariate = "subtype_crc_cms",
+                     numer = c("CMS1", "CMS2"),
+                     denom = c("CMS3", "CMS4"))
+  }, "NA")
+
+  bad1 <- samples %>%
+    fdge_model_def(covariate = "subtype_crc_cms",
+                   numer = "CMS1",
+                   denom = c("CMS1", "CMS2", "CMS3"))
+
+  bad1 <- samples %>%
+    fdge_model_def(covariate = "subtype_crc_cms",
+                   numer = "CMS1", denom = "CMS1")
+
+})
+
+
 test_that("fdge_model_def errors on non-fullrank matrices", {
   samples <- filter_samples(FDS, indication == "CRC")
 
