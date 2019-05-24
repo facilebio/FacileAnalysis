@@ -123,7 +123,11 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
   rmodel <- reactive({
     req(initialized(rfds))
-    out <- if (is(model, "FacileDGEModelDefinition")) model else model$result()
+    if (is(model, "FacileDGEModelDefinition")) {
+      out <- model
+    } else {
+      out <- req(model$result())
+    }
     out
   })
 

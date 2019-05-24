@@ -182,7 +182,13 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   safe_covname <- make.names(covariate)
   test_covs <- grep(paste0("^", make.names(safe_covname)), colnames(design))
+
   colnames(design) <- sub(paste0("^", safe_covname), "", colnames(design))
+  # Once we strip the covariate prefix from the main effect, we may again
+  # introduce invalid colnames, ie. if the covariate was genotype, and one
+  # value is 5xFAD, then if we strip off covariate, the column will just
+  # and we need to make that safe again.
+  colnames(design) <- make.names(colnames(design))
   rownames(design) <- paste(xx$dataset, xx$sample_id, sep = "__")
 
   non_estimable <- nonEstimable(design)
