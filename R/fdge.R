@@ -408,6 +408,7 @@ fdge_methods <- function(assay_type = NULL) {
     "umi",         "edgeR-qlf",         "DGEList",
     "umi",         "limma-trend",       "EList",
     "tpm",         "limma-trend",       "EList",
+    "cpm",         "limma-trend",       "EList",
     "isoseq",      "voom",              "EList",
     "isoseq",      "limma-trend",       "EList",
     "affymrna",    "limma",             "EList",

@@ -105,15 +105,18 @@ test_that("Errors gracefully with duplicate entries in numer and denom", {
                      denom = c("CMS3", "CMS4"))
   }, "NA")
 
-  bad1 <- samples %>%
-    fdge_model_def(covariate = "subtype_crc_cms",
-                   numer = "CMS1",
-                   denom = c("CMS1", "CMS2", "CMS3"))
+  bad1 <- expect_warning({
+    samples %>%
+      fdge_model_def(covariate = "subtype_crc_cms",
+                     numer = "CMS1",
+                     denom = c("CMS1", "CMS2", "CMS3"))
+  }, "NA.*required covariates")
 
-  bad1 <- samples %>%
-    fdge_model_def(covariate = "subtype_crc_cms",
-                   numer = "CMS1", denom = "CMS1")
-
+  bad1 <- expect_warning({
+    samples %>%
+      fdge_model_def(covariate = "subtype_crc_cms",
+                     numer = "CMS1", denom = "CMS1")
+  }, "NA.*required covariates")
 })
 
 
@@ -143,5 +146,7 @@ test_that("fdge_model_def errors on non-fullrank matrices", {
 
 test_that("invalid R variable named covariate levels are safe", {
   samples <- filter_samples(FDS, indication == "CRC")
-  model <- fdge_model_def(samples, covariate = "subtype_microsatellite_instability")
+  model <- expect_warning({
+    fdge_model_def(samples, covariate = "subtype_microsatellite_instability")
+  }, "NA.*required covariates")
 })

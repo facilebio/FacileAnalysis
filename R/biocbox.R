@@ -10,6 +10,32 @@ biocbox <- function(x, ...) {
   UseMethod("biocbox", x)
 }
 
+#' @noRd
+#' @export
+result.BiocBox <- function(x, ...) {
+  x[["biocbox"]]
+}
+
+#' @noRd
+#' @export
+design.BiocBox <- function(x, ...) {
+  box <- result(x)
+  if (is.null(box)) {
+    stop("The bioc assay container is not found in the BiocBox")
+  }
+  if (is(box, "DGEList") || is(box, "EList")) {
+    out <- box[["design"]]
+  } else {
+    stop("design.BiocBox not implemented for '", class(box)[1L], "' containers")
+  }
+
+  if (!is.matrix(out)) {
+    stop("Error extracting design matrix")
+  }
+
+  out
+}
+
 #' @section Linear Model Definitions:
 #' This function accepts a model defined using using [fdge_model_def()] and
 #' creates the appropriate Bioconductor assay container to test the model
@@ -28,8 +54,6 @@ biocbox <- function(x, ...) {
 #' @export
 #' @rdname biocbox
 #'
-#' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
-#' @importFrom limma arrayWeights voom voomWithQualityWeights
 #' @param sample_info a `facile_frame` that enumerates the samples to fetch
 #'   data for, as well as the covariates used in downstream analysis
 #' @param assay_name the name of the assay to pull data for
@@ -58,7 +82,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
-                                             prior_count = 3, ...) {
+                                             prior_count = NULL, ...) {
   assert_class(x, "FacileDGEModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
@@ -79,8 +103,10 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   })
 
   ainfo <- assay_info(.fds, assay_name)
-  if (!ainfo$assay_type %in% c("rnaseq", "umi", "tpm")) {
-    errors <- "DGE analysis only implemented for bulk-rnaseq-like data"
+  assay_type <- ainfo[["assay_type"]]
+  if (!assay_type %in% c("rnaseq", "umi", "tpm", "cpm", "lognorm")) {
+    errors <- paste("DGE analysis not implemented for this assay_type: ",
+                    assay_type)
     return(out)
   }
 
@@ -106,15 +132,58 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
     method <- default_method
   }
 
-  # Refactor ###################################################################
-  # NOTE: The code from here down assumes we are working with a "count"-like
-  # assay, and defaulting to using a DGEList. This is where we need to start
-  # hacking to support the other types of assay data.
-  y.all <- as.DGEList(si, assay_name = assay_name, covariates = si)
+  out[["biocbox"]] <- .biocbox_create(si, assay_name = assay_name,
+                                      assay_type = assay_type,
+                                      design = x$design, filter = filter,
+                                      method = method,
+                                      with_sample_weights = with_sample_weights,
+                                      prior_count = prior_count, ...)
+  out[["dge_method"]] <- method
+  out
+}
+
+#' Something like a factor function for a "biocbox"
+#'
+#' All the argument checking and whatever else has been done upstream, these
+#' helper functions are just executing under the assumption that everything
+#' is kosher.
+#'
+#' We'll come back to make this pretty later (#!refactor)
+#'
+#' @noRd
+.biocbox_create <- function(xsamples, assay_name, assay_type,
+                            design, filter, method, with_sample_weights,
+                            prior_count, ...) {
+  if (assay_type %in% c("rnaseq", "isoseq", "umi")) {
+    create <- .biocbox_create_DGEList
+  } else if (assay_type %in% c("cpm", "tpm", "lognorm")) {
+    create <- .biocbox_create_EList
+  } else {
+    stop(paste("DGE analysis not implemented for this assay_type: ",
+               assay_type))
+  }
+
+  bbox <- create(xsamples, assay_name = assay_name,
+                 assay_type = assay_type,
+                 design = design, filter = filter,
+                 method = method,
+                 with_sample_weights = with_sample_weights,
+                 prior_count = prior_count, ...)
+  bbox
+}
+
+#' @noRd
+#' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
+#' @importFrom limma arrayWeights voom voomWithQualityWeights
+.biocbox_create_DGEList <- function(xsamples, assay_name, assay_type,
+                                    design, filter, method, with_sample_weights,
+                                    prior_count = 2, ...) {
+  if (is.null(prior_count)) prior_count <- 2
+  y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
   # The roughly approximated norm.factors already present in a faciledatastore
   # should be good enough for initial low-pass filtering.
   # y.all <- calcNormFactors(y.all)
-  y.all$design <- x$design[colnames(y.all),]
+  y.all$design <- design[colnames(y.all),]
 
   # Remove genes according to `filter` specificaiton
   if (is.character(filter)) {
@@ -140,12 +209,12 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   y <- calcNormFactors(y)
 
   if (method == "edgeR-qlf") {
-    out[["biocbox"]] <- estimateDisp(y, y[["design"]], robust = TRUE)
+    out <- estimateDisp(y, y[["design"]], robust = TRUE)
   } else if (method == "voom") {
     if (with_sample_weights) {
-      out[["biocbox"]] <- voomWithQualityWeights(y, y[["design"]], ...)
+      out <- voomWithQualityWeights(y, y[["design"]], ...)
     } else {
-      out[["biocbox"]] <- voom(y, y$design, save.plot = TRUE, ...)
+      out <- voom(y, y$design, save.plot = TRUE, ...)
     }
   } else if (method %in% c("limma-trend", "limma")) {
     elist <- list()
@@ -157,36 +226,65 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
     if (with_sample_weights) {
       elist <- arrayWeights(elist, elist[["design"]])
     }
-    out[["biocbox"]] <- elist
+    out <- elist
   } else {
     stop("How did we get here?")
   }
 
-  out[["dge_method"]] <- method
-}
-
-#' @noRd
-#' @export
-result.BiocBox <- function(x, ...) {
-  x[["biocbox"]]
-}
-
-#' @noRd
-#' @export
-design.BiocBox <- function(x, ...) {
-  box <- result(x)
-  if (is.null(box)) {
-    stop("The bioc assay container is not found in the BiocBox")
-  }
-  if (is(box, "DGEList") || is(box, "EList")) {
-    out <- box[["design"]]
-  } else {
-    stop("design.BiocBox not implemented for '", class(box)[1L], "' containers")
-  }
-
-  if (!is.matrix(out)) {
-    stop("Error extracting design matrix")
-  }
-
   out
+}
+
+#' @noRd
+#' @importFrom stats hat
+#' @importFrom limma arrayWeights
+.biocbox_create_EList <- function(xsamples, assay_name, assay_type,
+                                  design, filter, method, with_sample_weights,
+                                  prior_count = 0.25, ...) {
+  if (is.null(prior_count)) prior_count <- 0.25
+
+  # assay_type is one of c("cpm", "tpm", "lognorm")
+  # Note that as.DGEList always assembles the assay matrix with
+  # normalized = FALSE
+  y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
+  e <- y.all[["counts"]]
+  if (assay_type %in% c("cpm", "tpm")) {
+    e <- log2(e + prior_count)
+  }
+
+  # Remove genes according to `filter` specificaiton
+  if (is.character(filter)) {
+    if (length(filter) == 1L && filter == "default") {
+      if (assay_type == "lognorm") {
+        min.expr <- log2(2)
+      } else {
+        min.expr <- 1
+      }
+      # Code below taken from edgeR:::filterByExpr.default function
+      h <- hat(design)
+      min.samples <- 1 / max(h)
+      if (min.samples > 10) {
+        min.samples <- 10 + (min.samples - 10) * 0.7
+      }
+      tol <- 1e-14
+      keep <- rowSums(e >= min.expr) >= (min.samples - tol)
+      elist <- elist[keep,]
+    } else {
+      keep <- rownames(y.all) %in% filter
+    }
+  } else {
+    keep <- rep(TRUE, nrow(y.all))
+  }
+
+  elist <- list()
+  elist[["E"]] <- e[keep,,drop = FALSE]
+  elist[["genes"]] <- y[["genes"]][keep,,drop = FALSE]
+  elist[["targets"]] <- y[["samples"]]
+  elist <- new("EList", elist)
+  elist[["design"]] <- design
+
+  if (with_sample_weights) {
+    elist <- arrayWeights(elist, elist[["design"]])
+  }
+
+  elist
 }

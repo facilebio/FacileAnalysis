@@ -167,6 +167,10 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     xx <- xx[!incomplete,]
   }
 
+  # Avoids adding all-0 columns to the design matrix, which come from levels
+  # of the tested covariate that do not appear in our sample space
+  xx <- droplevels(xx)
+
   dformula <- paste(
     "~",
     if (test_type == "anova") "" else "0 +",
@@ -177,18 +181,27 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   }
 
   design <- model.matrix(formula(dformula), data = xx)
-  # Protect against non-valid column names
-  colnames(design) <- make.names(colnames(design))
+  # safe_covname <- make.names(covariate)
+  # test_covs <- grep(paste0("^", make.names(safe_covname)), colnames(design))
 
-  safe_covname <- make.names(covariate)
-  test_covs <- grep(paste0("^", make.names(safe_covname)), colnames(design))
+  # The indices of the columns of the design matrix that come from the covariate
+  # under test
+  test_covs <- grep(paste0("^", covariate), colnames(design))
 
-  colnames(design) <- sub(paste0("^", safe_covname), "", colnames(design))
+  # remove the covariate prefix from the colnames of the matrix
+  colnames(design) <- sub(paste0("^", covariate), "", colnames(design))
+
   # Once we strip the covariate prefix from the main effect, we may again
   # introduce invalid colnames, ie. if the covariate was genotype, and one
   # value is 5xFAD, then if we strip off covariate, the column will just
-  # and we need to make that safe again.
-  colnames(design) <- make.names(colnames(design))
+  # Protect against non-valid column names. Do not mangle the first (Intercept)
+  # which will be there if this is an ANOVA
+  if (test_type == "anova") {
+    colnames(design)[-1L] <- make.names(colnames(design)[-1L])
+  } else {
+    colnames(design) <- make.names(colnames(design))
+  }
+
   rownames(design) <- paste(xx$dataset, xx$sample_id, sep = "__")
 
   non_estimable <- nonEstimable(design)

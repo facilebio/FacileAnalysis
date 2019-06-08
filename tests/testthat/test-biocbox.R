@@ -13,6 +13,7 @@ test_that("Correct bioc container built from model def and method spec", {
   bbox <- biocbox(mdef, "rnaseq", method = "edgeR-qlf")
   y <- result(bbox)
   expect_class(y, "DGEList")
+
   expect_subset("sample_type", colnames(y$samples))
 
   # expect dispersions estimated
