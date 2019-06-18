@@ -83,7 +83,8 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
 #' @importFrom shiny browserViewer dialogViewer paneViewer
 gadget_viewer <- function(type = c("dialog", "browser", "pane"),
                           title = "Facile Gadget",
-                          width = 800, height = 600, minHeight = height) {
+                          width = 800, height = 600, minHeight = height,
+                          ...) {
   type <- match.arg(type)
   switch(type,
          dialog = dialogViewer(title, width, height),

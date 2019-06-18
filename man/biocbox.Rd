@@ -10,7 +10,7 @@ biocbox(x, ...)
 
 \method{biocbox}{FacileDGEModelDefinition}(x, assay_name = NULL,
   method = NULL, dge_methods = NULL, filter = "default",
-  with_sample_weights = FALSE, prior_count = 3, ...)
+  with_sample_weights = FALSE, prior_count = NULL, ...)
 
 \method{biocbox}{FacileDGEResult}(x, ...)
 }

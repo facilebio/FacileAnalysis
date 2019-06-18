@@ -5,19 +5,23 @@
 #' @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
 #' @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
 #' @importFrom FacileShine reactiveFacileDataStore
-shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
+shine.FacileDGEResult <- function(x, with_volcano = TRUE,
+                                  user = Sys.getenv("USER"),
                                   title = "Differential Expression Results",
-                                  height = 600, width = 800, ...) {
+                                  width = 800, height = 600,
+                                  viewer = "pane", ...) {
   ui <- miniPage(
     gadgetTitleBar(class(x)[1L]),
     miniContentPanel(fdgeViewUI("view")),
     NULL)
 
+  viewer <- gadget_viewer(viewer, title, width, height, ...)
+
   server <- function(input, output, session) {
     rfds <- ReactiveFacileDataStore(fds(x), "ds", user = user,
                                     samples = samples(x))
     # rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
-    view <- callModule(fdgeView, "view", rfds, x)
+    view <- callModule(fdgeView, "view", rfds, x, with_volcano = with_volcano)
     observeEvent(input$done, {
       stopApp(invisible(NULL))
     })
@@ -26,8 +30,6 @@ shine.FacileDGEResult <- function(x, user = Sys.getenv("USER"),
     })
   }
 
-  viewer <- dialogViewer(title, height = height, width = width)
-  # viewer <- shiny::browserViewer()
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 

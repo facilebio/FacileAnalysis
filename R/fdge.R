@@ -149,6 +149,9 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     result <- result[rownames(y),]
 
     axe.cols <- c("featureId", "x.idx")
+    if (is(y, "DGEList")) {
+      axe.cols <- c(axe.cols, "t")
+    }
     for (col in axe.cols) {
       if (col %in% names(result)) result[[col]] <- NULL
     }
@@ -198,6 +201,59 @@ model.FacileDGEResult <- function(x, ...) {
 #' @export
 design.FacileDGEResult <- function(x, ...) {
   design(model(x, ...), ...)
+}
+
+#' @noRd
+#' @export
+name.FacileTtestDGEResult <- function(x, ...) {
+  m <- model(x)
+  covname <- param(m, "covariate")
+  fixed <- param(m, "fixed")
+  contrast <- gsub(" ", "", m[["contrast_string"]])
+  contrast <- gsub("/", ".divby.", contrast, fixed = TRUE)
+  out <- sprintf("%s_%s", covname, contrast)
+  if (length(fixed)) {
+    out <- sprintf("%s_controlfor_%s", out, paste(fixed, collapse = ","))
+  }
+  out
+}
+
+#' @noRd
+#' @export
+label.FacileTtestDGEResult <- function(x, ...) {
+  m <- model(x)
+  covname <- param(m, "covariate")
+  fixed <- param(m, "fixed")
+  contrast <- m[["contrast_string"]]
+  out <- sprintf("%s: %s", covname, contrast)
+  if (length(fixed)) {
+    out <- sprintf("%s (control for %s)", out, paste(fixed, collapse = ","))
+  }
+  out
+}
+
+name.FacileAnovaDGEResult <- function(x, ...) {
+  m <- model(x)
+  covname <- param(m, "covariate")
+  clevels <- unique(samples(m)[[covname]])
+  fixed <- param(m, "fixed")
+  out <- sprintf("%s_%s", covname, paste(clevels, collapse = ","))
+  if (length(fixed)) {
+    out <- sprintf("%s_controlfor_%s", out, paste(fixed, collapse = ","))
+  }
+  out
+}
+
+label.FacileAnovaDGEResult <- function(x, ...) {
+  m <- model(x)
+  covname <- param(m, "covariate")
+  clevels <- unique(samples(m)[[covname]])
+  fixed <- param(m, "fixed")
+  out <- sprintf("%s [%s]", covname, paste(clevels, collapse = ","))
+  if (length(fixed)) {
+    out <- sprintf("%s (control for %s)", out, paste(fixed, collapse = ","))
+  }
+  out
 }
 
 # Ranks and Signatures =========================================================

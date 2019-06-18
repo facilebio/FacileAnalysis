@@ -260,7 +260,7 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 #' @importFrom FacileViz fscatterplot fboxplot
 #' @importFrom DT datatable dataTableProxy formatRound renderDT replaceData
 #' @importFrom plotly event_data layout
-#' @importFrom shiny req
+#' @importFrom shiny downloadHandler req
 #' @importFrom shinyjs toggleElement
 #' @param result The result from calling [fdge()].
 fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
@@ -284,7 +284,8 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
   is.ttest <- reactive(is(req(result.()), "FacileTtestDGEResult"))
 
   observe({
-    toggleElement("volcanobox", condition = is.ttest())
+    toggleElement("volcanobox", condition = is.ttest() && with_volcano)
+    toggleElement("dlbuttonbox", condition = is(dge.stats.all(), "data.frame"))
   })
 
   # Two versions of the result table are stored:
@@ -417,6 +418,33 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
 
 
   # Stats Table ----------------------------------------------------------------
+
+  output$statsdl <- downloadHandler(
+    filename = function() {
+      res <- req(isolate(result.()))
+      name <- sprintf("%s.csv", name(res))
+      sprintf('DGE-statistics-%s.csv', name)
+    },
+    content = function(file) {
+      .fdge <- req(isolate(result.()))
+      .result <- ranks(.fdge) %>% result()
+      if ("padj" %in% colnames(.result)) {
+        .result <- rename(.result, FDR = "padj")
+      }
+      c.order <- c("symbol", "name", "feature_id", "meta", "AveExpr",
+                   "FDR", "pval")
+      if (is(.fdge, "FacileAnovaDGEGadgetResult")) {
+        c.order <- c(c.order, "F")
+      } else {
+        c.order <- c(c.order, "logFC", "CI.L", "CI.R", "B", "t")
+      }
+      c.order <- c(c.order, "assay")
+      c.order <- intersect(c.order, colnames(.result))
+      .result <- select(.result, !!c.order)
+      write.csv(.result, file, row.names = FALSE)
+    }
+  )
+
   output$stats <- DT::renderDT({
     # Triggered when new result comes in
     res <- req(result.())
@@ -453,16 +481,17 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
 #' @export
 #' @importFrom DT DTOutput
 #' @importFrom plotly plotlyOutput
-#' @importFrom shiny column fluidRow NS
+#' @importFrom shiny column downloadButton fluidRow NS
 #' @importFrom shinyjs hidden
 #' @importFrom shinydashboard box
 #' @importFrom shinycssloaders withSpinner
 fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
+
   fluidRow(
     column(
-      width = 4,
+      width = 5,
       id = ns("vizcolumn"),
       # style = "padding: 2px; margin: 5px",
       # volcano
@@ -470,7 +499,6 @@ fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
         tags$div(id = ns("volcanobox"),
                  box(
                    width = 12,
-                   # id = ns("volcanobox"),
                    withSpinner(plotlyOutput(ns("volcano")))))
       } else {
         NULL
@@ -481,12 +509,17 @@ fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
         id = ns("boxplotbox"),
         withSpinner(plotlyOutput(ns("boxplot"))))),
     column(
-      width = 8,
+      width = 7,
       id = ns("statscolumn"),
       # style = "padding: 2px; margin: 5px",
       box(
         width = 12,
         id = ns("statbox"),
         title = "Differential Expression",
+        tags$div(
+          id = ns("dlbuttonbox"),
+          style = "padding: 0 0 1em 0; float: right;",
+          downloadButton(ns("statsdl"), "Download")),
+        tags$div(style = "clear: right;"),
         withSpinner(DT::DTOutput(ns("stats"))))))
 }
