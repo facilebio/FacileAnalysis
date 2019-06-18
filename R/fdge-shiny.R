@@ -8,7 +8,7 @@
 #' efds <- exampleFacileDataSet()
 #' dge.crc <- efds %>%
 #'   filter_samples(indication == "CRC") %>%
-#'   fdgeGadget(viewer = "pane")
+#'   fdgeGadget(viewer = "pane", with_volcano = FALSE)
 #' dge.blca <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdgeGadget(viewer = "pane")
@@ -33,10 +33,12 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @importFrom shinyjs toggleElement
 #' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ShinyFacileDGEResult`, the output from [fdge()]
-fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
+fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
+                         ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
-  view <- callModule(fdgeView, "view", rfds, dge, ...,
+  view <- callModule(fdgeView, "view", rfds, dge, with_volcano = with_volcano,
+                     ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = debug)
@@ -71,7 +73,7 @@ fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
 #'   wellPanel
 #' @importFrom shinydashboard box
 #' @importFrom shinyjs hidden
-fdgeAnalysisUI <- function(id, ..., debug = FALSE,
+fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
                            bs4dash = isTRUE(getOption("facile.bs4dash"))) {
   ns <- NS(id)
   # box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
@@ -87,7 +89,8 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
                     box.(title = NULL, #"Testing Results",
                          solidHeader = TRUE,
                          width = 12,
-                         fdgeViewUI(ns("view"), debug = debug)))))
+                         fdgeViewUI(ns("view"), with_volcano = with_volcano,
+                                    debug = debug)))))
 }
 
 # Building block fdge shiny modules ============================================
@@ -260,7 +263,8 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 #' @importFrom shiny req
 #' @importFrom shinyjs toggleElement
 #' @param result The result from calling [fdge()].
-fdgeView <- function(input, output, session, rfds, result, ...,
+fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
+                     ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = FALSE) {
@@ -317,18 +321,20 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     stats.
   })
 
-  output$volcano <- renderPlotly({
-    req(is.ttest())
-    dat. <- req(dge.stats.all())
-    dat.$yaxis <- -log10(dat.$pval)
-    fplot <- fscatterplot(dat., c("logFC", "yaxis"),
-                          xlabel = "logFC", ylabel = "-log10(pval)",
-                          width = NULL, height = NULL,
-                          hover = c("symbol", "logFC", "FDR"),
-                          webgl = TRUE, event_source = feature_selection,
-                          key = "feature_id")
-    fplot$plot
-  })
+  if (with_volcano) {
+    output$volcano <- renderPlotly({
+      req(is.ttest())
+      dat. <- req(dge.stats.all())
+      dat.$yaxis <- -log10(dat.$pval)
+      fplot <- fscatterplot(dat., c("logFC", "yaxis"),
+                            xlabel = "logFC", ylabel = "-log10(pval)",
+                            width = NULL, height = NULL,
+                            hover = c("symbol", "logFC", "FDR"),
+                            webgl = TRUE, event_source = feature_selection,
+                            key = "feature_id")
+      fplot$plot
+    })
+  }
 
   # Visualization of selected genes across samples -----------------------------
 
@@ -357,11 +363,11 @@ fdgeView <- function(input, output, session, rfds, result, ...,
     if (is.ttest()) {
       m <- req(model.())
       cov.vals <- c(param(m, "numer"), param(m, "denom"))
-      # dat <- filter(dat, !!scov %in% cov.vals)
       keep <- dat[[scov]] %in% cov.vals # old school, !! isn't working
       dat <- dat[keep,,drop = FALSE]
     }
 
+    dat <- droplevels(dat)
     mutate(dat, .key = seq(nrow(dat)))
   })
 
@@ -451,7 +457,7 @@ fdgeView <- function(input, output, session, rfds, result, ...,
 #' @importFrom shinyjs hidden
 #' @importFrom shinydashboard box
 #' @importFrom shinycssloaders withSpinner
-fdgeViewUI <- function(id, ..., debug = FALSE) {
+fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
   fluidRow(
@@ -460,11 +466,15 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
       id = ns("vizcolumn"),
       # style = "padding: 2px; margin: 5px",
       # volcano
-      tags$div(id = ns("volcanobox"),
-               box(
-                 width = 12,
-                 # id = ns("volcanobox"),
-                 withSpinner(plotlyOutput(ns("volcano"))))),
+      if (with_volcano) {
+        tags$div(id = ns("volcanobox"),
+                 box(
+                   width = 12,
+                   # id = ns("volcanobox"),
+                   withSpinner(plotlyOutput(ns("volcano")))))
+      } else {
+        NULL
+      },
       # boxplot
       box(
         width = 12,

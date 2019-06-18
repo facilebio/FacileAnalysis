@@ -204,25 +204,55 @@ design.FacileDGEResult <- function(x, ...) {
 
 #' @export
 #' @noRd
-ranks.FacileTtestDGEResult <- function(x, ...) {
+ranks.FacileTtestDGEResult <- function(x, signed = FALSE, ...) {
   ranks. <- result(x, ...)
-  ranks. <- arrange(ranks., desc(logFC))
+  if (signed) {
+    ranks. <- arrange(ranks., desc(logFC))
+  } else {
+    ranks. <- arrange(ranks., pval)
+  }
+
   out <- list(
     result = ranks.,
     ranking_columns = "logFC",
     ranking_order = "decreasing")
-  class(out) <- c("FacileTtestDGEFeatureRankings",
-                  "FacileFeatureRankings",
+  # FacileTtestFeatureRanksSigned
+  clazz <- "Facile%sFeatureRanks%s"
+  s <- if (signed) "Signed" else "Unsigned"
+  classes <- sprintf(clazz, c("Ttest", "Ttest",  "", ""), c(s, "", s, ""))
+  class(out) <- c(clazz,
+                  "FacileFeatureRanks",
                   "FacileAnalysisResult")
   out
 }
 
+ranks.FacileAnovaDGEResult <- function(x, signed = FALSE, ...) {
+  if (signed != TRUE) {
+    stop("ANOVA results can only provide unsigned ranks ",
+         "based on p-value, which is the same as desc(Fstatistic)")
+  }
+  ranks. <- arrange(ranks, pval)
+  out <- list(
+    result = ranks.,
+    ranking_columns = "F",
+    ranking_order = "decreasing")
+  # FacileAnovaFeatureRanksSigned
+  clazz <- "Facile%sFeatureRanks%s"
+  s <- if (signed) "Signed" else "Unsigned"
+  classes <- sprintf(clazz, c("Anova", "Anova",  "", ""), c(s, "", s, ""))
+  class(out) <- c(clazz,
+                  "FacileFeatureRanks",
+                  "FacileAnalysisResult")
+  out
+
+}
 #' @export
 #' @noRd
 signature.FacileTtestDGEResult <- function(x, min_logFC = x[["treat_lfc"]],
                                            max_padj = 0.10, ntop = 20,
                                            name = NULL, collection_name = NULL,
                                            ...) {
+  clazz <- "Facile%sFeatureSignature%s"
   signature(ranks(x, ...), min_logFC = min_logFC, max_padj = max_padj,
             ntop = ntop, name = name, collection_name = collection_name, ...)
 }

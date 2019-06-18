@@ -59,14 +59,79 @@ param.FacileAnalysisResult <- function(x, name, ...) {
   params.[[name]]
 }
 
-#' Extracts feature or sample ranks from a FacileAnalysis
+#' Extracts ranks and signatures from a FacileAnalysisResult.
 #'
-#' Among other thigns, analyses can often provide rankings over features or
-#' samples. For instance, a differential expression result may provide ranking
-#' over the genes. This generic extract ranks of one type or another.
+#' (Note: there is a lot of philosophizing going on here).
+#' It is often the case that an analysis over a set of features (or samples)
+#' induces a ranking over the features (or samples), which is determend by the
+#' test performed in the analysis. The `ranks()` and `signatures()` functions
+#' returns a ranking induced over the features (or samples) from the analysis.
+#'
+#' When an analysis imposes ranks, this usually only occurs over only one of
+#' "features" or "samples" used in the analysis. In the even that both of these
+#' can be ranked, then these functions will accept a `type` argument which you
+#' can parameterize with by either `"features"` or `"samples"`.
+#'
+#' Signatures are essentially a summary extracted from the ranks. This is most
+#' often the "topn" ranks returned from the analysis (or a dimension thereof).
+#'
+#' @section Signed and Unsigned Ranks:
+#' Let's consider a differential gene expression (DGE) analysis, where we are
+#' testing the differential abundance of a gene across two groups of samples.
+#' The result of the analysis can induce both a signed and unsigned ranking on
+#' the genes under test.
+#'
+#' ```
+#' dge <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "BLCA") %>%
+#'   fdge_model_def(covariate = "sample_type",
+#'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
+#'   fdge()
+#' ```
+#'
+#' Ranking the results of the DGE by ascending *p*-value will provide an
+#' **unsigned** ranking on the genes: Alternatively, one could get a **signed**
+#' ranking from the result of this test simply by arranging each gene by its
+#' log-fold-change. Both approaches are achieved by the code below:
+#'
+#' ```
+#' uranks <- ranks(dge, signed = FALSE)
+#' sranks <- ranks(dge, signed = TRUE)
+#' ```
+#'
+#' rank each gene by its *p*-value (ascending).
+#'
+#' @section Ranks (Differential Expression):
+#' Any differential gene expression analysis works over a set of samples in
+#' order to find which genes are most differentially abundant between the two
+#' conditions that are defined by the sample groups. It's clear to see, here,
+#' that this analysis induces a ranking over the *features* (genes). This
+#' ranking can be both signed or unsigned.
+#'
+#'
+#' @section Signature (Differential Expression):
+#'
+#' @section Ranks (PCA):
+#'
+#' @section Signature (PCA):
+#'
+#' @section Signatures and Ranks for all things:
+#'
+#' Think about how the next analysis you implement fits this scenario.
+#'
+#' Perhaps we can consider an e-/p-/etc- *QTL analysis is on whose features are
+#' SNPs, which we can rank by ones that have strong association with the
+#' quantitative phenotypes under test.
+#'
+#' @section Why is this a formalism in the FacileVerse:
+#' I feel like being able to generate succinct summaries of an analysis will
+#' more easily enable the analyst (via GUI or code) to dive back in and ask
+#' another question. That question might be as simple as "how does this version
+#' of my question compare to a slightly different version?"
 #'
 #' @export
 #' @param x A `FacileAnalysisResult`
+#' @rdname ranks_and_signatures
 ranks <- function(x, ...) {
   UseMethod("ranks", x)
 }

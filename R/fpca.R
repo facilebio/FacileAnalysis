@@ -59,8 +59,12 @@ fpca <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 fpca.FacileDataStore <- function(x, pcs = 5, ntop = 500,
                                  row_covariates = NULL, col_covariates = NULL,
                                  assay_name = default_assay(x),
-                                 custom_key = Sys.getenv("USER"), ...) {
-  fpca(samples(x), pcs, ntop, row_covariates, col_covariates, assay_name,
+                                 custom_key = Sys.getenv("USER"), ...,
+                                 samples = NULL) {
+  if (is.null(samples)) samples <- samples(x)
+  samples <- collect(samples, n = Inf)
+
+  fpca(samples, pcs, ntop, row_covariates, col_covariates, assay_name,
        custom_key, ...)
 }
 
@@ -218,16 +222,14 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     messages = messages,
     warnings = warnings,
     errors = errors)
-
   class(result) <- c("FacilePCAResult", "FacileReducedDimResult",
                      "FacileAnalysisResult")
-  result$feature_stats <- .fpca.feature_statistics(result)
+
+  result[["feature_stats"]] <- .fpca.feature_statistics(result)
   result
 }
 
 # Ranks and Signatures =========================================================
-# TODO: Updage fpca ranks and signature to work with fpca.res[["rotation"]]
-#       matrix, which gives us a signed ranking of the genes.
 
 #' Reports the contribution of each gene to the principal components
 #'
@@ -313,8 +315,12 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
     result = sig,
     params = list(pcs = pcs, ntop = ntop))
 
-  class(out) <- c("FacilePCAFeatureSignature",
-                  "FacileFeatureSignature",
+  # FacilePCAFeatureSignatureSigned
+  clazz <- "Facile%sFeatureSignature%s"
+  s <- if (signed) "Signed" else "Unsigned"
+  classes <- sprintf(clazz, c("PCA", "PCA",  "", ""), c(s, "", s, ""))
+  class(out) <- c(classes,
+                  "FacileFeatureRanks",
                   "FacileAnalysisResult")
   out
 }

@@ -104,7 +104,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
 
   ainfo <- assay_info(.fds, assay_name)
   assay_type <- ainfo[["assay_type"]]
-  if (!assay_type %in% c("rnaseq", "umi", "tpm", "cpm", "lognorm")) {
+  if (!assay_type %in% c("rnaseq", "umi", "normcounts", "lognorm")) {
     errors <- paste("DGE analysis not implemented for this assay_type: ",
                     assay_type)
     return(out)
@@ -156,7 +156,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
                             prior_count, ...) {
   if (assay_type %in% c("rnaseq", "isoseq", "umi")) {
     create <- .biocbox_create_DGEList
-  } else if (assay_type %in% c("cpm", "tpm", "lognorm")) {
+  } else if (assay_type %in% c("normcounts", "lognorm")) {
     create <- .biocbox_create_EList
   } else {
     stop(paste("DGE analysis not implemented for this assay_type: ",
@@ -231,6 +231,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
     stop("How did we get here?")
   }
 
+  dropped <- setdiff(rownames(y.all), rownames(out))
   out
 }
 
@@ -242,12 +243,12 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
                                   prior_count = 0.25, ...) {
   if (is.null(prior_count)) prior_count <- 0.25
 
-  # assay_type is one of c("cpm", "tpm", "lognorm")
+  # assay_type is one of c("normcounts","lognorm")
   # Note that as.DGEList always assembles the assay matrix with
   # normalized = FALSE
   y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
   e <- y.all[["counts"]]
-  if (assay_type %in% c("cpm", "tpm")) {
+  if (assay_type %in% c("normcounts")) {
     e <- log2(e + prior_count)
   }
 
@@ -267,6 +268,7 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
       }
       tol <- 1e-14
       keep <- rowSums(e >= min.expr) >= (min.samples - tol)
+      # end filterByExpr block
       elist <- elist[keep,]
     } else {
       keep <- rownames(y.all) %in% filter
@@ -285,6 +287,8 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   if (with_sample_weights) {
     elist <- arrayWeights(elist, elist[["design"]])
   }
+
+  dropped <- setdiff(rowanmes(y.all), rownames(elilst))
 
   elist
 }
