@@ -422,8 +422,8 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
   output$statsdl <- downloadHandler(
     filename = function() {
       res <- req(isolate(result.()))
-      name <- sprintf("%s.csv", name(res))
-      sprintf("DGE-statistics_%s_%s_.csv", res[["test_type"]], name)
+      sprintf("DGE-%s_%s_%s.csv", param(res, "method"),
+              res[["test_type"]], name(res))
     },
     content = function(file) {
       .fdge <- req(isolate(result.()))
