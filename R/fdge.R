@@ -80,8 +80,11 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
   res
 }
 
+
 #' @export
 #' @rdname fdge
+#' @param ... passed down into inner methods, such as `biocbox` to tweak
+#'   filtering criteria, for instance
 fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                           filter = "default",
                                           with_sample_weights = FALSE,
@@ -260,7 +263,7 @@ label.FacileAnovaDGEResult <- function(x, ...) {
 
 #' @export
 #' @noRd
-ranks.FacileTtestDGEResult <- function(x, signed = FALSE, ...) {
+ranks.FacileTtestDGEResult <- function(x, signed = TRUE, ...) {
   ranks. <- result(x, ...)
   if (signed) {
     ranks. <- arrange(ranks., desc(logFC))
@@ -499,7 +502,7 @@ fdge_methods <- function(assay_type = NULL) {
     "isoseq",      "limma-trend",       "EList",
     "affymrna",    "limma",             "EList",
     "affymirna",   "limma",             "EList",
-    "log2",        "limma",             "EList")
+    "lognorm",     "limma",             "EList")
 
   method_params <- tribble(
     ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,

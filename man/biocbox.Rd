@@ -17,7 +17,7 @@ biocbox(x, ...)
 \arguments{
 \item{x}{The FacileAnalysisResult}
 
-\item{...}{passed down to modeling functions where appropriate.}
+\item{...}{passed down to internal modeling and filtering functions.}
 
 \item{assay_name}{the name of the assay to pull data for}
 
@@ -60,8 +60,11 @@ This function accepts a model defined using using \code{\link[=fdge_model_def]{f
 creates the appropriate Bioconductor assay container to test the model
 given the \code{assay_name} and dge \code{method} specified by the user.
 
-This function only supports RNA-seq like data, ie. data from assays from
-these \code{assay_type}s:
+This function currently supports retrieving data and whipping it into
+a DGEList (for count-like data) and an EList for data that can be analyzed
+with one form limma or another.
+
+Assumptions on different \code{assay_type} values include:
 \itemize{
 \item \code{rnaseq}: assumed to be "vanilla" bulk rnaseq gene counts
 \item \code{umi}: data from bulk rnaseq, UMI data, like quantseq

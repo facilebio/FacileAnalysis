@@ -41,8 +41,11 @@ design.BiocBox <- function(x, ...) {
 #' creates the appropriate Bioconductor assay container to test the model
 #' given the `assay_name` and dge `method` specified by the user.
 #'
-#' This function only supports RNA-seq like data, ie. data from assays from
-#' these `assay_type`s:
+#' This function currently supports retrieving data and whipping it into
+#' a DGEList (for count-like data) and an EList for data that can be analyzed
+#' with one form limma or another.
+#'
+#' Assumptions on different `assay_type` values include:
 #'
 #' * `rnaseq`: assumed to be "vanilla" bulk rnaseq gene counts
 #' * `umi`: data from bulk rnaseq, UMI data, like quantseq
@@ -73,7 +76,7 @@ design.BiocBox <- function(x, ...) {
 #'   sample weighting function to sue. Defaults to `FALSE`.
 #' @param prior_count The pseudo-count to add to count data. Used primarily
 #'   when running the `limma-trend` method on count (RNA-seq) data.
-#' @param ... passed down to modeling functions where appropriate.
+#' @param ... passed down to internal modeling and filtering functions.
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
@@ -177,7 +180,10 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
 #' @importFrom limma arrayWeights voom voomWithQualityWeights
 .biocbox_create_DGEList <- function(xsamples, assay_name, assay_type,
                                     design, filter, method, with_sample_weights,
-                                    prior_count = 2, ...) {
+                                    prior_count = 2,
+                                    # default params for edgeR::filterByExpr
+                                    filter_min_count = 10,
+                                    filter_min_total_count = 15, ...) {
   if (is.null(prior_count)) prior_count <- 2
   y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
   # The roughly approximated norm.factors already present in a faciledatastore
@@ -188,7 +194,8 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   # Remove genes according to `filter` specificaiton
   if (is.character(filter)) {
     if (length(filter) == 1L && filter == "default") {
-      keep <- filterByExpr(y.all, y.all$design, ...)
+      keep <- filterByExpr(y.all, y.all$design, min.count = filter_min_count,
+                           min.total.count = filter_min_total_count, ...)
     } else {
       keep <- rownames(y.all) %in% filter
     }
@@ -240,7 +247,8 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
 #' @importFrom limma arrayWeights
 .biocbox_create_EList <- function(xsamples, assay_name, assay_type,
                                   design, filter, method, with_sample_weights,
-                                  prior_count = 0.25, ...) {
+                                  prior_count = 0.25,
+                                  filter_min_expr = 1, ...) {
   if (is.null(prior_count)) prior_count <- 0.25
 
   # assay_type is one of c("normcounts","lognorm")
@@ -255,11 +263,12 @@ biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
   # Remove genes according to `filter` specificaiton
   if (is.character(filter)) {
     if (length(filter) == 1L && filter == "default") {
-      if (assay_type == "lognorm") {
-        min.expr <- log2(2)
-      } else {
-        min.expr <- 1
-      }
+      # if (assay_type == "lognorm") {
+      #   min.expr <- log2(2)
+      # } else {
+      #   min.expr <- 1
+      # }
+      min.expr <- filter_min_expr
       # Code below taken from edgeR:::filterByExpr.default function
       h <- hat(design)
       min.samples <- 1 / max(h)

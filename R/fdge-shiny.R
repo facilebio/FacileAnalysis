@@ -134,14 +134,20 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     out
   })
 
+  assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
+
+  # Sets up appropriate UI to retreive the params used to filter out
+  # features measured using the selected assay
+  ffilter <- callModule(fdgeFeatureFilter, "ffilter", rfds, model,
+                        assay, ..., debug = debug)
+
   runnable <- reactive({
     model. <- rmodel()
     enable <- is(model., "FacileDGEModelDefinition") &&
       !is(model., "FacileFailedModelDefinition") &&
-      !is(model., "IncompleteModelDefintion")
+      !is(model., "IncompleteModelDefintion") &&
+      initialized(assay)
   })
-
-  assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
 
   # Update the dge_methods available given the selected assay
   observe({
@@ -155,17 +161,20 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
                       selected = selected.)
   })
 
-  sample_weights <- reactive({
+  can_sample_weight <- reactive({
     method. <- input$dge_method
     req(!unselected(method.))
-    can_weight <- fdge_methods() %>%
+    fdge_methods() %>%
       filter(dge_method == method.) %>%
       pull(can_sample_weight)
-    input$weights && can_weight
+  })
+  sample_weights <- reactive({
+    isTRUE(can_sample_weight() && input$sample_weights)
   })
 
   observe({
     toggleState("run", condition = runnable())
+    toggleState("sample_weights", condition = can_sample_weight())
   })
 
   dge <- eventReactive(input$run, {
@@ -181,7 +190,11 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
     withProgress({
       fdge(model., assay_name = assay_name., method = method.,
-           with_sample_weights = sample_weights., treat_lfc = treat_lfc.)
+           with_sample_weights = sample_weights., treat_lfc = treat_lfc.,
+           filter = ffilter$method(),
+           filter_min_count = ffilter$min_count(),
+           filter_min_total_count = ffilter$min_total_count(),
+           filter_min_expr = ffilter$min_expr())
     }, message = "Performing differential expression")
   })
 
@@ -216,6 +229,7 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 #'   tagList
 #'   tags
 #'   verbatimTextOutput
+#'   wellPanel
 #' @importFrom shinyWidgets dropdownButton prettyCheckbox
 fdgeRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
@@ -234,8 +248,11 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
             selectInput(ns("dge_method"), label = "Method", choices = NULL),
             numericInput(ns("treatfc"), label = "Min. Fold Change",
                          value = 1, min = 1, max = 10, step = 0.25),
-            prettyCheckbox(ns("weights"), label = "Use Sample Weights",
-                           status = "primary")))),
+            prettyCheckbox(ns("sample_weights"), label = "Use Sample Weights",
+                           status = "primary"),
+            tags$h4("Filter Strategy"),
+            wellPanel(
+              fdgeFeatureFilterUI(ns("ffilter"), ..., debug = debug))))),
       column(1, actionButton(ns("run"), "Run", style = "margin-top: 1.7em"))
     ))
 
@@ -247,6 +264,67 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
   }
 
   out
+}
+
+
+# Inner Helper Module for feature filtering parameters =========================
+
+#' @noRd
+#' @param assay_mod [FacileShine::assaySelect()] module, ie. an
+#'   `AssaySelectInput` object.
+fdgeFeatureFilter <- function(input, output, session, rfds, model,
+                              assay_module, ..., debug = FALSE) {
+
+  # TODO: Support returning a vector of feature id's
+  filter_method <- reactive("default")
+
+  min_count <- reactive({
+    input$min_count
+  })
+  min_total_count <- reactive({
+    input$min_total_count
+  })
+  min_expr <- reactive({
+    input$min_expr
+  })
+
+  # Show/hide the appropropriate options. I would have used
+  # shinyjs::toggleElement, but that's not working inside the dropdown
+  # this is embedded in
+  # observe({
+  #   toggleElement("countopts", condition = count_options())
+  #   toggleElement("expropts", condition = !count_options())
+  # })
+  output$show_count_options <- reactive({
+    assay <- assay_module$assay_info()$assay
+    if (assay %in% c("rnaseq", "umi", "isoseq")) "yes" else "no"
+  })
+  outputOptions(output, "show_count_options", suspendWhenHidden = FALSE)
+
+  vals <- list(
+    method = filter_method,
+    min_count = min_count,
+    min_total_count = min_total_count,
+    min_expr = min_expr)
+}
+
+#' @noRd
+#' @importFrom shiny conditionalPanel NS numericInput tagList tags
+fdgeFeatureFilterUI <- function(id, ..., debug = FALSE) {
+  ns <- NS(id)
+  tagList(
+    conditionalPanel(
+      condition = "output.show_count_options == 'yes'", ns = ns,
+      tags$div(id = ns("countopts"),
+               numericInput(ns("min_count"), label = "Min. Count",
+                            value = 10, min = 1, max = 50, step = 5),
+               numericInput(ns("min_total_count"), label = "Min. Total Count",
+                            value = 15, min = 1, max = 100, step = 10))),
+    conditionalPanel(
+      condition = "output.show_count_options == 'no'", ns = ns,
+      tags$div(id = ns("expropts"),
+               numericInput(ns("min_expr"), label = "Min. Expression",
+                            value = 1, min = 0.25, max = 100, step = 5))))
 }
 
 # Visualize the fdge result ====================================================

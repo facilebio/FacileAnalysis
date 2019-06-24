@@ -95,7 +95,7 @@ test_that("ranks returns DGE features in expected order", {
     result() %>%
     arrange(desc(logFC))
   ttest.ranks <- ttest.res %>%
-    ranks() %>%
+    ranks(signed = TRUE) %>%
     result()
   expect_equal(ttest.ranks[["feature_id"]], ttest.expected[["feature_id"]])
 

@@ -28,6 +28,9 @@ fdge(x, ...)
 \arguments{
 \item{x}{a data source}
 
+\item{...}{passed down into inner methods, such as \code{biocbox} to tweak
+filtering criteria, for instance}
+
 \item{assay_name}{the name of the assay that holds the measurements for test.
 Defaults to \code{default_assay(x)}.}
 

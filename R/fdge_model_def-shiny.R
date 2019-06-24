@@ -39,7 +39,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   # covariates. the entry selected in the testcov is removed from the
   # available elemetns to select from here
   fixedcov <- callModule(categoricalSampleCovariateSelect, "fixedcov",
-                         rfds, ..., .with_none = FALSE,
+                         rfds, include1 = FALSE, ..., .with_none = FALSE,
                          .exclude = testcov$covariate,
                          reactive = .reactive)
 
