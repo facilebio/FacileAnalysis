@@ -356,7 +356,8 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
     feature <- req(selected_result())
     dat <- req(samples.())
     scov <- covariate.()
-    dat <- fetch_assay_data(rfds, feature, dat, normalized = TRUE)
+    dat <- fetch_assay_data(rfds, feature, dat, normalized = TRUE,
+                            prior.count = 0.25)
     if (!scov %in% colnames(dat)) {
       dat <- with_sample_covariates(dat, scov)
     }
