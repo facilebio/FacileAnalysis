@@ -1,17 +1,25 @@
-#' Takes care of the tedium of wrapping a facilemodule to run as a gadget.
+#' Wraps FacileAnalysis modules into a gadget.
 #'
-#' We will implement barebones analysis gadgets that delegate down into here.
+#' If `x` is a `facile_frame`, than the analysis is strictly performed over the
+#' samples defined by the `facile_frame`. If it is a `FacileDataStore`, then
+#' a UI is provided to filter into the sample space by the
+#' [FacileShine::filteredReactiveFacileDataStoreUI()] module.
 #'
 #' @importFrom miniUI
 #'   gadgetTitleBar
 #'   miniPage
 #' @importFrom multiGSEA failWith
-#' @importFrom FacileShine ReactiveFacileDataStore
+#' @importFrom FacileShine
+#'   filteredReactiveFacileDataStore
+#'   filteredReactiveFacileDataStoreUI
+#'   ReactiveFacileDataStore
 #' @importFrom shiny
 #'   browserViewer
 #'   callModule
 #'   dialogViewer
 #'   runGadget
+#'   tagList
+#'   tags
 #' @importFrom shinyjs useShinyjs
 #' @importFrom shinyWidgets useSweetAlert
 #' @param analysisModule the server function for the gadget
@@ -43,7 +51,9 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   if (is(x, "facile_frame")) {
     fds. <- fds(x)
     samples. <- x
+    sample.filter <- FALSE
   } else {
+    sample.filter <- TRUE
     fds. <- x
     samples. <- samples(x) %>% collect(n = Inf)
   }
@@ -51,11 +61,20 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   assert_class(fds., "FacileDataStore")
   assert_class(samples., "facile_frame")
 
+  if (sample.filter) {
+    ui.content <- tagList(
+      filteredReactiveFacileDataStoreUI("ds"),
+      tags$hr(),
+      analysisUI("analysis", ..., debug = debug))
+  } else {
+    ui.content <- analysisUI("analysis", ..., debug = debug)
+  }
+
   ui <- miniPage(
     useShinyjs(),
     useSweetAlert(),
     gadgetTitleBar(title),
-    miniContentPanel(analysisUI("analysis", ..., debug = debug)),
+    miniContentPanel(ui.content),
     NULL)
 
   server <- function(input, output, session) {
@@ -64,7 +83,7 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
 
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
-      result. <- failWith(list(), unreact(analysis$result$result()))
+      result. <- failWith(list(), unreact(result(analysis)))
       result.[["gadget"]] <- list(
         annotation = annotation)
       class(result.) <- classify_as_gadget(result.)

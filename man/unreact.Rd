@@ -2,7 +2,7 @@
 % Please edit documentation in R/unreact.R
 \name{unreact}
 \alias{unreact}
-\title{Replace ReactiveFacileDataStore versions with their "inert" version.}
+\title{Replace reactive versions of facile objects with their "inert" counterparts}
 \usage{
 unreact(x, ...)
 }
@@ -14,12 +14,17 @@ a version of x with an "inert" FacileDataStore where the
 ReactiveFacileDataStore once was
 }
 \description{
-When analyses are run through a gadget, a ReactiveFacileDataStore is stored
-everywhere a FacileDataStore would be (which is to say: in a lot of places).
-This function tries to dig through the embedded results of an analysis and
-replaces the ReactiveFaileDataStore objects with their inner FacileDataStore.
+This function is primariy meant to be called within the \code{frunGadget}
+framework. We attempt to find all "reactive"-like components and covert them
+into their "inert" versions so that they can be used in the context of an
+ongoing analysis.
 }
 \details{
+We are primariy concerned about replacing the \code{ReactiveFacileDataStore} that
+is stashed within facile components (\code{facile_frames}) (set and retrieved with
+the \code{set_fds()} and \code{fds()} setters and getters), with their inner
+\code{FacileDataStore}
+
 This function needs to be called within the gadget, ie. I'm pretty sure it
 needs to fire in a reactive environment, which you get in the
 \code{observeEvent(intput$done, { ... })} expression.

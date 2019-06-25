@@ -2,7 +2,7 @@
 % Please edit documentation in R/frunGadget.R
 \name{frunGadget}
 \alias{frunGadget}
-\title{Takes care of the tedium of wrapping a facilemodule to run as a gadget.}
+\title{Wraps FacileAnalysis modules into a gadget.}
 \usage{
 frunGadget(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   title = "Facile Analysis Gadget", height = 600, width = 1000,
@@ -32,5 +32,8 @@ information from brushing of smaples (or features) -- depending on what
 the gadget is working over.
 }
 \description{
-We will implement barebones analysis gadgets that delegate down into here.
+If \code{x} is a \code{facile_frame}, than the analysis is strictly performed over the
+samples defined by the \code{facile_frame}. If it is a \code{FacileDataStore}, then
+a UI is provided to filter into the sample space by the
+\code{\link[FacileShine:filteredReactiveFacileDataStoreUI]{FacileShine::filteredReactiveFacileDataStoreUI()}} module.
 }

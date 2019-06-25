@@ -1,0 +1,67 @@
+---
+title: "Introduction to FacileAnalysis"
+author: "Steve Lianoglou"
+date: "5/17/2019"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+```
+
+The FacileAnalysis package defines a set of analysis tasks over genomic data
+housed in a `FacileDataStore`. We also attempt to provide a generalized grammar
+(defined as S3 generics) over their results such that they can be re-used in 
+various contexts, which include:
+
+1. interactive exploration of results (via shiny modules and gadgets)
+2. conveniant reporting of results in serialized (shiny-detached) modalities,
+   like Rmarkdown reports
+3. further (potentially interactive) interrogation on a line of inquiry that
+   was the impetus for the analysis task itself (ie. feeding a differential
+   expression result into a gene set enrichment analysis)
+
+Analyses implemented within this package include:
+
+1. Principal Components Analysis (fpca)
+2. Differential Expression Analysis (fdge)
+3. Gene Set Enrichment Analysis (fgsea)
+
+Additional analyses can be added within this package, or as new packages which
+import and implement the FacileAnalysis S3 API from here.
+
+## FacileAnalysis API
+
+* S3 methods
+    - result.FacileAnalysisResult() and result.ShinyFacileAnalysisResult()
+    - viz()
+    - report()
+    - shine()
+* Interactive Invocation
+
+As much as possible, a "complete" analysis should be broken down into
+intermediate steps. For instance, a complete differential expresion analysis
+from a FacileDataStore is defined as.
+
+1. filtering down to the samples used for the test
+2. defining the model over the samples, ie. the covariate to test and which
+   covariates to used for fixed/batch effects
+3. defining the parameters to run the statistical test, ie.
+    i)   the assay from the samples to run the analysis on
+    ii)  the differential expression pipeline to use (limma, limma-trend,
+         voom ,etc)
+    iii) advanced options, like the threshold to test against (limma/treat), or
+         whether to incorporate sample level weights
+
+

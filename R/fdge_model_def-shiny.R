@@ -165,8 +165,14 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     fixedcov = fixedcov,
     .ns = session$ns)
 
-  class(vals) <- c("ShinyDGEModelDefinition", class(vals))
+  class(vals) <- c("ShinyDGEModelDefinition", "ShinyFacileAnalysisResult")
   vals
+}
+
+#' @noRd
+#' @export
+result.ShinyDGEModelDefinition <- function(x, ...) {
+  x[["result"]]()
 }
 
 #' @noRd

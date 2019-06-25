@@ -1,6 +1,29 @@
-
-#' @noRd
+#' Fully interactive differential expression analysis
+#'
+#' Assembles a shiny UI to define all of the bits required to perform a
+#' differential expression analysis over a predefined set of samples.
+#'
+#' An interactive differential expression analysis is divided into three
+#' steps, each of which provides its own shiny module and interface. The
+#' minimal input to this analysis is a pre-defined subset of samples to act on.
+#'
+#' These steps are:
+#'
+#' 1. Model matrix definition. The functionality is provided by the
+#'    [fdge_model_def()] function, and the shiny interface by the
+#'    [fdgeModelDefRun()] module.
+#' 2. Differential expression analysis. The functionality is
+#'    defined by the [fdge()] function, and the shiny interface by the
+#'    [fdgeRun()] module.
+#' 3. Results display. The interactive display of the results is provided
+#'    by the [fdgeView()] module.
+#'
+#' Th
+#' @rdname fdge-shiny
 #' @export
+#'
+#' @section Interactive Gadget:
+#'
 #' @examples
 #' if (interactive()) {
 #' # run tumor vs normal comparisons vs each, then run compare() on the results
@@ -24,6 +47,8 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
              height = height, width = width, ...)
 }
 
+#' @rdname fdge-shiny
+#' @section
 #' Wrapper module to perform and interact with a differential expression result.
 #'
 #' This module can be embedded within a shiny app, or called from a gadget.
@@ -59,8 +84,14 @@ fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
     model = model,
     view = view,
     .ns = session$ns)
-  class(vals) <- "ShinyFdgeAnalysis"
+  class(vals) <- c("ShinyFdgeAnalysis", "ShinyFacileAnalysisResult")
   vals
+}
+
+#' @noRd
+#' @export
+result.ShinyFdgeAnalysis <- function(x, ...) {
+  x[["result"]]$result()
 }
 
 #' @noRd
@@ -110,8 +141,8 @@ fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
 #'   unselected
 #' @param model A linear model definition. Can be either a "naked"
 #'   `FacileDGEModelDefinition` that is returned from a call to
-#'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned from
-#'   the [fdgeModelDefRun()] module.
+#'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned
+#'   from the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]
 #' @return A list of stuff. `$result` holds the `FacileDGEResult` wrapped in
@@ -296,7 +327,7 @@ fdgeFeatureFilter <- function(input, output, session, rfds, model,
   #   toggleElement("expropts", condition = !count_options())
   # })
   output$show_count_options <- reactive({
-    assay <- assay_module$assay_info()$assay
+    assay <- assay_module$assay_info()$assay_type
     if (assay %in% c("rnaseq", "umi", "isoseq")) "yes" else "no"
   })
   outputOptions(output, "show_count_options", suspendWhenHidden = FALSE)

@@ -421,6 +421,12 @@ design.FacileDGEModelDefinition <- function(x, ...) {
   x[["design"]]
 }
 
+#' @noRd
+#' @export
+result.FacileDGEModelDefinition <- function(x, ...) {
+  x[["design"]]
+}
+
 # Printing =====================================================================\
 
 #' @noRd

@@ -1,30 +1,33 @@
-#' Replace ReactiveFacileDataStore versions with their "inert" version.
+#' Replace reactive versions of facile objects with their "inert" counterparts
 #'
-#' When analyses are run through a gadget, a ReactiveFacileDataStore is stored
-#' everywhere a FacileDataStore would be (which is to say: in a lot of places).
-#' This function tries to dig through the embedded results of an analysis and
-#' replaces the ReactiveFaileDataStore objects with their inner FacileDataStore.
+#' This function is primariy meant to be called within the `frunGadget`
+#' framework. We attempt to find all "reactive"-like components and covert them
+#' into their "inert" versions so that they can be used in the context of an
+#' ongoing analysis outside of the shiny world. This is an important function,
+#' but it is purposefully not exported.
+#'
+#' We are primariy concerned about replacing the `ReactiveFacileDataStore` that
+#' is stashed within facile components (`facile_frames`) (set and retrieved with
+#' the `set_fds()` and `fds()` setters and getters), with their inner
+#' `FacileDataStore`
 #'
 #' This function needs to be called within the gadget, ie. I'm pretty sure it
 #' needs to fire in a reactive environment, which you get in the
 #' `observeEvent(intput$done, { ... })` expression.
 #'
-#' @export
 #' @param x stuff and things
-#' @return a version of x with an "inert" FacileDataStore where the
-#'   ReactiveFacileDataStore once was
+#' @return a version of x with an "inert" versions of internal facile-components
+#'   (primariy FacileDataStore) wherever they may be.
 unreact <- function(x, ...) {
   UseMethod("unreact", x)
 }
 
 #' @noRd
-#' @export
 unreact.default <- function(x, ...) {
   x
 }
 
 #' @noRd
-#' @export
 unreact.list <- function(x, ...) {
   out <- lapply(x, unreact)
   class(out) <- class(x)
@@ -32,20 +35,17 @@ unreact.list <- function(x, ...) {
 }
 
 #' @noRd
-#' @export
 unreact.FacileAnalysisResult <- function(x, ...) {
   unreact.list(x, ...)
 }
 
 #' @noRd
-#' @export
 unreact.facile_frame <- function(x, ...) {
   as_facile_frame(x, fds(fds(x)))
 }
 
 
 #' @noRd
-#' @export
 unreact.ReactiveFacileDataStore <- function(x, ...) {
   fds(x)
 }
