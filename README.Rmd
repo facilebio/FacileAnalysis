@@ -1,0 +1,131 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo = TRUE,
+  message = FALSE,
+  error = FALSE,
+  comment = "#>",
+  fig.path = "man/figures/"
+)
+```
+
+# FacileAnalysis <img src="man/figures/logo.png" align="right" />
+
+<!-- badges: start -->
+[![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Travis build status](https://travis-ci.org/facileverse/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facileverse/FacileAnalysis)
+[![Codecov test coverage](https://codecov.io/gh/facileverse/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facileverse/FacileAnalysis?branch=master)
+<!-- badges: end -->
+
+## Overview
+
+The FacileAnalysis package defines a set of analysis tasks (modules) over
+genomic data housed in a container that implements the FacileData API (aka a
+`FacileDataStore`). The over-arching goal of developing analysis modules within
+this framework is to enable quick and effortless ways to interrogate genomic
+data by enabling a **hybrid** interactive and code-driven approach to data
+analysis (or any extreme mix of the two).
+
+FacileAnalysis modules attempt to break down a general analysis task into
+smaller constituent steps, each of which can be explored at
+**different levels of interactivity**, or piped together to perform a complete
+analysis task.
+
+The analyses implemented within this package are listed below, with links to
+vignettes that describe their functionality in more detail.
+
+* `fpca`: [Interactive Principal Components Analyses][fpcavign]
+* `fdge`: [Interactive Differential Gene Expression Analyses][fdgevign]
+* `fgsea`: [Interactive Gene Set Enrichment Analysis][fgseavign]
+
+## Differential Expression Analysis
+
+We'll include an exemplar differential expression analysis here in order to
+touch on some of the guiding principles of an analysis modules mentioned above.
+
+We have first defined a complete differential expression analysis (`fdge`),
+by breaking it down into the following steps:
+
+1. identifying the subset of samples from a `FacileDataStore` to perform the
+   analysis over;
+2. defining the model (design) over the samples, ie. the covariate to test and
+   which covariates to used for fixed/batch effects
+3. defining the parameters to run the statistical test, ie.
+    i)   the assay from the samples to run the analysis on
+    ii)  the differential expression pipeline to use (limma, limma-trend,
+         voom ,etc)
+    iii) advanced options, like the threshold to test against (limma/treat), or
+         whether to incorporate sample level weights
+
+The example below identifies genes differentially expression between tumor and
+normal samples (and controlling for sex) in the "BLCA" indication of the example
+TCGA dataset included in the [FacileData][faciledata] package.
+
+```{r voom-analysis}
+library(FacileAnalysis)
+efds <- FacileData::exampleFacileDataSet()
+
+# Step 1: define the samples to test
+samples <- filter_samples(efds, indication == "BLCA")
+
+# Step 2: define the model (design) for the test
+model <- fdge_model_def(samples, covariate = "sample_type",
+                        numer = "tumor", denom = "normal",
+                        fixed = "sex")
+
+# Step 3: configure the options to run the test, which include the assay that
+#         holds the data used to test and the statistical method/framework we
+#         should use to perform the test
+vdge <- fdge(model, assay_name = "rnaseq", method = "voom")
+```
+
+We can take the same "analysis pipeline" and simply change the method we are
+using to test for differential expression by tweaking the last step. For
+instance, we might want to use the edgeR/QLF statistical framework:
+
+```{r qlf-analysis}
+qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
+```
+
+## Levels of Interactivity
+
+There are a number of S3 methods a `FacileAnalysisResult` needs to define in
+order to be complete. For instance, the group of three methods listed below
+enable the analysis module developer to provide custom interactivity over the
+result of an analysis task at different granularities, enabling the end-user to
+interrogate the result in whatever method is appropriate to the task.
+
+* `shine(aresult, ...)` provides the richest interactive view by launching a
+  [shiny gadget][sgadget] over the analysis result.
+* `viz(aresult, ...)` leverages [htmlwidgets][htmlwidgets] to create a
+  JavaScript-powered interactive view of the analysis result, which is detached
+  from a running R-process.
+* `report(aresult, ...)` is similar to `viz`, but is meant to create a "more
+  complete" (but still server-detached) view over an analysis result that is
+  more suitable for inclusion into an Rmarkdown report. This is accomplished
+  by including a caption and, perhaps, multiple graphical views into the result.
+
+
+## Installation
+
+```{r, eval = FALSE}
+# These packages are only available via github for now
+# install.packages("devtools")
+devtools::install_github("facileverse/FacileAnalysis")
+```
+
+## Getting Help
+
+Please post questions to [our google group][ggroup].
+
+[faciledata]: https://facileverse.github.io/FacileData
+[ggroup]: https://groups.google.com/forum/#!forum/facileverse
+[htmlwidgets]: https://www.htmlwidgets.org
+[sgadget]: https://shiny.rstudio.com/articles/gadgets.html

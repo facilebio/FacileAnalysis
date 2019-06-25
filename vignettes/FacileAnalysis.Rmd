@@ -21,9 +21,11 @@ set.seed(0xFEED)
 ```
 
 The FacileAnalysis package defines a set of analysis tasks over genomic data
-housed in a `FacileDataStore`. We also attempt to provide a generalized grammar
-(defined as S3 generics) over their results such that they can be re-used in 
-various contexts, which include:
+housed in a container that implements the FacileData API (aka a
+`FacileDataStore`). 
+
+We also attempt to provide a generalized grammar (defined as S3 generics) over
+their results such that they can be re-used in  various contexts, which include:
 
 1. interactive exploration of results (via shiny modules and gadgets)
 2. conveniant reporting of results in serialized (shiny-detached) modalities,
@@ -48,6 +50,8 @@ import and implement the FacileAnalysis S3 API from here.
     - viz()
     - report()
     - shine()
+    - ranks() and signature()
+    
 * Interactive Invocation
 
 As much as possible, a "complete" analysis should be broken down into

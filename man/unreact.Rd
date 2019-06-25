@@ -10,14 +10,15 @@ unreact(x, ...)
 \item{x}{stuff and things}
 }
 \value{
-a version of x with an "inert" FacileDataStore where the
-ReactiveFacileDataStore once was
+a version of x with an "inert" versions of internal facile-components
+(primariy FacileDataStore) wherever they may be.
 }
 \description{
 This function is primariy meant to be called within the \code{frunGadget}
 framework. We attempt to find all "reactive"-like components and covert them
 into their "inert" versions so that they can be used in the context of an
-ongoing analysis.
+ongoing analysis outside of the shiny world. This is an important function,
+but it is purposefully not exported.
 }
 \details{
 We are primariy concerned about replacing the \code{ReactiveFacileDataStore} that

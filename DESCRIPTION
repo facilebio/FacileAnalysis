@@ -3,7 +3,8 @@ Type: Package
 Title: Analysis routines over a FacileDataStore
 Version: 0.1.6
 Authors@R: c(
-    person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre")),
+    person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-0924-1754")),
     person("Denali Therapeutics", role = c("cph", "fnd")))
 Description: Provides modularized versions of analyses that are commonly
     performed over genomics data. Analysis results can be interactively explored
@@ -41,6 +42,12 @@ Remotes:
     denalitherapeutics/FacileData,
     denalitherapeutics/FacileShine,
     denalitherapeutics/FacileViz
+biocViews:
+    DifferentialExpression,
+    GeneExpression,
+    GeneSetEnrichment,
+    Pathways,
+    DimensionReduction
 License: Apache Version 2.0
 Encoding: UTF-8
 LazyData: true
