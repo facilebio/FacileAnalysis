@@ -45,13 +45,14 @@ fgsea <- function(x, gdb, methods, ...) {
 
 #' @rdname fgsea
 #' @export
-fgsea.FacileTtestDGEResult <- function(x, gdb, methods = "cameraPR",
-                                       min_logFC = 1, max_padj = 0.10,
-                                       rank_by = "logFC", ...) {
+fgsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
+                                            min_logFC = 1, max_padj = 0.10,
+                                            rank_by = "logFC", signed = TRUE,
+                                            ...) {
   assert_class(gdb, "GeneSetDb")
   assert_subset(methods, c("cameraPR", "fgsea", "geneSetTest"))
 
-  ranks. <- result(ranks(x))
+  ranks. <- result(ranks(x, signed = signed, ...))
   assert_choice(rank_by, colnames(ranks.))
   assert_numeric(ranks.[[rank_by]], any.missing = FALSE)
 
@@ -78,23 +79,23 @@ fgsea.FacileTtestDGEResult <- function(x, gdb, methods = "cameraPR",
     result = mg,
     params = list(methods = methods, min_logFC = min_logFC, max_padj = max_padj,
                   rank_by = rank_by))
-  class(out) <- c("FacileTtestGSEAResult",
-                  "FacileGSEAResult",
+  class(out) <- c("FacileTtestGseaResult",
+                  "FacileGseaResult",
                   "FacileAnalysisResult")
   out
 }
 
 #' @noRd
 #' @export
-fgsea.FacileAnovaDGEResult <- function(x, gdb, methods = "goseq",
-                                       max_padj = 0.10, ...) {
+fgsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
+                                            max_padj = 0.10, ...) {
 
 }
 
 #' @noRd
 #' @export
-fgsea.FacilePCAResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
-                                  ...) {
+fgsea.FacilePcaAnalysisResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
+                                          ...) {
   ranks. <- ranks(x, ...)
 }
 
@@ -112,7 +113,7 @@ fgsea.FacilePCAResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
 #'
 #' @rdname fgsea
 #' @export
-result.FacileGSEAResult <- function(x, name = "result", ...) {
+result.FacileGseaResult <- function(x, name = "result", ...) {
   mgres <- x[["result"]]
   if (name == "result") {
     out <- mgres

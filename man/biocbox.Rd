@@ -2,17 +2,17 @@
 % Please edit documentation in R/biocbox.R, R/fdge.R
 \name{biocbox}
 \alias{biocbox}
-\alias{biocbox.FacileDGEModelDefinition}
-\alias{biocbox.FacileDGEResult}
+\alias{biocbox.FacileDgeModelDefinition}
+\alias{biocbox.FacileDgeAnalysisResult}
 \title{Materializes the bioc assay container to use to run a dge test.}
 \usage{
 biocbox(x, ...)
 
-\method{biocbox}{FacileDGEModelDefinition}(x, assay_name = NULL,
+\method{biocbox}{FacileDgeModelDefinition}(x, assay_name = NULL,
   method = NULL, dge_methods = NULL, filter = "default",
   with_sample_weights = FALSE, prior_count = NULL, ...)
 
-\method{biocbox}{FacileDGEResult}(x, ...)
+\method{biocbox}{FacileDgeAnalysisResult}(x, ...)
 }
 \arguments{
 \item{x}{The FacileAnalysisResult}
@@ -75,9 +75,9 @@ then differentially tested using the limma-trended pipeline
 TODO: support affymrna, affymirna, etc. assay types
 }
 
-\section{FacileDGEResult}{
+\section{FacileDgeAnalysisResult}{
 
-Given a FacileDGEResult, we can re-materialize the Bioconductor assay
+Given a FacileDgeAnalysisResult, we can re-materialize the Bioconductor assay
 container used within the differential testing pipeline used from \code{\link[=fdge]{fdge()}}.
 Currently we have limited our analysis framework to either work over DGEList
 (edgeR) or EList (limma) containers.

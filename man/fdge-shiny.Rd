@@ -15,7 +15,7 @@ fdgeAnalysis(input, output, session, rfds, with_volcano = TRUE, ...,
 \item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
 }
 \value{
-a \code{ShinyFacileDGEResult}, the output from \code{\link[=fdge]{fdge()}}
+a \code{ShinyFacileDgeAnalysisResult}, the output from \code{\link[=fdge]{fdge()}}
 }
 \description{
 Assembles a shiny UI to define all of the bits required to perform a
@@ -42,6 +42,13 @@ Th
 }
 \section{Interactive Gadget}{
 
+}
+
+\section{Analysis Module}{
+
+Wrapper module to perform and interact with a differential expression result.
+
+This module can be embedded within a shiny app, or called from a gadget.
 }
 
 \examples{

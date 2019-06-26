@@ -9,7 +9,7 @@ fdgeRun(input, output, session, rfds, model, with_gsea = FALSE, ...,
 }
 \arguments{
 \item{model}{A linear model definition. Can be either a "naked"
-\code{FacileDGEModelDefinition} that is returned from a call to
+\code{FacileDgeModelDefinition} that is returned from a call to
 \code{\link[=fdge_model_def]{fdge_model_def()}}, or the \code{ShinyDGEModelDefinition} object returned
 from the \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.}
 
@@ -18,8 +18,8 @@ from the \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.}
 \item{...}{passed into \code{\link[=fdge]{fdge()}}}
 }
 \value{
-A list of stuff. \code{$result} holds the \code{FacileDGEResult} wrapped in
-a \code{reactive()}, ie. a \code{ReactiveDGEResult}.
+A list of stuff. \code{$result} holds the \code{FacileDgeAnalysisResult}
+wrapped in a \code{reactive()}.
 }
 \description{
 Shiny module to configure and run fdge over a predefined model.

@@ -34,18 +34,25 @@ data by enabling a **hybrid** interactive and code-driven approach to data
 analysis (or any extreme mix of the two).
 
 FacileAnalysis modules attempt to break down a general analysis task into
-smaller constituent steps, each of which can be explored at
-**different levels of interactivity**, or piped together to perform a complete
-analysis task.
+smaller constituent steps, the results of which can:
+
+1. be piped together (`%>%`) to perform a complete analysis task;
+2. be explored at **different levels of interactivity**, via the `shine()`,
+   `viz()`, and `report()` methods; and
+3. act as starting (or reference) points for **the next** analysis task, via
+   the `compare()`, `ranks()`, and `signature()` methods.
+
+You can find a more in-depth overview and philosophy of this package in the
+[FacileAnalysis vignette][pkgvign].
 
 The analyses implemented within this package are listed below, with links to
-vignettes that describe their functionality in more detail.
+vignettes that describe their functionality in more detail:
 
 * `fpca`: [Interactive Principal Components Analyses][fpcavign]
 * `fdge`: [Interactive Differential Gene Expression Analyses][fdgevign]
 * `fgsea`: [Interactive Gene Set Enrichment Analysis][fgseavign]
 
-## Differential Expression Analysis
+## Example Analysis: Differential Expression
 
 We'll include an exemplar differential expression analysis here in order to
 touch on some of the guiding principles of an analysis modules mentioned above.
@@ -72,7 +79,7 @@ TCGA dataset included in the [FacileData][faciledata] package.
 library(FacileAnalysis)
 efds <- FacileData::exampleFacileDataSet()
 
-# Step 1: define the samples to test
+# Step 1: define the samples implicated in our test
 samples <- filter_samples(efds, indication == "BLCA")
 
 # Step 2: define the model (design) for the test
@@ -94,16 +101,27 @@ instance, we might want to use the edgeR/QLF statistical framework:
 qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
 ```
 
-## Levels of Interactivity
+## Interrogation at Different Levels of Interactivity
 
 There are a number of S3 methods a `FacileAnalysisResult` needs to define in
-order to be complete. For instance, the group of three methods listed below
-enable the analysis module developer to provide custom interactivity over the
-result of an analysis task at different granularities, enabling the end-user to
-interrogate the result in whatever method is appropriate to the task.
+order to be complete. The `shine()`, `viz()`, and `report()` methods are there
+enable the end-user to interrogate (and report) the results of an analysis at
+using different levels of interactivity.
 
-* `shine(aresult, ...)` provides the richest interactive view by launching a
-  [shiny gadget][sgadget] over the analysis result.
+Let's take a look at how these work over a `FacileDGEAnalysis
+
+### Deep Interaction via shine()
+
+The `shine(aresult, ...)` method provides the richest interactive view over a
+`FacileAnalysisResult` by launching a [shiny gadget][sgadget] that enables
+the end-user to fully interrogate the results.
+
+```{r, eval = FALSE}
+shine(vdge)
+```
+
+<img src="man/figures/fdge-shine.png" width="50%" />
+
 * `viz(aresult, ...)` leverages [htmlwidgets][htmlwidgets] to create a
   JavaScript-powered interactive view of the analysis result, which is detached
   from a running R-process.
@@ -121,11 +139,20 @@ interrogate the result in whatever method is appropriate to the task.
 devtools::install_github("facileverse/FacileAnalysis")
 ```
 
-## Getting Help
+## Resources
 
-Please post questions to [our google group][ggroup].
+* [facileverse.github.io/FacileAnalysis][facileanalysis]
+  (online documentation and vignettes)
+* [Ask a question][ggroup] (Google Group Q&A Site)
+* [Open an issue][issues] (GitHub issues for bug reports and feature requests)
 
 [faciledata]: https://facileverse.github.io/FacileData
+[facileanalysis]: https://facileverse.github.io/FacileAnalysis
+[fpcavign]: FacileAnalysis-pca.html
+[fdgevign]: FacileAnalysis-dge.html
+[fgseavign]: FacileAnalysis-gsea.html
 [ggroup]: https://groups.google.com/forum/#!forum/facileverse
 [htmlwidgets]: https://www.htmlwidgets.org
+[issues]: https://github.com/facileverse/FacileAnalysis/issues
+[pkgvign]: FacileAnalysis.html
 [sgadget]: https://shiny.rstudio.com/articles/gadgets.html

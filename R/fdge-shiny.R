@@ -48,7 +48,7 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 }
 
 #' @rdname fdge-shiny
-#' @section
+#' @section Analysis Module:
 #' Wrapper module to perform and interact with a differential expression result.
 #'
 #' This module can be embedded within a shiny app, or called from a gadget.
@@ -57,7 +57,7 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @importFrom shiny callModule
 #' @importFrom shinyjs toggleElement
 #' @param model_def the module returned from [fdgeModelDefModule()]
-#' @return a `ShinyFacileDGEResult`, the output from [fdge()]
+#' @return a `ShinyFacileDgeAnalysisResult`, the output from [fdge()]
 fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
                          ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
@@ -72,10 +72,8 @@ fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
   # done this way, the showSpinner() around the view's output datatable works
   # like a "wait, processing DGE" while it's running.
   observe({
-    # model. <- model$result()
-    # show <- is(model., "FacileDGEModelDefinition")
-    res <- req(dge$result())
-    show <- is(res, "FacileDGEResult")
+    res. <- req(dge$result())
+    show <- is(res., "FacileDgeAnalysisResult")
     toggleElement("viewbox", condition = show)
   })
 
@@ -84,13 +82,13 @@ fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
     model = model,
     view = view,
     .ns = session$ns)
-  class(vals) <- c("ShinyFdgeAnalysis", "ShinyFacileAnalysisResult")
+  class(vals) <- c("ShinyFacileDgeAnalysisResult", "ShinyFacileAnalysisResult")
   vals
 }
 
 #' @noRd
 #' @export
-result.ShinyFdgeAnalysis <- function(x, ...) {
+result.ShinyFacileDgeAnalysisResult <- function(x, ...) {
   x[["result"]]$result()
 }
 
@@ -140,24 +138,24 @@ fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
 #'   assaySelect
 #'   unselected
 #' @param model A linear model definition. Can be either a "naked"
-#'   `FacileDGEModelDefinition` that is returned from a call to
+#'   `FacileDgeModelDefinition` that is returned from a call to
 #'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned
 #'   from the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]
-#' @return A list of stuff. `$result` holds the `FacileDGEResult` wrapped in
-#'   a `reactive()`, ie. a `ReactiveDGEResult`.
+#' @return A list of stuff. `$result` holds the `FacileDgeAnalysisResult`
+#'   wrapped in a `reactive()`.
 fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
                     debug = FALSE, .reactive = TRUE) {
-  kosher <- is(model, "FacileDGEModelDefinition") ||
-    is(model, "ShinyDGEModelDefinition")
+  kosher <- is(model, "FacileDgeModelDefinition") ||
+    is(model, "ShinyFacileDgeModelDefinition")
   if (!kosher) {
     stop("Invalid object passed as `model`: ", class(model)[1L])
   }
 
   rmodel <- reactive({
     req(initialized(rfds))
-    if (is(model, "FacileDGEModelDefinition")) {
+    if (is(model, "FacileDgeModelDefinition")) {
       out <- model
     } else {
       out <- req(model$result())
@@ -174,7 +172,7 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 
   runnable <- reactive({
     model. <- rmodel()
-    enable <- is(model., "FacileDGEModelDefinition") &&
+    enable <- is(model., "FacileDgeModelDefinition") &&
       !is(model., "FacileFailedModelDefinition") &&
       !is(model., "IncompleteModelDefintion") &&
       initialized(assay)
@@ -381,8 +379,8 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
   # The FacileDGEResult object
   result. <- reactive({
     req(initialized(rfds))
-    out <- if (is(result, "FacileDGEResult")) result else result$result()
-    req(is(out, "FacileDGEResult"))
+    out <- if (is(result, "FacileDgeAnalysisResult")) result else result$result()
+    req(is(out, "FacileDgeAnalysisResult"))
     out
   })
 

@@ -19,7 +19,7 @@
 #' @importFrom shiny renderText
 #' @importFrom shinyjs toggleElement
 #' @importFrom shinyWidgets sendSweetAlert
-#' @return A `FacileDGEModelDefinition` object, the output from
+#' @return A `ShinyFacileDgeModelDefinition` object, the output from
 #'   [fdge_model_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
                             debug = FALSE, .reactive = TRUE) {
@@ -89,63 +89,27 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     out
   })
 
-  status <- reactive({
+  status. <- reactive({
     req(initialized(rfds))
     model. <- model()
-    if (!is(model., "FacileDGEModelDefinition")) {
-      out <- "Uninitialized"
-    } else if (is(model., "FacileFailedModelDefinition")) {
-      out <- "error"
-    } else if (length(model.$warnings) == 0) {
-      out <- "warn"
-    } else {
-      out <- "clean"
-    }
-    out
+    status(model., with_warnings = TRUE)
   })
 
-  observeEvent(status(), {
-    status. <- status()
-    # model. <- model()
-    # show.mbox <- status. != "error" && is(model, "FacileDGEModelDefinition")
-    # toggleElement("messagebox", condition = show.mbox)
-
-    toggleElement("messagebox", condition = status. != "error")
-    if (status. == "error") {
-      sendSweetAlert(session, "Error building model",
-                     text = model()$errors, type = "error")
+  observeEvent(status.(), {
+    s <- status.()
+    iserr <- is(s, "FacileAnalysisStatusError")
+    toggleElement("messagebox", condition = !iserr)
+    if (iserr) {
+      sendSweetAlert(session, "Error building model",text = s, type = "error")
     }
   })
 
   output$message <- renderText({
     model. <- model()
-    status. <- isolate(status())
-    clazz <- class(model.)[1L]
-    if (!is.null(model.)) {
-      nsamples <- nrow(samples(model.))
-    }
-
-    msg <- switch(
-      clazz,
-      "NULL" = "Undefined model",
-      FacileAnovaModelDefinition = {
-        sprintf("ANOVA model defined across '%s' covariate on %d samples",
-                param(model., "covariate"), nsamples)
-      },
-      FacileInteractionTestDGEModelDefinition = {
-        sprintf("Interaction model defined on %d samples", nsamples)
-      },
-      FacileTtestDGEModelDefinition = {
-        sprintf("T-test model [%s] defined on %d samples",
-                model.$contrast_string, nsamples)
-      },
-      FacileFailedModelDefinition = {
-        paste("ERROR:", paste(model.$errors, collapse = "\n"))
-      },
-      "Unknown model type defined")
-
-    if (status. == "warn") {
-      msg <- paste(msg, model.$warnings, sep = "\n")
+    if (is.null(model.)) {
+      msg <- "Undefined model"
+    } else {
+      msg <- status.()
     }
     msg
   })
@@ -165,13 +129,13 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     fixedcov = fixedcov,
     .ns = session$ns)
 
-  class(vals) <- c("ShinyDGEModelDefinition", "ShinyFacileAnalysisResult")
+  class(vals) <- c("ShinyFacileDgeModelDefinition", "ShinyFacileAnalysisResult")
   vals
 }
 
 #' @noRd
 #' @export
-result.ShinyDGEModelDefinition <- function(x, ...) {
+result.ShinyFacileDgeModelDefinition <- function(x, ...) {
   x[["result"]]()
 }
 

@@ -8,7 +8,7 @@ test_that("fdge_model_def supports simple t-test specification", {
     fdge_model_def(covariate = "sample_type",
                    numer = "tumor", denom = "normal",
                    fixed = "sex")
-  expect_is(mdef, "FacileTtestDGEModelDefinition")
+  expect_is(mdef, "FacileTtestModelDefinition")
   expect_equal(mdef$contrast, c(normal = -1, tumor = 1, sexf = 0))
 
   # Flip numerator and denominator
@@ -17,7 +17,7 @@ test_that("fdge_model_def supports simple t-test specification", {
     fdge_model_def(covariate = "sample_type",
                    numer = "normal", denom = "tumor",
                    fixed = "sex")
-  expect_is(mdef, "FacileTtestDGEModelDefinition")
+  expect_is(mdef, "FacileTtestModelDefinition")
   expect_equal(mdef$contrast, c(normal = 1, tumor = -1, sexf = 0))
 })
 
@@ -71,8 +71,8 @@ test_that("fdge_model_def removes samples with NA in covariates", {
   # FacileDGEModel spec is the same after NA samples are removed
   expect_equal(mod.all$covariates, mod.tumor$covariates)
   expect_equal(mod.all$design, mod.tumor$design)
-  expect_is(mod.all, "FacileTtestDGEModelDefinition")
-  expect_is(mod.tumor, "FacileTtestDGEModelDefinition")
+  expect_is(mod.all, "FacileTtestModelDefinition")
+  expect_is(mod.tumor, "FacileTtestModelDefinition")
 })
 
 test_that("fdge_model_def supports retrieving test covaraites on the fly", {
@@ -129,7 +129,7 @@ test_that("fdge_model_def errors on non-fullrank matrices", {
                      numer = c("CMS1", "CMS2"),
                      denom = c("CMS3", "CMS4"))
   }, "NA")
-  expect_class(good.model, "FacileTtestDGEModelDefinition")
+  expect_class(good.model, "FacileTtestModelDefinition")
 
   # adding `fixed = "sex"` makes this not full rank
   bad.model <- expect_warning({

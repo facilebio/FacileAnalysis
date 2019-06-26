@@ -1,7 +1,7 @@
 #' Peform a differential expression analysis.
 #'
 #' Use [fdge_model_def()] to define the design matrix and contrast to test and
-#' pass the `FacileDGEModelDefinition` object returned from that to `fdge()`
+#' pass the `FacileDgeModelDefinition` object returned from that to `fdge()`
 #' to run the desired differential testing framework (dictated by the `method`
 #' parameter) over the data. `fdge_model_def` accepts a
 #'
@@ -85,7 +85,7 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 #' @rdname fdge
 #' @param ... passed down into inner methods, such as `biocbox` to tweak
 #'   filtering criteria, for instance
-fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
+fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                           filter = "default",
                                           with_sample_weights = FALSE,
                                           treat_lfc = NULL,
@@ -99,10 +99,10 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
   if (test_type == "ttest") {
     testme <- x[["contrast"]]
-    clazz <- "FacileTtestDGEResult"
+    clazz <- "FacileTtestAnalysisResult"
   } else {
     testme <- x[["coef"]]
-    clazz <- "FacileAnovaDGEResult"
+    clazz <- "FacileAnovaAnalysisResult"
   }
 
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
@@ -178,13 +178,13 @@ fdge.FacileDGEModelDefinition <- function(x, assay_name = NULL, method = NULL,
     warnings = warnings,
     errors = errors)
 
-  class(out) <- c(clazz, "FacileDGEResult", "FacileAnalysisResult")
+  class(out) <- c(clazz, "FacileDgeAnalysisResult", "FacileAnalysisResult")
   out
 }
 
 #' @noRd
 #' @export
-result.FacileDGEResult <- function(x, name, ...) {
+result.FacileDgeAnalysisResult <- function(x, name, ...) {
   out <- x[["result"]]
   if (!"feature_type" %in% colnames(out)) {
     feature_type <- guess_feature_type(out[["feature_id"]], summarize = TRUE)
@@ -196,19 +196,19 @@ result.FacileDGEResult <- function(x, name, ...) {
 
 #' @noRd
 #' @export
-model.FacileDGEResult <- function(x, ...) {
+model.FacileDgeAnalysisResult <- function(x, ...) {
   x[["params"]][["model_def"]]
 }
 
 #' @noRd
 #' @export
-design.FacileDGEResult <- function(x, ...) {
+design.FacileDgeAnalysisResult <- function(x, ...) {
   design(model(x, ...), ...)
 }
 
 #' @noRd
 #' @export
-name.FacileTtestDGEResult <- function(x, ...) {
+name.FacileTtestAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   fixed <- param(m, "fixed")
@@ -223,7 +223,7 @@ name.FacileTtestDGEResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-label.FacileTtestDGEResult <- function(x, ...) {
+label.FacileTtestAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   fixed <- param(m, "fixed")
@@ -235,7 +235,9 @@ label.FacileTtestDGEResult <- function(x, ...) {
   out
 }
 
-name.FacileAnovaDGEResult <- function(x, ...) {
+#' @noRd
+#' @export
+name.FacileAnovaAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   clevels <- unique(samples(m)[[covname]])
@@ -247,7 +249,9 @@ name.FacileAnovaDGEResult <- function(x, ...) {
   out
 }
 
-label.FacileAnovaDGEResult <- function(x, ...) {
+#' @noRd
+#' @export
+label.FacileAnovaAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   clevels <- unique(samples(m)[[covname]])
@@ -259,11 +263,11 @@ label.FacileAnovaDGEResult <- function(x, ...) {
   out
 }
 
-# Ranks and Signatures =========================================================
+# Ttest Ranks and Signatures ===================================================
 
 #' @export
 #' @noRd
-ranks.FacileTtestDGEResult <- function(x, signed = TRUE, ...) {
+ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
   ranks. <- result(x, ...)
   if (signed) {
     ranks. <- arrange(ranks., desc(logFC))
@@ -274,7 +278,7 @@ ranks.FacileTtestDGEResult <- function(x, signed = TRUE, ...) {
   out <- list(
     result = ranks.,
     ranking_columns = "logFC",
-    ranking_order = "decreasing")
+    ranking_order = "descending")
   # FacileTtestFeatureRanksSigned
   clazz <- "Facile%sFeatureRanks%s"
   s <- if (signed) "Signed" else "Unsigned"
@@ -285,45 +289,25 @@ ranks.FacileTtestDGEResult <- function(x, signed = TRUE, ...) {
   out
 }
 
-ranks.FacileAnovaDGEResult <- function(x, signed = FALSE, ...) {
-  if (signed != TRUE) {
-    stop("ANOVA results can only provide unsigned ranks ",
-         "based on p-value, which is the same as desc(Fstatistic)")
-  }
-  ranks. <- arrange(ranks, pval)
-  out <- list(
-    result = ranks.,
-    ranking_columns = "F",
-    ranking_order = "decreasing")
-  # FacileAnovaFeatureRanksSigned
-  clazz <- "Facile%sFeatureRanks%s"
-  s <- if (signed) "Signed" else "Unsigned"
-  classes <- sprintf(clazz, c("Anova", "Anova",  "", ""), c(s, "", s, ""))
-  class(out) <- c(clazz,
-                  "FacileFeatureRanks",
-                  "FacileAnalysisResult")
-  out
-
-}
 #' @export
 #' @noRd
-signature.FacileTtestDGEResult <- function(x, min_logFC = x[["treat_lfc"]],
-                                           max_padj = 0.10, ntop = 20,
-                                           name = NULL, collection_name = NULL,
-                                           ...) {
-  clazz <- "Facile%sFeatureSignature%s"
+signature.FacileTtestAnalysisResult <- function(x, min_logFC = x[["treat_lfc"]],
+                                                max_padj = 0.10, ntop = 20,
+                                                name = NULL,
+                                                collection_name = NULL,
+                                                ...) {
   signature(ranks(x, ...), min_logFC = min_logFC, max_padj = max_padj,
             ntop = ntop, name = name, collection_name = collection_name, ...)
 }
 
 #' @export
 #' @noRd
-signature.FacileTtestDGEFeatureRankings <- function(x, min_logFC = x[["treat_lfc"]],
-                                                    max_padj = 0.10,
-                                                    ntop = 20,
-                                                    name = NULL,
-                                                    collection_name = NULL,
-                                                    ...) {
+signature.FacileTtestFeatureRankings <- function(x, min_logFC = x[["treat_lfc"]],
+                                                 max_padj = 0.10,
+                                                 ntop = 20,
+                                                 name = NULL,
+                                                 collection_name = NULL,
+                                                 ...) {
   if (is.null(name)) name <- "Ttest signature"
   name. <- assert_string(name)
 
@@ -353,24 +337,36 @@ signature.FacileTtestDGEFeatureRankings <- function(x, min_logFC = x[["treat_lfc
   out
 }
 
+# ANOVA Ranks and Signatures ===================================================
+
 #' @noRd
 #' @export
-ranks.FacileAnovaDGEResult <- function(x, ...) {
-  ranks. <- result(x, ...)
-  ranks. <- arrange(ranks., pval)
+ranks.FacileAnovaAnalysisResult <- function(x, signed = FALSE, ...) {
+  if (signed) {
+    warning("ANOVA results can only provide unsigned ranks ",
+            "based on p-value, which is the same as desc(Fstatistic)",
+            immediate. = TRUE)
+    signed <- FALSE
+  }
+  ranks. <- arrange(result(x, ...), desc(F))
+
   out <- list(
     result = ranks.,
-    ranking_colums = "pval",
-    ranking_order = "ascending")
-  class(out) <- c("FacileAnovaDGEFeatureRankings",
-                  "FacileFeatureRankings",
+    ranking_columns = "F",
+    ranking_order = "descending")
+  # FacileAnovaFeatureRanksSigned
+  clazz <- "Facile%sFeatureRanks%s"
+  s <- if (signed) "Signed" else "Unsigned"
+  classes <- sprintf(clazz, c("Anova", "Anova",  "", ""), c(s, "", s, ""))
+  class(out) <- c(clazz,
+                  "FacileFeatureRanks",
                   "FacileAnalysisResult")
   out
 }
 
 #' @export
 #' @noRd
-signature.FacileAnovaDGEResult <- function(x, max_padj = 0.10, ntop = 20,
+signature.FacileAnovaAnalysisResult <- function(x, max_padj = 0.10, ntop = 20,
                                            name = NULL, collection_name = NULL,
                                            ...) {
   signature(ranks(x, ...), max_padj = max_padj, ntop = ntop, name = name,
@@ -379,7 +375,7 @@ signature.FacileAnovaDGEResult <- function(x, max_padj = 0.10, ntop = 20,
 
 #' @export
 #' @noRd
-signature.FacileAnovaDGEFeatureRankings <- function(x, max_padj = 0.10,
+signature.FacileAnovaFeatureRankings <- function(x, max_padj = 0.10,
                                                     ntop = 20, name = NULL,
                                                     collection_name = NULL,
                                                     ...) {
@@ -406,19 +402,19 @@ signature.FacileAnovaDGEFeatureRankings <- function(x, max_padj = 0.10,
 
 #' @noRd
 #' @export
-samples.FacileDGEResult <- function(x, ...) {
+samples.FacileDgeAnalysisResult <- function(x, ...) {
   samples(model(x))
 }
 
-#' @section FacileDGEResult:
-#' Given a FacileDGEResult, we can re-materialize the Bioconductor assay
+#' @section FacileDgeAnalysisResult:
+#' Given a FacileDgeAnalysisResult, we can re-materialize the Bioconductor assay
 #' container used within the differential testing pipeline used from [fdge()].
 #' Currently we have limited our analysis framework to either work over DGEList
 #' (edgeR) or EList (limma) containers.
 #'
 #' @export
 #' @rdname biocbox
-biocbox.FacileDGEResult <- function(x, ...) {
+biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   res <- biocbox(model(x),
                  x[["params"]][["assay_name"]],
                  x[["params"]][["method"]],
@@ -428,12 +424,12 @@ biocbox.FacileDGEResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-print.FacileDGEResult <- function(x, ...) {
+print.FacileDgeAnalysisResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
-format.FacileDGEResult <- function(x, ...) {
-  test_type <- if (is(x, "FacileTtestDGEResult")) "ttest" else "ANOVA"
+format.FacileDgeAnalysisResult <- function(x, ...) {
+  test_type <- if (is(x, "FacileTtestAnalysisResult")) "ttest" else "ANOVA"
   mdef <- model(x)
   des <- design(mdef)
   formula <- mdef[["design_formula"]]
@@ -456,7 +452,7 @@ format.FacileDGEResult <- function(x, ...) {
 
   out <- paste(
     "===========================================================\n",
-    sprintf("FacileDGEResult (%s)\n", test_type),
+    sprintf("FacileDgeAnalysisResult (%s)\n", test_type),
     "-----------------------------------------------------------\n",
     glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})"), "\n",
     "Formula: ", formula, "\n",

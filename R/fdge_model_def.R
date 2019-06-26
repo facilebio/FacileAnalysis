@@ -139,7 +139,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   out <- list(
     # Standard FacileAnalysisResult things
     fds = .fds)
-  class(out) <- c("FacileDGEModelDefinition", "FacileAnalysisResult")
+  class(out) <- c("FacileDgeModelDefinition", "FacileAnalysisResult")
   clazz <- "IncompleteModelDefintion"
   on.exit({
     out[["messages"]] <- messages
@@ -275,14 +275,14 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
       denom. <- "__inferred__"
       contrast_string <- contrast.
     }
-    clazz <- "FacileTtestDGEModelDefinition"
+    clazz <- "FacileTtestModelDefinition"
     # Are we testing an interaction term, ie. you can test the differences in
     # the treatment effect of a drug1 in hek cells vs its effect in hela cells:
     # (treatment_hek - ctrl_hek) - (treatment_hela - ctrl_hela)
     # Interaction regex, ie. (treat1_ - ctrl) - (treat2 - ctrl)
     iregex <- "\\(.+-.+\\)\\W*-\\W*\\(.+-.+\\)"
     if (str_detect(contrast_string, iregex)) {
-      clazz <- c("FacileInteractionTestDGEModelDefinition", clazz)
+      clazz <- c("FacileInteractionTestModelDefinition", clazz)
     }
     contrast <- makeContrasts(contrasts = contrast_string, levels = design)[,1L]
   }
@@ -411,33 +411,92 @@ fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @noRd
 #' @export
-samples.FacileDGEModelDefinition <- function(x, ...) {
+samples.FacileDgeModelDefinition <- function(x, ...) {
   x[["covariates"]]
 }
 
 #' @noRd
 #' @export
-design.FacileDGEModelDefinition <- function(x, ...) {
+design.FacileDgeModelDefinition <- function(x, ...) {
   x[["design"]]
 }
 
 #' @noRd
 #' @export
-result.FacileDGEModelDefinition <- function(x, ...) {
+result.FacileDgeModelDefinition <- function(x, ...) {
   x[["design"]]
+}
+
+#' @noRd
+.with_warnings <- function(x, fresult, ...) {
+  assert_class(x, "FacileAnalysisResultStatus")
+  assert_class(fresult, "FacileAnalysisResult")
+  w <- fresult[["warnings"]]
+  if (length(w)) {
+    cc <- class(x)
+    x <- paste0(x, "\n", "**Warnings**\n", paste(w, collapse = "\n"))
+    class(x) <- cc
+  }
+  x
+}
+
+#' @noRd
+#' @export
+status.FacileFailedModelDefinition <- function(x, type = "message", ...) {
+  out <- paste(model.$errors, collapse = "\n")
+  class(out) <- c("FacileAnalysisStatusError", "FacileAnalysisResultStatus",
+                  "character")
+  out
+}
+
+#' @noRd
+#' @export
+status.FacileAnovaModelDefinition <- function(x, type = "message",
+                                              with_warnings = TRUE, ...) {
+  nsamples <- nrow(samples(x))
+  out <- sprintf("ANOVA model defined across '%s' covariate on %d samples",
+                 param(x, "covariate"), nsamples)
+  class(out) <- c("FacileAnalysisStatusSuccess", "FacileAnalysisResultStatus",
+                  "character")
+  if (with_warnings) out <- .with_warnings(out, x)
+  out
+}
+
+#' @noRd
+#' @export
+status.FacileTtestModelDefinition <- function(x, type = "message",
+                                              with_warnings = TRUE, ...) {
+  nsamples <- nrow(samples(x))
+  out <- sprintf("T-test model [%s] defined on %d samples",
+                 x$contrast_string, nsamples)
+  class(out) <- c("FacileAnalysisStatusSuccess", "FacileAnalysisResultStatus",
+                  "character")
+  if (with_warnings) out <- .with_warnings(out, x)
+  out
+}
+
+#' @noRd
+#' @export
+status.FacileInteractionTestModelDefinition <- function(x, type = "message",
+                                                        with_warnings = TRUE,
+                                                        ...) {
+  out <- sprintf("Interaction model defined on %d samples", nsamples)
+  class(out) <- c("FacileAnalysisResultStatus", "character")
+  if (with_warnings) out <- .with_warnings(out, x)
+  out
 }
 
 # Printing =====================================================================\
 
 #' @noRd
 #' @export
-print.FacileDGEModelDefinition <- function(x, ...) {
+print.FacileDgeModelDefinition <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
 #' @noRd
 #' @export
-format.FacileDGEModelDefinition <- function(x, ...) {
+format.FacileDgeModelDefinition <- function(x, ...) {
   testtype <- x$test_type
   if (testtype == "ttest") {
     testing <- "contrast"

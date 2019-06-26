@@ -5,11 +5,13 @@
 #' @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
 #' @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
 #' @importFrom FacileShine reactiveFacileDataStore
-shine.FacileDGEResult <- function(x, with_volcano = TRUE,
-                                  user = Sys.getenv("USER"),
-                                  title = "Differential Expression Results",
-                                  width = 800, height = 600,
-                                  viewer = "pane", ...) {
+shine.FacileDgeAnalysisResult <- function(x, with_volcano = TRUE,
+                                          user = Sys.getenv("USER"),
+                                          title = "Differential Expression Results",
+                                          width = 800, height = 600,
+                                          viewer = "pane", ...) {
+  with_volcano <- with_volcano && !is(x, "FacileTtestAnalysisResult")
+
   ui <- miniPage(
     gadgetTitleBar(class(x)[1L]),
     miniContentPanel(fdgeViewUI("view")),
@@ -36,12 +38,12 @@ shine.FacileDGEResult <- function(x, with_volcano = TRUE,
 #' @noRd
 #' @export
 #' @importFrom DT datatable formatRound
-viz.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
-                                     ntop = 200, max_padj = 0.10,
-                                     min_logFC = 1,
-                                     features = NULL, round_digits = 3,
-                                     event_source = "A", webgl = TRUE,
-                                     ...) {
+viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
+                                          ntop = 200, max_padj = 0.10,
+                                          min_logFC = 1,
+                                          features = NULL, round_digits = 3,
+                                          event_source = "A", webgl = TRUE,
+                                          ...) {
   type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
@@ -76,12 +78,12 @@ viz.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
 #' @importFrom crosstalk bscols
 #' @importFrom htmltools browsable tagList tags
 #' @rdname fdge
-report.FacileTtestDGEResult <- function(x, type = c("dge", "features"),
-                                        ntop = 200, max_padj = 0.10,
-                                        min_logFC = 1,
-                                        features = NULL, round_digits = 3,
-                                        event_source = "A", webgl = TRUE,
-                                        caption = NULL, ...) {
+report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
+                                             ntop = 200, max_padj = 0.10,
+                                             min_logFC = 1,
+                                             features = NULL, round_digits = 3,
+                                             event_source = "A", webgl = TRUE,
+                                             caption = NULL, ...) {
   type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {

@@ -80,13 +80,13 @@ design.BiocBox <- function(x, ...) {
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
-biocbox.FacileDGEModelDefinition <- function(x, assay_name = NULL,
+biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                                              method = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
                                              prior_count = NULL, ...) {
-  assert_class(x, "FacileDGEModelDefinition")
+  assert_class(x, "FacileDgeModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
   if (is.null(assay_name)) assay_name <- default_assay(.fds)

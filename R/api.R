@@ -1,5 +1,23 @@
 # Universal FacileAnalysisResult methods =======================================
 
+#' Reports the status of the AnalysisResult
+#'
+#' @export
+#' @param x A `FacileAnalysisResult`
+#' @return a FacileAnalysisResultStatus (message)
+status <- function(x, type = "message", ...) {
+  UseMethod("status", x)
+}
+
+#' consumers of `status` can test if the result of this is a
+#' `FacileAnalysisStatus` or not ...
+#'
+#' @noRd
+#' @export
+status.default <- function(x, type = "message", ...) {
+  "undefined"
+}
+
 #' Compares two (or more(?)) FacileAnalysisResults against each other.
 #'
 #' This was initially motivated by the desire to compare the results of two

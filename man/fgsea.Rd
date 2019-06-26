@@ -2,16 +2,17 @@
 % Please edit documentation in R/fgsea.R
 \name{fgsea}
 \alias{fgsea}
-\alias{fgsea.FacileTtestDGEResult}
-\alias{result.FacileGSEAResult}
+\alias{fgsea.FacileTtestAnalysisResult}
+\alias{result.FacileGseaResult}
 \title{Performs Gene Set Enrichment Analyses}
 \usage{
 fgsea(x, gdb, methods, ...)
 
-\method{fgsea}{FacileTtestDGEResult}(x, gdb, methods = "cameraPR",
-  min_logFC = 1, max_padj = 0.1, rank_by = "logFC", ...)
+\method{fgsea}{FacileTtestAnalysisResult}(x, gdb, methods = "cameraPR",
+  min_logFC = 1, max_padj = 0.1, rank_by = "logFC", signed = TRUE,
+  ...)
 
-\method{result}{FacileGSEAResult}(x, name = "result", ...)
+\method{result}{FacileGseaResult}(x, name = "result", ...)
 }
 \arguments{
 \item{x}{A \code{FacileAnalysisResult} object}

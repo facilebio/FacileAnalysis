@@ -2,18 +2,18 @@
 % Please edit documentation in R/fdge-compare.R, R/fdge-interact.R, R/fdge.R
 \name{compare.FacileTtestDGEResult}
 \alias{compare.FacileTtestDGEResult}
-\alias{report.FacileTtestDGEResult}
+\alias{report.FacileTtestAnalysisResult}
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
-\alias{fdge.FacileDGEModelDefinition}
+\alias{fdge.FacileDgeModelDefinition}
 \title{Peform a differential expression analysis.}
 \usage{
 \method{compare}{FacileTtestDGEResult}(x, y, ...)
 
-\method{report}{FacileTtestDGEResult}(x, type = c("dge", "features"),
-  ntop = 200, max_padj = 0.1, min_logFC = 1, features = NULL,
-  round_digits = 3, event_source = "A", webgl = TRUE,
-  caption = NULL, ...)
+\method{report}{FacileTtestAnalysisResult}(x, type = c("dge",
+  "features"), ntop = 200, max_padj = 0.1, min_logFC = 1,
+  features = NULL, round_digits = 3, event_source = "A",
+  webgl = TRUE, caption = NULL, ...)
 
 fdge(x, ...)
 
@@ -21,7 +21,7 @@ fdge(x, ...)
   method = NULL, filter = "default", with_sample_weights = FALSE,
   ...)
 
-\method{fdge}{FacileDGEModelDefinition}(x, assay_name = NULL,
+\method{fdge}{FacileDgeModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", with_sample_weights = FALSE,
   treat_lfc = NULL, ...)
 }
@@ -45,7 +45,7 @@ to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[li
 }
 \description{
 Use \code{\link[=fdge_model_def]{fdge_model_def()}} to define the design matrix and contrast to test and
-pass the \code{FacileDGEModelDefinition} object returned from that to \code{fdge()}
+pass the \code{FacileDgeModelDefinition} object returned from that to \code{fdge()}
 to run the desired differential testing framework (dictated by the \code{method}
 parameter) over the data. \code{fdge_model_def} accepts a
 }

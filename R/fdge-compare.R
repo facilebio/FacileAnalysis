@@ -24,7 +24,7 @@ compare.FacileTtestDGEResult <- function(x, y, ...) {
     x <- dge.crc; y <- dge.blca
   }
   # TODO: assert_comparable(x, y, ...)
-  # TODO: assert_comparable.FacileDGEResult <- function(...)
+  # TODO: assert_comparable.FacileDgeAnalysisResult <- function(...)
   assert_class(x, "FacileTtestDGEResult")
   assert_class(y, "FacileTtestDGEResult")
   stopifnot(

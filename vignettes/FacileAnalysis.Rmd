@@ -68,4 +68,15 @@ from a FacileDataStore is defined as.
     iii) advanced options, like the threshold to test against (limma/treat), or
          whether to incorporate sample level weights
 
+## Required Shiny
 
+`<fanalysis>` is a place holder for one othe core functions that are implemented
+as a facile analysis module, ie.`"fdge"`, `"fgsea"`, `"fpca"`, etc.
+
+* `<fanalysis>Analysis`: a wrapper module that incorporates all the internal
+  modules for each step of the analysis pipeline. The `fdgeAnalysis` module,
+  for instance, is a wrapper to modules that provide an interface to the steps
+   of a differential expression analysis.
+* `<fanalysis>Gadget`: includes some wrapper boilerplat that enables the
+  `<fanalysis>Analysis` to be invoked into a gadget from a FacileDataStore, or
+  a `facile_sample_frame`
