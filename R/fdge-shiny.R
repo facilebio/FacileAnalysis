@@ -242,8 +242,7 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
                                                   filter = "default",
                                                   with_sample_weights = FALSE,
                                                   treat_lfc = NULL, ...) {
-  x <- faro(x)
-  fdge(x, assay_name = assay_name, method = method, filter = filter,
+  fdge(faro(x), assay_name = assay_name, method = method, filter = filter,
        with_sample_weights = with_sample_weights, treat_lfc = treat_lfc, ...)
 }
 
@@ -368,11 +367,9 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
     feature <- req(selected_result())
     dat <- req(samples.())
     scov <- covariate.()
-    aname <- assay_name.()
 
     dat <- fetch_assay_data(rfds, feature, dat,
-                            assay_name = aname,
-                            asnormalized = TRUE,
+                            normalized = TRUE,
                             prior.count = 0.25)
     if (!scov %in% colnames(dat)) {
       dat <- with_sample_covariates(dat, scov)
@@ -387,6 +384,11 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
 
     dat <- droplevels(dat)
     mutate(dat, .key = seq(nrow(dat)))
+  })
+
+  box_ylabel <- reactive({
+    aname <- assay_name.()
+    assay_units(rfds, aname, normalized = TRUE)
   })
 
   output$boxplot <- renderPlotly({
@@ -416,11 +418,13 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
       color.by <- scov
     }
 
+    ylbl <- box_ylabel()
+
     fplot <- fboxplot(dat, xaxis, "value", with_points = TRUE,
                       event_source = sample_selection, key = ".key",
                       color_aes = color.by, hover = c(scov, "value"),
                       width = NULL, height = NULL, legendside = "bottom",
-                      xlabel = "")
+                      xlabel = "", ylabel = ylbl)
     out <- fplot$plot
     layout(out, title = sprintf("<b>%s</b>", feature[["symbol"]]))
   })
