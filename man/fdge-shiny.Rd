@@ -15,7 +15,7 @@ fdgeAnalysis(input, output, session, rfds, with_volcano = TRUE, ...,
 \item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
 }
 \value{
-a \code{ShinyFacileDgeAnalysisResult}, the output from \code{\link[=fdge]{fdge()}}
+a \code{ReactiveFacileDgeAnalysisResult}, the output from \code{\link[=fdge]{fdge()}}
 }
 \description{
 Assembles a shiny UI to define all of the bits required to perform a

@@ -293,7 +293,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     denom = denom,
     fixed = fixed,
     contrast. = contrast.)
-  out[["test_type"]] <- test_type
+  # out[["test_type"]] <- test_type
   out[["covariates"]] <- xx
   out[["numer"]] <- numer.
   out[["denom"]] <- denom.
@@ -411,6 +411,12 @@ fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @noRd
 #' @export
+initialized.FacileDgeModelDefinition <- function(x, ...) {
+  !is(x, "FacileFailedModelDefinition") && !is(x, "IncompleteModelDefintion")
+}
+
+#' @noRd
+#' @export
 samples.FacileDgeModelDefinition <- function(x, ...) {
   x[["covariates"]]
 }
@@ -497,14 +503,13 @@ print.FacileDgeModelDefinition <- function(x, ...) {
 #' @noRd
 #' @export
 format.FacileDgeModelDefinition <- function(x, ...) {
-  testtype <- x$test_type
-  if (testtype == "ttest") {
+  if (is.ttest(x)) {
     testing <- "contrast"
     thetest <- paste(names(x$contrast), x$contrast,
                      sep = ": ", collapse = " || ")
   } else {
     testing <- "coefficient"
-    thetest <- paste(colnames(x$design)[x$coef], collapse = "|")
+    thetest <- paste(colnames(design(x))[x$coef], collapse = "|")
   }
   out <- paste(
     "===========================================================\n",

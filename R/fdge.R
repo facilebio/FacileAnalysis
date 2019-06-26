@@ -80,7 +80,6 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
   res
 }
 
-
 #' @export
 #' @rdname fdge
 #' @param ... passed down into inner methods, such as `biocbox` to tweak
@@ -94,10 +93,9 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
   warnings <- character()
   errors <- character()
 
-  test_type <- assert_choice(x[["test_type"]], c("ttest", "anova"))
   .fds <- assert_facile_data_store(fds(x))
 
-  if (test_type == "ttest") {
+  if (is.ttest(x)) {
     testme <- x[["contrast"]]
     clazz <- "FacileTtestAnalysisResult"
   } else {
@@ -132,7 +130,7 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
     method <- bb[["dge_method"]]
 
     if (!is.null(treat_lfc)) {
-      if (!test_number(treat_lfc, lower = 0) || test_type != "ttest") {
+      if (!test_number(treat_lfc, lower = 0) || !is.ttest(x)) {
         warnings <- c(
           warnings,
           "Illegal parameter passed to `treat_lfc`. It is being ignored")
@@ -164,7 +162,6 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
   }
 
   out <- list(
-    test_type = test_type,
     result = result,
     params = list(
       assay_name = assay_name,
@@ -181,6 +178,8 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
   class(out) <- c(clazz, "FacileDgeAnalysisResult", "FacileAnalysisResult")
   out
 }
+
+# Methods and Accessors ========================================================
 
 #' @noRd
 #' @export
@@ -429,7 +428,7 @@ print.FacileDgeAnalysisResult <- function(x, ...) {
 }
 
 format.FacileDgeAnalysisResult <- function(x, ...) {
-  test_type <- if (is(x, "FacileTtestAnalysisResult")) "ttest" else "ANOVA"
+  test_type <- if (is.ttest(x)) "ttest" else "ANOVA"
   mdef <- model(x)
   des <- design(mdef)
   formula <- mdef[["design_formula"]]
@@ -438,7 +437,6 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
     test <- mdef[["contrast_string"]]
     des.cols <- names(mdef$contrast[mdef$contrast != 0])
   } else {
-    des <- mdef[["design"]]
     test <- sprintf("%s (%s)", mdef[["covariate"]],
                     paste(colnames(des)[mdef[["coef"]]], collapse = "|"))
     des.cols <- c(1, mdef$coef)

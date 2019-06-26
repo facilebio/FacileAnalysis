@@ -46,7 +46,7 @@ import and implement the FacileAnalysis S3 API from here.
 ## FacileAnalysis API
 
 * S3 methods
-    - result.FacileAnalysisResult() and result.ShinyFacileAnalysisResult()
+    - result.FacileAnalysisResult() and result.ReactiveFacileAnalysisResult()
     - viz()
     - report()
     - shine()

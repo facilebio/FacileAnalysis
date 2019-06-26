@@ -83,7 +83,7 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
 
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
-      result. <- failWith(list(), unreact(result(analysis)))
+      result. <- failWith(list(), unreact(faro(analysis)))
       result.[["gadget"]] <- list(
         annotation = annotation)
       class(result.) <- classify_as_gadget(result.)

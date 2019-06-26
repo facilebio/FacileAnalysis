@@ -1,5 +1,90 @@
 # Universal FacileAnalysisResult methods =======================================
 
+#' Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
+#' ReactiveFacileAnalysis
+#'
+#' Due to the potential hybrid-nature of analysis workflow, we are not always
+#' certain that a FacileAnalysisResult used by a module that did not create it
+#' (ie. the `dgeres` object in the [fdgeView()] is a
+#' `ReactiveFacileAnalysisResult`, or simply an innert `FacileAnalysisResult`.
+#'
+#' So that we don't have to always check for these things, we call this method
+#' so that we get access to the `FacileAnalysisResult` object itself.
+#'
+#' As an aside, I know this is a bit of a cop-out to doing full-blown OO. I
+#' feel like if I were to implement each of the specific `*FacileAnalysisResult`
+#' methods for its sister `ReactiveFacile*AnalysisResult`, then this probably
+#' wouldn't be necessary ... I think, anyway.
+
+#' @export
+#' @return an innert FacileAnalysisResult
+faro <- function(x, ...) {
+  UseMethod("faro", x)
+}
+
+#' @noRd
+#' @export
+faro.default <- function(x, ...) {
+  stop("faro.default is undefined")
+}
+
+#' @noRd
+#' @export
+faro.FacileAnalysisResult <- function(x, ...) {
+  x
+}
+
+#' @noRd
+#' @export
+faro.ReactiveFacileAnalysisResult <- function(x, ...) {
+  assert_class(x$faro, "reactive")
+  x$faro()
+}
+
+#' ReactiveFacileAnalysisResultContainer are results from a shiny module that
+#' encapsulate a single complete analysis step, such as the fdgeAnalysis, for
+#' instance.
+#'
+#' These `*Analysis` will store the main FacileAnalysisResult in their
+#' `"main"` list element.
+#'
+#' @noRd
+#' @export
+faro.ReactiveFacileAnalysisResultContainer <- function(x, main = "main", ...) {
+  # assert_choice(main, names(x))
+  req(test_choice(main, names(x)))
+  main. <- x[[main]]
+  # assert_class(main., "ReactiveFacileAnalysisResult")
+  req(test_class(main., "ReactiveFacileAnalysisResult"))
+  faro(main.)
+}
+
+#' A shiny module that produces a FacileAnalysisResult as its main
+#' result will store it as a reactive() in its result$faro element.
+#'
+#' Triggering its reactivity will result in the return of that object.
+#' If the analysis-result has not be generated yet within that shiny module,
+#' then triggering it MUST raise an error, due to the module ensuring
+#' req() is in all the right places
+#'
+#' For instance, the fdgeRun module is responsible for everything being
+#' set up properly, and when the Run button is hit, it includes a req()
+#' in response to make sure the result is built correctly
+#'
+#' @noRd
+#' @export
+#' @importFrom FacileShine initialized
+initialized.ReactiveFacileAnalysisResult <- function(x, ...) {
+  obj <- try(faro(x), silent = TRUE)
+  is(obj, "FacileAnalysisResult") && initialized(obj)
+}
+
+#' @noRd
+#' @export
+initialized.FacileAnalysisResult <- function(x, ...) {
+  length(x$errors) == 0L
+}
+
 #' Reports the status of the AnalysisResult
 #'
 #' @export
@@ -60,6 +145,12 @@ result.FacileAnalysisResult <- function(x, name = "result", ...) {
   x[[name]]
 }
 
+#' @export
+#' @noRd
+result.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
+  result(faro(x, ...), name = name, ...)
+}
+
 #' Extract the value of a parameter used in a FacileAnalysis result
 #'
 #' @export
@@ -75,6 +166,13 @@ param.FacileAnalysisResult <- function(x, name, ...) {
   params. <- assert_list(x[["params"]], names = "unique")
   assert_choice(name, names(params.))
   params.[[name]]
+}
+
+#' @noRd
+#' @export
+param.ReactiveFacileAnalysisResult <- function(x, name, ...) {
+  assert_choice("result", names(x))
+  param(x$result(), name, ...)
 }
 
 #' Extracts ranks and signatures from a FacileAnalysisResult.

@@ -49,7 +49,7 @@ The analyses implemented within this package are listed below, with links to
 vignettes that describe their functionality in more detail:
 
 * `fpca`: [Interactive Principal Components Analyses][fpcavign]
-* `fdge`: [Interactive Differential Gene Expression Analyses][fdgevign]
+* `fdge`: [Interactive Differential Gene Expression Analysis][fdgevign]
 * `fgsea`: [Interactive Gene Set Enrichment Analysis][fgseavign]
 
 ## Example Analysis: Differential Expression

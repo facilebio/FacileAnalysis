@@ -57,7 +57,7 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @importFrom shiny callModule
 #' @importFrom shinyjs toggleElement
 #' @param model_def the module returned from [fdgeModelDefModule()]
-#' @return a `ShinyFacileDgeAnalysisResult`, the output from [fdge()]
+#' @return a `ReactiveFacileDgeAnalysisResult`, the output from [fdge()]
 fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
                          ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
@@ -72,25 +72,21 @@ fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
   # done this way, the showSpinner() around the view's output datatable works
   # like a "wait, processing DGE" while it's running.
   observe({
-    res. <- req(dge$result())
+    res. <- req(faro(dge))
     show <- is(res., "FacileDgeAnalysisResult")
     toggleElement("viewbox", condition = show)
   })
 
   vals <- list(
-    result = dge,
+    main = dge,
     model = model,
     view = view,
     .ns = session$ns)
-  class(vals) <- c("ShinyFacileDgeAnalysisResult", "ShinyFacileAnalysisResult")
+  class(vals) <- c("ReactiveFacileDgeAnalysisResultContainer",
+                   "ReactiveFacileAnalysisResultContainer")
   vals
 }
 
-#' @noRd
-#' @export
-result.ShinyFacileDgeAnalysisResult <- function(x, ...) {
-  x[["result"]]$result()
-}
 
 #' @noRd
 #' @export
@@ -137,9 +133,9 @@ fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
 #' @importFrom FacileShine
 #'   assaySelect
 #'   unselected
-#' @param model A linear model definition. Can be either a "naked"
+#' @param model A linear model definition. Can be either an "innert"
 #'   `FacileDgeModelDefinition` that is returned from a call to
-#'   [fdge_model_def()], or the `ShinyDGEModelDefinition` object returned
+#'   [fdge_model_def()], or the `ReactiveDGEModelDefinition` object returned
 #'   from the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]
@@ -147,83 +143,32 @@ fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
 #'   wrapped in a `reactive()`.
 fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
                     debug = FALSE, .reactive = TRUE) {
-  kosher <- is(model, "FacileDgeModelDefinition") ||
-    is(model, "ShinyFacileDgeModelDefinition")
-  if (!kosher) {
-    stop("Invalid object passed as `model`: ", class(model)[1L])
-  }
-
-  rmodel <- reactive({
-    req(initialized(rfds))
-    if (is(model, "FacileDgeModelDefinition")) {
-      out <- model
-    } else {
-      out <- req(model$result())
-    }
-    out
-  })
+  assert_class(rfds, "ReactiveFacileDataStore")
+  assert_class(model, "FacileDgeModelDefinition")
 
   assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
-
-  # Sets up appropriate UI to retreive the params used to filter out
-  # features measured using the selected assay
-  ffilter <- callModule(fdgeFeatureFilter, "ffilter", rfds, model,
-                        assay, ..., debug = debug)
+  runopts <- callModule(fdgeRunOptions, "runopts", rfds, model, assay, ...)
 
   runnable <- reactive({
-    model. <- rmodel()
-    enable <- is(model., "FacileDgeModelDefinition") &&
-      !is(model., "FacileFailedModelDefinition") &&
-      !is(model., "IncompleteModelDefintion") &&
-      initialized(assay)
-  })
-
-  # Update the dge_methods available given the selected assay
-  observe({
-    ainfo <- req(assay$assay_info())
-    assay_type. <- ainfo$assay_type
-    req(!unselected(assay_type.))
-    method. <- input$dge_method
-    methods. <- fdge_methods(assay_type.)$dge_method
-    selected. <- if (method. %in% methods.) method. else methods.[1L]
-    updateSelectInput(session, "dge_method", choices = methods.,
-                      selected = selected.)
-  })
-
-  can_sample_weight <- reactive({
-    method. <- input$dge_method
-    req(!unselected(method.))
-    fdge_methods() %>%
-      filter(dge_method == method.) %>%
-      pull(can_sample_weight)
-  })
-  sample_weights <- reactive({
-    isTRUE(can_sample_weight() && input$sample_weights)
+    initialized(model) && initialized(assay) && initialized(runopts)
   })
 
   observe({
     toggleState("run", condition = runnable())
-    toggleState("sample_weights", condition = can_sample_weight())
   })
 
   dge <- eventReactive(input$run, {
     req(runnable())
-    model. <- rmodel()
     assay_name. <- assay$assay_info()$assay
-    method. <- input$dge_method
-    req(
-      !unselected(assay_name.),
-      !unselected(method.))
-    sample_weights. <- sample_weights()
-    treat_lfc. <- log2(input$treatfc)
-
     withProgress({
-      fdge(model., assay_name = assay_name., method = method.,
-           with_sample_weights = sample_weights., treat_lfc = treat_lfc.,
-           filter = ffilter$method(),
-           filter_min_count = ffilter$min_count(),
-           filter_min_total_count = ffilter$min_total_count(),
-           filter_min_expr = ffilter$min_expr())
+      fdge(model, assay_name = assay_name.,
+           method = runopts$dge_method(),
+           with_sample_weights = runopts$sample_weights(),
+           treat_lfc = runopts$treat_lfc(),
+           filter = runopts$feature_filter$method(),
+           filter_min_count = runopts$feature_filter$min_count(),
+           filter_min_total_count = runopts$feature_filter$min_total_count(),
+           filter_min_expr = runopts$feature_filter$min_expr())
     }, message = "Performing differential expression")
   })
 
@@ -235,10 +180,16 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   }
 
   vals <- list(
-    result = dge,
+    faro = dge,
     .ns = session$ns)
 
-  class(vals) <- "FacileShinyDGEResult"
+  # Since `model` can be a reactive version of a FacileDgeModelDefinition, I
+  # don't know how to get the Ttest or ANOVA state of that model without
+  # being in a reactive context and, therefore, appending it to the class
+  # of the outgoing result.
+  class(vals) <- c("ReactiveFacileDgeAnalysisResult",
+                   "FacileDgeAnalysisResult",
+                   "ReactiveFacileAnalysisResult")
   vals
 }
 
@@ -259,7 +210,6 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
 #'   tags
 #'   verbatimTextOutput
 #'   wellPanel
-#' @importFrom shinyWidgets dropdownButton prettyCheckbox
 fdgeRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   out <- tagList(
@@ -269,19 +219,7 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
         1,
         tags$div(
           style = "padding-top: 1.7em",
-          dropdownButton(
-            inputId = ns("opts"),
-            icon = icon("sliders"),
-            status = "primary", circle = FALSE,
-            width = "300px",
-            selectInput(ns("dge_method"), label = "Method", choices = NULL),
-            numericInput(ns("treatfc"), label = "Min. Fold Change",
-                         value = 1, min = 1, max = 10, step = 0.25),
-            prettyCheckbox(ns("sample_weights"), label = "Use Sample Weights",
-                           status = "primary"),
-            tags$h4("Filter Strategy"),
-            wellPanel(
-              fdgeFeatureFilterUI(ns("ffilter"), ..., debug = debug))))),
+          fdgeRunOptionsUI(ns("runopts"), width = "300px"))),
       column(1, actionButton(ns("run"), "Run", style = "margin-top: 1.7em"))
     ))
 
@@ -295,66 +233,21 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
   out
 }
 
-
-# Inner Helper Module for feature filtering parameters =========================
-
-#' @noRd
-#' @param assay_mod [FacileShine::assaySelect()] module, ie. an
-#'   `AssaySelectInput` object.
-fdgeFeatureFilter <- function(input, output, session, rfds, model,
-                              assay_module, ..., debug = FALSE) {
-
-  # TODO: Support returning a vector of feature id's
-  filter_method <- reactive("default")
-
-  min_count <- reactive({
-    input$min_count
-  })
-  min_total_count <- reactive({
-    input$min_total_count
-  })
-  min_expr <- reactive({
-    input$min_expr
-  })
-
-  # Show/hide the appropropriate options. I would have used
-  # shinyjs::toggleElement, but that's not working inside the dropdown
-  # this is embedded in
-  # observe({
-  #   toggleElement("countopts", condition = count_options())
-  #   toggleElement("expropts", condition = !count_options())
-  # })
-  output$show_count_options <- reactive({
-    assay <- assay_module$assay_info()$assay_type
-    if (assay %in% c("rnaseq", "umi", "isoseq")) "yes" else "no"
-  })
-  outputOptions(output, "show_count_options", suspendWhenHidden = FALSE)
-
-  vals <- list(
-    method = filter_method,
-    min_count = min_count,
-    min_total_count = min_total_count,
-    min_expr = min_expr)
-}
+# Implement reactive fdge methods ==============================================
 
 #' @noRd
-#' @importFrom shiny conditionalPanel NS numericInput tagList tags
-fdgeFeatureFilterUI <- function(id, ..., debug = FALSE) {
-  ns <- NS(id)
-  tagList(
-    conditionalPanel(
-      condition = "output.show_count_options == 'yes'", ns = ns,
-      tags$div(id = ns("countopts"),
-               numericInput(ns("min_count"), label = "Min. Count",
-                            value = 10, min = 1, max = 50, step = 5),
-               numericInput(ns("min_total_count"), label = "Min. Total Count",
-                            value = 15, min = 1, max = 100, step = 10))),
-    conditionalPanel(
-      condition = "output.show_count_options == 'no'", ns = ns,
-      tags$div(id = ns("expropts"),
-               numericInput(ns("min_expr"), label = "Min. Expression",
-                            value = 1, min = 0.25, max = 100, step = 5))))
+#' @export
+fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
+                                                  method = NULL,
+                                                  filter = "default",
+                                                  with_sample_weights = FALSE,
+                                                  treat_lfc = NULL, ...) {
+  browser()
+  x <- faro(x)
+  fdge(x, assay_name = assay_name, method = method, filter = filter,
+       with_sample_weights = with_sample_weights, treat_lfc = treat_lfc, ...)
 }
+
 
 # Visualize the fdge result ====================================================
 
@@ -369,31 +262,24 @@ fdgeFeatureFilterUI <- function(id, ..., debug = FALSE) {
 #' @importFrom plotly event_data layout
 #' @importFrom shiny downloadHandler req
 #' @importFrom shinyjs toggleElement
-#' @param result The result from calling [fdge()].
-fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
+#'
+#' @param dgeres The result from calling [fdge()], or [fdgeRun()].
+fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
                      ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = FALSE) {
 
   # The FacileDGEResult object
-  result. <- reactive({
-    req(initialized(rfds))
-    out <- if (is(result, "FacileDgeAnalysisResult")) result else result$result()
-    req(is(out, "FacileDgeAnalysisResult"))
-    out
+  dge <- reactive({
+    req(initialized(dgeres))
+    faro(dgeres)
   })
 
-  assay_name. <- reactive(param(req(result.()), "assay_name"))
-  samples. <- reactive(samples(req(result.()))) # should have covariate columns
-  model. <- reactive(model(req(result.())))
+  assay_name. <- reactive(param(req(dge()), "assay_name"))
+  samples. <- reactive(samples(req(dge())))
+  model. <- reactive(model(req(dge())))
   covariate. <- reactive(param(req(model.()), "covariate"))
-  is.ttest <- reactive(is(req(result.()), "FacileTtestDGEResult"))
-
-  observe({
-    toggleElement("volcanobox", condition = is.ttest() && with_volcano)
-    toggleElement("dlbuttonbox", condition = is(dge.stats.all(), "data.frame"))
-  })
 
   # Two versions of the result table are stored:
   # 1. `dge.stats.all`: always the full table; and
@@ -401,37 +287,35 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
   #    selected features in (1) that are brushed from the volcano. If no
   #    brushing is active, then (2) == (1)
   dge.stats.all <- reactive({
-    .fdge <- req(result.())
-    .result <- ranks(.fdge) %>% result()
-    if (.fdge[["test_type"]] == "ttest") {
-      out <- select(.result, symbol, feature_id, logFC, FDR = padj, pval)
+    dge. <- req(dge())
+    ranked <- result(ranks(dge.))
+    if (is.ttest(dge.)) {
+      out <- select(ranked, symbol, feature_id, logFC, FDR = padj, pval)
     } else {
-      out <- select(.result, symbol, feature_id, F, FDR = padj, pval)
+      out <- select(ranked, symbol, feature_id, F, FDR = padj, pval)
     }
     out
   })
 
+
+  # samples. <- reactive(samples(req(result.()))) # should have covariate columns
+  # model. <- reactive(model(req(result.())))
+  # covariate. <- reactive(param(req(model.()), "covariate"))
+  # isttest <- reactive({
+  #   res. <- req(result.())
+  #   is.ttest(res.)
+  # })
+
+  observe({
+    toggleElement("volcanobox", condition = is.ttest(dge) && with_volcano)
+    toggleElement("dlbuttonbox", condition = is(dge.stats.all(), "data.frame"))
+  })
+
   # Visualization of DGE results -----------------------------------------------
-
-  # Responds to selection events on the volcano plot. If no selection is active,
-  # this is NULL, otherwise its the character vector of the "feature_id" values
-  # that are brushed in the plot.
-  selected_features <- reactive({
-    selected <- event_data("plotly_selected", source = feature_selection)
-    if (!is.null(selected)) selected <- selected$key
-    selected
-  })
-
-  dge.stats <- reactive({
-    stats. <- req(dge.stats.all())
-    selected <- selected_features()
-    if (!is.null(selected)) stats. <- filter(stats., feature_id %in% selected)
-    stats.
-  })
 
   if (with_volcano) {
     output$volcano <- renderPlotly({
-      req(is.ttest())
+      req(is.ttest(dge()))
       dat. <- req(dge.stats.all())
       dat.$yaxis <- -log10(dat.$pval)
       fplot <- fscatterplot(dat., c("logFC", "yaxis"),
@@ -443,6 +327,28 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
       fplot$plot
     })
   }
+
+  # Responds to selection events on the volcano plot. If no selection is active,
+  # this is NULL, otherwise its the character vector of the "feature_id" values
+  # that are brushed in the plot.
+  selected_features <- reactive({
+    if (with_volcano) {
+      selected <- event_data("plotly_selected", source = feature_selection)
+      if (!is.null(selected)) selected <- selected$key
+    } else {
+      selected <- NULL
+    }
+    selected
+  })
+
+  # The table of stats that are actively being shown. This is the whole table,
+  # unless the user is brushing the volcano.
+  dge.stats <- reactive({
+    stats. <- req(dge.stats.all())
+    selected <- selected_features()
+    if (!is.null(selected)) stats. <- filter(stats., feature_id %in% selected)
+    stats.
+  })
 
   # Visualization of selected genes across samples -----------------------------
 
@@ -459,18 +365,22 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
     out
   })
 
-  boxdata <- reactive({
+  boxdata <- eventReactive(selected_result(), {
     feature <- req(selected_result())
     dat <- req(samples.())
     scov <- covariate.()
-    dat <- fetch_assay_data(rfds, feature, dat, normalized = TRUE,
+    aname <- assay_name.()
+
+    dat <- fetch_assay_data(rfds, feature, dat,
+                            assay_name = aname,
+                            asnormalized = TRUE,
                             prior.count = 0.25)
     if (!scov %in% colnames(dat)) {
       dat <- with_sample_covariates(dat, scov)
     }
 
-    if (is.ttest()) {
-      m <- req(model.())
+    if (is.ttest(dge())) {
+      m <- model.()
       cov.vals <- c(param(m, "numer"), param(m, "denom"))
       keep <- dat[[scov]] %in% cov.vals # old school, !! isn't working
       dat <- dat[keep,,drop = FALSE]
@@ -484,7 +394,9 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
     feature <- req(selected_result())
     dat <- req(boxdata())
     scov <- covariate.()
-    if (is.ttest()) {
+    dge. <- dge()
+
+    if (is.ttest(dge.)) {
       m <- req(model.())
       numer <- param(m, "numer")
       denom <- param(m, "denom")
@@ -529,22 +441,22 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
 
   output$statsdl <- downloadHandler(
     filename = function() {
-      res <- req(isolate(result.()))
-      sprintf("DGE-%s_%s_%s.csv", param(res, "method"),
-              res[["test_type"]], name(res))
+      res <- req(isolate(dge()))
+      test_type <- if (is.ttest(res)) "ttest" else "anova"
+      sprintf("DGE-%s_%s_%s.csv", param(res, "method"), test_type, name(res))
     },
     content = function(file) {
-      .fdge <- req(isolate(result.()))
+      .fdge <- req(isolate(dge()))
       .result <- ranks(.fdge) %>% result()
       if ("padj" %in% colnames(.result)) {
         .result <- rename(.result, FDR = "padj")
       }
       c.order <- c("symbol", "name", "feature_id", "meta", "AveExpr",
                    "FDR", "pval")
-      if (is(.fdge, "FacileAnovaDGEGadgetResult")) {
-        c.order <- c(c.order, "F")
-      } else {
+      if (is.ttest(.fdge)) {
         c.order <- c(c.order, "logFC", "CI.L", "CI.R", "B", "t")
+      } else {
+        c.order <- c(c.order, "F")
       }
       c.order <- c(c.order, "assay")
       c.order <- intersect(c.order, colnames(.result))
@@ -555,12 +467,13 @@ fdgeView <- function(input, output, session, rfds, result, with_volcano = TRUE,
 
   output$stats <- DT::renderDT({
     # Triggered when new result comes in
-    res <- req(result.())
+    res <- req(dge())
     dat <- req(dge.stats())
     num.cols <- colnames(dat)[sapply(dat, is.numeric)]
 
-    dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
-    dtopts <- list(pageLength = 15,
+    dtopts <- list(deferRender = TRUE, scrollY = 300,
+                   # scroller = TRUE,
+                   pageLength = 15,
                    lengthMenu = c(15, 30, 50))
 
     dtable <- dat %>%
@@ -597,25 +510,27 @@ fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
 
+  volcano.box <- NULL
+  if (with_volcano) {
+    volcano.box <- tags$div(
+      id = ns("volcanobox"),
+      box(
+        width = 12,
+        withSpinner(plotlyOutput(ns("volcano")))))
+  }
+
   fluidRow(
+    # Plots Column
     column(
       width = 5,
       id = ns("vizcolumn"),
-      # style = "padding: 2px; margin: 5px",
-      # volcano
-      if (with_volcano) {
-        tags$div(id = ns("volcanobox"),
-                 box(
-                   width = 12,
-                   withSpinner(plotlyOutput(ns("volcano")))))
-      } else {
-        NULL
-      },
       # boxplot
       box(
         width = 12,
         id = ns("boxplotbox"),
-        withSpinner(plotlyOutput(ns("boxplot"))))),
+        withSpinner(plotlyOutput(ns("boxplot")))),
+      volcano.box),
+    # Stats Table Column
     column(
       width = 7,
       id = ns("statscolumn"),

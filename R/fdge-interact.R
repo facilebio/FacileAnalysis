@@ -5,16 +5,16 @@
 #' @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
 #' @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
 #' @importFrom FacileShine reactiveFacileDataStore
-shine.FacileDgeAnalysisResult <- function(x, with_volcano = TRUE,
+shine.FacileDgeAnalysisResult <- function(x, with_volcano = is.ttest(x),
                                           user = Sys.getenv("USER"),
                                           title = "Differential Expression Results",
-                                          width = 800, height = 600,
+                                          width = 800, height = 800,
                                           viewer = "pane", ...) {
-  with_volcano <- with_volcano && !is(x, "FacileTtestAnalysisResult")
+  with_volcano <- with_volcano && is.ttest(x)
 
   ui <- miniPage(
     gadgetTitleBar(class(x)[1L]),
-    miniContentPanel(fdgeViewUI("view")),
+    miniContentPanel(fdgeViewUI("view", with_volcano = with_volcano)),
     NULL)
 
   viewer <- gadget_viewer(viewer, title, width, height, ...)

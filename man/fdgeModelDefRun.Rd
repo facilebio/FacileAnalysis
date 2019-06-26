@@ -8,7 +8,7 @@ fdgeModelDefRun(input, output, session, rfds, ..., debug = FALSE,
   .reactive = TRUE)
 }
 \value{
-A \code{ShinyFacileDgeModelDefinition} object, the output from
+A \code{ReactiveFacileDgeModelDefinition} object, the output from
 \code{\link[=fdge_model_def]{fdge_model_def()}}.
 }
 \description{

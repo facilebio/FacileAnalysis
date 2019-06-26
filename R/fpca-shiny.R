@@ -28,7 +28,8 @@ fpcaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
     result = pca,
     view = view,
     .ns = session$ns)
-  class(vals) <- "ShinyFpcaAnalysis"
+  class(vals) <- c("ReactiveFacilePcaAnalysisResultContainer",
+                   "FacileAnalysisResultContainer")
   vals
 }
 
@@ -74,7 +75,8 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE) {
   vals <- list(
     result = result,
     .ns = session$ns)
-  class(vals) <- "FacileShinyPCAResult"
+  class(vals) <- c("ReactiveFacilePcaAnalysisResult",
+                   "FacilePcaAnalysisResult")
   vals
 }
 
