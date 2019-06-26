@@ -242,7 +242,6 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
                                                   filter = "default",
                                                   with_sample_weights = FALSE,
                                                   treat_lfc = NULL, ...) {
-  browser()
   x <- faro(x)
   fdge(x, assay_name = assay_name, method = method, filter = filter,
        with_sample_weights = with_sample_weights, treat_lfc = treat_lfc, ...)
