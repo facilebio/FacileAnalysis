@@ -1,0 +1,106 @@
+---
+title: "Facile Differential Expression Analysis"
+author: "Steve Lianoglou"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+```
+
+**Under Construction**
+
+```{r init}
+library(FacileData)
+library(FacileAnalysis)
+library(dplyr)
+efds <- exampleFacileDataSet()
+```
+
+* Define linear models
+* Select method (voom, edgeR/QLF, limma-trend, vanilla limma)
+* Test against a thresholed with TREAT?
+* Use sample weighting?
+* Choose the assay you want to run analysis on.
+
+**Tumor vs Normal in TCGA BLCA Indication**
+
+```{r blcadge}
+blca.dge <- efds %>% 
+  filter_samples(indication == "BLCA") %>% 
+  fdge_model_def(assay_name = "rnaseq", # can run on CNV, proteomics, etc.
+                 covariate = "sample_type", 
+                 numer = "tumor", denom = "normal",
+                 fixed = "sex",) %>% 
+  fdge(method = "voom", with_sample_weights = TRUE)
+```
+
+
+```{r blreport}
+report(
+  blca.dge,
+  caption = "Tumor vs Normal DGE in bladder indication with sample weights")
+```
+
+**Tumor vs Normal in TCGA CRC Indication**
+
+```{r crcdge}
+crc.dge <- efds %>% 
+  filter_samples(indication == "CRC") %>% 
+  fdge_model_def(covariate = "sample_type", 
+                 numer = "tumor", denom = "normal",
+                 fixed = "sex") %>% 
+  fdge(method = "voom", with_sample_weights = TRUE)
+```
+
+**How do they compare?**
+
+Are the same genes differentially expressed across these two comparisons?
+That is to say, which genes differentially expressed in bladder tumors are
+also differentially expressed in colorectal tumors?
+
+Which are different?
+
+Running the `fdge`-specific `compare()` function will run the interaction
+model to identify which genes show (statistically) significant differential
+expression patterns in the tumor vs normal comparisons across indications.
+
+```{r comp}
+comp <- compare(blca.dge, crc.dge)
+```
+
+One way to visuaize the comparison between two differential expression results
+is to plot the log fold changes calculated in one comparison vs the other.
+Points that fall on the 45&deg; show common differential expression patterns
+among the two indications. The further away the points come off of the 45&deg;,
+the more dis-similar they are (these are the pvalues that the `compare()`
+function calculates).
+
+The plot below shows the genes that have an FDR <= `max_padj` in either of the
+original of the two `fdge` tests, or in the interaction test run in the
+`compare()` function.
+
+**Note:** in the code below, we are using a very conservative max FDR value
+(0.0005) in order to minimize the number of points drawn into the document. In a
+"live" analysis, you would likely want to interact with the `comp` result more
+deeply by calling `shine(comp)` to see the effect of different thresholds,
+dig through the table of statistical results, etc.
+
+```{r compreport}
+report(comp, max_padj = 0.0005)
+```
+
+**Note also:** the `compare()` functionality, in general, is a very nascent and
+is a huge work in progress.

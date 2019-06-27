@@ -64,7 +64,7 @@ differential expression analysis over a predefined set of samples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
       </span>
     </div>
 
@@ -81,6 +81,24 @@ differential expression analysis over a predefined set of samples." />
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
+    </li>
+    <li>
+      <a href="../articles/FacileAnalysis-fpca.html">Facile Principal Components Analysis</a>
+    </li>
+    <li>
+      <a href="../articles/FacileAnalysis-fsea.html">Facile (Gene) Set Expression Analysis</a>
+    </li>
+  </ul>
 </li>
       </ul>
       
@@ -113,8 +131,7 @@ differential expression analysis over a predefined set of samples.</p>
     <pre class="usage"><span class='fu'>fdgeGadget</span>(<span class='no'>x</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Differential Expression Analysis"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
   <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='no'>...</span>)
 
-<span class='fu'>fdgeAnalysis</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='kw'>with_volcano</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>,
-  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+<span class='fu'>fdgeAnalysis</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -127,7 +144,7 @@ differential expression analysis over a predefined set of samples.</p>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a <code>ShinyFacileDGEResult</code>, the output from <code><a href='fdge.html'>fdge()</a></code></p>
+    <p>a <code>ReactiveFacileDgeAnalysisResult</code>, the output from <code><a href='fdge.html'>fdge()</a></code></p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
@@ -150,6 +167,12 @@ by the <code><a href='fdgeView.html'>fdgeView()</a></code> module.</p></li>
 
     
     
+    <h2 class="hasAnchor" id="analysis-module"><a class="anchor" href="#analysis-module"></a>Analysis Module</h2>
+
+    
+    <p>Wrapper module to perform and interact with a differential expression result.</p>
+<p>This module can be embedded within a shiny app, or called from a gadget.</p>
+    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
@@ -158,7 +181,7 @@ by the <code><a href='fdgeView.html'>fdgeView()</a></code> module.</p></li>
 <span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='fu'>exampleFacileDataSet</span>()
 <span class='no'>dge.crc</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
   <span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>fdgeGadget</span>(<span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>, <span class='kw'>with_volcano</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+  <span class='fu'>fdgeGadget</span>(<span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>)
 <span class='no'>dge.blca</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
   <span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fdgeGadget</span>(<span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>)
@@ -178,6 +201,8 @@ by the <code><a href='fdgeView.html'>fdgeView()</a></code> module.</p></li>
       <li><a href="#details">Details</a></li>
 
       <li><a href="#interactive-gadget">Interactive Gadget</a></li>
+
+      <li><a href="#analysis-module">Analysis Module</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

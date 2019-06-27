@@ -121,12 +121,12 @@ fpcaRunUI <- function(id, ..., debug = FALSE) {
 fpcaView <- function(input, output, session, rfds, result, ..., debug = FALSE) {
   result. <- reactive({
     req(isolate(initialized(rfds)))
-    if (is(result, "FacilePCAResult")) {
+    if (is(result, "FacilePcaAnalysisResult")) {
       out <- result
     } else {
       out <- req(result$result())
     }
-    req(is(out, "FacilePCAResult"))
+    req(is(out, "FacilePcaAnalysisResult"))
     message("... fpca result retrieved")
     out
   })
@@ -136,7 +136,7 @@ fpcaView <- function(input, output, session, rfds, result, ..., debug = FALSE) {
 
   output$pcaplot <- renderPlotly({
     res <- req(result.())
-    req(is(res, "FacilePCAResult"))
+    req(is(res, "FacilePcaAnalysisResult"))
 
     # NOTE: It looks like covariate() keeps firing, fix!
     # Also FacileShine/tests/shiny-modules/shinytest-facileScatterPlot.R

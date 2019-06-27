@@ -1,8 +1,8 @@
-context("Test Gene Set Enrichment Analysis (fgsea)")
+context("Test (Gene) Set Enrichment Analysis (fsea)")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
-test_that("fgsea,cameraPR works like multiGSEA call", {
+test_that("fsea,cameraPR works like multiGSEA call", {
   gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
 
   # GSEA the facile way
@@ -11,7 +11,7 @@ test_that("fgsea,cameraPR works like multiGSEA call", {
     fdge_model_def(covariate = "sample_type",
                    numer = "tumor", denom = "normal", fixed = "sex") %>%
     fdge(method = "voom")
-  facile.gsea <- fgsea(facile.ttest, gdb, method = "cameraPR")
+  facile.gsea <- fsea(facile.ttest, gdb, method = "cameraPR")
   facile.mgres <- result(facile.gsea)
   facile.cameraPR <- multiGSEA::result(facile.mgres, "cameraPR")
 

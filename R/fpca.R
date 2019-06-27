@@ -222,7 +222,8 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     messages = messages,
     warnings = warnings,
     errors = errors)
-  class(result) <- c("FacilePCAResult", "FacileReducedDimResult",
+  class(result) <- c("FacilePcaAnalysisResult",
+                     "FacileReducedDimAnalysisResult",
                      "FacileAnalysisResult")
 
   result[["feature_stats"]] <- .fpca.feature_statistics(result)
@@ -240,15 +241,15 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 #'
 #' @export
 #' @noRd
-#' @param x A `FacilePCAResult`
+#' @param x A `FacilePcaAnalysisResult`
 #' @param type `"rankings"` (default) or `"ranked"` -- note that the idea
 #' of the output for `"ranked"` should be generalized. See `NOTE` in the
 #' function details section.
 #' @param report_feature_as The column used to display in the returned
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
-ranks.FacilePCAResult <- function(x, type = c("features", "samples"),
-                                  signed = TRUE, ...) {
+ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
+                                          signed = TRUE, ...) {
   type <- match.arg(type)
   if (type == "samples") stop("What does sample-ranking even mean?")
 
@@ -327,8 +328,9 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
 
 #' @noRd
 #' @export
-signature.FacilePCAResult <- function(x, type = "features", signed = TRUE,
-                                      pcs = NULL, ntop = 20, ...) {
+signature.FacilePcaAnalysisResult <- function(x, type = "features",
+                                              signed = TRUE,
+                                              pcs = NULL, ntop = 20, ...) {
   signature(ranks(x, type = type, signed = signed), pcs = pcs, ntop = ntop, ...)
 }
 
@@ -338,7 +340,7 @@ signature.FacilePCAResult <- function(x, type = "features", signed = TRUE,
 #' features of a PCA (loadings, weights, ranks)
 #' @noRd
 .fpca.feature_statistics <- function(x, ...) {
-  assert_class(x, "FacilePCAResult")
+  assert_class(x, "FacilePcaAnalysisResult")
 
   pvar <- assert_numeric(x$percent_var, names = "unique")
   pc.names <- names(pvar)
@@ -385,11 +387,11 @@ signature.FacilePCAResult <- function(x, type = "features", signed = TRUE,
 
 #' @noRd
 #' @export
-print.FacilePCAResult <- function(x, ...) {
+print.FacilePcaAnalysisResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
-format.FacilePCAResult <- function(x, ...) {
+format.FacilePcaAnalysisResult <- function(x, ...) {
   n.features <- nrow(x[["factor_contrib"]])
   pcv <- x$percent_var * 100
   pcvs <- paste(names(pcv), sprintf("%.2f%%", pcv), sep = ": ")
@@ -397,7 +399,7 @@ format.FacilePCAResult <- function(x, ...) {
 
   out <- paste(
     "===========================================================\n",
-    sprintf("FacilePCAResult\n"),
+    sprintf("FacilePcaAnalysisResult\n"),
     "-----------------------------------------------------------\n",
     "Number of features used: ", n.features, "\n",
     "Number of PCs: ", length(pcv), "\n",

@@ -1,5 +1,5 @@
 ---
-title: "Introduction to FacileAnalysis"
+title: "Introduction to the FacileAnalysis Framework"
 author: "Steve Lianoglou"
 date: "5/17/2019"
 output: rmarkdown::html_vignette
@@ -20,6 +20,11 @@ knitr::opts_chunk$set(
 set.seed(0xFEED)
 ```
 
+Note: this document is a scratchpad right now. Much of the README document
+will replace these contents and be further expanded upon.
+
+## Scratch
+
 The FacileAnalysis package defines a set of analysis tasks over genomic data
 housed in a container that implements the FacileData API (aka a
 `FacileDataStore`). 
@@ -38,7 +43,7 @@ Analyses implemented within this package include:
 
 1. Principal Components Analysis (fpca)
 2. Differential Expression Analysis (fdge)
-3. Gene Set Enrichment Analysis (fgsea)
+3. (Gene) Set Enrichment Analysis (fsea)
 
 Additional analyses can be added within this package, or as new packages which
 import and implement the FacileAnalysis S3 API from here.
@@ -71,7 +76,7 @@ from a FacileDataStore is defined as.
 ## Required Shiny
 
 `<fanalysis>` is a place holder for one othe core functions that are implemented
-as a facile analysis module, ie.`"fdge"`, `"fgsea"`, `"fpca"`, etc.
+as a facile analysis module, ie.`"fdge"`, `"fsea"`, `"fpca"`, etc.
 
 * `<fanalysis>Analysis`: a wrapper module that incorporates all the internal
   modules for each step of the analysis pipeline. The `fdgeAnalysis` module,

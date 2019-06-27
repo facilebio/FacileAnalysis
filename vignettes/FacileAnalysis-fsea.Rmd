@@ -1,0 +1,72 @@
+---
+title: "Facile (Gene) Set Expression Analysis"
+author: "Steve Lianoglou"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+```
+
+**Under Construction**
+
+```{r, eval = FALSE}
+library(FacileData)
+library(FacileAnalysis)
+samples <- exampleFacileDataSet() %>% 
+  filter_samples(indication == "BLCA")
+```
+
+For now, I imagine (gene) set enerichment analyses will be performed over
+**the result** of other analyses. This means that we can perform (G)SEA on:
+
+1. The result of a differential expression analysis (`fdge`) using:
+    - Pre-ranked methods like cameraPR and fgsea
+    - Enrichment methods (goseq, hypergeometric testing)
+   
+   or some combination of the two.
+   
+    ```{r, eval=FALSE}
+    dge.gsea <- samples %>% 
+      fdge_model_def(covariate = "sample_type", 
+                 numer = "tumor", denom = "normal",
+                 fixed = "sex") %>% 
+      fdge() %>% 
+      fsea(method = c("cameraPR", "goseq", rank_by = "t"))
+    ```
+
+2. The "highly loaded" genes from the first prinicpal component of a
+   principal components analysis (`fpca`). Deafult GSEA methods are set for
+   each analysis result type, too, if you don't want to specify them.
+
+    ```{r, eval=FALSE}
+    pc1.gsea <- samples %>% 
+      fpca() %>% 
+      fsea(pc = 1)
+    ```
+
+In the immediate term, the GSEA functionality will lean heavily on the multiGSEA
+package, including the bits that enable interactivity over the results
+(ie. the multiGSEA.shiny package).
+
+**Comparing (Gene) Set Enrichment Results**
+
+To **compare** GSEA results, Thomas' idea of overlaying enrichment maps from
+the two results on top of each other in some dynamic way may be the first
+thing we try.
+
+
+
+

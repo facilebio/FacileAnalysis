@@ -31,7 +31,7 @@
 #' efds <- exampleFacileDataSet()
 #' dge.crc <- efds %>%
 #'   filter_samples(indication == "CRC") %>%
-#'   fdgeGadget(viewer = "pane", with_volcano = FALSE)
+#'   fdgeGadget(viewer = "pane")
 #' dge.blca <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdgeGadget(viewer = "pane")
@@ -58,12 +58,10 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @importFrom shinyjs toggleElement
 #' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ReactiveFacileDgeAnalysisResult`, the output from [fdge()]
-fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
-                         ..., debug = FALSE) {
+fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
-  view <- callModule(fdgeView, "view", rfds, dge, with_volcano = with_volcano,
-                     ...,
+  view <- callModule(fdgeView, "view", rfds, dge,  ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = debug)
@@ -98,7 +96,7 @@ fdgeAnalysis <- function(input, output, session, rfds, with_volcano = TRUE,
 #'   wellPanel
 #' @importFrom shinydashboard box
 #' @importFrom shinyjs hidden
-fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
+fdgeAnalysisUI <- function(id, ..., debug = FALSE,
                            bs4dash = isTRUE(getOption("facile.bs4dash"))) {
   ns <- NS(id)
   # box. <- if (bs4dash) bs4Dash::bs4Box else shinydashboard::box
@@ -114,8 +112,7 @@ fdgeAnalysisUI <- function(id, with_volcano = TRUE, ..., debug = FALSE,
                     box.(title = NULL, #"Testing Results",
                          solidHeader = TRUE,
                          width = 12,
-                         fdgeViewUI(ns("view"), with_volcano = with_volcano,
-                                    debug = debug)))))
+                         fdgeViewUI(ns("view"), debug = debug)))))
 }
 
 # Building block fdge shiny modules ============================================
@@ -260,10 +257,9 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
 #' @importFrom plotly event_data layout
 #' @importFrom shiny downloadHandler req
 #' @importFrom shinyjs toggleElement
-#'
+#' @importFrom shinyWidgets updateSwitchInput
 #' @param dgeres The result from calling [fdge()], or [fdgeRun()].
-fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
-                     ...,
+fdgeView <- function(input, output, session, rfds, dgeres, ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = FALSE) {
@@ -271,7 +267,17 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
   # The FacileDGEResult object
   dge <- reactive({
     req(initialized(dgeres))
-    faro(dgeres)
+    out <- faro(dgeres)
+  })
+
+  # When a new fdge result is produced, we may want to reset a few things
+  observeEvent(dge(), {
+    # Turn off volcano when new dgeresult is created
+    updateSwitchInput(session, "volcanotoggle", value = FALSE)
+    # TODO: We will need to reset the selected_volcano reactive to NULL,
+    # otherwise if there is a selection, it will remain and the stats table
+    # will be filtered & stuck to that because the volcano has dissapeared.
+    # OR listen for when the switchInput("volcanotoggle")  is FALSE
   })
 
   assay_name. <- reactive(param(req(dge()), "assay_name"))
@@ -295,25 +301,17 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
     out
   })
 
-
-  # samples. <- reactive(samples(req(result.()))) # should have covariate columns
-  # model. <- reactive(model(req(result.())))
-  # covariate. <- reactive(param(req(model.()), "covariate"))
-  # isttest <- reactive({
-  #   res. <- req(result.())
-  #   is.ttest(res.)
-  # })
-
   observe({
-    toggleElement("volcanobox", condition = is.ttest(dge) && with_volcano)
+    toggleElement("volcanobox", condition = is.ttest(dge()))
     toggleElement("dlbuttonbox", condition = is(dge.stats.all(), "data.frame"))
   })
 
   # Visualization of DGE results -----------------------------------------------
 
-  if (with_volcano) {
-    output$volcano <- renderPlotly({
-      req(is.ttest(dge()))
+  output$volcano <- renderPlotly({
+    plt <- NULL
+    show <- input$volcanotoggle
+    if (is.ttest(dge()) && show) {
       dat. <- req(dge.stats.all())
       dat.$yaxis <- -log10(dat.$pval)
       fplot <- fscatterplot(dat., c("logFC", "yaxis"),
@@ -322,20 +320,17 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
                             hover = c("symbol", "logFC", "FDR"),
                             webgl = TRUE, event_source = feature_selection,
                             key = "feature_id")
-      fplot$plot
-    })
-  }
+      plt <- fplot$plot
+    }
+    plt
+  })
 
   # Responds to selection events on the volcano plot. If no selection is active,
   # this is NULL, otherwise its the character vector of the "feature_id" values
   # that are brushed in the plot.
-  selected_features <- reactive({
-    if (with_volcano) {
-      selected <- event_data("plotly_selected", source = feature_selection)
-      if (!is.null(selected)) selected <- selected$key
-    } else {
-      selected <- NULL
-    }
+  selected_volcano <- reactive({
+    selected <- event_data("plotly_selected", source = feature_selection)
+    if (!is.null(selected)) selected <- selected$key
     selected
   })
 
@@ -343,7 +338,7 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
   # unless the user is brushing the volcano.
   dge.stats <- reactive({
     stats. <- req(dge.stats.all())
-    selected <- selected_features()
+    selected <- selected_volcano()
     if (!is.null(selected)) stats. <- filter(stats., feature_id %in% selected)
     stats.
   })
@@ -367,7 +362,6 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
     feature <- req(selected_result())
     dat <- req(samples.())
     scov <- covariate.()
-
     dat <- fetch_assay_data(rfds, feature, dat,
                             normalized = TRUE,
                             prior.count = 0.25)
@@ -496,7 +490,7 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
   # })
 
   vals <- list(
-    selected_features = selected_features,
+    selected_features = selected_volcano,
     selected_samples = selected_samples)
   return(vals)
 }
@@ -509,29 +503,35 @@ fdgeView <- function(input, output, session, rfds, dgeres, with_volcano = TRUE,
 #' @importFrom shinyjs hidden
 #' @importFrom shinydashboard box
 #' @importFrom shinycssloaders withSpinner
-fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
+#' @importFrom shinyWidgets switchInput
+fdgeViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
 
-  volcano.box <- NULL
-  if (with_volcano) {
-    volcano.box <- tags$div(
-      id = ns("volcanobox"),
-      box(
-        width = 12,
-        withSpinner(plotlyOutput(ns("volcano")))))
-  }
+  volcano.box <- tags$div(
+    style = "margin-top: 10px",
+    id = ns("volcanobox"),
+    box(
+      width = 12, style = "padding-top: 10px",
+      tags$span("Volcano Plot", style = "font-weight: bold"),
+      switchInput(inputId = ns("volcanotoggle"), size = "mini",
+                  onLabel = "Yes", offLabel = "No", value = FALSE,
+                  inline = TRUE),
+      tags$div(
+        id = ns("volcanoplotdiv"),
+        withSpinner(plotlyOutput(ns("volcano"))))))
+
+  boxplot.box <- box(
+    width = 12,
+    id = ns("boxplotbox"),
+    withSpinner(plotlyOutput(ns("boxplot"))))
 
   fluidRow(
     # Plots Column
     column(
       width = 5,
       id = ns("vizcolumn"),
-      # boxplot
-      box(
-        width = 12,
-        id = ns("boxplotbox"),
-        withSpinner(plotlyOutput(ns("boxplot")))),
+      boxplot.box,
       volcano.box),
     # Stats Table Column
     column(
@@ -541,7 +541,7 @@ fdgeViewUI <- function(id, with_volcano = TRUE, ..., debug = FALSE) {
       box(
         width = 12,
         id = ns("statbox"),
-        title = "Differential Expression",
+        title = "Statistics",
         tags$div(
           id = ns("dlbuttonbox"),
           style = "padding: 0 0 1em 0; float: right;",

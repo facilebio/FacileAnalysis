@@ -1,0 +1,51 @@
+---
+title: "Facile Principal Components Analysis"
+author: "Steve Lianoglou"
+date: "5/17/2019"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+```
+
+**Under Construction**
+
+* Performs PCA
+* Easily explore PCs
+* Extract the highly loaded genes (and genesets) from each PC
+
+Easy to run a PCA over the rnaseq data, or whatever other assy you got there
+(CNV, proteomics, take your pick)
+
+```{r init}
+library(FacileData)
+library(FacileAnalysis)
+library(dplyr)
+
+pca.crc <- exampleFacileDataSet() %>% 
+  filter_samples(indication == "CRC") %>% 
+  fpca(assay_name = "rnaseq")
+```
+
+Vizualize the results:
+
+```{r vizpca}
+viz(pca.crc, pcs = 2, color_aes = "sample_type",
+    hover = c("sex", "sample_type", "sample_id"))
+```
+
+Need to fix up `report()`
+
+Not sure how to `compare()` two PCA results ...

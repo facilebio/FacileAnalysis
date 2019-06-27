@@ -19,14 +19,11 @@
 #'   report(dge.comp)
 #'   shine(dge.comp)
 #' }
-compare.FacileTtestDGEResult <- function(x, y, ...) {
-  if (FALSE) {
-    x <- dge.crc; y <- dge.blca
-  }
+compare.FacileTtestAnalysisResult <- function(x, y, ...) {
   # TODO: assert_comparable(x, y, ...)
   # TODO: assert_comparable.FacileDgeAnalysisResult <- function(...)
-  assert_class(x, "FacileTtestDGEResult")
-  assert_class(y, "FacileTtestDGEResult")
+  assert_class(x, "FacileTtestAnalysisResult")
+  assert_class(y, "FacileTtestAnalysisResult")
   stopifnot(
     param(x, "assay_name") == param(y, "assay_name"),
     param(x, "method") == param(y, "method"))
@@ -54,26 +51,32 @@ compare.FacileTtestDGEResult <- function(x, y, ...) {
   out <- list(
     result = xystats,
     dge = idge)
-  class(out) <- c("FacileTtestComparison",
-                  "FacileAnalysisComparison",
+  class(out) <- c("FacileTtestComparisonAnalysisResult",
+                  "FacileAnalysisComparisonComparison",
                   "FacileAnalysisResult")
   out
 }
 
 #' @noRd
 #' @export
-report.FacileTtestComparison <- function(x, ...) {
+report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
+  hover <- c(
+    # feature metadata
+    "symbol", "feature_id", "meta",
+    # padj from individual fdge tests
+    "padj.x", "padj.y",
+    # stats from interaction model, if it was run
+    "logFC", "padj")
+  d <- result(x)
   if (!is.null(x[["dge"]])) {
-    fscatterplot(result(x),
-                 c("logFC.x", "logFC.y"),
-                 hover = c("padj.x", "padj.y", "logFC", "padj"),
-                 webgl = TRUE)
+    d <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
   } else {
-    fscatterplot(result(x),
-                 c("logFC.x", "logFC.y"),
-                 hover = c("padj.x", "padj.y"),
-                 webgl = TRUE)
+    d <- filter(d, padj.x <= max_padj | padj.y <= max_padj)
   }
+  hover <- intersect(hover, colnames(d))
+  # get knitr to work / print FacileViz objects correctly
+  # https://github.com/denalitherapeutics/FacileViz/issues/2
+  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE)$plot
 }
 
 #' Helper function to run an interaction model to generate statistics when
@@ -82,6 +85,7 @@ report.FacileTtestComparison <- function(x, ...) {
 #' This function is only to be called from within compare.FacileTTestDGEResult.
 #'
 #' If we can't generate an interaction result, this will return NULL.
+#' @noRd
 .interaction_fdge <- function(x, y, ...) {
   xmod <- model(x)
   ymod <- model(y)

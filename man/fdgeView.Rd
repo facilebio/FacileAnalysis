@@ -4,7 +4,7 @@
 \alias{fdgeView}
 \title{Shiny module that interacts with result of fdgeRun module}
 \usage{
-fdgeView(input, output, session, rfds, dgeres, with_volcano = TRUE, ...,
+fdgeView(input, output, session, rfds, dgeres, ...,
   feature_selection = session$ns("volcano"),
   sample_selection = session$ns("samples"), debug = FALSE)
 }

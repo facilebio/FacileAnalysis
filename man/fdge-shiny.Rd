@@ -8,8 +8,7 @@
 fdgeGadget(x, title = "Differential Expression Analysis", height = 800,
   width = 1000, ...)
 
-fdgeAnalysis(input, output, session, rfds, with_volcano = TRUE, ...,
-  debug = FALSE)
+fdgeAnalysis(input, output, session, rfds, ..., debug = FALSE)
 }
 \arguments{
 \item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
@@ -58,7 +57,7 @@ options(facile.log.level.fshine = "trace")
 efds <- exampleFacileDataSet()
 dge.crc <- efds \%>\%
   filter_samples(indication == "CRC") \%>\%
-  fdgeGadget(viewer = "pane", with_volcano = FALSE)
+  fdgeGadget(viewer = "pane")
 dge.blca <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
   fdgeGadget(viewer = "pane")

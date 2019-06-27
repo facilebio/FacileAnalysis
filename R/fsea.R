@@ -1,14 +1,14 @@
 #' Performs Gene Set Enrichment Analyses
 #'
 #' **For now** only GSEA methods process a pre-ranked feature set work, like
-#' `"cameraPR"` or `"fgsea"`.
+#' `"cameraPR"` or `"fsea"`.
 #'
 #' @section Updates required to multiGSEA:
 #' I need to update multiGSEA to take an input data.frame of differential
 #' expression statistics to work with goseq as well such that it doesn't have to
 #' run the differential expression stuff again.
 #'
-#' Once this is implemented, the a call to fgsea will also work on an Anova
+#' Once this is implemented, the a call to fsea will also work on an Anova
 #' result, as well.
 #'
 #' @export
@@ -29,7 +29,7 @@
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
 #'   fdge(method = "voom")
-#' ttest.gsea <- fgsea(ttest.res, gdb)
+#' ttest.gsea <- fsea(ttest.res, gdb)
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
 #' # Not yet implemented, requires small update to multiGSEA
@@ -39,16 +39,16 @@
 #' # right now we just have weights. Or, fully extracing the biplot code, I
 #' # think the weight should be the length on the PC of choice, and the sign is
 #' # the same.
-fgsea <- function(x, gdb, methods, ...) {
-  UseMethod("fgsea", x)
+fsea <- function(x, gdb, methods, ...) {
+  UseMethod("fsea", x)
 }
 
-#' @rdname fgsea
+#' @noRd
 #' @export
-fgsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
-                                            min_logFC = 1, max_padj = 0.10,
-                                            rank_by = "logFC", signed = TRUE,
-                                            ...) {
+fsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
+                                           min_logFC = 1, max_padj = 0.10,
+                                           rank_by = "logFC", signed = TRUE,
+                                           ...) {
   assert_class(gdb, "GeneSetDb")
   assert_subset(methods, c("cameraPR", "fgsea", "geneSetTest"))
 
@@ -79,23 +79,23 @@ fgsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
     result = mg,
     params = list(methods = methods, min_logFC = min_logFC, max_padj = max_padj,
                   rank_by = rank_by))
-  class(out) <- c("FacileTtestGseaResult",
-                  "FacileGseaResult",
+  class(out) <- c("FacileTtestSeaAnalysisResult",
+                  "FacileSeaAnalysisResult",
                   "FacileAnalysisResult")
   out
 }
 
 #' @noRd
 #' @export
-fgsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
-                                            max_padj = 0.10, ...) {
+fsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
+                                           max_padj = 0.10, ...) {
 
 }
 
 #' @noRd
 #' @export
-fgsea.FacilePcaAnalysisResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
-                                          ...) {
+fsea.FacilePcaAnalysisResult <- function(x, methods = "cameraPR", pc = x[["pcs"]][1L],
+                                         ...) {
   ranks. <- ranks(x, ...)
 }
 
@@ -107,8 +107,8 @@ fgsea.FacilePcaAnalysisResult <- function(x, methods = "cameraPR", pc = x[["pcs"
 #' below are equivalent:
 #'
 #' ```r
-#' r1 <- result(fgsea.res, name = "cameraPR")
-#' r2 <- result(fgsea.res) %>% multiGSEA::result("cameraPR")
+#' r1 <- result(fsea.res, name = "cameraPR")
+#' r2 <- result(fsea.res) %>% multiGSEA::result("cameraPR")
 #' ```
 #'
 #' @rdname fgsea

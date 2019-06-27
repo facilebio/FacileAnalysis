@@ -1,13 +1,13 @@
-# Interactivity and vizualization over FacilePCAResults ========================
+# Interactivity and vizualization over FacilePcaAnalysisResult =================
 
 #' @noRd
 #' @export
-viz.FacilePCAResult <- function(x, pcs = 3, ...,
-                                xlabel = "default",
-                                ylabel = "default",
-                                zlabel = "default",
-                                event_source = "A",
-                                webgl = FALSE) {
+viz.FacilePcaAnalysisResult <- function(x, pcs = 3, ...,
+                                        xlabel = "default",
+                                        ylabel = "default",
+                                        zlabel = "default",
+                                        event_source = "A",
+                                        webgl = FALSE) {
   xx <- result(x)
   assert_integerish(pcs, lower = 1L)
   if (length(pcs) == 1L) {
@@ -45,27 +45,28 @@ viz.FacilePCAResult <- function(x, pcs = 3, ...,
   p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
                     zlabel = zlabel, event_source = event_source,
                     webgl = webgl, ...)
-  p
+  # TODO: https://github.com/denalitherapeutics/FacileViz/issues/2
+  p$plot
 }
 
 #' @export
 #' @noRd
 #' @importFrom shiny tagList tags
-#' @param x The `FacilePCAResult`
+#' @param x The `FacilePcaAnalysisResult`
 #' @param pcs The PC's to show (min 2, max 3). If a single integer is provided,
 #'   PC's 1:`pcs` will be shown. If a vector is provided, then the PCs
 #'   specified will be shown. Defaults is `3`, to show first 3 PCs
 #' @param topn the number of top genes to enumerate that drive direction of PCs
 #' @param feature_id_col the column name in `x[["row_covariates"]]` to use
 #'   in the feature table.
-report.FacilePCAResult <- function(x, pcs = 3, with_features = TRUE,
-                                   ntop = 100, report_feature_as = NULL,
-                                   caption = NULL, ...,
-                                   event_source = "A",
-                                   xlabel = "default",
-                                   ylabel = "default",
-                                   zlabel = "default",
-                                   webgl = FALSE) {
+report.FacilePcaAnalysisResult <- function(x, pcs = 3, with_features = TRUE,
+                                           ntop = 100, report_feature_as = NULL,
+                                           caption = NULL, ...,
+                                           event_source = "A",
+                                           xlabel = "default",
+                                           ylabel = "default",
+                                           zlabel = "default",
+                                           webgl = FALSE) {
   viz. <- .viz.fpca(x, pcs = pcs, ntop = ntop,
                     with_features = with_features,
                     report_feature_as = report_feature_as, ...,

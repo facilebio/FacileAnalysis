@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FacileAnalysis <img src="man/figures/logo.png" align="right" />
+# FacileAnalysis
 
 <!-- badges: start -->
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
@@ -24,19 +24,19 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/facileverse/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facileverse/FacileAnalysis?branch=master)
 <!-- badges: end -->
 
-## Overview
+The FacileAnalysis package defines a set of analysis tasks over genomic data
+in a modular fashion, which requires these data to be stored in a container that
+implements the FacileData API (aka a `FacileDataStore`).
 
-The FacileAnalysis package defines a set of analysis tasks (modules) over
-genomic data housed in a container that implements the FacileData API (aka a
-`FacileDataStore`). The over-arching goal of developing analysis modules within
-this framework is to enable quick and effortless ways to interrogate genomic
-data by enabling a **hybrid** interactive and code-driven approach to data
-analysis (or any extreme mix of the two).
+The over-arching goal of developing analyses within this framework is to enable
+quick and effortless interrogation of genomic data by enabling a **hybrid**
+interactive and code-driven approach to data analysis. Analyses can be either
+completely code-driven, GUI driven, or some mix of the two.
 
-FacileAnalysis modules attempt to break down a general analysis task into
+To achieve this goal, analysis modules break down a general analysis task into
 smaller constituent steps, the results of which can:
 
-1. be piped together (`%>%`) to perform a complete analysis task;
+1. be piped together (`%>%`) to perform a complete analysis;
 2. be explored at **different levels of interactivity**, via the `shine()`,
    `viz()`, and `report()` methods; and
 3. act as starting (or reference) points for **the next** analysis task, via
@@ -50,7 +50,7 @@ vignettes that describe their functionality in more detail:
 
 * `fpca`: [Interactive Principal Components Analyses][fpcavign]
 * `fdge`: [Interactive Differential Gene Expression Analysis][fdgevign]
-* `fgsea`: [Interactive Gene Set Enrichment Analysis][fgseavign]
+* `fsea`: [Interactive (Gene) Set Enrichment Analysis][fseavign]
 
 ## Example Analysis: Differential Expression
 
@@ -76,8 +76,9 @@ normal samples (and controlling for sex) in the "BLCA" indication of the example
 TCGA dataset included in the [FacileData][faciledata] package.
 
 ```{r voom-analysis}
+library(FacileData)
 library(FacileAnalysis)
-efds <- FacileData::exampleFacileDataSet()
+efds <- exampleFacileDataSet()
 
 # Step 1: define the samples implicated in our test
 samples <- filter_samples(efds, indication == "BLCA")
@@ -93,15 +94,28 @@ model <- fdge_model_def(samples, covariate = "sample_type",
 vdge <- fdge(model, assay_name = "rnaseq", method = "voom")
 ```
 
-We can take the same "analysis pipeline" and simply change the method we are
-using to test for differential expression by tweaking the last step. For
-instance, we might want to use the edgeR/QLF statistical framework:
+Perhaps you prefer the [edgeR/QLF][qlf] analysis framework, instead? No problem,
+we only need to tweak one of the parameters in the last step of the pipeline:
 
 ```{r qlf-analysis}
 qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
 ```
 
-## Interrogation at Different Levels of Interactivity
+... or DESeq2, perhaps? No problem, [we accept pull requests][PR] :-)
+
+**Note** that `fdge` is running over the RNA-seq data stored in the "rnaseq"
+assay. If the datastore had a `"CNV"` assay matrix, one could find regions
+of differential copy number between tumor and normal like so:
+
+```{r cnv-example, eval = FALSE}
+cnv.dge <- fdge(model, assay_name = "CNV", method = "limma-trend")
+```
+
+We are using a `limma-trend` pipeline there, which might not be appropriate.
+Developers can develop their own `method` for differential copy number analysis
+and plug it in there.
+
+## Interrogation of Analyses at Different Levels of Interactivity
 
 There are a number of S3 methods a `FacileAnalysisResult` needs to define in
 order to be complete. The `shine()`, `viz()`, and `report()` methods are there
@@ -116,24 +130,64 @@ The `shine(aresult, ...)` method provides the richest interactive view over a
 `FacileAnalysisResult` by launching a [shiny gadget][sgadget] that enables
 the end-user to fully interrogate the results.
 
-```{r, eval = FALSE}
+```{r shine, eval = FALSE}
 shine(vdge)
 ```
 
 <img src="man/figures/fdge-shine.png" width="50%" />
 
-* `viz(aresult, ...)` leverages [htmlwidgets][htmlwidgets] to create a
-  JavaScript-powered interactive view of the analysis result, which is detached
-  from a running R-process.
-* `report(aresult, ...)` is similar to `viz`, but is meant to create a "more
-  complete" (but still server-detached) view over an analysis result that is
-  more suitable for inclusion into an Rmarkdown report. This is accomplished
-  by including a caption and, perhaps, multiple graphical views into the result.
+### Interactive Graphics via viz()
 
+The `viz(aresult, ...)` methods leverage [htmlwidgets][htmlwidgets] to create a
+JavaScript-powered interactive view of the analysis result, which is detached
+from a running R-process.
+
+```{r viz, eval=FALSE}
+viz(vdge)
+```
+
+### Reporting Results via report()
+
+While the output of the `viz()` functions can be used directly in Rmarkdown
+reports, `report(aresult, ...)` is meant to create a "more complete"
+(perhaps multi-htmlwidget) view over the result that can be more suitable
+for inclusion into an Rmarkdown report.
+
+```{r report, eval=FALSE}
+cap <- paste(
+  "Differential expression of tumor vs normal samples, in the TCGA bladder"
+  "cancer indication (BLCA)")
+report(vdge, caption = cap)
+```
+
+## Hybrid Analyses
+
+The same differential expression analysis that created the `vdge` object above
+can be performed entirely interactively, with the same results.
+
+We can either start the analysis from the same predefined set of samples, but
+define the linear model and testing framework to use interactively, by launching
+a the **f**acile **d**ifferential **g**ene **e**xpression gadget:
+
+```{r vdge2, eval=FALSE}
+vdge2 <- fdgeGadget(samples)
+```
+
+Or we can perform the whole thing via a GUI which lets us select the subset
+of samples and run the differential expression analysis without using any
+code at all:
+
+```{r vdge3, eval=FALSE}
+vdge3 <- fdgeGadget(efds)
+```
+
+Assuming the same filtering and testing strategies were selected in the GUI
+using the `fdgeGadget` calls above, the objects they return will all be
+equivalent to the `vdge` result, which was entirely generated programmatically.
 
 ## Installation
 
-```{r, eval = FALSE}
+```{r install, eval = FALSE}
 # These packages are only available via github for now
 # install.packages("devtools")
 devtools::install_github("facileverse/FacileAnalysis")
@@ -148,11 +202,13 @@ devtools::install_github("facileverse/FacileAnalysis")
 
 [faciledata]: https://facileverse.github.io/FacileData
 [facileanalysis]: https://facileverse.github.io/FacileAnalysis
-[fpcavign]: FacileAnalysis-pca.html
-[fdgevign]: FacileAnalysis-dge.html
-[fgseavign]: FacileAnalysis-gsea.html
+[fpcavign]: FacileAnalysis-fpca.html
+[fdgevign]: FacileAnalysis-fdge.html
+[fseavign]: FacileAnalysis-fsea.html
 [ggroup]: https://groups.google.com/forum/#!forum/facileverse
 [htmlwidgets]: https://www.htmlwidgets.org
 [issues]: https://github.com/facileverse/FacileAnalysis/issues
 [pkgvign]: FacileAnalysis.html
+[PR]: https://github.com/denalitherapeutics/FacileAnalysis/pulls
+[qlf]: https://f1000research.com/articles/5-1438
 [sgadget]: https://shiny.rstudio.com/articles/gadgets.html
