@@ -121,10 +121,10 @@ copy number analysis and plug it in there.
 
 There are a number of S3 methods a `FacileAnalysisResult` needs to
 define in order to be complete. The `shine()`, `viz()`, and `report()`
-methods are there enable the end-user to interrogate (and report) the
-results of an analysis at using different levels of interactivity.
+methods allow the end-user to interrogate (and report) the results of an
+analysis at different levels of interactivity.
 
-Let’s take a look at how these work over a \`FacileDGEAnalysis
+Let’s take a look at how these work over a `FacileDgeAnalysisResult`
 
 ### Deep Interaction via shine()
 

@@ -75,7 +75,7 @@ The example below identifies genes differentially expression between tumor and
 normal samples (and controlling for sex) in the "BLCA" indication of the example
 TCGA dataset included in the [FacileData][faciledata] package.
 
-```{r voom-analysis}
+```{r voom-analysis, eval = FALSE}
 library(FacileData)
 library(FacileAnalysis)
 efds <- exampleFacileDataSet()
@@ -97,7 +97,7 @@ vdge <- fdge(model, assay_name = "rnaseq", method = "voom")
 Perhaps you prefer the [edgeR/QLF][qlf] analysis framework, instead? No problem,
 we only need to tweak one of the parameters in the last step of the pipeline:
 
-```{r qlf-analysis}
+```{r qlf-analysis, eval = FALSE}
 qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
 ```
 
