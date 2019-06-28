@@ -276,6 +276,7 @@ ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
 
   out <- list(
     result = ranks.,
+    signed = signed,
     ranking_columns = "logFC",
     ranking_order = "descending",
     fds = fds(x))
@@ -284,8 +285,7 @@ ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
   clazz <- "Facile%sFeatureRanks%s"
   s <- if (signed) "Signed" else "Unsigned"
   classes <- sprintf(clazz, c("Ttest", "Ttest",  "", ""), c(s, "", s, ""))
-  class(out) <- c(classes,
-                  "FacileFeatureRanks")
+  class(out) <- c(classes, "FacileFeatureRanks")
   out
 }
 
@@ -314,24 +314,36 @@ signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
   if (is.null(collection_name)) collection_name <- class(x)[1L]
   assert_string(collection_name)
 
-  if (is.null(min_logFC)) min_logFC <- 1
-  up <- result(x) %>%
-    filter(padj <= max_padj, logFC >= min_logFC) %>%
-    mutate(collection = collection_name, name = paste(name., "up"),
-           direction = "up")
-  up <- head(up, ntop)
+  if (is.null(min_logFC)) min_logFC <- 0
+  min_logFC <- abs(min_logFC)
 
-  down <- result(x) %>%
-    filter(padj <= max_padj, logFC <= min_logFC) %>%
-    mutate(collection = collection_name, name = paste(name., "down"),
-           direction = "down")
-  down <- tail(down, ntop)
+  res <- result(x)
 
-  sig <- bind_rows(up, down) %>%
-    select(collection, name, everything())
+  if (x$signed) {
+    up <- res %>%
+      filter(padj <= max_padj, logFC > min_logFC) %>%
+      mutate(collection = collection_name, name = paste(name, "up"),
+             direction = "up") %>%
+      head(ntop)
+    down <- res %>%
+      filter(padj <= max_padj, logFC < -min_logFC) %>%
+      mutate(collection = collection_name, name = paste(name, "down"),
+             direction = "down") %>%
+      tail(ntop)
+    sig <- bind_rows(up, down)
+  } else {
+    sig <- res %>%
+      filter(padj <= max_padj) %>%
+      head(ntop)
+  }
+
+  sig <- sig %>%
+    select(collection, name, feature_id, symbol, direction,
+           logFC, pval, padj, everything())
 
   out <- list(
     result = sig,
+    signed = x$signed,
     params = list(max_padj = max_padj, min_logFC = min_logFC))
   class(out) <- sub("Ranks$", "Signature", class(x))
   out
@@ -352,14 +364,14 @@ ranks.FacileAnovaAnalysisResult <- function(x, signed = FALSE, ...) {
 
   out <- list(
     result = ranks.,
+    signed = signed,
     ranking_columns = "F",
     ranking_order = "descending")
   # FacileAnovaFeatureRanksSigned
   clazz <- "Facile%sFeatureRanks%s"
   s <- if (signed) "Signed" else "Unsigned"
   classes <- sprintf(clazz, c("Anova", "Anova",  "", ""), c(s, "", s, ""))
-  class(out) <- c(clazz,
-                  "FacileFeatureRanks")
+  class(out) <- c(classes, "FacileFeatureRanks")
   out
 }
 
@@ -388,13 +400,15 @@ signature.FacileAnovaFeatureRanks <- function(x, max_padj = 0.10,
     filter(padj <= max_padj) %>%
     mutate(collection = collection_name, name = name.,
            direction = "udefined") %>%
-    head(ntop)
+    head(ntop) %>%
+    select(collection, name, feature_id, symbol, direction, F, pval, padj,
+           everything())
 
   out <- list(
     result = sig,
     params = list(ntop = ntop, max_padj = max_padj))
   class(out) <- sub("Ranks$", "Signature", class(x))
-  sig
+  out
 }
 
 # Facile API ===================================================================

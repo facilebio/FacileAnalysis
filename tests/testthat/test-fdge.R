@@ -84,30 +84,59 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$F, vres$F)
 })
 
-test_that("ranks returns DGE features in expected order", {
-  ttest.res <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal") %>%
-    fdge(method = "voom")
-  ttest.expected <- ttest.res %>%
+# Let's pre-compute and ANOVA and ttest result so we can break up our
+# ranks and signature tests
+TRES <- FDS %>%
+  filter_samples(indication == "BLCA") %>%
+  fdge_model_def(covariate = "sample_type",
+                 numer = "tumor",
+                 denom = "normal") %>%
+  fdge(method = "voom")
+ARES <- FDS %>%
+  filter_samples(indication == "BLCA") %>%
+  fdge_model_def(covariate = "stage", fixed = "sex") %>%
+  fdge(method = "voom")
+
+test_that("ttest ranks and signatures generated correctly", {
+  # Signed Ranks
+  eranks.signed <- TRES %>%
     result() %>%
     arrange(desc(logFC))
-  ttest.ranks <- ttest.res %>%
+  ranks.signed <- TRES %>%
     ranks(signed = TRUE) %>%
     result()
-  expect_equal(ttest.ranks[["feature_id"]], ttest.expected[["feature_id"]])
+  expect_equal(ranks.signed[["feature_id"]], eranks.signed[["feature_id"]])
 
-  anova.res <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "stage", fixed = "sex") %>%
-    fdge(method = "voom")
-  anova.expected <- anova.res %>%
+  # Unsigned Ranks
+  eranks.unsigned <- TRES %>%
     result() %>%
     arrange(pval)
-  anova.ranks <- anova.res %>%
+  ranks.unsigend <- TRES %>%
+    ranks(signed = FALSE) %>%
+    result()
+  expect_equal(ranks.unsigend[["feature_id"]], eranks.unsigned[["feature_id"]])
+})
+
+test_that("ranks returns anova features in expected order", {
+  eranks <- ARES %>%
+    result() %>%
+    arrange(pval)
+  anova.ranks <- ARES %>%
     ranks() %>%
     result()
-  expect_equal(anova.ranks[["feature_id"]], anova.expected[["feature_id"]])
+  expect_equal(anova.ranks[["feature_id"]], eranks[["feature_id"]])
+
+  # signed anova ranks fires a warning but returns a ranking
+  r <- expect_warning(ranks(ARES, signed = TRUE), "only.*unsigned")
+  expect_equal(result(r)[["feature_id"]], eranks[["feature_id"]])
 })
+
+test_that("t-test signatures generated correcty", {
+  # we'll compare these to parts of the correctly-generated ranks, which were
+  # tested above.
+  sig.signed <- signature(TRES, signed = TRUE)
+
+  sig.unsinged <- signature(TRES, signed = FALSE)
+})
+
+

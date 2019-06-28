@@ -158,6 +158,13 @@ result.FacileFeatureRanks <- function(x, name = "result", ...) {
   x[[name]]
 }
 
+#' @export
+#' @noRd
+result.FacileFeatureSignature <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
 #' Extract the value of a parameter used in a FacileAnalysis result
 #'
 #' @export
