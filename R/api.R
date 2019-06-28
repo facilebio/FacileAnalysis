@@ -165,6 +165,27 @@ result.FacileFeatureSignature <- function(x, name = "result", ...) {
   x[[name]]
 }
 
+#' Are these results (ranks, signatures) signed?
+#'
+#' @export
+#' @param x a rank or signature result
+#' @return logical
+signed <- function(x, ...) {
+  UseMethod("signed", x)
+}
+
+#' @noRd
+#' @export
+signed.FacileFeatureRanks <- function(x, ...) {
+  grepl("Signed$", class(x)[1L], ignore.case = FALSE)
+}
+
+#' @noRd
+#' @export
+signed.FacileFeatureSignature <- function(x, ...) {
+  grepl("Signed$", class(x)[1L], ignore.case = FALSE)
+}
+
 #' Extract the value of a parameter used in a FacileAnalysis result
 #'
 #' @export

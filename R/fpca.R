@@ -249,9 +249,13 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
 ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
-                                          signed = TRUE, ...) {
+                                          signed = TRUE, pcs = NULL, ...) {
   type <- match.arg(type)
   if (type == "samples") stop("What does sample-ranking even mean?")
+  if (!is.null(pcs)) {
+    pcs <- assert_integerish(pcs, lower = 1)
+    pcs <- unique(pcs)
+  }
 
   if (type == "features") {
     fstats <- x[["feature_stats"]]
@@ -259,38 +263,68 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
     ranks. <- select(fstats, feature_id, feature_type,
                      dimension = PC, score = rotation,
                      weight, rank = !!rcol)
-    clazz <- "FacilePcaFeatureRankings"
+    # FacilePcaFeatureRanksSigned
+    clazz <- "FacilePcaFeatureRanks%s"
+    s <- if (signed) "Signed" else "Unsigned"
+    classes <- sprintf(clazz, c(s, ""))
+    classes <- c(classes,
+                 sub("Pca", "MultiDimensional", classes),
+                 "FacileFeatureRanks")
   }
 
+  if (!is.null(pcs)) {
+    ranks. <- filter(ranks., dimension %in% sprintf("PC%d", pcs))
+    if (nrow(ranks.) == 0L) {
+      stop("All PC dimensions have been filtered out.")
+    }
+  }
+
+  # Order by PC and rank
+  ranks. <- ranks. %>%
+    mutate(PC. = as.integer(sub("PC", "", ranks.$dimension))) %>%
+    arrange(PC., rank) %>%
+    mutate(PC. = NULL)
+
   pvar <- x[["percent_var"]]
-  ranks.[["percent_var"]] <- pvar[ranks.[["dimension"]]]
+  ranks.[["percent_var_dim"]] <- pvar[ranks.[["dimension"]]]
 
   out <- list(
     result = ranks.,
+    signed = signed,
     params = list(type = type, signed = signed),
     ranking_columns = rcol,
     ranking_order = "descending",
     fds = fds(x))
 
-  class(out) <- c(clazz,
-                  "FacileMultiDimensionalFeatureRankings")
+  class(out) <- classes
   out
 }
 
 #' @noRd
 #' @export
-signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
-                                               collection_name = class(x)[1L],
-                                               ranking_columns = x[["ranking_columns"]],
-                                               ...) {
+signature.FacilePcaFeatureRanks <- function(x, pcs = NULL, ntop = 20,
+                                            collection_name = class(x)[1L],
+                                            ranking_columns = x[["ranking_columns"]],
+                                            ...) {
+  res. <- result(x)
+
+  if (!is.null(pcs)) {
+    pcs <- assert_integerish(pcs, lower = 1)
+    pcs <- unique(pcs)
+    res. <- filter(res., dimension %in% sprintf("PC%d", pcs))
+    if (nrow(ranks.) == 0L) {
+      stop("All PC dimensions have been filtered out.")
+    }
+  }
+
   if (isTRUE(x$params$signed)) {
-    sig.up <- result(x) %>%
+    sig.up <- res. %>%
       group_by(dimension) %>%
       arrange(rank) %>%
       slice(1:min(ntop, n())) %>%
       mutate(name = paste(dimension, "pos")) %>%
       ungroup()
-    sig.down <- result(x) %>%
+    sig.down <- res. %>%
       group_by(dimension) %>%
       arrange(desc(rank)) %>%
       slice(1:min(ntop, n())) %>%
@@ -300,7 +334,7 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
       bind_rows(sig.down) %>%
       arrange(dimension, rank)
   } else {
-    sig <- result(x) %>%
+    sig <- res. %>%
       group_by(dimension) %>%
       arrange(rank) %>%
       slice(1:min(ntop, n())) %>%
@@ -310,19 +344,13 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
 
   sig <- mutate(sig, collection = collection_name)
   sig <- select(sig, collection, name, feature_id, everything())
-  sig <- as_facile_frame(sig, fds(x))
+  # sig <- as_facile_frame(sig, fds(x))
 
   out <- list(
     result = sig,
     params = list(pcs = pcs, ntop = ntop))
 
-  # FacilePCAFeatureSignatureSigned
-  clazz <- "Facile%sFeatureSignature%s"
-  s <- if (signed) "Signed" else "Unsigned"
-  classes <- sprintf(clazz, c("PCA", "PCA",  "", ""), c(s, "", s, ""))
-  class(out) <- c(classes,
-                  "FacileFeatureRanks",
-                  "FacileAnalysisResult")
+  class(out) <- sub("Ranks$", "Signature", class(x))
   out
 }
 
@@ -331,7 +359,8 @@ signature.FacilePCAFeatureRankings <- function(x, pcs = NULL, ntop = 20,
 signature.FacilePcaAnalysisResult <- function(x, type = "features",
                                               signed = TRUE,
                                               pcs = NULL, ntop = 20, ...) {
-  signature(ranks(x, type = type, signed = signed), pcs = pcs, ntop = ntop, ...)
+  signature(ranks(x, type = type, signed = signed, pcs = pcs, ...),
+            ntop = ntop, ...)
 }
 
 # Utility Functions ============================================================

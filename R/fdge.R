@@ -276,7 +276,7 @@ ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
 
   out <- list(
     result = ranks.,
-    signed = signed,
+    params = list(signed = signed),
     ranking_columns = "logFC",
     ranking_order = "descending",
     fds = fds(x))
@@ -317,18 +317,15 @@ signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
   if (is.null(min_logFC)) min_logFC <- 0
   min_logFC <- abs(min_logFC)
 
-  res <- result(x)
+  res <- result(x) %>%
+    mutate(direction = ifelse(logFC > 0, "up", "down"))
 
-  if (x$signed) {
+  if (signed(x)) {
     up <- res %>%
       filter(padj <= max_padj, logFC > min_logFC) %>%
-      mutate(collection = collection_name, name = paste(name, "up"),
-             direction = "up") %>%
       head(ntop)
     down <- res %>%
       filter(padj <= max_padj, logFC < -min_logFC) %>%
-      mutate(collection = collection_name, name = paste(name, "down"),
-             direction = "down") %>%
       tail(ntop)
     sig <- bind_rows(up, down)
   } else {
@@ -338,14 +335,14 @@ signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
   }
 
   sig <- sig %>%
+    mutate(collection = collection_name, name = paste(name., direction)) %>%
     select(collection, name, feature_id, symbol, direction,
            logFC, pval, padj, everything())
 
   out <- list(
     result = sig,
-    signed = x$signed,
-    params = list(max_padj = max_padj, min_logFC = min_logFC))
-  class(out) <- sub("Ranks$", "Signature", class(x))
+    params = list(max_padj = max_padj, min_logFC = min_logFC, ntop = ntop))
+  class(out) <- sub("Ranks", "Signature", class(x))
   out
 }
 
@@ -364,7 +361,7 @@ ranks.FacileAnovaAnalysisResult <- function(x, signed = FALSE, ...) {
 
   out <- list(
     result = ranks.,
-    signed = signed,
+    params = list(signed = signed),
     ranking_columns = "F",
     ranking_order = "descending")
   # FacileAnovaFeatureRanksSigned
