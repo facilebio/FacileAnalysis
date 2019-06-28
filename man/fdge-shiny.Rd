@@ -54,9 +54,9 @@ This module can be embedded within a shiny app, or called from a gadget.
 if (interactive()) {
 # run tumor vs normal comparisons vs each, then run compare() on the results
 options(facile.log.level.fshine = "trace")
-efds <- exampleFacileDataSet()
+efds <- FacileData::exampleFacileDataSet()
 dge.crc <- efds \%>\%
-  filter_samples(indication == "CRC") \%>\%
+  FacileData::filter_samples(indication == "CRC") \%>\%
   fdgeGadget(viewer = "pane")
 dge.blca <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%

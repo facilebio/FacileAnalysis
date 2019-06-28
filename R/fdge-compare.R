@@ -74,9 +74,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     d <- filter(d, padj.x <= max_padj | padj.y <= max_padj)
   }
   hover <- intersect(hover, colnames(d))
-  # get knitr to work / print FacileViz objects correctly
-  # https://github.com/denalitherapeutics/FacileViz/issues/2
-  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE)$plot
+  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE)
 }
 
 #' Helper function to run an interaction model to generate statistics when

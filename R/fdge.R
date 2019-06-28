@@ -277,14 +277,15 @@ ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
   out <- list(
     result = ranks.,
     ranking_columns = "logFC",
-    ranking_order = "descending")
+    ranking_order = "descending",
+    fds = fds(x))
+
   # FacileTtestFeatureRanksSigned
   clazz <- "Facile%sFeatureRanks%s"
   s <- if (signed) "Signed" else "Unsigned"
   classes <- sprintf(clazz, c("Ttest", "Ttest",  "", ""), c(s, "", s, ""))
-  class(out) <- c(clazz,
-                  "FacileFeatureRanks",
-                  "FacileAnalysisResult")
+  class(out) <- c(classes,
+                  "FacileFeatureRanks")
   out
 }
 
@@ -301,12 +302,12 @@ signature.FacileTtestAnalysisResult <- function(x, min_logFC = x[["treat_lfc"]],
 
 #' @export
 #' @noRd
-signature.FacileTtestFeatureRankings <- function(x, min_logFC = x[["treat_lfc"]],
-                                                 max_padj = 0.10,
-                                                 ntop = 20,
-                                                 name = NULL,
-                                                 collection_name = NULL,
-                                                 ...) {
+signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
+                                              max_padj = 0.10,
+                                              ntop = 20,
+                                              name = NULL,
+                                              collection_name = NULL,
+                                              ...) {
   if (is.null(name)) name <- "Ttest signature"
   name. <- assert_string(name)
 
@@ -332,7 +333,7 @@ signature.FacileTtestFeatureRankings <- function(x, min_logFC = x[["treat_lfc"]]
   out <- list(
     result = sig,
     params = list(max_padj = max_padj, min_logFC = min_logFC))
-  class(out) <- sub("Rankings$", "Signature", class(x))
+  class(out) <- sub("Ranks$", "Signature", class(x))
   out
 }
 
@@ -358,8 +359,7 @@ ranks.FacileAnovaAnalysisResult <- function(x, signed = FALSE, ...) {
   s <- if (signed) "Signed" else "Unsigned"
   classes <- sprintf(clazz, c("Anova", "Anova",  "", ""), c(s, "", s, ""))
   class(out) <- c(clazz,
-                  "FacileFeatureRanks",
-                  "FacileAnalysisResult")
+                  "FacileFeatureRanks")
   out
 }
 
@@ -374,10 +374,10 @@ signature.FacileAnovaAnalysisResult <- function(x, max_padj = 0.10, ntop = 20,
 
 #' @export
 #' @noRd
-signature.FacileAnovaFeatureRankings <- function(x, max_padj = 0.10,
-                                                    ntop = 20, name = NULL,
-                                                    collection_name = NULL,
-                                                    ...) {
+signature.FacileAnovaFeatureRanks <- function(x, max_padj = 0.10,
+                                              ntop = 20, name = NULL,
+                                              collection_name = NULL,
+                                              ...) {
   if (is.null(name)) name <- "Anova signature"
   name. <- assert_string(name)
 
@@ -393,7 +393,7 @@ signature.FacileAnovaFeatureRankings <- function(x, max_padj = 0.10,
   out <- list(
     result = sig,
     params = list(ntop = ntop, max_padj = max_padj))
-  class(out) <- sub("Rankings$", "Signature", class(x))
+  class(out) <- sub("Ranks$", "Signature", class(x))
   sig
 }
 

@@ -45,8 +45,7 @@ viz.FacilePcaAnalysisResult <- function(x, pcs = 3, ...,
   p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
                     zlabel = zlabel, event_source = event_source,
                     webgl = webgl, ...)
-  # TODO: https://github.com/denalitherapeutics/FacileViz/issues/2
-  p$plot
+  p
 }
 
 #' @export

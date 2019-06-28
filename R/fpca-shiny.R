@@ -148,7 +148,7 @@ fpcaView <- function(input, output, session, rfds, result, ..., debug = FALSE) {
 
     v <- viz(res, color_aes = color., shape_aes = shape.)
     message("... viz generataed")
-    v$plot
+    plot(v)
   })
 }
 

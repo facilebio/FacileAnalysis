@@ -151,6 +151,13 @@ result.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
   result(faro(x, ...), name = name, ...)
 }
 
+#' @export
+#' @noRd
+result.FacileFeatureRanks <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
 #' Extract the value of a parameter used in a FacileAnalysis result
 #'
 #' @export

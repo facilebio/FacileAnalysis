@@ -28,9 +28,9 @@
 #' if (interactive()) {
 #' # run tumor vs normal comparisons vs each, then run compare() on the results
 #' options(facile.log.level.fshine = "trace")
-#' efds <- exampleFacileDataSet()
+#' efds <- FacileData::exampleFacileDataSet()
 #' dge.crc <- efds %>%
-#'   filter_samples(indication == "CRC") %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fdgeGadget(viewer = "pane")
 #' dge.blca <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
@@ -256,13 +256,21 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
 #' @importFrom DT datatable dataTableProxy formatRound renderDT replaceData
 #' @importFrom plotly event_data layout
 #' @importFrom shiny downloadHandler req
-#' @importFrom shinyjs toggleElement
+#' @importFrom shinyjs hide show toggleElement
 #' @importFrom shinyWidgets updateSwitchInput
 #' @param dgeres The result from calling [fdge()], or [fdgeRun()].
 fdgeView <- function(input, output, session, rfds, dgeres, ...,
                      feature_selection = session$ns("volcano"),
                      sample_selection = session$ns("samples"),
                      debug = FALSE) {
+  state <- reactiveValues(
+    # store brushed values from volcano plot here so that it can be reset
+    # externally. When a new DGE is run, I want to turn off the volcano, and
+    # blow out the selection. If we rely on just the reactive nature of
+    # event_data("plotly_selected") then the selection would be stuck when
+    # user turns off the volcano option
+    volcano_select = tibble(assay_name = character(), feature_id = character()),
+    boxplot_select = tibble(dataset = character(), sample_id = character()))
 
   # The FacileDGEResult object
   dge <- reactive({
@@ -270,15 +278,25 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     out <- faro(dgeres)
   })
 
-  # When a new fdge result is produced, we may want to reset a few things
+  # When a new fdge result is produced, we may want to reset a few things.
+  # Trigger that UI restting/cleanup work here.
   observeEvent(dge(), {
-    # Turn off volcano when new dgeresult is created
+    # Hide volcanobox completely if new dge is not a ttest
+    toggleElement("volcanobox", condition = is.ttest(dge()))
+    # New results should turn off the volcano toggleSwitch if it is a ttest
     updateSwitchInput(session, "volcanotoggle", value = FALSE)
-    # TODO: We will need to reset the selected_volcano reactive to NULL,
-    # otherwise if there is a selection, it will remain and the stats table
-    # will be filtered & stuck to that because the volcano has dissapeared.
-    # OR listen for when the switchInput("volcanotoggle")  is FALSE
-  })
+  }, priority = 5) # upping priority so some withProgress things hide quick
+
+  # When the volcano boxplot is turned off (toggle is set to FALSE), nuke
+  # any active selection
+  observeEvent(input$volcanotoggle, {
+    if (input$volcanotoggle) {
+      show("volcanoplotdiv")
+    } else {
+      state$volcano_select <- tibble(feature_id = character())
+      hide("volcanoplotdiv")
+    }
+  }, priority = 5)
 
   assay_name. <- reactive(param(req(dge()), "assay_name"))
   samples. <- reactive(samples(req(dge())))
@@ -302,7 +320,6 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   })
 
   observe({
-    toggleElement("volcanobox", condition = is.ttest(dge()))
     toggleElement("dlbuttonbox", condition = is(dge.stats.all(), "data.frame"))
   })
 
@@ -313,6 +330,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     show <- input$volcanotoggle
     if (is.ttest(dge()) && show) {
       dat. <- req(dge.stats.all())
+      # to make debugging faster from fewer points
+      dat. <- bind_rows(head(dat.), tail(dat.))
       dat.$yaxis <- -log10(dat.$pval)
       fplot <- fscatterplot(dat., c("logFC", "yaxis"),
                             xlabel = "logFC", ylabel = "-log10(pval)",
@@ -320,7 +339,7 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
                             hover = c("symbol", "logFC", "FDR"),
                             webgl = TRUE, event_source = feature_selection,
                             key = "feature_id")
-      plt <- fplot$plot
+      plt <- plot(fplot)
     }
     plt
   })
@@ -328,18 +347,26 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   # Responds to selection events on the volcano plot. If no selection is active,
   # this is NULL, otherwise its the character vector of the "feature_id" values
   # that are brushed in the plot.
-  selected_volcano <- reactive({
+  observeEvent(event_data("plotly_selected", source = feature_selection), {
     selected <- event_data("plotly_selected", source = feature_selection)
-    if (!is.null(selected)) selected <- selected$key
-    selected
-  })
+    if (is.null(selected)) {
+      selected <- character()
+    } else {
+      selected <- selected$key
+    }
+    if (!setequal(selected, state$volcano_select$feature_id)) {
+      state$volcano_select <- tibble(
+        assay_name = rep(assay_name.(), length(selected)),
+        feature_id = selected)
+    }
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
-  # The table of stats that are actively being shown. This is the whole table,
-  # unless the user is brushing the volcano.
   dge.stats <- reactive({
     stats. <- req(dge.stats.all())
-    selected <- selected_volcano()
-    if (!is.null(selected)) stats. <- filter(stats., feature_id %in% selected)
+    selected <- state$volcano_select
+    if (nrow(selected)) {
+      stats. <- filter(stats., feature_id %in% selected$feature_id)
+    }
     stats.
   })
 
@@ -358,6 +385,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     out
   })
 
+  # adds a .key column to the data.frame, which is seq(nrow(data)) to act as the
+  # plotly selection key for brushing
   boxdata <- eventReactive(selected_result(), {
     feature <- req(selected_result())
     dat <- req(samples.())
@@ -419,19 +448,29 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
                       color_aes = color.by, hover = c(scov, "value"),
                       width = NULL, height = NULL, legendside = "bottom",
                       xlabel = "", ylabel = ylbl)
-    out <- fplot$plot
+    out <- plot(fplot)
     layout(out, title = sprintf("<b>%s</b>", feature[["symbol"]]))
   })
 
-  # a dataset,sample_id tibble of the selected things, or NULL if none selected
-  selected_samples <- reactive({
+  # Responds to sample-selection events on the boxplot. If no selection is
+  # active, this is NULL, otherwise it's <dataset>__<sample_id>-pastd
+  # compound key
+  observeEvent(event_data("plotly_selected", source = sample_selection), {
     selected <- event_data("plotly_selected", source = sample_selection)
-    if (!is.null(selected)) {
-      dat <- req(boxdata())
-      selected <- select(filter(dat, .key == selected), dataset, sample_id)
+    if (is.null(selected)) {
+      selected <- tibble(dataset = character(), sample_id = character())
+    } else {
+      selected <- boxdata() %>%
+        slice(as.integer(selected$key)) %>%
+        select(dataset, sample_id)
     }
-    selected
-  })
+    current <- paste(state$boxplot_select$dataset,
+                     state$boxplot_select$sample_id)
+    snew <- paste(selected$dataset, selected$sample_id)
+    if (!setequal(current, snew)) {
+      state$boxplot_select <- selected
+    }
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 
   # Stats Table ----------------------------------------------------------------
@@ -490,8 +529,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   # })
 
   vals <- list(
-    selected_features = selected_volcano,
-    selected_samples = selected_samples)
+    selected_features = reactive(state$volcano_select),
+    selected_samples = reactive(state$boxplot_select))
   return(vals)
 }
 

@@ -259,8 +259,7 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
     ranks. <- select(fstats, feature_id, feature_type,
                      dimension = PC, score = rotation,
                      weight, rank = !!rcol)
-    ranks. <- arrange(ranks., dimension, rank)
-    clazz <- "FacilePCAFeatureRankings"
+    clazz <- "FacilePcaFeatureRankings"
   }
 
   pvar <- x[["percent_var"]]
@@ -269,11 +268,12 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
   out <- list(
     result = ranks.,
     params = list(type = type, signed = signed),
+    ranking_columns = rcol,
+    ranking_order = "descending",
     fds = fds(x))
 
   class(out) <- c(clazz,
-                  "FacileMultiDimensionalRankings",
-                  "FacileAnalysisResult")
+                  "FacileMultiDimensionalFeatureRankings")
   out
 }
 

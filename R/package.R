@@ -9,6 +9,7 @@ NULL
 # Ubiquitously used methods from other package =================================
 
 #' @importFrom glue glue
+#' @importFrom FacileViz plot
 NULL
 
 # Externally defined generics to re-export on package load ---------------------
