@@ -151,7 +151,8 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
 
   fdge(imodel, filter = genes.,
        method = param(x, "method"),
-       assay_name = param(x, "assay_name"))
+       assay_name = param(x, "assay_name"),
+       with_sample_weights = param(x, "with_sample_weights"))
 }
 
 #' @noRd
