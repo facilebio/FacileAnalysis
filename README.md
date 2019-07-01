@@ -193,10 +193,18 @@ programmatically.
 
 ## Installation
 
+The `FacileAnalysis` package uses all of the “facileverse” packages, so
+those need to be installed first.
+
+A simple `devtools::install_github("denalitherapeutics/FacileAnalysis")`
+should do the trick, however if you need to install them indivdiually,
+do so in this order:
+
 ``` r
-# These packages are only available via github for now
-# install.packages("devtools")
-devtools::install_github("facileverse/FacileAnalysis")
+devtools::install_github("denalitherapeutics/FacileData")
+devtools::install_github("denalitherapeutics/FacileViz")
+devtools::install_github("denalitherapeutics/FacileShine")
+devtools::install_github("denalitherapeutics/FacileAnalysis")
 ```
 
 ## Resources
