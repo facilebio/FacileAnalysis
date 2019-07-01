@@ -29,8 +29,8 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
     param(x, "method") == param(y, "method"))
 
   fds. <- fds(x)
-  xres <- result(x)
-  yres <- result(y)
+  xres <- tidy(x)
+  yres <- tidy(y)
 
   idge <- .interaction_fdge(x, y)
 
@@ -44,14 +44,17 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
     by = meta.cols)
 
   if (!is.null(idge)) {
-    ires <- select(result(idge), !!c(meta.cols, stat.cols))
+    ires <- select(tidy(idge), !!c(meta.cols, stat.cols))
     xystats <- left_join(xystats, ires, by = meta.cols)
+    # put stats for interaction test up front, followed by *.x, *.y
+    xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
   }
 
   out <- list(
     result = xystats,
     dge = idge)
   class(out) <- c("FacileTtestComparisonAnalysisResult",
+                  "FacileTtestAnalysisResult",
                   "FacileAnalysisComparisonComparison",
                   "FacileAnalysisResult")
   out
@@ -67,7 +70,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     "padj.x", "padj.y",
     # stats from interaction model, if it was run
     "logFC", "padj")
-  d <- result(x)
+  d <- tidy(x)
   if (!is.null(x[["dge"]])) {
     d <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
   } else {
@@ -87,8 +90,8 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
 .interaction_fdge <- function(x, y, ...) {
   xmod <- model(x)
   ymod <- model(y)
-  xres <- result(x)
-  yres <- result(y)
+  xres <- tidy(x)
+  yres <- tidy(y)
 
   covariate <- param(xmod, "covariate")
   if (covariate != param(ymod, "covariate")) {
@@ -97,32 +100,50 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     return(NULL)
   }
 
-  icovariate <- ".grp."
-  ifixed <- unique(c(param(xmod, "fixed"), param(ymod, "fixed")))
+  warning("Properly running the interaction model here is still ALPHA",
+          immediate. = TRUE)
+
   xsamples <- samples(xmod)
-  xadd <- setdiff(ifixed, colnames(xsamples))
-  if (length(xadd)) {
-    warning("Adding fixed covariates to x, these were not originally used: ",
-            paste(xadd, collapse = ", "))
-    xsamples <- with_sample_covariates(xsamples, .fds = fds(x))
-  }
-  xsamples[[icovariate]] <- paste0("xgrp.", xsamples[[covariate]])
-
   ysamples <- samples(ymod)
-  yadd <- setdiff(ifixed, colnames(ysamples))
-  if (length(yadd)) {
-    warning("Adding fixed covariates to y, these were not originally used: ",
-            paste(yadd, collapse = ", "))
-    ysamples <- with_sample_covariates(ysamples, .fds = fds(y))
+
+  ifixed <- unique(c(param(xmod, "fixed"), param(ymod, "fixed")))
+
+  # If the models were defined on separate samples, then we have to take
+  # extra care, since if the samples were split differently, then the same
+  # covariate values can identify the same samples across models.
+  # For example, if we did a tumor vs normal comparison in x of CRC and the
+  # same comparison in y from BLCA, then we need to be more careful with
+  # contrast for (crc tumor / crc normal) / (blca tumor / blca normal)
+  same.samples <- setequal(
+    paste(xsamples$dataset, xsamples$sample_id),
+    paste(ysamples$dataset, ysamples$sample_id))
+
+  if (same.samples) {
+    samples. <- xsamples
+    icovariate <- covariate
+  } else {
+    icovariate <- ".grp."
+    xsamples[[icovariate]] <- paste0("xgrp.", xsamples[[covariate]])
+    ysamples[[icovariate]] <- paste0("ygrp.", ysamples[[covariate]])
+    samples. <- bind_rows(xsamples, ysamples)
+    samples. <- distinct(samples., dataset, sample_id, .keep_all = TRUE)
   }
-  ysamples[[icovariate]] <- paste0("ygrp.", ysamples[[covariate]])
 
-  samples. <- set_fds(bind_rows(xsamples, ysamples), fds(xmod))
+  samples. <- set_fds(samples., fds(x))
 
-  contrast. <- glue(
-    "( {xcon} ) - ( {ycon} )",
-    xcon = .prefix_contrast(xmod[["contrast_string"]], "xgrp."),
-    ycon = .prefix_contrast(ymod[["contrast_string"]], "ygrp."))
+  if (length(ifixed)) {
+    # remove and add values to be thorough
+    for (fixcov in ifixed)  samples.[[fixcov]] <- NULL
+    samples. <- with_sample_covariates(samples., ifixed)
+  }
+
+  xcontrast <- xmod[["contrast_string"]]
+  ycontrast <- ymod[["contrast_string"]]
+  if (!same.samples) {
+    xcontrast <- .prefix_contrast(xcontrast, "xgrp.")
+    ycontrast <- .prefix_contrast(ycontrast, "ygrp.")
+  }
+  contrast. <- glue("( {xcontrast} ) - ( {ycontrast} )")
 
   imodel <- fdge_model_def(samples., icovariate, fixed = ifixed,
                            contrast. = contrast.)

@@ -3,6 +3,8 @@
 #' @noRd
 #' @export
 viz.FacilePcaAnalysisResult <- function(x, pcs = 3, ...,
+                                        height = 400,
+                                        width = 700,
                                         xlabel = "default",
                                         ylabel = "default",
                                         zlabel = "default",
@@ -44,7 +46,7 @@ viz.FacilePcaAnalysisResult <- function(x, pcs = 3, ...,
 
   p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
                     zlabel = zlabel, event_source = event_source,
-                    webgl = webgl, ...)
+                    webgl = webgl, height = height, width = width, ...)
   p
 }
 

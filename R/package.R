@@ -10,9 +10,13 @@ NULL
 
 #' @importFrom glue glue
 #' @importFrom FacileViz plot
+#' @importFrom broom tidy
 NULL
 
 # Externally defined generics to re-export on package load ---------------------
+
+#' @export tidy
+NULL
 
 # dplyr API
 

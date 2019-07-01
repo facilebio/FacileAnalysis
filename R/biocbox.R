@@ -137,7 +137,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
 
   out[["biocbox"]] <- .biocbox_create(si, assay_name = assay_name,
                                       assay_type = assay_type,
-                                      design = x$design, filter = filter,
+                                      design = x, filter = filter,
                                       method = method,
                                       with_sample_weights = with_sample_weights,
                                       prior_count = prior_count, ...)
@@ -157,6 +157,8 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
 .biocbox_create <- function(xsamples, assay_name, assay_type,
                             design, filter, method, with_sample_weights,
                             prior_count, ...) {
+  assert_class(design, "FacileDgeModelDefinition")
+
   if (assay_type %in% c("rnaseq", "isoseq", "umi")) {
     create <- .biocbox_create_DGEList
   } else if (assay_type %in% c("normcounts", "lognorm")) {
@@ -184,17 +186,30 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                                     # default params for edgeR::filterByExpr
                                     filter_min_count = 10,
                                     filter_min_total_count = 15, ...) {
+  assert_class(design, "FacileDgeModelDefinition")
   if (is.null(prior_count)) prior_count <- 2
   y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
   # The roughly approximated norm.factors already present in a faciledatastore
   # should be good enough for initial low-pass filtering.
   # y.all <- calcNormFactors(y.all)
-  y.all$design <- design[colnames(y.all),]
+
+  des.matrix <- design(design)[colnames(y.all),,drop=FALSE]
+  y.all$design <- des.matrix
 
   # Remove genes according to `filter` specificaiton
   if (is.character(filter)) {
     if (length(filter) == 1L && filter == "default") {
-      keep <- filterByExpr(y.all, y.all$design, min.count = filter_min_count,
+      # keep only the columns in the design matrix that correspond to the
+      # main groups. If this is a ttest, its des.matrix[, design$text_covs].
+      # If anova, then we also include the intercept column
+      filter.cols <- design$test_covs
+      if (is.anova(design)) {
+        filter.cols <- c(
+          grep("(Intercept)", colnames(des.matrix), ignore.case = TRUE),
+          filter.cols)
+      }
+      keep <- filterByExpr(y.all, des.matrix[, filter.cols],
+                           min.count = filter_min_count,
                            min.total.count = filter_min_total_count, ...)
     } else {
       keep <- rownames(y.all) %in% filter

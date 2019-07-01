@@ -330,8 +330,11 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     show <- input$volcanotoggle
     if (is.ttest(dge()) && show) {
       dat. <- req(dge.stats.all())
-      # to make debugging faster from fewer points
-      dat. <- bind_rows(head(dat.), tail(dat.))
+      if (debug) {
+        # reduce volcano size
+        dat. <- bind_rows(head(dat., 100), tail(dat., 100))
+        dat. <- distinct(dat, feature_id, .keep_all = TRUE)
+      }
       dat.$yaxis <- -log10(dat.$pval)
       fplot <- fscatterplot(dat., c("logFC", "yaxis"),
                             xlabel = "logFC", ylabel = "-log10(pval)",

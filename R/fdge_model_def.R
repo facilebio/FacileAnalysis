@@ -281,6 +281,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     # (treatment_hek - ctrl_hek) - (treatment_hela - ctrl_hela)
     # Interaction regex, ie. (treat1_ - ctrl) - (treat2 - ctrl)
     iregex <- "\\(.+-.+\\)\\W*-\\W*\\(.+-.+\\)"
+
     if (str_detect(contrast_string, iregex)) {
       clazz <- c("FacileInteractionTestModelDefinition", clazz)
     }

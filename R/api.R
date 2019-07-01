@@ -147,8 +147,22 @@ result.FacileAnalysisResult <- function(x, name = "result", ...) {
 
 #' @export
 #' @noRd
+tidy.FacileAnalysisResult <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
+
+#' @export
+#' @noRd
 result.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
   result(faro(x, ...), name = name, ...)
+}
+
+#' @export
+#' @noRd
+tidy.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
+  tidy(faro(x, ...), name = name, ...)
 }
 
 #' @export
@@ -160,7 +174,21 @@ result.FacileFeatureRanks <- function(x, name = "result", ...) {
 
 #' @export
 #' @noRd
+tidy.FacileFeatureRanks <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
+#' @export
+#' @noRd
 result.FacileFeatureSignature <- function(x, name = "result", ...) {
+  assert_choice(name, names(x))
+  x[[name]]
+}
+
+#' @export
+#' @noRd
+tidy.FacileFeatureSignature <- function(x, name = "result", ...) {
   assert_choice(name, names(x))
   x[[name]]
 }

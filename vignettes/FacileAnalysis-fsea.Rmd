@@ -22,6 +22,12 @@ set.seed(0xFEED)
 
 **Under Construction**
 
+The facile feature set enrichment analysis leans on the multiGSEA framework
+for running GSEA methods, as well as providing gene set collections via 
+`multiGSEA::GeneSetDb` objects.
+
+This vignette assumes that you've got a `GeneSetDb` object in hand named `gdb`.
+
 ```{r, eval = FALSE}
 library(FacileData)
 library(FacileAnalysis)
@@ -44,7 +50,7 @@ For now, I imagine (gene) set enerichment analyses will be performed over
                  numer = "tumor", denom = "normal",
                  fixed = "sex") %>% 
       fdge() %>% 
-      fsea(method = c("cameraPR", "goseq", rank_by = "t"))
+      ffsea(gdb, pc = 1, method = c("cameraPR", "goseq", rank_by = "t"))
     ```
 
 2. The "highly loaded" genes from the first prinicpal component of a
@@ -54,7 +60,7 @@ For now, I imagine (gene) set enerichment analyses will be performed over
     ```{r, eval=FALSE}
     pc1.gsea <- samples %>% 
       fpca() %>% 
-      fsea(pc = 1)
+      ffsea(gdb, pc = 1)
     ```
 
 In the immediate term, the GSEA functionality will lean heavily on the multiGSEA

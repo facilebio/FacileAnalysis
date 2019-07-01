@@ -43,7 +43,7 @@ Analyses implemented within this package include:
 
 1. Principal Components Analysis (fpca)
 2. Differential Expression Analysis (fdge)
-3. (Gene) Set Enrichment Analysis (fsea)
+3. Feature (Gene) Set Enrichment Analysis (ffsea)
 
 Additional analyses can be added within this package, or as new packages which
 import and implement the FacileAnalysis S3 API from here.
@@ -76,7 +76,7 @@ from a FacileDataStore is defined as.
 ## Required Shiny
 
 `<fanalysis>` is a place holder for one othe core functions that are implemented
-as a facile analysis module, ie.`"fdge"`, `"fsea"`, `"fpca"`, etc.
+as a facile analysis module, ie.`"fdge"`, `"ffsea"`, `"fpca"`, etc.
 
 * `<fanalysis>Analysis`: a wrapper module that incorporates all the internal
   modules for each step of the analysis pipeline. The `fdgeAnalysis` module,
