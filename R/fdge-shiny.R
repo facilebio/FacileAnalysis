@@ -232,6 +232,8 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 
 # Implement reactive fdge methods ==============================================
 
+#' Runs fdge over a model definition created from a shiny gadget.
+#'
 #' @noRd
 #' @export
 fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
@@ -275,7 +277,7 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   # The FacileDGEResult object
   dge <- reactive({
     req(initialized(dgeres))
-    out <- faro(dgeres)
+    faro(dgeres)
   })
 
   # When a new fdge result is produced, we may want to reset a few things.
@@ -533,7 +535,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
 
   vals <- list(
     selected_features = reactive(state$volcano_select),
-    selected_samples = reactive(state$boxplot_select))
+    selected_samples = reactive(state$boxplot_select),
+    .ns = session$ns)
   return(vals)
 }
 

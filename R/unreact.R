@@ -15,6 +15,12 @@
 #' needs to fire in a reactive environment, which you get in the
 #' `observeEvent(intput$done, { ... })` expression.
 #'
+#' NOTE: I don't want to export this function, or its class-speficic
+#' implementation, but when this package is library()/loaded, and one of its
+#' functions calls it inernally, for some reason the `unreact.default` function
+#' isn't found ...
+#'
+#' @export
 #' @param x stuff and things
 #' @return a version of x with an "inert" versions of internal facile-components
 #'   (primariy FacileDataStore) wherever they may be.
@@ -23,11 +29,13 @@ unreact <- function(x, ...) {
 }
 
 #' @noRd
+#' @export
 unreact.default <- function(x, ...) {
   x
 }
 
 #' @noRd
+#' @export
 unreact.list <- function(x, ...) {
   out <- lapply(x, unreact)
   class(out) <- class(x)
@@ -35,17 +43,29 @@ unreact.list <- function(x, ...) {
 }
 
 #' @noRd
+#' @export
 unreact.FacileAnalysisResult <- function(x, ...) {
   unreact.list(x, ...)
 }
 
 #' @noRd
+#' @export
 unreact.facile_frame <- function(x, ...) {
-  as_facile_frame(x, fds(fds(x)))
+  out <- as_facile_frame(x, fds(fds(x)))
+  class(out) <- rm.rds.class(x)
+  out
 }
 
 
 #' @noRd
+#' @export
 unreact.ReactiveFacileDataStore <- function(x, ...) {
   fds(x)
+}
+
+#' @noRd
+rm.rds.class <- function(x, ...) {
+  oclass <- class(x)
+  rds.classes <- grepl("^reactive_", oclass, ignore.case = TRUE)
+  oclass[!rds.classes]
 }

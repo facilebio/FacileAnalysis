@@ -3,7 +3,7 @@
 \name{ffsea}
 \alias{ffsea}
 \alias{result.FacileFseaAnalysisResult}
-\title{Performs Gene Set Enrichment Analyses}
+\title{Performs Feature (Gene) Set Enrichment Analyses}
 \usage{
 ffsea(x, ...)
 
@@ -22,7 +22,7 @@ as it's \code{result()}.
 }
 \description{
 \strong{For now} only GSEA methods process a pre-ranked feature set work, like
-\code{"cameraPR"} or \code{"fgsea"}.
+\code{"cameraPR"} and \code{"fgsea"}.
 }
 \details{
 The default method run is simply \code{"cameraPR"}.
@@ -61,6 +61,9 @@ ttest.res <- FacileData::exampleFacileDataSet() \%>\%
                  numer = "tumor", denom = "normal", fixed = "sex") \%>\%
   fdge(method = "voom")
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "fgsea"))
+if (interactive()) {
+  shine(ttest.gsea)
+}
 
 mgsea.result <- result(ttest.gsea)
 camera.stats <- tidy(ttest.gsea, "cameraPR")

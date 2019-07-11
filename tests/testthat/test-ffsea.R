@@ -1,10 +1,13 @@
 context("Test Feature Set Enrichment Analysis (ffsea)")
 
-if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
-
-test_that("ffsea,cameraPR works like multiGSEA call", {
+if (!exists("FDS")) {
+  FDS <- FacileData::exampleFacileDataSet()
+}
+if (!exists("gdb")) {
   gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+}
 
+test_that("cameraPR call through ffsea works like multiGSEA call", {
   # GSEA the facile way
   facile.ttest <- FDS %>%
     FacileData::filter_samples(indication == "CRC") %>%
@@ -31,6 +34,16 @@ test_that("ffsea,cameraPR works like multiGSEA call", {
     select(facile.cameraPR, name, pval),
     select(mgres.cameraPR, name, pval))
 })
+
+test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
+  pca.crc <- FacileData::exampleFacileDataSet() %>%
+    FacileData::filter_samples(indication == "CRC") %>%
+    fpca()
+  pca1.gsea <- ffsea(pca.crc, gdb, pc = 1)
+  mgres <- result(pca1.gsea)
+  # TODO: test something here ffsea,pca
+})
+
 
 if (FALSE) {
   # are there really no hallmark pathways differentially expressed between

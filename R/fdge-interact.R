@@ -2,35 +2,45 @@
 
 #' @noRd
 #' @export
-#' @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
-#' @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
-#' @importFrom FacileShine reactiveFacileDataStore
 shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                           title = "Differential Expression Results",
                                           width = 800, height = 800,
                                           viewer = "pane", ...) {
-  ui <- miniPage(
-    gadgetTitleBar(class(x)[1L]),
-    miniContentPanel(fdgeViewUI("view")),
-    NULL)
-
-  viewer <- gadget_viewer(viewer, title, width, height, ...)
-
-  server <- function(input, output, session) {
-    rfds <- ReactiveFacileDataStore(fds(x), "ds", user = user,
-                                    samples = samples(x))
-    # rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
-    view <- callModule(fdgeView, "view", rfds, x, ...)
-    observeEvent(input$done, {
-      stopApp(invisible(NULL))
-    })
-    observeEvent(input$cancel, {
-      stopApp(invisible(NULL))
-    })
-  }
-
-  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title,
+             width = width, height = height, ...)
 }
+
+# @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp
+# @importFrom miniUI gadgetTitleBar miniContentPanel miniPage
+# @importFrom FacileShine reactiveFacileDataStore
+# shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
+#                                           title = "Differential Expression Results",
+#                                           width = 800, height = 800,
+#                                           viewer = "pane", ...) {
+#   ui <- miniPage(
+#     useShinyjs(),
+#     useSweetAlert(),
+#     gadgetTitleBar(class(x)[1L]),
+#     miniContentPanel(fdgeViewUI("view")),
+#     NULL)
+#
+#   viewer <- gadget_viewer(viewer, title, width, height, ...)
+#
+#   server <- function(input, output, session) {
+#     rfds <- ReactiveFacileDataStore(fds(x), "ds", user = user,
+#                                     samples = samples(x))
+#     # rfds <- callModule(reactiveFacileDataStore, "ds", fds(x), samples(x), user)
+#     view <- callModule(fdgeView, "view", rfds, x, ...)
+#     observeEvent(input$done, {
+#       stopApp(invisible(NULL))
+#     })
+#     observeEvent(input$cancel, {
+#       stopApp(invisible(NULL))
+#     })
+#   }
+#
+#   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+# }
 
 #' @noRd
 #' @export

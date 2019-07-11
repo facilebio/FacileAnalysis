@@ -1,12 +1,33 @@
-#' Wraps FacileAnalysis modules into a gadget.
+#' Support harness to initialize and launch a shiny gadget over a facile object.
 #'
-#' If `x` is a `facile_frame`, than the analysis is strictly performed over the
-#' samples defined by the `facile_frame`. If it is a `FacileDataStore`, then
-#' a UI is provided to filter into the sample space by the
-#' [FacileShine::filteredReactiveFacileDataStoreUI()] module.
+#' This function handles much of the book keeping code required to setup a shiny
+#' gadget around a facile object `x`. There are two
+#'
+#' This allows us to interact over objects
+#' (`x`)that have been  created programmaticaly during an analysis, and return
+#' relevant interactive events over `x`, or derivative analysis results back
+#' to the workspace.
+#'
+#' @section Flavors of x:
+#' We want to support building interactive components over different types of
+#' facile objects (`x`). When `x` is a:
+#'
+#' * `FacileDataStore` the analysis module will include a
+#'   [FacileShine::filteredReactiveFacileDataStoreUI()], which allows the user
+#'   to interactrively subset down to the samples that the analysis module will
+#'   have access to and analyze. The user can then configure and run and
+#'   analysis, and subsequently interact with the results.
+#'
+#' * `facile_sample_frame` the analysis module will be initialized to work over
+#'   the samples defined in the facile_frame. The user will then configure the
+#'   anlaysis to run from there and be able to interact with the results.
+#'
+#' * `FacileAnalysisResult` will launch the view over the analysis result,
+#'   allowing the user to interact with and explore the result.
 #'
 #' @importFrom miniUI
 #'   gadgetTitleBar
+#'   miniContentPanel
 #'   miniPage
 #' @importFrom multiGSEA failWith
 #' @importFrom FacileShine
@@ -38,6 +59,7 @@
 frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
                        title = "Facile Analysis Gadget",
                        height = 600, width = 1000, viewer = "pane", ...,
+                       use_sweet_alert = TRUE,
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
   options(facile.bs4dash = FALSE)
@@ -52,10 +74,16 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     fds. <- fds(x)
     samples. <- x
     sample.filter <- FALSE
-  } else {
+  } else if (is(x, "FacileDataStore")) {
     sample.filter <- TRUE
     fds. <- x
     samples. <- samples(x) %>% collect(n = Inf)
+  } else if (is(x, "FacileAnalysisResult")) {
+    # ugh, this isn't going to work -- I'm writing this in to fire up a
+    # ffseaGadget, whose needs to be a FacileAnalysisResult.
+    sample.filter <- FALSE
+    fds. <- fds(x)
+    samples. <- samples(x)
   }
 
   assert_class(fds., "FacileDataStore")
@@ -70,11 +98,26 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     ui.content <- analysisUI("analysis", ..., debug = debug)
   }
 
+  # Add dummy entry using shinyjs::extendShinyjs so that downstream modules
+  # can use it, if they like
+  dummy.extend <- "shinyjs.dummy = function(params) { return undefined; };"
+
   ui <- miniPage(
     useShinyjs(),
-    useSweetAlert(),
+    # extendShinyjs(text = dummyjs.extend),
+    if (use_sweet_alert) useSweetAlert() else NULL,
     gadgetTitleBar(title),
     miniContentPanel(ui.content),
+    # miniContentPanel({
+    #   if (sample.filter) {
+    #     tagList(
+    #       filteredReactiveFacileDataStoreUI("ds"),
+    #       tags$hr(),
+    #       analysisUI("analysis", ..., debug = debug))
+    #   } else {
+    #     analysisUI("analysis", ..., debug = debug)
+    #   }
+    # }),
     NULL)
 
   server <- function(input, output, session) {
@@ -83,7 +126,11 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
 
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
-      result. <- failWith(list(), unreact(faro(analysis)))
+      if (is(x, "FacileAnalysisResult"))   {
+        result. <- x
+      } else {
+        result. <- failWith(list(), unreact(faro(analysis)))
+      }
       result.[["gadget"]] <- list(
         annotation = annotation)
       class(result.) <- classify_as_gadget(result.)

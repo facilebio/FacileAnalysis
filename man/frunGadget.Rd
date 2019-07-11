@@ -2,11 +2,11 @@
 % Please edit documentation in R/frunGadget.R
 \name{frunGadget}
 \alias{frunGadget}
-\title{Wraps FacileAnalysis modules into a gadget.}
+\title{Support harness to initialize and launch a shiny gadget over a facile object.}
 \usage{
 frunGadget(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   title = "Facile Analysis Gadget", height = 600, width = 1000,
-  viewer = "pane", ..., debug = FALSE)
+  viewer = "pane", ..., use_sweet_alert = TRUE, debug = FALSE)
 }
 \arguments{
 \item{analysisModule}{the server function for the gadget}
@@ -32,8 +32,30 @@ information from brushing of smaples (or features) -- depending on what
 the gadget is working over.
 }
 \description{
-If \code{x} is a \code{facile_frame}, than the analysis is strictly performed over the
-samples defined by the \code{facile_frame}. If it is a \code{FacileDataStore}, then
-a UI is provided to filter into the sample space by the
-\code{\link[FacileShine:filteredReactiveFacileDataStoreUI]{FacileShine::filteredReactiveFacileDataStoreUI()}} module.
+This function handles much of the book keeping code required to setup a shiny
+gadget around a facile object \code{x}. There are two
 }
+\details{
+This allows us to interact over objects
+(\code{x})that have been  created programmaticaly during an analysis, and return
+relevant interactive events over \code{x}, or derivative analysis results back
+to the workspace.
+}
+\section{Flavors of x}{
+
+We want to support building interactive components over different types of
+facile objects (\code{x}). When \code{x} is a:
+\itemize{
+\item \code{FacileDataStore} the analysis module will include a
+\code{\link[FacileShine:filteredReactiveFacileDataStoreUI]{FacileShine::filteredReactiveFacileDataStoreUI()}}, which allows the user
+to interactrively subset down to the samples that the analysis module will
+have access to and analyze. The user can then configure and run and
+analysis, and subsequently interact with the results.
+\item \code{facile_sample_frame} the analysis module will be initialized to work over
+the samples defined in the facile_frame. The user will then configure the
+anlaysis to run from there and be able to interact with the results.
+\item \code{FacileAnalysisResult} will launch the view over the analysis result,
+allowing the user to interact with and explore the result.
+}
+}
+

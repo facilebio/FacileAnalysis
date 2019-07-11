@@ -29,4 +29,9 @@ the \code{set_fds()} and \code{fds()} setters and getters), with their inner
 This function needs to be called within the gadget, ie. I'm pretty sure it
 needs to fire in a reactive environment, which you get in the
 \code{observeEvent(intput$done, { ... })} expression.
+
+NOTE: I don't want to export this function, or its class-speficic
+implementation, but when this package is library()/loaded, and one of its
+functions calls it inernally, for some reason the \code{unreact.default} function
+isn't found ...
 }

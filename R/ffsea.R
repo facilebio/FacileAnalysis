@@ -1,7 +1,7 @@
-#' Performs Gene Set Enrichment Analyses
+#' Performs Feature (Gene) Set Enrichment Analyses
 #'
 #' **For now** only GSEA methods process a pre-ranked feature set work, like
-#' `"cameraPR"` or `"fgsea"`.
+#' `"cameraPR"` and `"fgsea"`.
 #'
 #' The default method run is simply `"cameraPR"`.
 #'
@@ -32,6 +32,9 @@
 #'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
 #'   fdge(method = "voom")
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "fgsea"))
+#' if (interactive()) {
+#'   shine(ttest.gsea)
+#' }
 #'
 #' mgsea.result <- result(ttest.gsea)
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")
@@ -56,12 +59,14 @@ ffsea <- function(x, ...) {
 
 #' @noRd
 #' @export
+#' @importFrom multiGSEA multiGSEA
 ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
                                             min_logFC = 1, max_padj = 0.10,
                                             rank_by = "logFC", signed = TRUE,
                                             ...) {
   assert_class(gdb, "GeneSetDb")
   assert_subset(methods, c("cameraPR", "fgsea", "geneSetTest"))
+  fds. <- assert_facile_data_store(fds(x))
 
   ranks. <- result(ranks(x, signed = signed, ...))
   assert_choice(rank_by, colnames(ranks.))
@@ -71,18 +76,33 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
   ranks. <- arrange_at(ranks., rank_by, desc)
   ranked <- setNames(ranks.[[rank_by]], ranks.[["feature_id"]])
 
+  messages <- character()
+  warnings <- character()
+  errors <- character()
+
+  clazz <- c("FacileTtestFseaAnalysisResult", "FacileDgeFseaAnalysisResult")
+  classes <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
+
+  out <- list(
+    result = NULL,
+    params = list(methods = methods, min_logFC = min_logFC,
+                  max_padj = max_padj, rank_by = rank_by, x = x),
+    fds = fds.)
+
+  on.exit({
+    out[["messages"]] <- messages
+    out[["warnings"]] <- warnings
+    out[["errors"]] <- errors
+    class(out) <- c(clazz, classes)
+    return(out)
+  })
+
+
   xmeta. <- select(ranks., feature_id, symbol, meta, logFC, t, B, AveExpr,
                    pval, padj)
 
-  mg <- multiGSEA(gdb, ranked, method = methods, ..., xmeta. = xmeta.)
-
-  out <- list(
-    result = mg,
-    params = list(methods = methods, min_logFC = min_logFC, max_padj = max_padj,
-                  rank_by = rank_by))
-  class(out) <- c("FacileTtestFseaAnalysisResult",
-                  "FacileFseaAnalysisResult",
-                  "FacileAnalysisResult")
+  out[["result"]] <- multiGSEA(gdb, ranked, method = methods, ...,
+                               xmeta. = xmeta.)
   out
 }
 
@@ -97,6 +117,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
 #'
 #' @noRd
 #' @export
+#' @importFrom multiGSEA multiGSEA
 ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
                                           signed = TRUE, methods = "cameraPR",
                                           ...) {
@@ -111,7 +132,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
   classes <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
 
   out <- list(
-    params = list(pc = pc, signed = signed, methods = methods, pca_result = x),
+    params = list(pc = pc, signed = signed, methods = methods, x = x),
     fds = fds.)
 
   on.exit({
@@ -121,7 +142,6 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
     class(out) <- c(clazz, classes)
     return(out)
   })
-
 
   rank.column <- if (signed) "score" else "weight"
   pc.ranks <- result(ranks(x, pcs = pc, signed = signed, ...))
@@ -133,8 +153,8 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
     assay_feature_info(aname.) %>%
     transmute(feature_id, symbol = name, biotype = meta)
 
-  mgres <- multiGSEA(gdb, vals, methods = methods, ..., xmeta. = xmeta.)
-  out[["result"]] <- mgres
+  out[["result"]] <- multiGSEA(gdb, vals, methods = methods, ...,
+                               xmeta. = xmeta.)
   out
 }
 
@@ -158,11 +178,21 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
 #' @importFrom multiGSEA resultNames
 result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
   mgres <- x[["result"]]
-  if (name == "object") return(mgres)
+  if (name == "object") {
+    return(mgres)
+  }
 
   name. <- assert_choice(name, param(x, "methods"))
   out <- as.tbl(result(mgres, name.))
   out
+}
+
+
+#' @noRd
+#' @export
+samples.FacileFseaAnalysisResult <- function(x, ...) {
+  x.parent <- param(x, "x")
+  samples(x.parent)
 }
 
 #' @noRd
@@ -216,4 +246,30 @@ result.FacileFeatureSetRanks <- function(x, name = "result") {
 #' @export
 tidy.FacileFeatureSetRanks <- function(x, name = "result") {
   x[["result"]]
+}
+
+# Printing =====================================================================
+
+#' @noRd
+#' @export
+print.FacileFseaAnalysisResult <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+#' @noRd
+#' @export
+#' @importFrom multiGSEA resultNames tabulateResults
+format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
+  mgres <- result(x)
+  gsea.res.table <- tabulateResults(mgres, max.p = max_padj)
+  source.type <- class(param(x, "x"))[1L]
+
+  msg <- paste(
+    paste(rep("=", 80), collapse = ""), "\n",
+    sprintf("FacileFseaAnalysisResult (from a %s)\n", source.type),
+    paste(rep("-", 80), collapse = ""), "\n",
+    paste(tibble:::format.tbl(gsea.res.table)[-1], collapse = "\n"), "\n",
+    paste(rep("=", 80), collapse = ""), "\n",
+    sep = "")
+  msg
 }

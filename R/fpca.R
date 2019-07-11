@@ -101,10 +101,14 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
   }
 
   # (lazily) turning this into a DGEList to leverage the already-implented
-  # feature and sample anntation alignment written up in there.
+  # feature and sample anntation alignment written up in there. The desired
+  # assay data (from assay_matrix) will be stored in the DGEList's $count
+  # element
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
 
   out <- fpca(y, pcs, ntop, ...)
+  out[["params"]][["assay_name"]] <- assay_name
+
   out[["result"]] <- out[["result"]] %>%
     as.tbl() %>%
     select(dataset, sample_id, everything()) %>%
@@ -113,11 +117,9 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
     as.tbl() %>%
     as_facile_frame(.fds)
 
-  out[["params"]] <- list(
-    pcs = pcs,
-    ntop = ntop,
-    assay_name = assay_name)
-  ## add facile stuff
+  out[["samples"]] <- x
+
+  # add facile stuff
   out[["fds"]] <- .fds
   out
 }
@@ -142,6 +144,16 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
   out <- fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
+
+  out[["params"]][["assay_name"]] <- assay_name
+
+  if ("dataset" %in% colnames(x$samples)) {
+    out[["samples"]][["dataset"]] <- x$samples[["dataset"]]
+  }
+  if ("sample_id" %in% colnames(x$samples)) {
+    out[["samples"]][["sample_id"]] <- x$samples[["sample_id"]]
+  }
+
   out
 }
 
@@ -149,8 +161,18 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
 #' @export
 fpca.EList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
                        col_covariates = x$targets,
-                       prior.count = 3, assay_name = "counts", ...) {
+                       prior.count = 3, assay_name = "E", ...) {
+  assert_choice(assay_name,  names(x))
   out <- fpca(x$E, pcs, ntop, row_covariates, col_covariates, ...)
+  out[["params"]][["assay_name"]] <- assay_name
+
+  if ("dataset" %in% colnames(x$targets)) {
+    out[["samples"]][["dataset"]] <- x$targets[["dataset"]]
+  }
+  if ("sample_id" %in% colnames(x$targets)) {
+    out[["samples"]][["sample_id"]] <- x$targets[["sample_id"]]
+  }
+
   out
 }
 
@@ -210,6 +232,8 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
   }
 
+  samples. <- tibble(dataset = "dataset", sample_id = colnames(x))
+
   result <- list(
     result = dat,
     pcs = pcs,
@@ -217,8 +241,11 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     percent_var = percentVar,
     row_covariates = row_covariates,
     taken = take,
+    samples = samples.,
     # Standard FacileAnalysisResult things
     # fds = .fds,
+    params = list(pcs = pcs, ntop = ntop, use_irlba = use_irlba,
+                  center = center, scale. = scale.),
     messages = messages,
     warnings = warnings,
     errors = errors)
@@ -363,6 +390,14 @@ signature.FacilePcaAnalysisResult <- function(x, type = "features",
             ntop = ntop, ...)
 }
 
+# Facile API ===================================================================
+
+#' @noRd
+#' @export
+samples.FacilePcaAnalysisResult <- function(x, ...) {
+  x[["samples"]]
+}
+
 # Utility Functions ============================================================
 
 #' Helper function that creates a long/tidy table of statistics over the
@@ -420,8 +455,10 @@ print.FacilePcaAnalysisResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
+#' @noRd
+#' @export
 format.FacilePcaAnalysisResult <- function(x, ...) {
-  n.features <- nrow(x[["factor_contrib"]])
+  n.features <- param(x, "ntop")
   pcv <- x$percent_var * 100
   pcvs <- paste(names(pcv), sprintf("%.2f%%", pcv), sep = ": ")
   pcvu <- paste(head(pcvs, 5), collapse = "\n  ")
@@ -430,6 +467,7 @@ format.FacilePcaAnalysisResult <- function(x, ...) {
     "===========================================================\n",
     sprintf("FacilePcaAnalysisResult\n"),
     "-----------------------------------------------------------\n",
+    "Assay used: ", param(x, "assay_name"), "\n",
     "Number of features used: ", n.features, "\n",
     "Number of PCs: ", length(pcv), "\n",
     "Variance explained:\n  ", pcvu, "\n",

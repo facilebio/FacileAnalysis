@@ -10,5 +10,5 @@ classify_as_gadget <- function(x, ...) {
     head(oc, -1L),
     "FacileAnalysisGadgetResult",
     tail(oc, 1L))
-  out
+  unique(out)
 }

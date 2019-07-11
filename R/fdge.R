@@ -46,12 +46,12 @@
 #' mdef <- fdge_model_def(samples, covariate = "sample_type",
 #'                        numer = "tumor", denom = "normal", fixed = "sex")
 #' dge <- fdge(mdef, method = "voom")
-#' dge.stats <- tidy(dge)
-#' dge.sig <- signature(dge)
 #' if (interactive()) {
 #'   viz(dge)
 #'   shine(dge)
 #' }
+#' dge.stats <- tidy(dge)
+#' dge.sig <- signature(dge)
 #'
 #' stage.anova <- samples %>%
 #'   fdge_model_def(covariate = "stage", fixed = "sex") %>%
@@ -162,6 +162,14 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
     result <- NULL
   }
 
+  # Hack here to support call from a bioc-container that we haven't turned
+  # into a facile data store yet
+  if (!is.null(result) && !"feature_type" %in% colnames(result)) {
+    feature_type <- guess_feature_type(result[["feature_id"]], summarize = TRUE)
+    result[["feature_type"]] <- feature_type[["feature_type"]]
+    result <- select(result, feature_type, everything())
+  }
+
   out <- list(
     result = result,
     params = list(
@@ -184,14 +192,20 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
 
 #' @noRd
 #' @export
-result.FacileDgeAnalysisResult <- function(x, name, ...) {
+result.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
+  tidy(x, name, ...)
+}
+
+tidy.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
   out <- x[["result"]]
-  if (!"feature_type" %in% colnames(out)) {
-    feature_type <- guess_feature_type(out[["feature_id"]], summarize = TRUE)
-    out[["feature_type"]] <- feature_type[["feature_type"]]
-    out <- select(feature_type, everything())
-  }
   out
+}
+
+#' @noRd
+#' @export
+initialized.FacileDgeAnalysisResult <- function(x, ...) {
+  stat.table <- tidy(x)
+  !is(x, "FacileFailedModelDefinition") && !is(x, "IncompleteModelDefintion")
 }
 
 #' @noRd
