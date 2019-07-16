@@ -8,23 +8,23 @@
 #'
 #' @export
 #' @param x A FacileAnalysisResult that has an implemented `ffsea.*` method
+#' @param gdb A `GeneSetDb` to use for the FSEA.
 #' @examples
-#'
-#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' gdb <- multiGSEA::exampleGeneSetDb()
 #' dge.ttest <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
 #'   fdge(method = "voom")
-#' gsea.ttest <- ffsea(dge.ttest, gdb, methods = c("cameraPR", "fgsea"))
 #' if (interactive()) {
-#'   shine(ttest.gsea)
+#'   ffseaGadget(dge.ttest, gdb)
 #' }
-ffseaGadget <- function(x, title = "Feature Set Enrichment Analysis",
+ffseaGadget <- function(x, gdb, title = "Feature Set Enrichment Analysis",
                         height = 800, width = 1000, ...) {
   assert_class(x, "FacileAnalysisResult")
-  frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, title = title,
-             height = height, width = width, ...)
+  assert_class(gdb, "GeneSetDb")
+  frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, aresult = x, gdb = gdb,
+             title = title, height = height, width = width, ...)
 }
 
 #' A moodule that encapsulates configuring and running ffsea, and a view to
@@ -32,16 +32,15 @@ ffseaGadget <- function(x, title = "Feature Set Enrichment Analysis",
 #'
 #' @noRd
 #' @export
-ffseaAnalysis <- function(input, output, session, rfds, aresult, ...,
-                          debug = FALSE) {
-  res <- callModule(ffseaRun, "run", rfds, aresult, ..., debug = debug)
+ffseaAnalysis <- function(input, output, session, rfds, aresult, gdb = NULL,
+                          ..., debug = FALSE) {
+  res <- callModule(ffseaRun, "run", rfds, aresult, gdb, ..., debug = debug)
   view <- callModule(ffseaView, "view", rfds, res, ..., debug = FALSE)
 
   # Only show the view UI when there is an FfseaAnalysisResult ready
   observe({
     res. <- req(faro(res))
-    show <- is(res., "FacileFseaAnalysisResult")
-    toggleElement("viewbox", condition = show)
+    toggleElement("viewbox", condition = is(res., "FacileFseaAnalysisResult"))
   })
 
   vals <- list(
@@ -62,12 +61,12 @@ ffseaAnalysisUI <- function(id, ...) {
     tags$div(
       id = ns("runbox"),
       box(title = "Configure Feature Set Analysis", width = 12,
-          ffseaRunUI("run"))),
+          ffseaRunUI(ns("run")))),
     hidden(
       tags$div(
         id = ns("viewbox"),
-        box(title = NULL, solidHeader = TRUE, width = 12,
-            ffseaViewUI(ns("view"), debug = debug)))))
+        box(title = "Feature Set Analysis Results", solidHeader = TRUE,
+            width = 12, ffseaViewUI(ns("view"), debug = debug)))))
 }
 
 # Run ==========================================================================
@@ -83,39 +82,48 @@ ffseaAnalysisUI <- function(id, ...) {
 #' that extract and invokes the function.
 #'
 #' @rdname interactive-ffsea
+#' @export
+#' @importFrom shinyWidgets updatePickerInput
 #'
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
 #' @param gdb A GeneSetDb object to use for testing.
-#' @export
 ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
                      debug = FALSE) {
-
   ares <- reactive({
-    req(initialized(ares))
-    faro(ares)
+    req(initialized(aresult))
+    faro(aresult)
   })
+
+  # Enable user to configure the GeneSetDb used for testing
+  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, aresult = aresult,
+                     gdb = gdb, ..., debug = debug)
 
   # When the AnalysisResult changes, update the runopts UI based on the specific
   # subclass of the AnalysisResult we have at play
-  runopts <- callModule(ffseaRunOpts, "runopts", rfds, ares, ...)
+  runopts <- callModule(ffseaRunOpts, "runopts", rfds, aresult = aresult, ...,
+                        debug = debug)
 
-  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, ares, ...)
 
-  # When the FacileAnalysisResult changes, we need to update the types of
-  # methods that are available for analysis on this thing.
-  observe({
-    ares. <- req(ares)
-
+  # Updates the set-enrichment methods when the analysis result changes.
+  available_methods <- reactive({
+    ares. <- req(ares())
+    ffsea_methods(ares.)
   })
 
-  fsea_methods <- reactive({
-    methods <- input$ffsea_methods
+  observeEvent(available_methods(), {
+    methods <- req(available_methods())
+    choices <- split(methods[["method"]], methods[["type"]])
+    selected <- unname(sapply(choices, "[", 1L))
+    opts <- NULL
+    updatePickerInput(session, "ffsea_methods", selected = selected,
+                      choices = choices, choicesOpt = opts)
   })
 
   runnable <- reactive({
-    initialized(ares()) &&
-      initialized(runopts) &&
-      length(fsea_methods()) > 0
+    !unselected(input$ffsea_methods) &&
+      initialized(ares()) &&
+      initialized(gdb.) &&
+      initialized(runopts)
   })
 
   observe({
@@ -125,11 +133,10 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   fseares <- eventReactive(input$run, {
     req(runnable())
     args. <- runopts$args()
-    gdb. <- gdb$gdb()
+    gdb. <- gdb.$gdb()
     args <- c(list(x = ares(), gdb = gdb$gdb()), args.)
-    out <- do.call(ffsea, args)
+    do.call(ffsea, args)
   })
-
 
   vals <- list(
     faro = fseares,
@@ -151,11 +158,14 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
   tagList(
-    tags$div(id = "gdb-container", geneSetDbConfigUI(ns("gdb"))),
+    tags$div(
+      id = ns("gdb-container"),
+      geneSetDbConfigUI(ns("gdb"))),
     fluidRow(
       column(
         3,
-        pickerInput(ns("ffsea_methods"), "Analysis Methods", choices = NULL)),
+        pickerInput(ns("ffsea_methods"), "Analysis Methods", choices = NULL,
+                    multiple = TRUE)),
       column(
         1,
         tags$div(
@@ -165,24 +175,6 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
     )
   )
 }
-
-#' @noRd
-#' @export
-initialized.FfseaRunOptions <- function(x, ...) {
-  test_list(x, names = "unique") && all(sapply(vals, is, "reactive"))
-}
-
-#' @noRd
-#' @export
-ffseaRunOpts <- function(x, ...) {
-  UseMethod("ffseaRunOpts", x)
-}
-
-ffseaRunOpts.default <- function(x, ...) {
-  warning("ffseaRunOpts not implemented for: ", class(x)[1L])
-  list(arg1 = NULL, arg2 = NULL)
-}
-
 
 # View =========================================================================
 
@@ -228,7 +220,7 @@ ffseaView <- function(input, output, session, rfds, ares, ...,
 
   gs_result_filter <- callModule(mgResultFilter, "mg_result_filter", mgc)
 
-  # Overview Tab ===============================================================
+  # Overview Tab ...............................................................
   output$gseaMethodSummary <- renderUI({
     mgc. <- req(mgc())
     tagList(
@@ -239,7 +231,7 @@ ffseaView <- function(input, output, session, rfds, ares, ...,
     )
   })
 
-  # GSEA Results Tab ===========================================================
+  # GSEA Results Tab ...........................................................
   gs_viewer <- callModule(geneSetContrastView, "geneset_viewer",
                           mgc, maxOptions=500, server=TRUE)
 

@@ -121,7 +121,7 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
         result. <- failWith(list(), unreact(faro(analysis)))
       }
 
-      attr(result. ,"INTERACTED") <- list(
+      attr(result., "INTERACTED") <- list(
         annotation = annotation)
       class(result.) <- classify_as_gadget(result.)
       stopApp(invisible(result.))

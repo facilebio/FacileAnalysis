@@ -1,5 +1,4 @@
 library(FacileData)
-library(FacileShine)
 library(shiny)
 
 devtools::load_all(".")

@@ -6,40 +6,42 @@
 #' @export
 #' @importFrom shiny renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
-ffseaRunOpts <- function(input, output, session, rfds, ares, ...,
+#' @return An `FfseaRunOptions` list, where `$args()` is a reactive list, with
+#'   name=value pairs set to the arguments to run the appropriate `ffsea.*`
+#'   method for `aresult`.
+ffseaRunOpts <- function(input, output, session, rfds, aresult, ...,
                          debug = FALSE) {
   ns <- session$ns
   state <- reactiveValues(
     aclass = "__initializing__",
-    default_args = "__initializing__",
-  )
+    default_args = "__initializing__")
+
+  ares <- reactive({
+    req(initialized(aresult))
+    faro(aresult)
+  })
 
   observeEvent(ares(), {
     ares. <- req(ares())
     aclass <- class(ares.)[1L]
 
-    if (state$aclass != aclass) {
+    # always reset to default params when a new analysis result is provided,
+    # but we may want to change this later.
+    if (TRUE || state$aclass != aclass) {
       rm.ui <- names(state$default_args)
       state$aclass <- aclass
       uistuff <- renderFfseaRunOptsUI(ares., ns)
       state$default_args <- uistuff$args
-      renderUI("ui", uistuff$ui)
+      # renderUI("ui", uistuff$ui)
+      output$ui <- renderUI(uistuff$ui)
     }
   }, priority = 5)
 
-  observeEvent(state$aclass, {
-    # Add new UI elements
-
-  })
-
-  # ares is already a reactive FacileAnalysisResult
-  # When it changes, we have to update the GUI and get its values
-
-  argnames <- reactive(names(state$default_args))
-
   # extracts the values from the UI for this object
   args <- reactive({
-    lapply(argnames(), function(name) input[[name]])
+    dargs <- state$default_args
+    req(!unselected(dargs))
+    lapply(names(dargs), function(name) input[[name]])
   })
 
   # 1. remove the UI already there
@@ -47,6 +49,7 @@ ffseaRunOpts <- function(input, output, session, rfds, ares, ...,
   vals <- list(
     args = args,
     aclass = reactive(state$aclass),
+    .state = state,
     .ns = session$ns)
   class(vals) <- "FfseaRunOptions"
   vals
@@ -74,7 +77,17 @@ ffseaRunOptsUI <- function(id, width = "300px", ..., debug = FALSE) {
     width = width,
     tags$div(
       id = ns("ffseaRunOptsContainer"),
+      # style = "height: 400px",
       uiOutput(ns("ui"))))
+}
+
+# Helper Functions =============================================================
+
+#' @noRd
+#' @export
+initialized.FfseaRunOptions <- function(x, ...) {
+  args <- x$args
+  is.list(args) && length(args) > 0L && !any(sapply(args, is.na))
 }
 
 #' @noRd
@@ -88,10 +101,26 @@ renderFfseaRunOptsUI <- function(x, ns, ...) {
 
 #' @noRd
 #' @export
-#' @importFrom shiny tagList tags
+#' @importFrom shiny checkboxInput numericInput selectInput tagList tags
 renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
   args <- default_ffsea_args(x)
-  ui <- tagList()
+  # We can rank by either logFC or t-statistics (if they are available)
+  rank.opts <- intersect(c("logFC", "t"), colnames(tidy(x)))
+
+  # NOTE: We may want to update this and even have the UI update with the number
+  # of features that pass these filtering criteria, and what have you.
+
+  ui <- tagList(
+    tags$h4("Enrichment Options"),
+    numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
+                 min = 0, max = 10, step = 0.5),
+    numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
+                 min = 0, max = 1, step = 0.05),
+    tags$h4("Preranked Options"),
+    selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
+                selected = rank.opts[1]),
+    checkboxInput(ns("signed"), "Signed Ranks", value = args$signed))
+
   list(args = args, ui = ui)
 }
 

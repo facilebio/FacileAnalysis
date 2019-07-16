@@ -109,7 +109,9 @@ default_ffsea_args.default <- function(x, ...) {
 #' @noRd
 #' @export
 default_ffsea_args.FacileTtestAnalysisResult <- function(x, ...) {
-  list(min_logFC = 1, max_padj = 0.10)
+  list(
+    min_logFC = 1, max_padj = 0.10,
+    rank_by = "logFC", signed = TRUE)
 }
 
 #' @noRd

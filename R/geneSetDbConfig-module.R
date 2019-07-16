@@ -1,18 +1,33 @@
 #' Module to instantiate and configure a GeneSetDb for a FacileAnalysisResult
 #'
-#' Currently we accept
-#' Need to provide user with the collection,geneset combinations that are
-#' appropriate for the features in the assay_tyupe of `ares`.
+#' This accepts a "supserset-of-a-GeneSetDb" that can be added to by a user
+#' defined set of gene sets via the [multiGSEA.shiny::userDefinedGeneSetDb()]
+#' module. If this module is not initialized with such a `GeneSetDb` via the
+#' `gdb` argument, then the only `GeneSetDb` available will be the one that is
+#' uploaded by the user.
 #'
-#' TODO: There's a lot to do in order to make a shiny interaface to a GeneSetDb
+#' Need to provide user with the collection,geneset combinations that are
+#' appropriate for the features in the assay_tyupe of `aresult`. Although we are
+#' currently useing `aresult` to decipher the feature space of the GeneSetDb
+#' to generate, this should probably as it is too specific to Facile, and this
+#' module more appropriately belongs in the multiGSEA.shiny package.
+#'
+#' @section Refactoring to support connection to a GeneSetDb provider:
+#' We should be able to query a GeneSetDb provider to ask for a catlog of
+#' gene set collections by providing the organism and feature type that we want
+#' gene sets for.
 #'
 #' @noRd
 #' @export
 #' @importFrom multiGSEA append conform GeneSetDb featureIds geneSets
+#' @importFrom multiGSEA.shiny userDefinedGeneSetDb
 #' @importFrom shiny callModule need reactive renderUI validate
+#'
 #' @param rfds `ReactiveFacileDataSet`
 #' @param aresult A `FacileAnalysisResult` to run through ffsesa
 #' @param gdb An optional "super" GeneSetDb that we will subset from.
+#' @return A ReactiveGeneSetDb (list) with a configured GeneSetDb ready for
+#'   analysis over `aresult` in `$gdb()`
 geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
                             ..., debug = FALSE) {
 
@@ -43,22 +58,22 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
     gdb.
   })
 
-  gdb.user <- callModule(userDefinedGeneSetDb, "user_gdb")
+  gdb.user <- callModule(userDefinedGeneSetDb, "user_gdb", ...)
 
   gdb.go <- reactive({
     finfo <- req(afeatures())
-    base. <- gdb.base()
-    user. <- gdb.user$gdb()
+    base.gdb <- gdb.base()
+    user.gdb <- gdb.user$gdb()
 
-    if (is.null(base.)) {
+    if (is.null(base.gdb)) {
       validate(
-        need(is(user., "GeneSetDb"),
+        need(is(user.gdb, "GeneSetDb"),
              "No Default GeneSetDb provided, please upload custom gene sets"))
-      out <- user.
+      out <- user.gdb
     } else {
-      out <- base.
-      if (!is.null(user.)) {
-        out <- append(out, user.)
+      out <- base.gdb
+      if (!is.null(user.gdb)) {
+        out <- append(out, user.gdb)
       }
     }
 
@@ -68,6 +83,7 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
     out
   })
 
+  # TODO: Implemenet a better messaging system for the geneSetDbConfig here.
   output$message <- renderUI({
     gdb. <- gdb.go()
     if (!is(gdb., "GeneSetDb")) {
@@ -94,6 +110,7 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
 #' @noRd
 #' @export
 #' @importFrom shiny NS tags uiOutput
+#' @importFrom multiGSEA.shiny userDefinedGeneSetDbUI
 geneSetDbConfigUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(

@@ -30,6 +30,17 @@ viz.FacileFseaAnalysisResult <- function(x, name = NULL, collection = NULL,
 
 #' @noRd
 #' @export
+#' @examples
+#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' dge.ttest <- FacileData::exampleFacileDataSet() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fdge_model_def(covariate = "sample_type",
+#'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
+#'   fdge(method = "voom")
+#' gsea.ttest <- ffsea(dge.ttest, gdb, methods = c("cameraPR", "fgsea"))
+#' if (interactive()) {
+#'   shine(ttest.gsea)
+#' }
 shine.FacileFseaAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                            title = "FSEA Results",
                                            ...) {
