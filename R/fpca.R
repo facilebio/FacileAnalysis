@@ -29,7 +29,7 @@
 #' }
 #'
 #' pca.gdb <- pca.crc %>%
-#'   signature(pcs = 1:3) %>%
+#'   signature(dims = 1:3) %>%
 #'   result() %>%
 #'   multiGSEA::GeneSetDb()
 #'
@@ -49,14 +49,14 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
+fpca <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
                  col_covariates = NULL, ...) {
   UseMethod("fpca", x)
 }
 
 #' @noRd
 #' @export
-fpca.FacileDataStore <- function(x, pcs = 5, ntop = 500,
+fpca.FacileDataStore <- function(x, dims = 5, ntop = 500,
                                  row_covariates = NULL, col_covariates = NULL,
                                  assay_name = default_assay(x),
                                  custom_key = Sys.getenv("USER"), ...,
@@ -64,7 +64,7 @@ fpca.FacileDataStore <- function(x, pcs = 5, ntop = 500,
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
-  fpca(samples, pcs, ntop, row_covariates, col_covariates, assay_name,
+  fpca(samples, dims, ntop, row_covariates, col_covariates, assay_name,
        custom_key, ...)
 }
 
@@ -78,7 +78,7 @@ fpca.FacileDataStore <- function(x, pcs = 5, ntop = 500,
 #'
 #' @rdname fpca
 #' @export
-fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
+fpca.facile_frame <- function(x, dims = 5, ntop = 500,
                               row_covariates = NULL, col_covariates = NULL,
                               assay_name = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -106,7 +106,7 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
   # element
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
 
-  out <- fpca(y, pcs, ntop, ...)
+  out <- fpca(y, dims, ntop, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   out[["result"]] <- out[["result"]] %>%
@@ -134,7 +134,7 @@ fpca.facile_frame <- function(x, pcs = 5, ntop = 500,
 #' @noRd
 #' @export
 #' @importFrom edgeR cpm
-fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
+fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
                          col_covariates = x$samples,
                          prior.count = 3, assay_name = "counts", ...) {
   if (assay_name == "counts") {
@@ -143,7 +143,7 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
     m <- x[[assay_name]]
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
-  out <- fpca(m, pcs, ntop, row_covariates, col_covariates, ...)
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -159,11 +159,11 @@ fpca.DGEList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
 
 #' @noRd
 #' @export
-fpca.EList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
+fpca.EList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
                        col_covariates = x$targets,
                        prior.count = 3, assay_name = "E", ...) {
   assert_choice(assay_name,  names(x))
-  out <- fpca(x$E, pcs, ntop, row_covariates, col_covariates, ...)
+  out <- fpca(x$E, dims, ntop, row_covariates, col_covariates, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   if ("dataset" %in% colnames(x$targets)) {
@@ -180,14 +180,14 @@ fpca.EList <- function(x, pcs = 5, ntop = 500, row_covariates = x$genes,
 #' @rdname fpca
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
-fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL, use_irlba = pcs < 7,
+fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
+                        col_covariates = NULL, use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
   messages <- character()
   warnings <- character()
   errors <- character()
 
-  assert_int(pcs, lower = 3L, upper = min(nrow(x), ncol(x)))
+  assert_int(dims, lower = 3L, upper = min(nrow(x), ncol(x)))
   assert_flag(use_irlba)
 
   if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
@@ -213,14 +213,14 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
   row_covariates <- row_covariates[take,,drop = FALSE]
 
   if (use_irlba) {
-    pca <- prcomp_irlba(t(xx), n = pcs, center = center, scale. = scale.)
+    pca <- prcomp_irlba(t(xx), n = dims, center = center, scale. = scale.)
     rownames(pca$rotation) <- rownames(xx)
     rownames(pca$x) <- colnames(xx)
   } else {
     pca <- prcomp(t(xx), center = center, scale. = scale.)
-    pca$sdev <- head(pca$sdev, pcs)
-    pca$rotation <- pca$rotation[, 1:pcs, drop = FALSE]
-    pca$x <- pca$x[, 1:pcs, drop = FALSE]
+    pca$sdev <- head(pca$sdev, dims)
+    pca$rotation <- pca$rotation[, 1:dims, drop = FALSE]
+    pca$x <- pca$x[, 1:dims, drop = FALSE]
   }
 
   pca$sdev <- setNames(pca$sdev, paste0("PC", seq(pca$sdev)))
@@ -236,7 +236,7 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 
   result <- list(
     result = dat,
-    pcs = pcs,
+    dims = dims,
     rotation = pca$rotation,
     percent_var = percentVar,
     row_covariates = row_covariates,
@@ -244,7 +244,7 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
     samples = samples.,
     # Standard FacileAnalysisResult things
     # fds = .fds,
-    params = list(pcs = pcs, ntop = ntop, use_irlba = use_irlba,
+    params = list(dims = dims, ntop = ntop, use_irlba = use_irlba,
                   center = center, scale. = scale.),
     messages = messages,
     warnings = warnings,
@@ -255,6 +255,22 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 
   result[["feature_stats"]] <- .fpca.feature_statistics(result)
   result
+}
+
+# Methods and Accessors ========================================================
+
+#' @noRd
+#' @export
+initialized.FacilePcaAnalysisResult <- function(x, ...) {
+  stat.table <- tidy(x)
+  is.data.frame(stat.table) && nrow(stat.table) == nrow(samples(x))
+}
+
+#' @noRd
+#' @export
+features.FacilePcaAnalysisResult <- function(x, ...) {
+  out <- assert_class(x[["feature_stats"]], "data.frame")
+  out
 }
 
 # Ranks and Signatures =========================================================
@@ -276,12 +292,12 @@ fpca.matrix <- function(x, pcs = 5, ntop = 500, row_covariates = NULL,
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
 ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
-                                          signed = TRUE, pcs = NULL, ...) {
+                                          signed = TRUE, dims = NULL, ...) {
   type <- match.arg(type)
   if (type == "samples") stop("What does sample-ranking even mean?")
-  if (!is.null(pcs)) {
-    pcs <- assert_integerish(pcs, lower = 1)
-    pcs <- unique(pcs)
+  if (!is.null(dims)) {
+    dims <- assert_integerish(dims, lower = 1)
+    dims <- unique(dims)
   }
 
   if (type == "features") {
@@ -299,8 +315,8 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
                  "FacileFeatureRanks")
   }
 
-  if (!is.null(pcs)) {
-    ranks. <- filter(ranks., dimension %in% sprintf("PC%d", pcs))
+  if (!is.null(dims)) {
+    ranks. <- filter(ranks., dimension %in% sprintf("PC%d", dims))
     if (nrow(ranks.) == 0L) {
       stop("All PC dimensions have been filtered out.")
     }
@@ -329,16 +345,16 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
 
 #' @noRd
 #' @export
-signature.FacilePcaFeatureRanks <- function(x, pcs = NULL, ntop = 20,
+signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
                                             collection_name = class(x)[1L],
                                             ranking_columns = x[["ranking_columns"]],
                                             ...) {
   res. <- result(x)
 
-  if (!is.null(pcs)) {
-    pcs <- assert_integerish(pcs, lower = 1)
-    pcs <- unique(pcs)
-    res. <- filter(res., dimension %in% sprintf("PC%d", pcs))
+  if (!is.null(dims)) {
+    dims <- assert_integerish(dims, lower = 1)
+    dims <- unique(dims)
+    res. <- filter(res., dimension %in% sprintf("PC%d", dims))
     if (nrow(ranks.) == 0L) {
       stop("All PC dimensions have been filtered out.")
     }
@@ -375,7 +391,7 @@ signature.FacilePcaFeatureRanks <- function(x, pcs = NULL, ntop = 20,
 
   out <- list(
     result = sig,
-    params = list(pcs = pcs, ntop = ntop))
+    params = list(pcs = dims, ntop = ntop))
 
   class(out) <- sub("Ranks$", "Signature", class(x))
   out
@@ -385,8 +401,8 @@ signature.FacilePcaFeatureRanks <- function(x, pcs = NULL, ntop = 20,
 #' @export
 signature.FacilePcaAnalysisResult <- function(x, type = "features",
                                               signed = TRUE,
-                                              pcs = NULL, ntop = 20, ...) {
-  signature(ranks(x, type = type, signed = signed, pcs = pcs, ...),
+                                              dims = NULL, ntop = 20, ...) {
+  signature(ranks(x, type = type, signed = signed, dims = dims, ...),
             ntop = ntop, ...)
 }
 

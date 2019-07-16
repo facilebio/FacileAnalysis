@@ -3,10 +3,9 @@
 #' This function handles much of the book keeping code required to setup a shiny
 #' gadget around a facile object `x`. There are two
 #'
-#' This allows us to interact over objects
-#' (`x`)that have been  created programmaticaly during an analysis, and return
-#' relevant interactive events over `x`, or derivative analysis results back
-#' to the workspace.
+#' This allows us to (shiny)-interact over objects (`x`) that have been created
+#' programmaticaly during an analysis, and return relevant interactive events
+#' over `x`, or derivative analysis results back to the workspace.
 #'
 #' @section Flavors of x:
 #' We want to support building interactive components over different types of
@@ -58,8 +57,8 @@
 #'   the gadget is working over.
 frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
                        title = "Facile Analysis Gadget",
-                       height = 600, width = 1000, viewer = "pane", ...,
-                       use_sweet_alert = TRUE,
+                       height = 800, width = 1000, viewer = "dialog", ...,
+                       retval = "x",
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
   options(facile.bs4dash = FALSE)
@@ -98,26 +97,11 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     ui.content <- analysisUI("analysis", ..., debug = debug)
   }
 
-  # Add dummy entry using shinyjs::extendShinyjs so that downstream modules
-  # can use it, if they like
-  dummy.extend <- "shinyjs.dummy = function(params) { return undefined; };"
-
   ui <- miniPage(
     useShinyjs(),
-    # extendShinyjs(text = dummyjs.extend),
-    if (use_sweet_alert) useSweetAlert() else NULL,
+    useSweetAlert(),
     gadgetTitleBar(title),
     miniContentPanel(ui.content),
-    # miniContentPanel({
-    #   if (sample.filter) {
-    #     tagList(
-    #       filteredReactiveFacileDataStoreUI("ds"),
-    #       tags$hr(),
-    #       analysisUI("analysis", ..., debug = debug))
-    #   } else {
-    #     analysisUI("analysis", ..., debug = debug)
-    #   }
-    # }),
     NULL)
 
   server <- function(input, output, session) {
@@ -127,15 +111,22 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
       if (is(x, "FacileAnalysisResult"))   {
-        result. <- x
+        if (retval == "x") {
+          result. <- x
+        } else {
+          result. <- analysis[[retval]]
+          if (is(result., "reactive")) result. <- result.()
+        }
       } else {
         result. <- failWith(list(), unreact(faro(analysis)))
       }
-      result.[["gadget"]] <- list(
+
+      attr(result. ,"INTERACTED") <- list(
         annotation = annotation)
       class(result.) <- classify_as_gadget(result.)
       stopApp(invisible(result.))
     })
+
     observeEvent(input$cancel, {
       stopApp(invisible(NULL))
     })
@@ -144,6 +135,21 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
+#' Extracts interactions over an object that happened in a gadget
+#'
+#' These are stored and returned as a named list
+#'
+#' @export
+#' @param x any object
+#' @return a named list of interactions recorded from running [frunGadget()]
+interacted <- function(x, ...) {
+  out <- attr(x, "INTERACTED", exact = TRUE)
+  if (is.null(out)) {
+    warning("No metadata from gadget interaction found in x")
+    out <- list()
+  }
+  out
+}
 
 #' @noRd
 #' @importFrom shiny browserViewer dialogViewer paneViewer

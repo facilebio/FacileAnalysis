@@ -32,8 +32,6 @@ viz.FacileFseaAnalysisResult <- function(x, name = NULL, collection = NULL,
 #' @export
 shine.FacileFseaAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                            title = "FSEA Results",
-                                           width = 800, height = 800,
-                                           viewer = "pane", ...) {
-  frunGadget(ffseaView, ffseaViewUI, x, ares = x, title = title,
-             width = width, height = height, ...)
+                                           ...) {
+  frunGadget(ffseaView, ffseaViewUI, x, ares = x, title = title, ...)
 }

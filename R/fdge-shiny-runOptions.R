@@ -62,8 +62,8 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
 
 #' @noRd
 #' @importFrom shinyWidgets dropdownButton prettyCheckbox
-#' @importFrom shiny wellPanel
-fdgeRunOptionsUI <- function(id, width = "300px", ...) {
+#' @importFrom shiny icon wellPanel
+fdgeRunOptionsUI <- function(id, width = "300px", ..., debug = FALSE) {
   ns <- NS(id)
   dropdownButton(
     inputId = ns("opts"),

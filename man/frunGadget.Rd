@@ -5,8 +5,8 @@
 \title{Support harness to initialize and launch a shiny gadget over a facile object.}
 \usage{
 frunGadget(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
-  title = "Facile Analysis Gadget", height = 600, width = 1000,
-  viewer = "pane", ..., use_sweet_alert = TRUE, debug = FALSE)
+  title = "Facile Analysis Gadget", height = 800, width = 1000,
+  viewer = "dialog", ..., retval = "x", debug = FALSE)
 }
 \arguments{
 \item{analysisModule}{the server function for the gadget}
@@ -36,10 +36,9 @@ This function handles much of the book keeping code required to setup a shiny
 gadget around a facile object \code{x}. There are two
 }
 \details{
-This allows us to interact over objects
-(\code{x})that have been  created programmaticaly during an analysis, and return
-relevant interactive events over \code{x}, or derivative analysis results back
-to the workspace.
+This allows us to (shiny)-interact over objects (\code{x}) that have been created
+programmaticaly during an analysis, and return relevant interactive events
+over \code{x}, or derivative analysis results back to the workspace.
 }
 \section{Flavors of x}{
 

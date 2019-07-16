@@ -205,7 +205,16 @@ tidy.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
 #' @export
 initialized.FacileDgeAnalysisResult <- function(x, ...) {
   stat.table <- tidy(x)
-  !is(x, "FacileFailedModelDefinition") && !is(x, "IncompleteModelDefintion")
+  is.data.frame(stat.table) &&
+    is.numeric(stat.table[["pval"]]) &&
+    is.numeric(stat.table[["padj"]])
+}
+
+features.FacileDgeAnalysisResult <- function(x, ...) {
+  stat.table <- tidy(x)
+  take <- c("feature_id", "feature_type", "symbol", "assay", "assay_type")
+  take <- intersect(take, colnames(stat.table))
+  select(stat.table, !!take, everything())
 }
 
 #' @noRd

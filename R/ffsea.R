@@ -47,7 +47,7 @@
 #' pca.crc <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
-#' pca1.gsea <- ffsea(pca.crc, gdb, pc = 1)
+#' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 #'
 #' # Not yet implemented, need to get a signed weight out of eigenWeightedMean
 #' # right now we just have weights. Or, fully extracing the biplot code, I
@@ -118,7 +118,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
 #' @noRd
 #' @export
 #' @importFrom multiGSEA multiGSEA
-ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
+ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
                                           signed = TRUE, methods = "cameraPR",
                                           ...) {
   fds. <- assert_facile_data_store(fds(x))
@@ -132,7 +132,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
   classes <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
 
   out <- list(
-    params = list(pc = pc, signed = signed, methods = methods, x = x),
+    params = list(dim = dim, signed = signed, methods = methods, x = x),
     fds = fds.)
 
   on.exit({
@@ -144,7 +144,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
   })
 
   rank.column <- if (signed) "score" else "weight"
-  pc.ranks <- result(ranks(x, pcs = pc, signed = signed, ...))
+  pc.ranks <- result(ranks(x, dims = dim, signed = signed, ...))
   assert_choice(rank.column, colnames(pc.ranks))
   vals <- assert_numeric(pc.ranks[[rank.column]])
   names(vals) <- pc.ranks[["feature_id"]]
@@ -157,6 +157,32 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, pc = 1,
                                xmeta. = xmeta.)
   out
 }
+
+# Methods and Accessors ========================================================
+
+#' @section Feature Set Enrichment Analysis:
+#' What are the features of a feature-set enrichment analysis ([ffsea()])?
+#' Aren't they the gene sets, and not the individual genes themselves?
+#' There is crappy support for this, for now.
+#'
+#' It is a meta-something type of thing. The genesets are the features, but
+#' they are also made up of their own features. We most often think of genesets
+#' as consisting of genes, but perhaps we can imagine a feature set that
+#' consists of motifs ... or sometihng.
+#'
+#' @rdname features
+#' @export
+#' @importFrom multiGSEA encode_gskey
+features.FacileFseaAnalysisResult <- function(x, ...) {
+  warning("The feature_id,feature_type feature representation for fsea is a ",
+          "bit loose, refer to the 'Feature Set Enrichment Analyais' section ",
+          "of ?features")?
+  stat.table <- tidy(x)
+  stat.table[["feature_id"]] <- encode_gskey(stat.table)
+  stat.table[["feature_type"]] <- "feature_set"
+  select(stat.table, collection, name, feature_id, feature_type, everything())
+}
+
 
 #' @section Accessing Results:
 #' We are in a bit of a schizophrenic state right now, where `tidy()` is
@@ -187,6 +213,11 @@ result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
   out
 }
 
+#' @noRd
+#' @export
+initialized.FacileFseaAnalysisResult <- function(x, ...) {
+  is(result(x), "MultiGSEAResult")
+}
 
 #' @noRd
 #' @export
@@ -263,6 +294,10 @@ format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
   mgres <- result(x)
   gsea.res.table <- tabulateResults(mgres, max.p = max_padj)
   source.type <- class(param(x, "x"))[1L]
+
+  if (source.type == "FacilePcaAnalysisResult") {
+    source.type <- sprintf("%s [PC%d]", source.type, param(x, "dim"))
+  }
 
   msg <- paste(
     paste(rep("=", 80), collapse = ""), "\n",

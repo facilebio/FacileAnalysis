@@ -4,10 +4,8 @@
 #' @export
 shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                           title = "Differential Expression Results",
-                                          width = 800, height = 800,
-                                          viewer = "pane", ...) {
-  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title,
-             width = width, height = height, ...)
+                                          ...) {
+  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title, ...)
 }
 
 # @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp

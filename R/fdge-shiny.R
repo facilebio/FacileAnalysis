@@ -115,7 +115,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
                          fdgeViewUI(ns("view"), debug = debug)))))
 }
 
-# Building block fdge shiny modules ============================================
+# Run ==========================================================================
 
 #' Shiny module to configure and run fdge over a predefined model.
 #'
@@ -230,8 +230,6 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
   out
 }
 
-# Implement reactive fdge methods ==============================================
-
 #' Runs fdge over a model definition created from a shiny gadget.
 #'
 #' @noRd
@@ -246,7 +244,7 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
 }
 
 
-# Visualize the fdge result ====================================================
+# View =========================================================================
 
 #' Shiny module that interacts with result of fdgeRun module
 #'

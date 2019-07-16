@@ -76,7 +76,7 @@ fgsea.stats <- tidy(ttest.gsea, "fgsea")
 pca.crc <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fpca()
-pca1.gsea <- ffsea(pca.crc, gdb, pc = 1)
+pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 
 # Not yet implemented, need to get a signed weight out of eigenWeightedMean
 # right now we just have weights. Or, fully extracing the biplot code, I

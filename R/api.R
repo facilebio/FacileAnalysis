@@ -59,6 +59,19 @@ faro.ReactiveFacileAnalysisResultContainer <- function(x, main = "main", ...) {
   faro(main.)
 }
 
+#' Returns a table of information about the features used in the analysis.
+#'
+#' The individual FacileAnalysis modules will define their own implementations
+#' of this method. Think of "features" as being the things that the analysis
+#' is generating statistics over.
+#'
+#' @param x A FacileAnalysisResult
+#' @return a tibble with containing feature_id, feature_type, and whatever other
+#'   columns that were used in the analysis.
+features <- function(x, ...) {
+  UseMethod("features", x)
+}
+
 #' A shiny module that produces a FacileAnalysisResult as its main
 #' result will store it as a reactive() in its result$faro element.
 #'
