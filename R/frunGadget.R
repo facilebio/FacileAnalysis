@@ -83,18 +83,19 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     sample.filter <- FALSE
     fds. <- fds(x)
     samples. <- samples(x)
+  } else {
+    stop("What in the world?")
   }
 
   assert_class(fds., "FacileDataStore")
   assert_class(samples., "facile_frame")
 
+  ui.content <- analysisUI("analysis", ..., debug = debug)
   if (sample.filter) {
     ui.content <- tagList(
       filteredReactiveFacileDataStoreUI("ds"),
       tags$hr(),
-      analysisUI("analysis", ..., debug = debug))
-  } else {
-    ui.content <- analysisUI("analysis", ..., debug = debug)
+      ui.content)
   }
 
   ui <- miniPage(
@@ -110,7 +111,8 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
 
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
-      if (is(x, "FacileAnalysisResult"))   {
+
+      if (is(x, "FacileAnalysisResult") && retval != "faro")   {
         if (retval == "x") {
           result. <- x
         } else {

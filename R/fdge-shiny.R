@@ -185,8 +185,8 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   # being in a reactive context and, therefore, appending it to the class
   # of the outgoing result.
   class(vals) <- c("ReactiveFacileDgeAnalysisResult",
-                   "FacileDgeAnalysisResult",
-                   "ReactiveFacileAnalysisResult")
+                   "ReactiveFacileAnalysisResult",
+                   "FacileDgeAnalysisResult")
   vals
 }
 

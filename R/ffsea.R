@@ -24,9 +24,10 @@
 #'
 #' @examples
 #' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # GSEA from t-test result ---------------------------------------------------
-#' ttest.res <- FacileData::exampleFacileDataSet() %>%
+#' ttest.res <- efds %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
@@ -41,10 +42,20 @@
 #' fgsea.stats <- tidy(ttest.gsea, "fgsea")
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
-#' # Not yet implemented, requires small update to multiGSEA
+#' \dontrun{
+#' # This requires an update in mutiGSEA (to support df inputs) to run
+#' stage.anova <- efds %>%
+#'   FacileData::filter_samples(indication == "BLCA") %>%
+#'   fdge_model_def(covariate = "stage", fixed = "sex") %>%
+#'   fdge(method = "voom")
+#' anova.gsea <- ffsea(stage.anova)
+#' if (interactive()) {
+#'  shine(anova.gsea)
+#' }
+#' }
 #'
 #' # GSEA over loadings on a Principal Component -------------------------------
-#' pca.crc <- FacileData::exampleFacileDataSet() %>%
+#' pca.crc <- efds %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
@@ -296,7 +307,8 @@ format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
   source.type <- class(param(x, "x"))[1L]
 
   if (source.type == "FacilePcaAnalysisResult") {
-    source.type <- sprintf("%s [PC%d]", source.type, param(x, "dim"))
+    source.type <- sprintf("%s [PC: %s]", source.type,
+                           as.character(param(x, "dim")))
   }
 
   msg <- paste(

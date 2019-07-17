@@ -296,7 +296,10 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
   type <- match.arg(type)
   if (type == "samples") stop("What does sample-ranking even mean?")
   if (!is.null(dims)) {
-    dims <- assert_integerish(dims, lower = 1)
+    if (is.character(dims)) { # We can accept "PC1" or 1
+      dims <- as.integer(sub("^PC", "", dims))
+    }
+    dims <- assert_integerish(dims, lower = 1, any.missing = FALSE)
     dims <- unique(dims)
   }
 

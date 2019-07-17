@@ -5,14 +5,16 @@
 \alias{ffseaRun}
 \title{Full interactive executation of GSEA, soup to nuts.}
 \usage{
-ffseaGadget(x, title = "Feature Set Enrichment Analysis", height = 800,
-  width = 1000, ...)
+ffseaGadget(x, gdb, title = "Feature Set Enrichment Analysis",
+  height = 800, width = 1000, ..., debug = FALSE)
 
 ffseaRun(input, output, session, rfds, aresult, gdb = NULL, ...,
   debug = FALSE)
 }
 \arguments{
 \item{x}{A FacileAnalysisResult that has an implemented \code{ffsea.*} method}
+
+\item{gdb}{A \code{GeneSetDb} to use for the FSEA.}
 
 \item{aresult}{A \code{FacileAnalysisResult} that has a \code{ffsea.*} method defined.}
 
@@ -36,10 +38,13 @@ that extract and invokes the function.
 }
 
 \examples{
-gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+gdb <- multiGSEA::exampleGeneSetDb()
 dge.ttest <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor", denom = "normal", fixed = "sex") \%>\%
   fdge(method = "voom")
+if (interactive()) {
+  ffseaGadget(dge.ttest, gdb)
+}
 }

@@ -123,5 +123,5 @@ default_ffsea_args.FacileAnovaAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 default_ffsea_args.FacilePcaAnalysisResult <- function(x, ...) {
-  list(dim = 1)
+  list(dim = 1, signed = TRUE)
 }

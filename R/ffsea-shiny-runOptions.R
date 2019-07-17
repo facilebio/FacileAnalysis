@@ -4,7 +4,7 @@
 #'
 #' @noRd
 #' @export
-#' @importFrom shiny renderUI
+#' @importFrom shiny outputOptions renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
 #' @return An `FfseaRunOptions` list, where `$args()` is a reactive list, with
 #'   name=value pairs set to the arguments to run the appropriate `ffsea.*`
@@ -32,16 +32,26 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, ...,
       state$aclass <- aclass
       uistuff <- renderFfseaRunOptsUI(ares., ns)
       state$default_args <- uistuff$args
-      # renderUI("ui", uistuff$ui)
       output$ui <- renderUI(uistuff$ui)
     }
   }, priority = 5)
+
+  # register the values of the default values in server code without having
+  # to expand the dropdownButton.
+  observeEvent(state$default_args, {
+    args <- state$default_args
+    req(!unselected(args))
+    # for (arg in names(args)) {
+    #   outputOptions(output, arg, suspendWhenHidden = FALSE)
+    # }
+    outputOptions(output, "ui", suspendWhenHidden = FALSE)
+  })
 
   # extracts the values from the UI for this object
   args <- reactive({
     dargs <- state$default_args
     req(!unselected(dargs))
-    lapply(names(dargs), function(name) input[[name]])
+    sapply(names(dargs), function(name) input[[name]], simplify = FALSE)
   })
 
   # 1. remove the UI already there
@@ -86,8 +96,10 @@ ffseaRunOptsUI <- function(id, width = "300px", ..., debug = FALSE) {
 #' @noRd
 #' @export
 initialized.FfseaRunOptions <- function(x, ...) {
-  args <- x$args
-  is.list(args) && length(args) > 0L && !any(sapply(args, is.na))
+  args <- x$args()
+  is.list(args) &&
+    length(args) > 0L &&
+    all(sapply(args, function(arg) !(is.null(arg) || is.na(arg))))
 }
 
 #' @noRd
@@ -101,7 +113,13 @@ renderFfseaRunOptsUI <- function(x, ns, ...) {
 
 #' @noRd
 #' @export
-#' @importFrom shiny checkboxInput numericInput selectInput tagList tags
+#' @importFrom shiny
+#'   checkboxInput
+#'   numericInput
+#'   outputOptions
+#'   selectInput
+#'   tagList
+#'   tags
 renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
   args <- default_ffsea_args(x)
   # We can rank by either logFC or t-statistics (if they are available)
@@ -126,19 +144,27 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
 
 #' @noRd
 #' @export
-#' @importFrom shiny tagList tags
+#' @importFrom shiny numericInput tagList tags
 renderFfseaRunOptsUI.FacileAnovaAnalysisResult <- function(x, ns, ...) {
   args <- default_ffsea_args(x)
-  ui <- tagList()
+  ui <- tagList(
+    numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
+                 min = 0, max = 1, step = 0.05))
   list(args = args, ui = ui)
 }
 
 #' @noRd
 #' @export
-#' @importFrom shiny tagList tags
+#' @importFrom shiny selectInput tagList tags
 renderFfseaRunOptsUI.FacilePcaAnalysisResult <- function(x, ns, ...) {
   args <- default_ffsea_args(x)
-  ui <- tagList()
+  dims <- intersect(names(x$percent_var), colnames(tidy(x)))
+  labels <- sprintf("%s (%.02f%% variance)", dims, x$percent_var[dims] * 100)
+  choices <- setNames(dims, labels)
+  ui <- tagList(
+    selectInput(ns("dim"), "Test Dimension", choices = choices,
+                selected = choices[1L]),
+    checkboxInput(ns("signed"), "Signed Ranks", value = args$signed))
   list(args = args, ui = ui)
 }
 

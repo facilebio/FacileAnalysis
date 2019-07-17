@@ -89,12 +89,18 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
     if (!is(gdb., "GeneSetDb")) {
       msg <- "No GeneSetDb defined"
     } else {
-      gs <- geneSets(gdb.)
+      gs.all <- geneSets(gdb., active.only = FALSE)
+      gs.active <- filter(gs.all, active)
       msg <- glue(
-        "GeneSetDb defined: {ngs} gene sets, {ncol} collections, {ngene} genes",
-        ngs = nrow(gs),
-        ncol = length(unique(gs[["collection"]])),
-        ngene = length(featureIds(gdb.)))
+        "Active GeneSetDb: {active_sets} of {total_sets} gene sets, ",
+        "from {active_collections} / {total_collections} collections, ",
+        "with {active_genes} / {total_genes} genes",
+        active_sets = nrow(gs.active),
+        total_sets = nrow(gs.all),
+        active_collections = length(unique(gs.active[["collection"]])),
+        total_collections = length(unique(gs.all[["collection"]])),
+        active_genes = length(featureIds(gdb., active.only = TRUE)),
+        total_genes = length(featureIds(gdb., active.only = FALSE)))
     }
     tags$p(msg)
   })

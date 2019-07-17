@@ -20,11 +20,12 @@
 #'   ffseaGadget(dge.ttest, gdb)
 #' }
 ffseaGadget <- function(x, gdb, title = "Feature Set Enrichment Analysis",
-                        height = 800, width = 1000, ...) {
+                        height = 800, width = 1000, ..., debug = FALSE) {
   assert_class(x, "FacileAnalysisResult")
   assert_class(gdb, "GeneSetDb")
   frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, aresult = x, gdb = gdb,
-             title = title, height = height, width = width, ...)
+             title = title, height = height, width = width, ...,
+             retval = "faro", debug = debug)
 }
 
 #' A moodule that encapsulates configuring and running ffsea, and a view to
@@ -39,8 +40,7 @@ ffseaAnalysis <- function(input, output, session, rfds, aresult, gdb = NULL,
 
   # Only show the view UI when there is an FfseaAnalysisResult ready
   observe({
-    res. <- req(faro(res))
-    toggleElement("viewbox", condition = is(res., "FacileFseaAnalysisResult"))
+    toggleElement("viewbox", condition = initialized(res))
   })
 
   vals <- list(
@@ -49,6 +49,7 @@ ffseaAnalysis <- function(input, output, session, rfds, aresult, gdb = NULL,
     .ns = session$ns)
   class(vals) <- c("ReactiveFacileFseaAnalysisResultContainer",
                    "ReactiveFacileAnalysisResultContainer")
+  vals
 }
 
 #' @noRd
@@ -83,6 +84,7 @@ ffseaAnalysisUI <- function(id, ...) {
 #'
 #' @rdname interactive-ffsea
 #' @export
+#' @importFrom shiny eventReactive withProgress
 #' @importFrom shinyWidgets updatePickerInput
 #'
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
@@ -127,15 +129,23 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   })
 
   observe({
-    toggleState("run", condition = runnable())
+    runnable. <- runnable()
+    ftrace("runnable: ", as.character(runnable.))
+    toggleState("runbtn", condition = runnable.)
   })
 
-  fseares <- eventReactive(input$run, {
+  observe({
+    ftrace("Run button pressed: ", as.character(input$runbtn))
+  })
+
+  fseares <- eventReactive(input$runbtn, {
     req(runnable())
     args. <- runopts$args()
     gdb. <- gdb.$gdb()
-    args <- c(list(x = ares(), gdb = gdb$gdb()), args.)
-    do.call(ffsea, args)
+    args <- c(list(x = ares(), gdb = gdb.), args.)
+    withProgress({
+      do.call(ffsea, args)
+    }, message = "Running FSEA")
   })
 
   vals <- list(
@@ -144,16 +154,18 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
 
   # TODO: fix class hierarchy
   classes <- c("ReactiveFacileFseaAnalysisResult",
-               "FacileFseaAnalysisResult",
-               "ReactiveFacileAnalysisResult")
+               "ReactiveFacileAnalysisResult",
+               "FacileFseaAnalysisResult")
 
   class(vals) <- classes
+
   vals
 }
 
 #' @noRd
 #' @export
 #' @importFrom shinyWidgets pickerInput
+#' @importFrom shiny actionButton column fluidRow tags tagList
 ffseaRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
@@ -171,7 +183,7 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
         tags$div(
           style = "padding-top: 1.7em",
           ffseaRunOptsUI(ns("runopts"), width = "300px"))),
-      column(1, actionButton(ns("run"), "Run", style = "margin-top: 1.7em"))
+      column(1, actionButton(ns("runbtn"), "Run", style = "margin-top: 1.7em"))
     )
   )
 }
@@ -194,23 +206,24 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
 #' @importFrom shiny validate
 #' @param rfds the reactive facile data store
 #' @param ares The `FacileFseaAnalysisResult`
-ffseaView <- function(input, output, session, rfds, ares, ...,
+ffseaView <- function(input, output, session, rfds, aresult, ...,
                       debug = FALSE) {
   state <- reactiveValues(
     gsview_select = tibble(assay_name = character(), feature_id = character()),
     set_select = tibble(collection = character(), name = character())
   )
 
-  # assert_class()
-  fsea_res <- reactive({
-    req(initialized(ares))
-    faro(ares)
+  ares <- reactive({
+    req(initialized(aresult))
+    faro(aresult)
   })
 
   mgc <- reactive({
-    res <- req(fsea_res())
+    res <- req(ares())
     mgres <- result(res)
-
+    # TODO: validate() isn't working here, only works inside a
+    # `output$xxx <- render*({})` block, which is generating outpout into the
+    # shiny app
     validate(
       need(is(mgres, "MultiGSEAResult"), "MultiGSEAResult can't be found")
     )
