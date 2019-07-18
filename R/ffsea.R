@@ -68,6 +68,44 @@ ffsea <- function(x, ...) {
   UseMethod("ffsea", x)
 }
 
+#' TODO: ffsea.FacileTtestDGEModelDefinition has all the info required to run
+#' GSEA methods that require more than just pre-ranked (or enriched) listing
+#' of genes.
+#'
+#' @noRd
+ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
+                                                methods = c("camera", "roast"),
+                                                ...) {
+}
+
+#' @section Generic Set Enrichment Analysis from a table of statistics:
+#' TODO: Write generic ffsea over a data.frame of feature statistics. This can
+#'   drive pre-ranked based GSEA, by identifying the column in `x` to `rank_by`,
+#'   as well as "enrichment" based methods, by identifying an indicator column
+#'   `select_by` in `x` flags features as "interesting" or not.
+#'
+#' TODO: Implement the universal ffsea.data.frame
+#'
+#' @noRd
+#' @export
+#' @method ffsea data.frame
+#'
+#' @param x a data.frame, rows are features, columns are metadata or statistics
+#'   over the features
+#' @param rank_by the name of a numeric column in `x` to use to arrange the
+#'   features by ranks
+#' @param select_by a logical column in `x` used to select features for
+#'   enrichmen tests. Rows where x[[select_by]] is `TRUE` are included for
+#'   enrichment analysis
+#' @param rank_order the direction to arrange values in `rank_by`. By default
+#'   (`rank_by = "asc"`), which arranges `x[[rank_by]]` in ascending order.
+#'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
+#'   order.
+ffsea.data.frame <- function(x, rank_by, select_by, methods,
+                             rank_order = c("asc", "desc"), ...) {
+
+}
+
 #' @noRd
 #' @export
 #' @importFrom multiGSEA multiGSEA
