@@ -18,33 +18,34 @@ fdgeseaGadget <- function(x, title = "DGE and GSEA",
 #' want to perform two anlayses together, differential expression and GSEA
 #' on the same contrast. This shiny-module presents an interface to both.
 #'
+#' @section Development Thouts:
 #' This also gives us the opportunity to exercise different methods of
 #' interaction between independant analysis results. In the DGE and GSEA
 #' scenario, for instance, we might want the linked brushing that happens within
 #' the `fdge` volcano to do a "significant gene set search" in the fgsea result.
 #'
-#' TODO: Enable / Disable FSEA widgets and results when DGE result isn't ready
-#' or a new one is generated.
+#' More specifically, maybe the volcano plot in the `dge_view` module should
+#' be able to broadcast the feature brushing in such a way that the "listener"
+#' in the `ffsea_vew` module can react to it. Similarly for the `ffsea_vew`
+#' module should be able to broadcast the features that are brushed within
+#' it to the `dge_vew` volcano and statistics tables ... or not?
 #'
 #' @export
 fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
+  # fdge bits ..................................................................
   model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
-
-  # Something to think about given the current design of these modules is if we
-  # can broadcast the feature brushing that happens here in such a way that
-  # a "listner" in the ffseaView model can react to it. Likewise can the
-  # ffseaView module broadcast feature brushing in such a way that the volcano
-  # module in the fdgeView module can react to.
   dge_view <- callModule(fdgeView, "dge_view", rfds, dge,  ...,
                         feature_selection = session$ns("volcano"),
                         sample_selection = session$ns("samples"),
                         debug = debug)
 
+  # ffsea bits .................................................................
   fsea <- callModule(ffseaRun, "fsea", rfds, dge, gdb, ..., debug = debug)
   fsea_view <- callModule(ffseaView, "fsea_view", rfds, fsea, ...,
                           debug = FALSE)
 
+  # toggle UI logic ............................................................
   # Only show the view UI when there is (at least) a DGE result.
   observe({
     res. <- req(faro(dge))
@@ -52,12 +53,17 @@ fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
     toggleElement("viewbox", condition = show)
   })
 
+  # TODO: Enable / Disable FSEA widgets and results when DGE result isn't ready
+  # or a new one is generated.
+
+  # wrap up ....................................................................
   vals <- list(
     main = list(dge = dge, fsea = fsea),
     .ns = session$ns)
 
   class(vals) <- c(
-    "ReactiveFacileMultiAnalysisResultContainer" # are you being serious?
+    # This is a serious whopper of a name -- are you being serious?
+    "ReactiveFacileMultiAnalysisResultContainer"
   )
 
   vals
