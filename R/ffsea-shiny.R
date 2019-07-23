@@ -138,18 +138,18 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
     ftrace("Run button pressed: ", as.character(input$runbtn))
   })
 
-  fseares <- eventReactive(input$runbtn, {
+  fsea_res <- eventReactive(input$runbtn, {
     req(runnable())
     args. <- runopts$args()
     gdb. <- gdb.$gdb()
     args <- c(list(x = ares(), gdb = gdb.), args.)
     withProgress({
       do.call(ffsea, args)
-    }, message = "Running FSEA")
+    }, message = "Running Enrichment Analysis")
   })
 
   vals <- list(
-    faro = fseares,
+    faro = fsea_res,
     .ns = session$ns)
 
   # TODO: fix class hierarchy

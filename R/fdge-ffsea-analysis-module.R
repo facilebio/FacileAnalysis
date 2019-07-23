@@ -1,3 +1,13 @@
+#' Gadget to run both DGE and GSEA
+#'
+#' @export
+fdgeseaGadget <- function(x, title = "DGE and GSEA",
+                          height = 800, width = 1000, ...) {
+  assert_multi_class(x, c("FacileDataStore", "facile_frame"))
+  frunGadget(fDgeSeaAnalysis, fDgeSeaAnalysisUI, x, title = title,
+             height = height, width = width, ...)
+}
+
 #' An analysis module that combines differential expression with GESA.
 #'
 #' This module enables the interactive configuration and execution of
@@ -12,6 +22,9 @@
 #' interaction between independant analysis results. In the DGE and GSEA
 #' scenario, for instance, we might want the linked brushing that happens within
 #' the `fdge` volcano to do a "significant gene set search" in the fgsea result.
+#'
+#' TODO: Enable / Disable FSEA widgets and results when DGE result isn't ready
+#' or a new one is generated.
 #'
 #' @export
 fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {

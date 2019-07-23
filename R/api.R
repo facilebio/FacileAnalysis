@@ -1,7 +1,11 @@
 # Universal FacileAnalysisResult methods =======================================
 
-#' Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-#' ReactiveFacileAnalysis
+#' Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.
+#'
+#' `FacileAnalysisResult` object can be stored within a
+#' `ReactiveFacileAnalysis`, or a `FacileMultiAnalysisResult` (which is a
+#' collection of FacileAnalysisResults returned from a "multi-analysis" view,
+#' like [fDgeSeaAnalysis()])
 #'
 #' Due to the potential hybrid-nature of analysis workflow, we are not always
 #' certain that a FacileAnalysisResult used by a module that did not create it

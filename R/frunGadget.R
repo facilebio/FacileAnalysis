@@ -128,11 +128,12 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
         } else if (is(analysis, "ReactiveFacileMultiAnalysisResultContainer")) {
           # like the fDgeGseaModule
           results. <- analysis$main
-          assert_list(results., named = "unique")
+          assert_list(results., names = "unique")
           result. <- lapply(results., function(res) {
-            assert_class(res, "reactive")
+            assert_class(res, "ReactiveFacileAnalysisResult")
             unreact(faro(res))
           })
+          class(result.) <- "FacileMultiAnalysisResult"
         } else {
           stop("Unexpected `analysis` return type: ", class(analysis)[1L])
         }

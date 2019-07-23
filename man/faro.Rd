@@ -2,8 +2,7 @@
 % Please edit documentation in R/api.R
 \name{faro}
 \alias{faro}
-\title{Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-ReactiveFacileAnalysis}
+\title{Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.}
 \usage{
 faro(x, ...)
 }
@@ -11,12 +10,17 @@ faro(x, ...)
 an innert FacileAnalysisResult
 }
 \description{
+\code{FacileAnalysisResult} object can be stored within a
+\code{ReactiveFacileAnalysis}, or a \code{FacileMultiAnalysisResult} (which is a
+collection of FacileAnalysisResults returned from a "multi-analysis" view,
+like \code{\link[=fDgeSeaAnalysis]{fDgeSeaAnalysis()}})
+}
+\details{
 Due to the potential hybrid-nature of analysis workflow, we are not always
 certain that a FacileAnalysisResult used by a module that did not create it
 (ie. the \code{dgeres} object in the \code{\link[=fdgeView]{fdgeView()}} is a
 \code{ReactiveFacileAnalysisResult}, or simply an innert \code{FacileAnalysisResult}.
-}
-\details{
+
 So that we don't have to always check for these things, we call this method
 so that we get access to the \code{FacileAnalysisResult} object itself.
 
