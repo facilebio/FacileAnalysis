@@ -59,6 +59,19 @@ faro.ReactiveFacileAnalysisResultContainer <- function(x, main = "main", ...) {
   faro(main.)
 }
 
+#' See combined fDgeSeaAnalysis module
+#' @noRd
+#' @export
+faro.ReactiveFacileMultiAnalysisResult <- function(x, main = names(x$names)[1L],
+                                                   ...) {
+  results <- x[["main"]]
+  assert_list(results, named = "unique")
+  assert_choice(main, names(results))
+  res <- results[[main]]
+  faro(res)
+}
+
+
 #' Returns a table of information about the features used in the analysis.
 #'
 #' The individual FacileAnalysis modules will define their own implementations
@@ -90,6 +103,20 @@ features <- function(x, ...) {
 initialized.ReactiveFacileAnalysisResult <- function(x, ...) {
   obj <- try(faro(x), silent = TRUE)
   is(obj, "FacileAnalysisResult") && initialized(obj)
+}
+
+#' A ReactiveFacileMultiAnalysisResult is an analysis module that combines
+#' two individual analyses together, like fdge and ffsea.
+#'
+#' For now, this might just be the fDgeSeaAnalysis module, as I'm not sure that
+#' this is a good idea ...
+#'
+#' @noRd
+#' @export
+initialized.ReactiveFacileMultiAnalysisResult <- function(x, ...) {
+  assert_list(x$main)
+  resnames <- names(x$main)
+  all(sapply(x$main, initialized))
 }
 
 #' @noRd

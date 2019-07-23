@@ -120,12 +120,24 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
           if (is(result., "reactive")) result. <- result.()
         }
       } else {
-        result. <- failWith(list(), unreact(faro(analysis)))
+        if (is(analysis, "ReactiveFacileAnalysisResultContainer")) {
+          result. <- failWith(list(), unreact(faro(analysis)))
+          attr(result., "INTERACTED") <- list(
+            annotation = annotation)
+          class(result.) <- classify_as_gadget(result.)
+        } else if (is(analysis, "ReactiveFacileMultiAnalysisResultContainer")) {
+          # like the fDgeGseaModule
+          results. <- analysis$main
+          assert_list(results., named = "unique")
+          result. <- lapply(results., function(res) {
+            assert_class(res, "reactive")
+            unreact(faro(res))
+          })
+        } else {
+          stop("Unexpected `analysis` return type: ", class(analysis)[1L])
+        }
       }
 
-      attr(result., "INTERACTED") <- list(
-        annotation = annotation)
-      class(result.) <- classify_as_gadget(result.)
       stopApp(invisible(result.))
     })
 
