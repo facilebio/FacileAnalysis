@@ -146,9 +146,10 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
     return(out)
   })
 
-
-  xmeta. <- select(ranks., feature_id, symbol, meta, logFC, t, B, AveExpr,
-                   pval, padj)
+  take.cols <- c("symbol", "meta", "logFC", "t", "B", "AveExpr", "pval", "padj",
+                 "CI.L", "CI.R")
+  take.cols <- intersect(take.cols, colnames(ranks.))
+  xmeta. <- select(ranks., feature_id, {{take.cols}})
 
   out[["result"]] <- multiGSEA(gdb, ranked, method = methods, ...,
                                xmeta. = xmeta.)
@@ -198,10 +199,11 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
   vals <- assert_numeric(pc.ranks[[rank.column]])
   names(vals) <- pc.ranks[["feature_id"]]
 
-  xmeta. <- fds. %>%
-    assay_feature_info(aname.) %>%
-    transmute(feature_id, symbol = name, biotype = meta)
+  # xmeta. <- fds. %>%
+  #   features(aname.) %>%
+  #   transmute(feature_id, symbol = name, score, weight, biotype = meta)
 
+  xmeta. <- pc.ranks
   out[["result"]] <- multiGSEA(gdb, vals, methods = methods, ...,
                                xmeta. = xmeta.)
   out

@@ -27,6 +27,29 @@
 #'    (largely) no trend of the variance to the mean worth modeling. Uses
 #'    [lima::arrayWeights()] when `with_sample_weights = TRUE`
 #'
+#' @section Feature Filtering Strategy:
+#' You will almost always want to filter out lowly abundant features before
+#' performing differential expression analysis. For this reason, when the
+#' `filter` parameter is set to `"default"`, the filtering strategy is largely
+#' is largely based on the logic found in [edgeR::filterByExpr()].
+#'
+#' When `fdge` analysis is perfomd on count data, the filtering is precisely
+#' perfomed by this function, using `design(x)` as the design paratmer to
+#' `filterByExpr`. You can modify the filtering behavior by passing any
+#' named parameters [edgeR::filterByExpr()] accepts to down to it via `fdge`'s
+#' `...` parameter (don't pass `design`, as this is already defined).
+#'
+#' There are times when you want to tweak this behavior in ways that aren't
+#' exactly supported by `filterByExpr`. You can pass down a `filter_require`
+#' parameter, which can be a feature table (one with a `feature_id` column)
+#' or character vector of feature ids into: this will do all of the
+#' `filterByExpr` mojo, but also ensure that the features enumerated in
+#' `filter_require` are also included.
+#'
+#' You can also pass a feature table (or feature id chartcter vector) as the
+#' `filter` parameter itself. In this case, only the featured provided there
+#' will be used in the `fdge` analysis.
+#'
 #' @export
 #' @importFrom multiGSEA calculateIndividualLogFC logFC multiGSEA
 #'
@@ -197,8 +220,7 @@ result.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
 }
 
 tidy.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
-  out <- x[["result"]]
-  out
+  x[["result"]]
 }
 
 #' @noRd
@@ -210,6 +232,8 @@ initialized.FacileDgeAnalysisResult <- function(x, ...) {
     is.numeric(stat.table[["padj"]])
 }
 
+#' @noRd
+#' @export
 features.FacileDgeAnalysisResult <- function(x, ...) {
   stat.table <- tidy(x)
   take <- c("feature_id", "feature_type", "symbol", "assay", "assay_type")
@@ -220,7 +244,7 @@ features.FacileDgeAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 model.FacileDgeAnalysisResult <- function(x, ...) {
-  x[["params"]][["model_def"]]
+  param(x, "model_def")
 }
 
 #' @noRd
@@ -291,7 +315,7 @@ label.FacileAnovaAnalysisResult <- function(x, ...) {
 #' @export
 #' @noRd
 ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
-  ranks. <- result(x, ...)
+  ranks. <- tidy(x, ...)
   if (signed) {
     ranks. <- arrange(ranks., desc(logFC))
   } else {
@@ -341,7 +365,7 @@ signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
   if (is.null(min_logFC)) min_logFC <- 0
   min_logFC <- abs(min_logFC)
 
-  res <- result(x) %>%
+  res <- tidy(x) %>%
     mutate(direction = ifelse(logFC > 0, "up", "down"))
 
   if (signed(x)) {
@@ -477,7 +501,8 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
     des.cols <- c(1, mdef$coef)
   }
 
-  nsamples <- sum(colSums(des[, des.cols, drop = FALSE] != 0))
+  # nsamples <- sum(colSums(des[, des.cols, drop = FALSE]) != 0)
+  nsamples <- sum(rowSums(des[,des.cols,drop = FALSE]) > 0)
 
   res <- result(x)
   ntested <- nrow(res)

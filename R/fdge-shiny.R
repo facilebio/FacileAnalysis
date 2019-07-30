@@ -392,14 +392,16 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   # plotly selection key for brushing
   boxdata <- eventReactive(selected_result(), {
     feature <- req(selected_result())
+    # This will pull in the covariates used in the test
     dat <- req(samples.())
     scov <- covariate.()
-    dat <- fetch_assay_data(rfds, feature, dat,
-                            normalized = TRUE,
-                            prior.count = 0.25)
+
     if (!scov %in% colnames(dat)) {
       dat <- with_sample_covariates(dat, scov)
     }
+
+    dat <- with_assay_data(dat, feature, normalized = TRUE,
+                           prior.count = 0.25, spread = "id")
 
     if (is.ttest(dge())) {
       m <- model.()
@@ -417,6 +419,12 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     assay_units(rfds, aname, normalized = TRUE)
   })
 
+  # TODO: implement viz.FacileDgeAnalysisResult and replace lots of shiny bits
+  # can all of this internal code block be replaced with {
+  #   feature <- req(selected_result())
+  #   dge. <- dge()
+  #   viz(dge., feature, ...)
+  # }
   output$boxplot <- renderPlotly({
     feature <- req(selected_result())
     dat <- req(boxdata())
@@ -445,10 +453,11 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     }
 
     ylbl <- box_ylabel()
+    valname <- feature[["feature_id"]]
 
-    fplot <- fboxplot(dat, xaxis, "value", with_points = TRUE,
+    fplot <- fboxplot(dat, xaxis, valname, with_points = TRUE,
                       event_source = sample_selection, key = ".key",
-                      color_aes = color.by, hover = c(scov, "value"),
+                      color_aes = color.by, hover = c(scov, valname),
                       width = NULL, height = NULL, legendside = "bottom",
                       xlabel = "", ylabel = ylbl)
     out <- plot(fplot)

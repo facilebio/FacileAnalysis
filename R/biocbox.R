@@ -113,6 +113,12 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
     return(out)
   }
 
+  if (test_multi_class(filter, c("data.frame", "tbl"))) {
+    filter <- filter[["feature_id"]]
+  }
+  if (is.null(filter)) {
+    filter <- "default"
+  }
   if (test_string(filter) && filter != "default") {
     errors <- c(
       glue("Invalid `filter` value (`{filter}`). The only valid string value ",
@@ -185,7 +191,9 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                                     prior_count = 2,
                                     # default params for edgeR::filterByExpr
                                     filter_min_count = 10,
-                                    filter_min_total_count = 15, ...) {
+                                    filter_min_total_count = 15,
+                                    # Additional filter params,
+                                    filter_require = NULL, ...) {
   assert_class(design, "FacileDgeModelDefinition")
   if (is.null(prior_count)) prior_count <- 2
   y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
@@ -213,6 +221,12 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                            min.total.count = filter_min_total_count, ...)
     } else {
       keep <- rownames(y.all) %in% filter
+    }
+    if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
+      filter_require <- filter_require[["feature_id"]]
+    }
+    if (is.character(filter_require) && length(character) > 0L) {
+      keep <- keep | rownames(y.all) %in% filter_require
     }
   } else {
     keep <- rep(TRUE, nrow(y.all))
@@ -263,7 +277,8 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
 .biocbox_create_EList <- function(xsamples, assay_name, assay_type,
                                   design, filter, method, with_sample_weights,
                                   prior_count = 0.25,
-                                  filter_min_expr = 1, ...) {
+                                  filter_min_expr = 1,
+                                  filter_require = character(), ...) {
   if (is.null(prior_count)) prior_count <- 0.25
 
   # assay_type is one of c("normcounts","lognorm")
@@ -296,6 +311,12 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
       elist <- elist[keep,]
     } else {
       keep <- rownames(y.all) %in% filter
+    }
+    if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
+      filter_require <- filter_require[["feature_id"]]
+    }
+    if (is.character(filter_require) && length(character) > 0L) {
+      keep <- keep | rownames(y.all) %in% filter_require
     }
   } else {
     keep <- rep(TRUE, nrow(y.all))

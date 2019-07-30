@@ -2,9 +2,9 @@
 % Please edit documentation in R/api.R
 \name{param}
 \alias{param}
-\title{Extract the value of a parameter used in a FacileAnalysis result}
+\title{Extract the value of a parameter(s) used in a FacileAnalysis result}
 \usage{
-param(x, name, ...)
+param(x, name = NULL, ...)
 }
 \arguments{
 \item{x}{A FacileAnalysisResult}
@@ -12,5 +12,5 @@ param(x, name, ...)
 \item{name}{the name of the parameter to extract}
 }
 \description{
-Extract the value of a parameter used in a FacileAnalysis result
+Extract the value of a parameter(s) used in a FacileAnalysis result
 }

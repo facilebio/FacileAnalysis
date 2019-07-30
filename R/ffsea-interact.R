@@ -3,7 +3,7 @@
 #' @importFrom multiGSEA iplot geneSets
 viz.FacileFseaAnalysisResult <- function(x, name = NULL, collection = NULL,
                                          ...) {
-  mgres <- assert_class(result(x, "object"), "MultiGSEAResult")
+  mgres <- assert_class(result(x), "MultiGSEAResult")
 
   # Passing in a geneset name will use multiGSEA::iplot
   if (is.character(name)) {
@@ -38,8 +38,10 @@ viz.FacileFseaAnalysisResult <- function(x, name = NULL, collection = NULL,
 #'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
 #'   fdge(method = "voom")
 #' gsea.ttest <- ffsea(dge.ttest, gdb, methods = c("cameraPR", "fgsea"))
+#'
+#' viz(gsea.ttest, name = "HALLMARK_ANGIOGENESIS")
 #' if (interactive()) {
-#'   shine(ttest.gsea)
+#'   shine(gsea.ttest)
 #' }
 shine.FacileFseaAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                            title = "FSEA Results",

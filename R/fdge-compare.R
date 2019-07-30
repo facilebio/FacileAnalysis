@@ -1,5 +1,8 @@
 #' @section Comapring DGE Results:
-#' We can compare two Ttest results
+#' We can compare two Ttest results.
+#'
+#' The filtering strategy in the interaction model dictates that the union
+#' of all features found in `x` are `y` are used in the test.
 #'
 #' @rdname fdge
 #' @export
@@ -24,15 +27,49 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
   # TODO: assert_comparable.FacileDgeAnalysisResult <- function(...)
   assert_class(x, "FacileTtestAnalysisResult")
   assert_class(y, "FacileTtestAnalysisResult")
+  fds. <- assert_class(fds(x), "FacileDataStore")
+
   stopifnot(
     param(x, "assay_name") == param(y, "assay_name"),
     param(x, "method") == param(y, "method"))
 
-  fds. <- fds(x)
+  messages <- character()
+  warnings <- character()
+  errors <- character()
+
+  # override downstream with "failed/incomplete/with_i_stats" version of class?
+  clazz <- NULL
+  classes <- c("FacileTtestComparisonAnalysisResult",
+               "FacileTtestAnalysisResult",
+               "FacileDgeAnalysisResult",
+               "FacileAnalysisComparisonComparison",
+               "FacileAnalysisResult")
+
+  out <- list(
+    result = NULL,
+    xystats = NULL,
+    params = list(x = x, y = y),
+    fds = fds.)
+
+  on.exit({
+    out[["messages"]] <- messages
+    out[["warnings"]] <- warnings
+    out[["errors"]] <- errors
+    class(out) <- c(clazz, classes)
+    return(out)
+  })
+
   xres <- tidy(x)
   yres <- tidy(y)
 
   idge <- .interaction_fdge(x, y)
+  if (is.null(idge)) {
+    samples. <- bind_rows(samples(x), samples(y))
+    samples. <- distinct(samples., dataset, sample_id)
+    samples. <- set_fds(samples., fds.)
+  } else {
+    samples. <- samples(idge)
+  }
 
   meta.cols <- c("feature_type", "feature_id", "symbol", "meta")
   drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
@@ -51,13 +88,48 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
   }
 
   out <- list(
-    result = xystats,
-    dge = idge)
-  class(out) <- c("FacileTtestComparisonAnalysisResult",
-                  "FacileTtestAnalysisResult",
-                  "FacileAnalysisComparisonComparison",
-                  "FacileAnalysisResult")
+    result = idge,
+    xystats = xystats,
+    samples = samples.,
+    # Standard FacileAnalysisResult things
+    fds = fds.,
+    messages = messages,
+    warnings = warnings,
+    errors = errors)
+
   out
+}
+
+#' This `result()` of comparison will return the FacileTtestAnalysisResult
+#' for the interaction, if it was run, otherwise NULL.
+#'
+#' This definition is redundant, since result.FacileAnalysisResult x returns
+#' x[["result"]], but I just want to make this explicit for consumers of this
+#' code (even myself).
+#'
+#' @noRd
+#' @export
+result.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  x[["result"]]
+}
+
+#' @noRd
+#' @export
+tidy.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  x[["xystats"]]
+}
+
+#' @noRd
+#' @export
+model.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  # model.NULL takes care of if/else testing NULL-ness of result()
+  model(result(x))
+}
+
+#' @noRd
+#' @export
+samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  x[["samples"]]
 }
 
 #' @noRd
@@ -125,16 +197,48 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     icovariate <- ".grp."
     xsamples[[icovariate]] <- paste0("xgrp.", xsamples[[covariate]])
     ysamples[[icovariate]] <- paste0("ygrp.", ysamples[[covariate]])
-    samples. <- bind_rows(xsamples, ysamples)
+    # bind_rows can not be overriden, so we have to ensure that fds is stored
+    # back into the samples. facile_frame
+    samples. <- set_fds(bind_rows(xsamples, ysamples), fds(x))
     samples. <- distinct(samples., dataset, sample_id, .keep_all = TRUE)
   }
-
-  samples. <- set_fds(samples., fds(x))
 
   if (length(ifixed)) {
     # remove and add values to be thorough
     for (fixcov in ifixed)  samples.[[fixcov]] <- NULL
     samples. <- with_sample_covariates(samples., ifixed)
+  }
+
+  # The x and y samples that came in here should have no samples that have
+  # NA values in the covariates used under their testing scenario, but it's
+  # possible that now that they are rbind'd together, they do.
+  #
+  # I *believe* this should only happen he xysamples samples. data.frame can
+  # have rows with NA values for covariates that come from the `fixed`
+  # covaraites used in either x or y. If this is the case, I guess we just have
+  # to remove that covariate from the model(?)
+  has.na <- sapply(samples., function(vals) any(is.na(vals)))
+  has.na <- names(has.na)[has.na]
+  if (length(has.na)) {
+    msg <- paste("The following covariates have samples with NA values, and",
+                 "therefore can't be used in the interaction model: ",
+                 paste(has.na, collapse = ","))
+    not.fixed <- setdiff(has.na, ifixed)
+    if (length(not.fixed)) {
+      msg <- glue(
+        msg, "\n\n",
+        "These covariates are not just the 'fixed' covarites in the upstream ",
+        "`fdge` results. Skipping the interaction model ...",
+        paste(not.fixed, collapse = ","))
+      warning(msg)
+      return(NULL)
+    }
+    msg <- glue(
+      msg, "\n\n",
+      "The covariates HAVE BEEN REMOVED in order to run the ",
+      "interaction fdge")
+    warning(msg)
+    ifixed <- setdiff(ifixed, has.na)
   }
 
   xcontrast <- xmod[["contrast_string"]]

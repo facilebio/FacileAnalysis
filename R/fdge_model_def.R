@@ -155,21 +155,21 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     test_type <- "ttest"
   }
 
+  x <- distinct(x, dataset, sample_id, .keep_all = TRUE)
   # Build the design matrix ----------------------------------------------------
   req.cols <- c("dataset",  "sample_id", covariate, fixed)
-  xx <- x[, req.cols]
-  incomplete <- !complete.cases(xx)
+  incomplete <- !complete.cases(select(x, !!req.cols))
   if (any(incomplete)) {
     msg <- paste(sum(incomplete), "samples with NA's in required covariates")
     if (on_missing == "error") stop(msg)
     warning(msg)
     warnings <- c(warnings, paste("Removed", msg))
-    xx <- xx[!incomplete,]
+    x <- x[!incomplete,]
   }
 
   # Avoids adding all-0 columns to the design matrix, which come from levels
   # of the tested covariate that do not appear in our sample space
-  xx <- droplevels(xx)
+  x <- droplevels(x)
 
   dformula <- paste(
     "~",
@@ -180,7 +180,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     dformula <- paste(dformula, "+", paste(fixed, collapse = " + "))
   }
 
-  design <- model.matrix(formula(dformula), data = xx)
+  design <- model.matrix(formula(dformula), data = x)
   # safe_covname <- make.names(covariate)
   # test_covs <- grep(paste0("^", make.names(safe_covname)), colnames(design))
 
@@ -202,7 +202,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     colnames(design) <- make.names(colnames(design))
   }
 
-  rownames(design) <- paste(xx$dataset, xx$sample_id, sep = "__")
+  rownames(design) <- paste(x$dataset, x$sample_id, sep = "__")
 
   non_estimable <- nonEstimable(design)
   if (!is.null(non_estimable)) {
@@ -295,7 +295,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     fixed = fixed,
     contrast. = contrast.)
   # out[["test_type"]] <- test_type
-  out[["covariates"]] <- xx
+  out[["covariates"]] <- x
   out[["numer"]] <- numer.
   out[["denom"]] <- denom.
   out[["design_formula"]] <- dformula

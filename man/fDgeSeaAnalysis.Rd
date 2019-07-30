@@ -15,9 +15,18 @@ Although the focus of the analysis workflow in this package is based on
 singular units of analysis, there are times like this where we almost always
 want to perform two anlayses together, differential expression and GSEA
 on the same contrast. This shiny-module presents an interface to both.
+}
+\section{Development Thouts}{
 
 This also gives us the opportunity to exercise different methods of
 interaction between independant analysis results. In the DGE and GSEA
 scenario, for instance, we might want the linked brushing that happens within
 the \code{fdge} volcano to do a "significant gene set search" in the fgsea result.
+
+More specifically, maybe the volcano plot in the \code{dge_view} module should
+be able to broadcast the feature brushing in such a way that the "listener"
+in the \code{ffsea_vew} module can react to it. Similarly for the \code{ffsea_vew}
+module should be able to broadcast the features that are brushed within
+it to the \code{dge_vew} volcano and statistics tables ... or not?
 }
+

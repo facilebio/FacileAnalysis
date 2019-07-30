@@ -236,7 +236,7 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
 
   result <- list(
     result = dat,
-    dims = dims,
+    dims = seq(dims),
     rotation = pca$rotation,
     percent_var = percentVar,
     row_covariates = row_covariates,
@@ -292,7 +292,8 @@ features.FacilePcaAnalysisResult <- function(x, ...) {
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
 ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
-                                          signed = TRUE, dims = NULL, ...) {
+                                          signed = TRUE, dims = x[["dims"]][1L],
+                                          ...) {
   type <- match.arg(type)
   if (type == "samples") stop("What does sample-ranking even mean?")
   if (!is.null(dims)) {
@@ -308,7 +309,7 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
     rcol <- if (signed) "rank_rotation" else "rank_weight"
     ranks. <- select(fstats, feature_id, feature_type,
                      dimension = PC, score = rotation,
-                     weight, rank = !!rcol)
+                     weight, rank = {{rcol}})
     # FacilePcaFeatureRanksSigned
     clazz <- "FacilePcaFeatureRanks%s"
     s <- if (signed) "Signed" else "Unsigned"
@@ -331,6 +332,13 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
     arrange(PC., rank) %>%
     mutate(PC. = NULL)
 
+  # Add metadata to ranks, if there.
+  rcovs <- x[["row_covariates"]]
+  add.meta <- c("feature_id", setdiff(colnames(rcovs), colnames(ranks.)))
+  if (length(add.meta)) {
+    ranks. <- left_join(ranks., rcovs[, add.meta, drop = FALSE],
+                        by = "feature_id")
+  }
   pvar <- x[["percent_var"]]
   ranks.[["percent_var_dim"]] <- pvar[ranks.[["dimension"]]]
 

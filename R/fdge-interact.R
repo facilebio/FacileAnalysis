@@ -1,11 +1,13 @@
 # Interactivity and Vizualization over FacileDGEResults ========================
 
+#' For some reason, default views in a dialog or pane freeze up like y0!
 #' @noRd
 #' @export
 shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
                                           title = "Differential Expression Results",
-                                          ...) {
-  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title, ...)
+                                          viewer = "browser", ...) {
+  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title,
+             viewer = viewer, ...)
 }
 
 # @importFrom shiny callModule dialogViewer observeEvent runGadget stopApp

@@ -51,7 +51,10 @@ parameter) over the data. \code{fdge_model_def} accepts a
 }
 \section{Comapring DGE Results}{
 
-We can compare two Ttest results
+We can compare two Ttest results.
+
+The filtering strategy in the interaction model dictates that the union
+of all features found in \code{x} are \code{y} are used in the test.
 }
 
 \section{Interacting with results}{
@@ -87,6 +90,31 @@ mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{wit
 (largely) no trend of the variance to the mean worth modeling. Uses
 \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}
 }
+}
+
+\section{Feature Filtering Strategy}{
+
+You will almost always want to filter out lowly abundant features before
+performing differential expression analysis. For this reason, when the
+\code{filter} parameter is set to \code{"default"}, the filtering strategy is largely
+is largely based on the logic found in \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}}.
+
+When \code{fdge} analysis is perfomd on count data, the filtering is precisely
+perfomed by this function, using \code{design(x)} as the design paratmer to
+\code{filterByExpr}. You can modify the filtering behavior by passing any
+named parameters \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} accepts to down to it via \code{fdge}'s
+\code{...} parameter (don't pass \code{design}, as this is already defined).
+
+There are times when you want to tweak this behavior in ways that aren't
+exactly supported by \code{filterByExpr}. You can pass down a \code{filter_require}
+parameter, which can be a feature table (one with a \code{feature_id} column)
+or character vector of feature ids into: this will do all of the
+\code{filterByExpr} mojo, but also ensure that the features enumerated in
+\code{filter_require} are also included.
+
+You can also pass a feature table (or feature id chartcter vector) as the
+\code{filter} parameter itself. In this case, only the featured provided there
+will be used in the \code{fdge} analysis.
 }
 
 \examples{

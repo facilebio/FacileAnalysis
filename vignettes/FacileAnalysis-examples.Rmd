@@ -1,0 +1,59 @@
+---
+title: "Reproducing genomic anlayses the facile way"
+author: "Steve Lianoglou"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reproducing genomic anlayses the facile way}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+```
+
+## Overview
+
+The goal of this vignette is to collect examples of a variety of publically
+available analyses and redo them using the packages available in the
+facileverse. This is useful in two ways:
+
+1. this can help guide the development of packages within the facileverse by
+   identifying things we can't do yet, or should be able to do more easily; and
+2. gives examples for end-users of how to perform common analysis tasks within
+   this framework.
+
+Examples can be collected from:
+
+1. Publically available workflows for data analysis, such as those found in:
+   a. [Bioconductor Workflow][biocworkflow] packages.
+   b. [Bioconductor Courses][bioccourses].
+   c. Other places?
+2. Questions asked on the [bioconductor][biocsupport] or [biostars][biostars]
+   support sites
+
+## Hitlist
+
+* [edgeR-QLF genes to reads to pahtways workflow][wflow-edgerqlf]
+* [glimma 1-2-3 biocworkflow][wflow-glimma]
+* [rnaseqGene DESeq2 workflow][wflow-rnaseqgene]
+
+   
+[//]: # References =============================================================
+
+[bioccourses]: https://www.bioconductor.org/help/course-materials/
+[biocworkflow]: https://www.bioconductor.org/packages/release/BiocViews.html#___Workflow
+[biocsupport]: https://support.bioconductor.org/
+[biostars]: https://www.biostars.org/
+
+[wflow-edgerqlf]: https://www.bioconductor.org/packages/release/workflows/html/RnaSeqGeneEdgeRQL.html
+[wflow-glimma]: https://www.bioconductor.org/packages/release/workflows/html/RNAseq123.html
+[wflow-rnaseqgene]: https://www.bioconductor.org/packages/release/workflows/html/rnaseqGene.html

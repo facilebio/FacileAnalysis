@@ -2,7 +2,7 @@
 
 #' @noRd
 #' @export
-viz.FacilePcaAnalysisResult <- function(x, pcs = 3, ...,
+viz.FacilePcaAnalysisResult <- function(x, pcs = 2, ...,
                                         height = 400,
                                         width = 700,
                                         xlabel = "default",

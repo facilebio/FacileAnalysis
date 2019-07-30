@@ -75,20 +75,6 @@ faro.ReactiveFacileMultiAnalysisResult <- function(x, main = names(x$names)[1L],
   faro(res)
 }
 
-
-#' Returns a table of information about the features used in the analysis.
-#'
-#' The individual FacileAnalysis modules will define their own implementations
-#' of this method. Think of "features" as being the things that the analysis
-#' is generating statistics over.
-#'
-#' @param x A FacileAnalysisResult
-#' @return a tibble with containing feature_id, feature_type, and whatever other
-#'   columns that were used in the analysis.
-features <- function(x, ...) {
-  UseMethod("features", x)
-}
-
 #' A shiny module that produces a FacileAnalysisResult as its main
 #' result will store it as a reactive() in its result$faro element.
 #'
@@ -258,26 +244,36 @@ signed.FacileFeatureSignature <- function(x, ...) {
   grepl("Signed$", class(x)[1L], ignore.case = FALSE)
 }
 
-#' Extract the value of a parameter used in a FacileAnalysis result
+#' Extract the value of a parameter(s) used in a FacileAnalysis result
 #'
 #' @export
 #' @param x A FacileAnalysisResult
 #' @param name the name of the parameter to extract
-param <- function(x, name, ...) {
+param <- function(x, name = NULL, ...) {
   UseMethod("param", x)
 }
 
 #' @noRd
 #' @export
-param.FacileAnalysisResult <- function(x, name, ...) {
+param.FacileAnalysisResult <- function(x, name = NULL, ...) {
   params. <- assert_list(x[["params"]], names = "unique")
-  assert_choice(name, names(params.))
-  params.[[name]]
+  if (is.null(name) || length(name) == 0L) {
+    out <- params.
+  } else {
+    assert_character(name)
+    name <- assert_subset(unique(name), names(params.))
+    if (length(name) > 1L) {
+      out <- params.[name]
+    } else {
+      out <- params.[[name]]
+    }
+  }
+  out
 }
 
 #' @noRd
 #' @export
-param.ReactiveFacileAnalysisResult <- function(x, name, ...) {
+param.ReactiveFacileAnalysisResult <- function(x, name = NULL, ...) {
   assert_choice("result", names(x))
   param(x$result(), name, ...)
 }
@@ -488,6 +484,10 @@ design <- function(x, ...) {
   UseMethod("design", x)
 }
 
+#' @noRd
+#' @export
+design.NULL <- function(x, ...) NULL
+
 #' Extract the model used for an analysis
 #'
 #' For a DGE analysis, this is the fdge_model_def object
@@ -496,6 +496,10 @@ design <- function(x, ...) {
 model <- function(x, ...) {
   UseMethod("model", x)
 }
+
+#' @noRd
+#' @export
+model.NULL <- function(x, ...) NULL
 
 # Generic API calls on results from running an analysis through a gadget =======
 
