@@ -73,6 +73,8 @@ then differentially tested using the limma-trended pipeline
 }
 
 TODO: support affymrna, affymirna, etc. assay types
+
+The "filter" parameters are described in the \code{\link[=fdge]{fdge()}} function for now.
 }
 
 \section{FacileDgeAnalysisResult}{

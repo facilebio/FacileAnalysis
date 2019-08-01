@@ -102,19 +102,27 @@ is largely based on the logic found in \code{\link[edgeR:filterByExpr]{edgeR::fi
 When \code{fdge} analysis is perfomd on count data, the filtering is precisely
 perfomed by this function, using \code{design(x)} as the design paratmer to
 \code{filterByExpr}. You can modify the filtering behavior by passing any
-named parameters \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} accepts to down to it via \code{fdge}'s
-\code{...} parameter (don't pass \code{design}, as this is already defined).
+named parameters found in the \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} function down to it via
+\code{fdge}'s \code{...} parameter (don't pass \code{design}, as this is already defined).
 
 There are times when you want to tweak this behavior in ways that aren't
-exactly supported by \code{filterByExpr}. You can pass down a \code{filter_require}
-parameter, which can be a feature table (one with a \code{feature_id} column)
-or character vector of feature ids into: this will do all of the
-\code{filterByExpr} mojo, but also ensure that the features enumerated in
-\code{filter_require} are also included.
-
-You can also pass a feature table (or feature id chartcter vector) as the
-\code{filter} parameter itself. In this case, only the featured provided there
-will be used in the \code{fdge} analysis.
+exactly supported by \code{filterByExpr}. You can pass in a "feature descriptor"
+(a character vector of feature ids, or a data.frame with a "feature_id"
+column) into the following parameters:
+\itemize{
+\item \code{filter_universe}: The features enumerated in this parameter will restrict
+the universe of features that can potentially be included in the downstream
+analysis. The \code{filterByExpr()} logic will happen downstream of this
+universe. The default value is \code{NULL}, which specifies the universe of
+features to be all of the ones measured using this assay.
+\item \code{filter_require}: The \code{filterByExpr} logic happens first on the universe
+of features as parameterized. All features enumerated here will be forcibly
+included in the analysis, regardless of their expression levels. The
+defalut value is \code{NULL}, which means no genes will be "recovered" if they
+don't pass "filter muster".
+\item \code{filter}: If a feature descriptor is provided here, then only the features
+enumerated here (that were assayed) will be included in the analysis.
+}
 }
 
 \examples{

@@ -40,3 +40,62 @@ test_that("Correct bioc container built from model def and method spec", {
   cors <- cor(e$E, vm$E, method = "spearman")
   expect_true(all(diag(cors) > 0.999))
 })
+
+test_that("Various filter* combinations to biocbox work", {
+  mdef <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def(covariate = "sample_type",
+                   numer = "tumor",
+                   denom = "normal")
+
+  all.features <- features(FDS, assay_name = "rnaseq")
+
+  # ELists generated for limma-trend (skip the voom step)
+
+  # No filtering takes place when filter = NULL
+  f.all <- mdef %>%
+    biocbox("rnaseq", method = "limma-trend", filter = NULL) %>%
+    features()
+  expect_equal(nrow(f.all), nrow(all.features))
+  expect_set_equal(f.all$feature_id, all.features$feature_id)
+
+  # Default low-expression filtering happens when filter isn't specified
+  f.default <- mdef %>%
+    biocbox("rnaseq", method = "limma-trend") %>%
+    features()
+  expect_true(nrow(f.default) < nrow(f.all))
+  expect_true(all(f.default$feature_id %in% f.all$feature_id))
+
+  # Filtering works on a restricted universe.
+  # Here we restrict the universe to genes with 5 letter names.
+  # A more common usecase might be to filter the features based on
+  # meta == "protein_coding"
+  fives.all <- filter(all.features, nchar(name) == 5)
+
+  # Low expression filtering happens within restricted universe
+  fives.default <- mdef %>%
+    biocbox("rnaseq", method = "limma-trend", filter_universe = fives.all) %>%
+    features()
+  expect_true(all(nchar(fives.default$symbol) == 5))
+  expect_true(all(fives.default$feature_id %in% f.default$feature_id))
+
+  # Specifying filter_require rescues lowly-expressed genes
+  add.req <- setdiff(fives.all$feature_id, fives.default$feature_id)
+  add.req <- sample(add.req, 10)
+  expect_false(any(add.req %in% fives.default$feature_id))
+
+  fives.with.req <- mdef %>%
+    biocbox("rnaseq", method = "limma-trend", filter_universe = fives.all,
+            filter_require = add.req) %>%
+    features()
+  expect_set_equal(
+    fives.with.req$feature_id,
+    c(fives.default$feature_id, add.req),)
+
+  # filter = feature descriptor does that and just that
+  take.these <- head(fives.all, 10)
+  only.these <- mdef %>%
+    biocbox("rnaseq", method = "limma-trend", filter = take.these) %>%
+    features()
+  expect_set_equal(only.these$feature_id, take.these$feature_id)
+})

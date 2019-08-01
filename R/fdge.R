@@ -36,19 +36,26 @@
 #' When `fdge` analysis is perfomd on count data, the filtering is precisely
 #' perfomed by this function, using `design(x)` as the design paratmer to
 #' `filterByExpr`. You can modify the filtering behavior by passing any
-#' named parameters [edgeR::filterByExpr()] accepts to down to it via `fdge`'s
-#' `...` parameter (don't pass `design`, as this is already defined).
+#' named parameters found in the [edgeR::filterByExpr()] function down to it via
+#' `fdge`'s `...` parameter (don't pass `design`, as this is already defined).
 #'
 #' There are times when you want to tweak this behavior in ways that aren't
-#' exactly supported by `filterByExpr`. You can pass down a `filter_require`
-#' parameter, which can be a feature table (one with a `feature_id` column)
-#' or character vector of feature ids into: this will do all of the
-#' `filterByExpr` mojo, but also ensure that the features enumerated in
-#' `filter_require` are also included.
+#' exactly supported by `filterByExpr`. You can pass in a "feature descriptor"
+#' (a character vector of feature ids, or a data.frame with a "feature_id"
+#' column) into the following parameters:
 #'
-#' You can also pass a feature table (or feature id chartcter vector) as the
-#' `filter` parameter itself. In this case, only the featured provided there
-#' will be used in the `fdge` analysis.
+#' * `filter_universe`: The features enumerated in this parameter will restrict
+#'   the universe of features that can potentially be included in the downstream
+#'   analysis. The `filterByExpr()` logic will happen downstream of this
+#'   universe. The default value is `NULL`, which specifies the universe of
+#'   features to be all of the ones measured using this assay.
+#' * `filter_require`: The `filterByExpr` logic happens first on the universe
+#'   of features as parameterized. All features enumerated here will be forcibly
+#'   included in the analysis, regardless of their expression levels. The
+#'   defalut value is `NULL`, which means no genes will be "recovered" if they
+#'   don't pass "filter muster".
+#' * `filter`: If a feature descriptor is provided here, then only the features
+#'   enumerated here (that were assayed) will be included in the analysis.
 #'
 #' @export
 #' @importFrom multiGSEA calculateIndividualLogFC logFC multiGSEA

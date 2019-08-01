@@ -148,8 +148,25 @@ compare <- function(x, y, ...) {
   UseMethod("compare", x)
 }
 
+# compare.FacileAnalysisResult <- function(x, y, ...) {
+#   msg <- glue("No `compare` method defined for `{class(x)[1L]}` result type.")
+# }
+
+#' Default/core function to compare FacileAnalysisResults by combining the
+#' feature-level statistics returned by the ranks induced over each analysis
+#' (as long as they are run on the same feature space.)
+#'
+#' @noRd
+#' @export
 compare.FacileAnalysisResult <- function(x, y, ...) {
-  msg <- glue("No `compare` method defined for `{class(x)[1L]}` result type.")
+  assert_class(x, "FacileAnalysisResult") # this should be a tautology
+  assert_class(y, "FacileAnalysisResult") # this should be a tautology
+
+  # TODO: need to check that x and y are run on same feature_type and induces
+  # ranks on them
+  # assert_true(feature_type(x) == feature_type(y))
+  rx <- ranks(x, ...)
+  ry <- ranks(y, ...)
 }
 
 # Retrieves the main (or alternative) result from a FacileAnalysis
@@ -278,6 +295,12 @@ param.ReactiveFacileAnalysisResult <- function(x, name = NULL, ...) {
   param(x$result(), name, ...)
 }
 
+#' @noRd
+#' @export
+param.BiocBox <- function(x, name = NULL, ...) {
+  param.FacileAnalysisResult(x, name, ...)
+}
+
 #' Extracts ranks and signatures from a FacileAnalysisResult.
 #'
 #' (Note: there is a lot of philosophizing going on here).
@@ -355,6 +378,7 @@ ranks <- function(x, ...) {
   UseMethod("ranks", x)
 }
 
+#'
 #' Converts an analysis result into a "signature" type of thing.
 #'
 #' This is mainly for feature rankings, but could be something else? Returns

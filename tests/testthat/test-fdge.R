@@ -1,6 +1,8 @@
-context("Differential Gene Expression and GSEA")
+context("Differential Gene Expression")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
+
+# Simpler Linear Models ========================================================
 
 test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   mdef <- FDS %>%
@@ -84,6 +86,63 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$F, vres$F)
 })
 
+# ttest ineraction / compare ===================================================
+
+test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
+  tvn.blca <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    fdge_model_def("sample_type", "tumor", "normal", fixed = "sex") %>%
+    fdge()
+  tvn.crc <- FDS %>%
+    filter_samples(indication == "CRC") %>%
+    fdge_model_def("sample_type", "tumor", "normal", fixed = "sex") %>%
+    fdge()
+  tvn.cmp <- compare(tvn.blca, tvn.crc)
+
+  all.samples <- samples(tvn.crc) %>%
+    bind_rows(samples(tvn.blca)) %>%
+    as_facile_frame(FDS) %>%
+    transmute(dataset, sample_id,
+              group = paste(dataset, sample_type, sep = "_"))
+
+  y.all <- as.DGEList(all.samples, feature_ids = features(tvn.cmp))
+  y.all <- calcNormFactors(y.all)
+  des <- model.matrix(~ 0 + group + sex, y.all$samples)
+  colnames(des) <- sub("group", "", colnames(des))
+  ctr <- makeContrasts(
+    testme = (BLCA_tumor - BLCA_normal) - (COAD_tumor - COAD_normal),
+    levels = des)
+  vm <- limma::voom(y.all, des)
+  ires <- limma::lmFit(vm, vm$des) %>%
+    limma::contrasts.fit(ctr) %>%
+    limma::eBayes() %>%
+    limma::topTable("testme", n = Inf) %>%
+    select(feature_id, logFC, t, pval = P.Value, padj = adj.P.Val)
+
+  expect_set_equal(tidy(tvn.cmp)$feature_id, ires$feature_id)
+  cmp <- tidy(tvn.cmp) %>%
+    select(feature_id, symbol, logFC, t, pval, padj) %>%
+    inner_join(ires, by = "feature_id")
+  expect_equal(cmp$logFC.x, cmp$logFC.y)
+  expect_equal(cmp$t.x, cmp$t.y)
+  expect_equal(cmp$pval.x, cmp$pval.y)
+})
+
+test_that("ttest compare() over same covariate, different numer/denom", {
+  # subset to cancer type, (stage I vs stage II) vs (stage III vs stage IV)
+  crc.samples <- filter_samples(FDS, indication == "CRC")
+  stage.2v1 <- crc.samples %>%
+    fdge_model_def("stage", "II", "I") %>%
+    fdge()
+  stage.4v3 <- crc.samples %>%
+    fdge_model_def("stage", "IV", "III") %>%
+    fdge()
+  cmp.stage <- compare(stage.2v1, stage.4v3)
+
+})
+
+# Ranks and Signatures =========================================================
+
 # Let's pre-compute and ANOVA and ttest result so we can break up our
 # ranks and signature tests
 TRES <- FDS %>%
@@ -119,11 +178,11 @@ test_that("ttest ranks and signatures generated correctly", {
 
 test_that("ranks returns anova features in expected order", {
   eranks <- ARES %>%
-    result() %>%
+    tidy() %>%
     arrange(pval)
   anova.ranks <- ARES %>%
     ranks() %>%
-    result()
+    tidy()
   expect_equal(anova.ranks[["feature_id"]], eranks[["feature_id"]])
 
   # signed anova ranks fires a warning but returns a ranking

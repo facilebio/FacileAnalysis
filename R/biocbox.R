@@ -36,6 +36,26 @@ design.BiocBox <- function(x, ...) {
   out
 }
 
+#' @noRd
+#' @export
+features.BiocBox <- function(x, ...)  {
+  y <- result(x)
+  if (is.null(y)) {
+    stop("The bioc assay container is not found in the BiocBox")
+  }
+  if (test_multi_class(y, c("DGEList", "EList"))) {
+    out <- y[["genes"]]
+  } else {
+    stop(class(y)[1L], " not yet handled")
+  }
+
+  if (is.null(out[["name"]]) && !is.null(out[["symbol"]])) {
+    out[["name"]] <- out[["symbol"]]
+  }
+
+  as.tbl(out)
+}
+
 #' @section Linear Model Definitions:
 #' This function accepts a model defined using using [fdge_model_def()] and
 #' creates the appropriate Bioconductor assay container to test the model
@@ -53,6 +73,8 @@ design.BiocBox <- function(x, ...) {
 #'          then differentially tested using the limma-trended pipeline
 #'
 #' TODO: support affymrna, affymirna, etc. assay types
+#'
+#' The "filter" parameters are described in the [fdge()] function for now.
 #'
 #' @export
 #' @rdname biocbox
@@ -91,7 +113,14 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
   .fds <- assert_class(fds(x), "FacileDataStore")
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
 
-  out <- list(biocbox = NULL)
+  out <- list(
+    biocbox = NULL,
+    params = list(
+      assay_name = assay_name,
+      method = method,
+      filter = filter,
+      with_sample_weights = with_sample_weights,
+      prior_count = prior_count))
   class(out) <- "BiocBox"
 
   messages <- character()
@@ -113,17 +142,18 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
     return(out)
   }
 
-  if (test_multi_class(filter, c("data.frame", "tbl"))) {
-    filter <- filter[["feature_id"]]
-  }
-  if (is.null(filter)) {
-    filter <- "default"
-  }
-  if (test_string(filter) && filter != "default") {
-    errors <- c(
-      glue("Invalid `filter` value (`{filter}`). The only valid string value ",
-            "the `filter` argument is 'default'"))
-    return(out)
+  if (!is.null(filter)) {
+    if (test_multi_class(filter, c("data.frame", "tbl"))) {
+      filter <- filter[["feature_id"]]
+    }
+    filter.kosher <- test_character(filter, min.len = 2) ||
+      (test_string(filter) && filter == "default")
+    if (!filter.kosher) {
+      errors <- c(
+        glue("Invalid `filter` value (`{filter}`). The only valid string value ",
+             "the `filter` argument is 'default'"))
+      return(out)
+    }
   }
 
   if (is.null(dge_methods)) {
@@ -184,6 +214,70 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
 }
 
 #' @noRd
+.get_DGEList <- function(xsamples, design, assay_name,
+                         filter, filter_universe, filter_require, ...) {
+  if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
+    filter_require <- filter_require[["feature_id"]]
+  }
+  if (!is.null(filter_universe)) {
+    if (test_multi_class(filter_universe, c("data.frame", "tbl"))) {
+      filter_universe <- filter_universe[["feature_id"]]
+      if (is.character(filter_require)) {
+        filter_universe <- unique(c(filter_universe, filter_require))
+      }
+    } else {
+      warning("Unknown parameter type for filter_universe, ignoring ...")
+      filter_universe <- NULL
+    }
+  }
+
+  do.filterByExpr <- test_string(filter) && filter == "default"
+  if (!do.filterByExpr) {
+    if (test_multi_class(filter, c("data.frame", "tbl"))) {
+      filter_universe <- filter[["feature_id"]]
+    } else {
+      filter_universe <- filter
+    }
+    if (!is.character(filter_universe) && !is.null(filter_universe)) {
+      stop("filter argument is of illegal type: ", class(filter)[1L])
+    }
+    filter.cols <- NULL
+  }
+
+  update_libsizes <- FALSE
+  update_normfactors <- FALSE
+
+  y <- as.DGEList(xsamples, assay_name = assay_name,
+                  covariates = xsamples,
+                  feature_ids = filter_universe,
+                  update_libsizes = update_libsizes,
+                  update_normfactors = update_normfactors)
+
+  if (do.filterByExpr) {
+    des.matrix <- design(design)[colnames(y),,drop=FALSE]
+    # keep only the columns in the design matrix used for filtering that
+    # correspond to the main groups. If this is a ttest, its
+    # des.matrix[, design$text_covs]. If anova, then we also include the
+    # intercept column
+    filter.cols <- design$test_covs
+    if (is.anova(design)) {
+      filter.cols <- c(
+        grep("(Intercept)", colnames(des.matrix), ignore.case = TRUE),
+        filter.cols)
+    }
+  }
+
+  list(
+    y = y,
+    filter_run = do.filterByExpr,
+    filter_require = filter_require,
+    filter_design_columns = filter.cols)
+}
+
+#' The behavior of the `filter*` parameters are currently described in the
+#' [fdge()] help page.
+#'
+#' @noRd
 #' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
 #' @importFrom limma arrayWeights voom voomWithQualityWeights
 .biocbox_create_DGEList <- function(xsamples, assay_name, assay_type,
@@ -193,56 +287,51 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                                     filter_min_count = 10,
                                     filter_min_total_count = 15,
                                     # Additional filter params,
-                                    filter_require = NULL, ...) {
+                                    filter_universe = NULL,
+                                    filter_require = NULL,
+                                    # minimum gene count to reset lib.size and
+                                    # norm factors
+                                    min_feature_count_tmm = 500,
+                                    ...) {
   assert_class(design, "FacileDgeModelDefinition")
   if (is.null(prior_count)) prior_count <- 2
-  y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
-  # The roughly approximated norm.factors already present in a faciledatastore
-  # should be good enough for initial low-pass filtering.
-  # y.all <- calcNormFactors(y.all)
 
-  des.matrix <- design(design)[colnames(y.all),,drop=FALSE]
-  y.all$design <- des.matrix
+  dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
+                      filter = filter,
+                      filter_universe = filter_universe,
+                      filter_require = filter_require)
+  y <- dat[["y"]]
+  des.matrix <- design(design)[colnames(y),,drop=FALSE]
 
-  # Remove genes according to `filter` specificaiton
-  if (is.character(filter)) {
-    if (length(filter) == 1L && filter == "default") {
-      # keep only the columns in the design matrix that correspond to the
-      # main groups. If this is a ttest, its des.matrix[, design$text_covs].
-      # If anova, then we also include the intercept column
-      filter.cols <- design$test_covs
-      if (is.anova(design)) {
-        filter.cols <- c(
-          grep("(Intercept)", colnames(des.matrix), ignore.case = TRUE),
-          filter.cols)
-      }
-      keep <- filterByExpr(y.all, des.matrix[, filter.cols],
-                           min.count = filter_min_count,
-                           min.total.count = filter_min_total_count, ...)
-    } else {
-      keep <- rownames(y.all) %in% filter
+  do.filterByExpr <- test_string(filter) && filter == "default"
+  if (dat[["filter_run"]]) {
+    dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
+    keep <- filterByExpr(y, dmatrix,
+                         min.count = filter_min_count,
+                         min.total.count = filter_min_total_count, ...)
+    if (is.character(dat[["filter_require"]])) {
+      keep <- keep | rownames(y) %in% dat[["filter_require"]]
     }
-    if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
-      filter_require <- filter_require[["feature_id"]]
+    keep_fraction <- mean(keep)
+    keep_n <- sum(keep)
+
+    if (keep_fraction < 0.50 * nrow(y)) {
+      msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
+                  "({keep_n}) of features are retained after filtering.")
+      warnings <- c(warnings, msg)
     }
-    if (is.character(filter_require) && length(character) > 0L) {
-      keep <- keep | rownames(y.all) %in% filter_require
-    }
+
+    y <- y[keep,,keep.lib.sizes = FALSE]
+    y <- calcNormFactors(y)
   } else {
-    keep <- rep(TRUE, nrow(y.all))
+    # update lib.size and normfactors if enough genes here
+    if (nrow(y) > min_feature_count_tmm) {
+      y <- y[rep(TRUE, nrow(y)),,keep.lib.sizes = FALSE]
+      y <- calcNormFactors(y)
+    }
   }
 
-  keep_fraction <- mean(keep)
-  keep_n <- sum(keep)
-
-  if (keep_fraction < 0.50 * nrow(y.all)) {
-    msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
-                "({keep_n}) of features are retained after filtering.")
-    warnings <- c(warnings, msg)
-  }
-
-  y <- y.all[keep,,keep.lib.sizes = FALSE]
-  y <- calcNormFactors(y)
+  y$design <- des.matrix
 
   if (method == "edgeR-qlf") {
     out <- estimateDisp(y, y[["design"]], robust = TRUE)
@@ -267,7 +356,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
     stop("How did we get here?")
   }
 
-  dropped <- setdiff(rownames(y.all), rownames(out))
+  dropped <- setdiff(rownames(dat[["y"]]), rownames(out))
   out
 }
 
@@ -284,42 +373,52 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
   # assay_type is one of c("normcounts","lognorm")
   # Note that as.DGEList always assembles the assay matrix with
   # normalized = FALSE
-  y.all <- as.DGEList(xsamples, assay_name = assay_name, covariates = xsamples)
-  e <- y.all[["counts"]]
+
+  dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
+                      filter = filter,
+                      filter_universe = filter_universe,
+                      filter_require = filter_require)
+  y <- dat[["y"]]
+  des.matrix <- design(design)[colnames(y),,drop=FALSE]
+
+  e <- y[["counts"]]
   if (assay_type %in% c("normcounts")) {
     e <- log2(e + prior_count)
   }
 
   # Remove genes according to `filter` specificaiton
-  if (is.character(filter)) {
-    if (length(filter) == 1L && filter == "default") {
-      # if (assay_type == "lognorm") {
-      #   min.expr <- log2(2)
-      # } else {
-      #   min.expr <- 1
-      # }
-      min.expr <- filter_min_expr
-      # Code below taken from edgeR:::filterByExpr.default function
-      h <- hat(design)
-      min.samples <- 1 / max(h)
-      if (min.samples > 10) {
-        min.samples <- 10 + (min.samples - 10) * 0.7
-      }
-      tol <- 1e-14
-      keep <- rowSums(e >= min.expr) >= (min.samples - tol)
-      # end filterByExpr block
-      elist <- elist[keep,]
-    } else {
-      keep <- rownames(y.all) %in% filter
+  if (dat[["filter_run"]]) {
+    # if (assay_type == "lognorm") {
+    #   min.expr <- log2(2)
+    # } else {
+    #   min.expr <- 1
+    # }
+    min.expr <- filter_min_expr
+    dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
+
+    # Code below taken from edgeR:::filterByExpr.default function
+    h <- hat(dmatrix)
+    min.samples <- 1 / max(h)
+    if (min.samples > 10) {
+      min.samples <- 10 + (min.samples - 10) * 0.7
     }
-    if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
-      filter_require <- filter_require[["feature_id"]]
+    tol <- 1e-14
+    keep <- rowSums(e >= min.expr) >= (min.samples - tol)
+    # end filterByExpr block
+
+    if (is.character(dat[["filter_require"]])) {
+      keep <- keep | rownames(y) %in% dat[["filter_require"]]
     }
-    if (is.character(filter_require) && length(character) > 0L) {
-      keep <- keep | rownames(y.all) %in% filter_require
+    keep_fraction <- mean(keep)
+    keep_n <- sum(keep)
+
+    if (keep_fraction < 0.50 * nrow(y)) {
+      msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
+                  "({keep_n}) of features are retained after filtering.")
+      warnings <- c(warnings, msg)
     }
   } else {
-    keep <- rep(TRUE, nrow(y.all))
+    keep <- rep(TRUE, nrow(e))
   }
 
   elist <- list()
@@ -327,13 +426,13 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
   elist[["genes"]] <- y[["genes"]][keep,,drop = FALSE]
   elist[["targets"]] <- y[["samples"]]
   elist <- new("EList", elist)
-  elist[["design"]] <- design
+  elist[["design"]] <- des.matrix
 
   if (with_sample_weights) {
     elist <- arrayWeights(elist, elist[["design"]])
   }
 
-  dropped <- setdiff(rowanmes(y.all), rownames(elilst))
+  dropped <- setdiff(rowanmes(dat[["y"]]), rownames(elilst))
 
   elist
 }
