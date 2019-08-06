@@ -306,7 +306,8 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
   do.filterByExpr <- test_string(filter) && filter == "default"
   if (dat[["filter_run"]]) {
     dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
-    keep <- filterByExpr(y, dmatrix,
+    dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
+    keep <- filterByExpr(y[, rownames(dmatrix)], dmatrix,
                          min.count = filter_min_count,
                          min.total.count = filter_min_total_count, ...)
     if (is.character(dat[["filter_require"]])) {
@@ -395,6 +396,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
     # }
     min.expr <- filter_min_expr
     dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
+    dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
 
     # Code below taken from edgeR:::filterByExpr.default function
     h <- hat(dmatrix)
@@ -403,7 +405,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
       min.samples <- 10 + (min.samples - 10) * 0.7
     }
     tol <- 1e-14
-    keep <- rowSums(e >= min.expr) >= (min.samples - tol)
+    keep <- rowSums(e[, rownames(dmatrix),drop = FALSE] >= min.expr) >= (min.samples - tol)
     # end filterByExpr block
 
     if (is.character(dat[["filter_require"]])) {

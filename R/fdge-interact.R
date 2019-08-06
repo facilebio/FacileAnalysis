@@ -51,7 +51,17 @@ viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                                           features = NULL, round_digits = 3,
                                           event_source = "A", webgl = TRUE,
                                           ...) {
-  type <- match.arg(type)
+  if (missing(type) && !is.null(features)) {
+    # boxplot of features, otherwise
+    type <- "features"
+  } else {
+    type <- match.arg(type)
+  }
+  if (type == "features") {
+    stopifnot(!is.null(features))
+    .viz.dge_features(x, features = features, ...)
+  }
+
   treat_lfc <- x[["treat_lfc"]]
   if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
     warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
@@ -71,6 +81,13 @@ viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   }
 
   out
+}
+
+.viz.dge_features <- function(x, features, log = TRUE, prior.count = 0.25,
+                              ...) {
+  dat <- fetch_assay_data(samples(x), features, normalized = TRUE,
+                          log = log, prior.count = prior.count, ...)
+
 }
 
 #' @section Interacting with results:
@@ -155,7 +172,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     ntop <- ntop
   }
 
-  dat.all <- result(x) %>%
+  dat.all <- tidy(x) %>%
     select(symbol, feature_id, logFC, padj, pval)
 
   dat.sig <- dat.all %>%
@@ -227,6 +244,3 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   list(datatable = dtable, volcano = p, title = title)
 }
 
-.viz.dge_features <- function(x, ...) {
-
-}

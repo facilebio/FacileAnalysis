@@ -123,7 +123,6 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
   messages <- character()
   warnings <- character()
   errors <- character()
-
   .fds <- assert_facile_data_store(fds(x))
 
   if (is.ttest(x)) {

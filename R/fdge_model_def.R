@@ -450,7 +450,7 @@ result.FacileDgeModelDefinition <- function(x, ...) {
 #' @noRd
 #' @export
 status.FacileFailedModelDefinition <- function(x, type = "message", ...) {
-  out <- paste(model.$errors, collapse = "\n")
+  out <- paste(x$errors, collapse = "\n")
   class(out) <- c("FacileAnalysisStatusError", "FacileAnalysisResultStatus",
                   "character")
   out
