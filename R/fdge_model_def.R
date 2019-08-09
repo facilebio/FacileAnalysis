@@ -434,6 +434,19 @@ result.FacileDgeModelDefinition <- function(x, ...) {
   x[["design"]]
 }
 
+#' The `formula()` function here just returns the formula string for the
+#' design matrix
+#' @noRd
+#' @importFrom stats formula
+#' @export
+formula.FacileDgeModelDefinition <- function(x, ..., as.string = TRUE) {
+  out <- x[["design_formula"]]
+  if (!as.string) {
+    stop("What should we be doing with this if not return the string?")
+  }
+  out
+}
+
 #' @noRd
 .with_warnings <- function(x, fresult, ...) {
   assert_class(x, "FacileAnalysisResultStatus")
@@ -493,7 +506,7 @@ status.FacileInteractionTestModelDefinition <- function(x, type = "message",
   out
 }
 
-# Printing =====================================================================\
+# Printing =====================================================================
 
 #' @noRd
 #' @export
@@ -516,7 +529,7 @@ format.FacileDgeModelDefinition <- function(x, ...) {
     "===========================================================\n",
     sprintf("%s\n", class(x)[1L]),
     "-----------------------------------------------------------\n",
-    "Design: ", x[["design_formula"]], "\n",
+    "Design: ", formula(x), "\n",
     sprintf("Testing `%s` (%s):\n    %s\n", x[["covariate"]],
             testing, thetest),
     "===========================================================\n",

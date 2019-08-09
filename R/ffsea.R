@@ -211,6 +211,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
 
 # Methods and Accessors ========================================================
 
+#' @noRd
 #' @section Feature Set Enrichment Analysis:
 #' What are the features of a feature-set enrichment analysis ([ffsea()])?
 #' Aren't they the gene sets, and not the individual genes themselves?
