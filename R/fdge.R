@@ -199,6 +199,17 @@ fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
     result <- select(result, feature_type, everything())
   }
 
+  if (is(y, "DGEList") || is(y, "EList")) {
+    samples. <- samples(x)
+    sinfo <- if (is(y, "DGElist")) y[["samples"]] else y[["targets"]]
+    for (cname in c("lib.size", "norm.factors")) {
+      if (cname %in% colnames(sinfo) && is.numeric(sinfo[[cname]])) {
+        samples.[[cname]] <- sinfo[[cname]]
+      }
+    }
+    x[["covariates"]] <- samples. # `samples(x) <- samples.` would be nice!
+  }
+
   out <- list(
     result = result,
     params = list(
