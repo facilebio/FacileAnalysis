@@ -10,15 +10,249 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
              viewer = viewer, ...)
 }
 
+#' The most common visualization downstream from a DGE analysis is either
+#' a volcano plot, or the expression of signficant (or not) genes across the
+#' samples tested in the DGE analysis.
+#'
+#' Therefore, viz(fdge) will return a volcano and viz(fdge, feature) will return
+#' a gene-level expression (box) plot.
+#'
+#'
+#' When we find interesting hits/genes downstream from a DGE analysis, I think
+#' we most often want to query invidual hits to see why they came up signficant
+#' (or not). Therefore the `vis.FcileDgeAnalysisResult` function will plot
+#' gene-level expression across the groups tested in the `fdge` result,
+#' for the gene(s) requested in the funciton call.
+#'
+#' @noRd
+viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
+                                          feature_highlight = NULL,
+                                          round_digits = 3, event_source = "A",
+                                          webgl = type == "volcano", ...) {
+  if (is.data.frame(feature_id)) {
+    feature_id <- feature_id[["feature_id"]]
+  }
+
+  if (is.null(type)) {
+    if (is.null(feature_id) || length(feature_id) > 1L) {
+      type <- "volcano"
+    } else {
+      type <- "feature"
+    }
+  }
+
+  if (type == "feature") {
+    out <- .viz_dge_feature(x, feature_id, round_digits = round_digits,
+                            event_source = event_source, ...)
+  } else {
+    force(webgl)
+    out <- .viz_ttest_volcano(x, feature_id = feature_id,
+                              feature_highlight = feature_highlight,
+                              round_digits = round_digits,
+                              event_source = event_source, webgl = webgl, ...)
+  }
+
+  out
+}
+
+#' @export
+#' @noRd
+viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
+                                          event_source = "A", ...) {
+  if (is.data.frame(feature_id)) {
+    feature_id <- feature_id[["feature_id"]]
+  }
+  assert_string(feature_id)
+  .viz_dge_feature(x, feature_id, round_digits = round_digits,
+                   event_source = event_source, ...)
+}
+
+# Helper Functions =============================================================
+
+.features_for_volcano <- function(x, feature_id = NULL, ntop = 200,
+                                  color_aes = NULL, feature_highlight = NULL,
+                                  ...) {
+  assert_class(x, "FacileTtestAnalysisResult")
+  dat.all <- tidy(ranks(x))
+  take.cols <- c("feature_id", "symbol", "name", "logFC", "pval", "padj", "t")
+  dat <- dat.all[, intersect(take.cols, colnames(dat.all))]
+
+  topn.fids <- c(
+    head(dat.all[["feature_id"]], ntop / 2),
+    tail(dat.all[["feature_id"]], ntop / 2))
+
+  if (!is.character(feature_id)) {
+    feature_id <- topn.fids
+  }
+  fids <- unique(feature_id)
+
+  dat <- filter(dat, feature_id %in% fids)
+  dat <- mutate(dat, yval = -log10(pval))
+
+  if (is.data.frame(feature_highlight)) {
+    feature_highlight <- feature_highlight[["feature_id"]]
+  }
+  if (is.character(feature_highlight)) {
+    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% feature_highlight,
+                                  "highlight", "background")
+    color_aes <- "highlight."
+  }
+  if (is.character(color_aes)) {
+    assert_subset(color_aes, colnames(dat))
+  }
+  attr(dat, "color_aes") <- color_aes
+  dat
+}
+
+.viz_ttest_volcano <- function(x, feature_id = NULL, ntop = 200,
+                               round_digits = 3, event_source = "A",
+                               width = NULL, height = NULL,
+                               webgl = TRUE, dat = NULL,
+                               color_aes = NULL,
+                               hover = c("logFC", "pval", "padj", "symbol"),
+                               feature_highlight = NULL, ...) {
+  if (is.null(dat)) {
+    dat <- .features_for_volcano(x, feature_id = feature_id, ntop = ntop,
+                                 color_aes = NULL,
+                                 feature_highlight = feature_highlight, ...)
+    color_aes <- attr(dat, "color_aes")
+  }
+  assert_subset(c("feature_id", "logFC", "yval", "symbol"), colnames(dat))
+  if (!is.null(color_aes)) assert_subset(color_aes, colnames(dat))
+  if (is.character(hover)) {
+    hover <- intersect(hover, colnames(dat))
+  }
+  fp <- fscatterplot(
+    dat, c("logFC", "yval"), color_aes = color_aes,
+    hover = hover,
+    xlabel = "logFC", ylabel = "-log10(pval)",
+    width = width, height = height, webgl = webgl, ...)
+  fp
+}
+
+.viz_dge_feature <- function(x, feature_id, round_digits = 3, event_source = "A",
+                             ylabel = NULL, title = NULL,
+                             batch_correct = TRUE, prior.count = 0.1,
+                             legendside = "bottom", width = NULL,
+                             height = NULL, ...) {
+  if (is.data.frame(feature_id)) {
+    feature_id <- feature_id[["feature_id"]]
+  }
+  fid <- assert_character(feature_id, min.len = 1, max.len = 1)
+
+  mod <- model(x)
+  assay_name <- param(x, "assay_name")
+
+  dat <- .feature_data_dge(x, fid, batch_correct = batch_correct,
+                           prior.count = prior.count, ...)
+
+  numer <- param(mod, "numer")
+  denom <- param(mod, "denom")
+  test.covariate <- param(mod, "covariate")
+  fixed <- param(mod, "fixed")
+
+  if (!test_string(ylabel)) {
+    ylabel <- assay_units(fds(x), assay_name, normalized = TRUE)
+    if (attr(dat, "batch_corrected")) {
+      ylabel <- paste(ylabel, "(batch corrected)", sep = "<br>")
+    }
+  }
+  if (!test_string(title) && !isFALSE(title)) {
+    finfo <- features(fds(x), assay_name = assay_name, feature_id = fid)
+    name <- finfo[["name"]]
+    if (nchar(name) == 0 || is.na(name)) {
+      title <- feature
+    } else {
+      title <- sprintf("%s (%s)", name, fid)
+    }
+  }
+  if (isFALSE(title)) title <- NULL
+
+  # TODO: Make this more elegant
+  xaxis <- test.covariate
+  xlabel <- test.covariate
+  color.by <- test.covariate
+  if (is.ttest(x)) {
+    if (length(numer) + length(denom) > 2) {
+      is.numer <- dat[[test.covariate]] %in% numer
+      dat[["xaxe."]] <- ifelse(is.numer, "numer", "denom")
+      xaxis <- "xaxe."
+      xlabel <- "group"
+    }
+  }
+
+  fplot <- fboxplot(dat, xaxis, ".value", with_points = TRUE,
+                    event_source = event_source, key = ".key",
+                    color_aes = color.by,
+                    hover = c("dataset", "sample_id", test.covariate, fixed),
+                    width = width, height = height, legendside = legendside,
+                    xlabel = "", ylabel = ylabel, title = title)
+  # TODO: Add DGE stats to the fdge feature plot. from dat:
+  #   * [["pval"]]
+  #   * [["padj"]]
+  #   * [["logFC]] & ([["t"]])? OR [["F]]
+  fplot
+}
+
+.feature_data_dge <- function(x, feature_id, batch_correct = TRUE,
+                              prior.count = 0.1, ...) {
+  fid <- assert_string(feature_id)
+
+  mod <- model(x)
+  test.covariate <- param(mod, "covariate")
+  fixed <- param(mod, "fixed")
+  corrected <- !is.null(fixed) && isTRUE(batch_correct)
+
+  if (!corrected) fixed <- NULL
+  assay_name <- param(x, "assay_name")
+  samples. <- samples(x)
+
+  dat <- with_assay_data(samples., fid, assay_name = assay_name,
+                         normalized = TRUE, prior.count = prior.count,
+                         spread = "id", batch = fixed, main = test.covariate)
+  value.idx <- match(fid, colnames(dat))[1L]
+  colnames(dat)[value.idx] <- ".value"
+
+  dat <- droplevels(dat)
+  dat[[".key"]] <- seq(nrow(dat))
+
+  # transfer dge statistics to outgoing data.frame
+  if (is.ttest(x)) {
+    xfer.cols <- c("logFC", "pval", "padj", "t")
+  } else {
+    xfer.cols <- c("F", "pval", "padj")
+  }
+
+  feature <- filter(features(x), feature_id == fid)
+  if (nrow(feature) == 0) {
+    feature <- tibble()
+  }
+
+  stat.cols <- colnames(feature)
+  for (xcol in xfer.cols) {
+    if (xcol %in% stat.cols) {
+      dat[[xcol]] <- feature[[xcol]]
+    } else {
+      dat[[xcol]] <- NA_real_
+    }
+  }
+
+  attr(dat, "analysis_stats") <- intersect(xfer.cols, colnames(feature))
+  attr(dat, "batch_corrected") <- corrected
+  dat
+}
+
+
+
 #' @noRd
 #' @export
 #' @importFrom DT datatable formatRound
-viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
-                                          ntop = 200, max_padj = 0.10,
-                                          min_logFC = 1,
-                                          features = NULL, round_digits = 3,
-                                          event_source = "A", webgl = TRUE,
-                                          ...) {
+.viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
+                                           ntop = 200, max_padj = 0.10,
+                                           min_logFC = 1,
+                                           features = NULL, round_digits = 3,
+                                           event_source = "A", webgl = TRUE,
+                                           ...) {
   if (missing(type) && !is.null(features)) {
     # boxplot of features, otherwise
     type <- "features"
@@ -51,12 +285,6 @@ viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   out
 }
 
-.viz.dge_features <- function(x, features, log = TRUE, prior.count = 0.25,
-                              ...) {
-  dat <- fetch_assay_data(samples(x), features, normalized = TRUE,
-                          log = log, prior.count = prior.count, ...)
-
-}
 
 #' @section Interacting with results:
 #'
