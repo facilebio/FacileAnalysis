@@ -81,17 +81,19 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
     head(dat.all[["feature_id"]], ntop / 2),
     tail(dat.all[["feature_id"]], ntop / 2))
 
+  if (is.data.frame(feature_highlight)) {
+    feature_highlight <- feature_highlight[["feature_id"]]
+  }
+  if (!is.character(feature_highlight)) feature_highlight <- NULL
+
   if (!is.character(feature_id)) {
     feature_id <- topn.fids
   }
-  fids <- unique(feature_id)
+  fids <- unique(c(feature_id, feature_highlight))
 
   dat <- filter(dat, feature_id %in% fids)
   dat <- mutate(dat, yval = -log10(pval))
 
-  if (is.data.frame(feature_highlight)) {
-    feature_highlight <- feature_highlight[["feature_id"]]
-  }
   if (is.character(feature_highlight)) {
     dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% feature_highlight,
                                   "highlight", "background")
