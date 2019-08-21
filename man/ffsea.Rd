@@ -59,7 +59,7 @@ efds <- FacileData::exampleFacileDataSet()
 ttest.res <- efds \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", fixed = "sex") \%>\%
+                 numer = "tumor", denom = "normal", batch = "sex") \%>\%
   fdge(method = "voom")
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "fgsea"))
 if (interactive()) {
@@ -75,7 +75,7 @@ fgsea.stats <- tidy(ttest.gsea, "fgsea")
 # This requires an update in mutiGSEA (to support df inputs) to run
 stage.anova <- efds \%>\%
   FacileData::filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "stage", fixed = "sex") \%>\%
+  fdge_model_def(covariate = "stage", batch = "sex") \%>\%
   fdge(method = "voom")
 anova.gsea <- ffsea(stage.anova)
 if (interactive()) {

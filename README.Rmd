@@ -52,6 +52,15 @@ vignettes that describe their functionality in more detail:
 * `fdge`: [Interactive Differential Gene Expression Analysis][fdgevign]
 * `fsea`: [Interactive (Gene) Set Enrichment Analysis][fseavign]
 
+**A note on the experimental lifecycle**: This package is tagged as
+"experimental" due to its limited use by a broader audience, and not as
+a sign of the commitment to its development or how long it has been in
+(internal) use. As we find the edge cases and pain points in the APIs through
+broader adoption, we expect to soon move to "maturing" (and eventually "stable")
+[lifecycle][lifecycle].
+
+[lifecycle]: https://www.tidyverse.org/lifecycle/
+
 ## Example Analysis: Differential Expression
 
 We'll include an exemplar differential expression analysis here in order to

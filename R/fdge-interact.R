@@ -28,7 +28,8 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
 viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
                                           feature_highlight = NULL,
                                           round_digits = 3, event_source = "A",
-                                          webgl = type == "volcano", ...) {
+                                          webgl = type %in% c("volcano", "ma"),
+                                          ...) {
   if (is.data.frame(feature_id)) {
     feature_id <- feature_id[["feature_id"]]
   }
@@ -40,6 +41,7 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
       type <- "feature"
     }
   }
+  type <- match.arg(tolower(type), c("feature", "volcano", "ma"))
 
   if (type == "feature") {
     out <- .viz_dge_feature(x, feature_id, round_digits = round_digits,
@@ -151,12 +153,16 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   numer <- param(mod, "numer")
   denom <- param(mod, "denom")
   test.covariate <- param(mod, "covariate")
-  fixed <- param(mod, "fixed")
+  batch <- param(mod, "batch")
 
   if (!test_string(ylabel)) {
     ylabel <- assay_units(fds(x), assay_name, normalized = TRUE)
-    if (attr(dat, "batch_corrected")) {
-      ylabel <- paste(ylabel, "(batch corrected)", sep = "<br>")
+    bc <- attr(dat, "batch_corrected")
+    if (is.character(bc)) {
+      ylabel <- paste(
+        ylabel,
+        sprintf("(batch corrected [%s])", paste(bc, collapse = ",")),
+        sep = "<br>")
     }
   }
   if (!test_string(title) && !isFALSE(title)) {
@@ -186,7 +192,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   fplot <- fboxplot(dat, xaxis, ".value", with_points = TRUE,
                     event_source = event_source, key = ".key",
                     color_aes = color.by,
-                    hover = c("dataset", "sample_id", test.covariate, fixed),
+                    hover = c("dataset", "sample_id", test.covariate, batch),
                     width = width, height = height, legendside = legendside,
                     xlabel = "", ylabel = ylabel, title = title)
   # TODO: Add DGE stats to the fdge feature plot. from dat:
@@ -202,21 +208,22 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
 
   mod <- model(x)
   test.covariate <- param(mod, "covariate")
-  fixed <- param(mod, "fixed")
-  corrected <- !is.null(fixed) && isTRUE(batch_correct)
+  batch <- param(mod, "batch")
+  corrected <- !is.null(batch) && isTRUE(batch_correct)
 
-  if (!corrected) fixed <- NULL
+  if (!corrected) batch <- NULL
   assay_name <- param(x, "assay_name")
   samples. <- samples(x)
 
   dat <- with_assay_data(samples., fid, assay_name = assay_name,
                          normalized = TRUE, prior.count = prior.count,
-                         spread = "id", batch = fixed, main = test.covariate)
+                         spread = "id", batch = batch, main = test.covariate)
   value.idx <- match(fid, colnames(dat))[1L]
   colnames(dat)[value.idx] <- ".value"
 
   dat <- droplevels(dat)
   dat[[".key"]] <- seq(nrow(dat))
+  dat <- mutate(dat, feature_id = fid, assay_name = assay_name)
 
   # transfer dge statistics to outgoing data.frame
   if (is.ttest(x)) {
@@ -240,7 +247,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   }
 
   attr(dat, "analysis_stats") <- intersect(xfer.cols, colnames(feature))
-  attr(dat, "batch_corrected") <- corrected
+  attr(dat, "batch_corrected") <- if (corrected) batch else FALSE
   dat
 }
 

@@ -43,7 +43,7 @@ blca.dge <- efds %>%
   fdge_model_def(assay_name = "rnaseq", # can run on CNV, proteomics, etc.
                  covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 fixed = "sex",) %>% 
+                 batch = "sex",) %>% 
   fdge(method = "voom", with_sample_weights = TRUE)
 ```
 
@@ -61,7 +61,7 @@ crc.dge <- efds %>%
   filter_samples(indication == "CRC") %>% 
   fdge_model_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 fixed = "sex") %>% 
+                 batch = "sex") %>% 
   fdge(method = "voom", with_sample_weights = TRUE)
 ```
 

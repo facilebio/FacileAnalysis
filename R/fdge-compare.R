@@ -178,7 +178,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   xsamples <- samples(xmod)
   ysamples <- samples(ymod)
 
-  ifixed <- unique(c(param(xmod, "fixed"), param(ymod, "fixed")))
+  ibatch <- unique(c(param(xmod, "batch"), param(ymod, "batch")))
 
   # If the models were defined on separate samples, then we have to take
   # extra care, since if the samples were split differently, then the same
@@ -203,10 +203,10 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     samples. <- distinct(samples., dataset, sample_id, .keep_all = TRUE)
   }
 
-  if (length(ifixed)) {
+  if (length(ibatch)) {
     # remove and add values to be thorough
-    for (fixcov in ifixed)  samples.[[fixcov]] <- NULL
-    samples. <- with_sample_covariates(samples., ifixed)
+    for (bcov in ibatch)  samples.[[bcov]] <- NULL
+    samples. <- with_sample_covariates(samples., ibatch)
   }
 
   # The x and y samples that came in here should have no samples that have
@@ -214,7 +214,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   # possible that now that they are rbind'd together, they do.
   #
   # I *believe* this should only happen he xysamples samples. data.frame can
-  # have rows with NA values for covariates that come from the `fixed`
+  # have rows with NA values for covariates that come from the `batch`
   # covaraites used in either x or y. If this is the case, I guess we just have
   # to remove that covariate from the model(?)
   has.na <- sapply(samples., function(vals) any(is.na(vals)))
@@ -223,13 +223,13 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     msg <- paste("The following covariates have samples with NA values, and",
                  "therefore can't be used in the interaction model: ",
                  paste(has.na, collapse = ","))
-    not.fixed <- setdiff(has.na, ifixed)
-    if (length(not.fixed)) {
+    not.batch <- setdiff(has.na, ibatch)
+    if (length(not.batch)) {
       msg <- glue(
         msg, "\n\n",
-        "These covariates are not just the 'fixed' covarites in the upstream ",
+        "These covariates are not just the 'batch' covarites in the upstream ",
         "`fdge` results. Skipping the interaction model ...",
-        paste(not.fixed, collapse = ","))
+        paste(not.batch, collapse = ","))
       warning(msg)
       return(NULL)
     }
@@ -238,7 +238,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
       "The covariates HAVE BEEN REMOVED in order to run the ",
       "interaction fdge")
     warning(msg)
-    ifixed <- setdiff(ifixed, has.na)
+    ibatch <- setdiff(ibatch, has.na)
   }
 
   xcontrast <- xmod[["contrast_string"]]
@@ -249,7 +249,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   }
   contrast. <- glue("( {xcontrast} ) - ( {ycontrast} )")
 
-  imodel <- fdge_model_def(samples., icovariate, fixed = ifixed,
+  imodel <- fdge_model_def(samples., icovariate, batch = ibatch,
                            contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 

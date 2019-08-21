@@ -6,7 +6,7 @@
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor",
 #'                  denom = "normal",
-#'                  fixed = "sex")
+#'                  batch = "sex")
 #' ```
 #'
 #' @export
@@ -35,10 +35,10 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
   testcov <- callModule(categoricalSampleCovariateSelect, "testcov",
                         rfds, include1 = FALSE, ..., .with_none = FALSE,
                         .reactive = .reactive)
-  # the "fixed" covariate is what I'm calling the extra/batch-level
+  # the "batch" covariate is what I'm calling the extra/batch-level
   # covariates. the entry selected in the testcov is removed from the
   # available elemetns to select from here
-  fixedcov <- callModule(categoricalSampleCovariateSelect, "fixedcov",
+  batchcov <- callModule(categoricalSampleCovariateSelect, "batchcov",
                          rfds, include1 = FALSE, ..., .with_none = FALSE,
                          .exclude = testcov$covariate,
                          reactive = .reactive)
@@ -72,7 +72,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 
     numer. <- numer$values()
     denom. <- denom$values()
-    fixed. <- name(fixedcov)
+    batch. <- name(batchcov)
 
     # Ensure that either
     #   i. neither numer or denom is filled so that we run an ANOVA;
@@ -84,7 +84,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
       out <- NULL
     } else {
       out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,
-                            fixed = fixed.)
+                            batch = batch.)
     }
     out
   })
@@ -126,7 +126,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     testcov = testcov,
     numer = numer,
     denom = denom,
-    fixedcov = fixedcov,
+    batchcov = batchcov,
     .ns = session$ns)
 
   class(vals) <- c("ReactiveFacileDgeModelDefinition",
@@ -167,7 +167,7 @@ fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
       column(
         3,
         categoricalSampleCovariateSelectUI(
-          ns("fixedcov"),
+          ns("batchcov"),
           label = "Control for",
           multiple = TRUE))),
     hidden(wellPanel(id = ns("messagebox"), textOutput(ns("message"))))

@@ -10,25 +10,25 @@
 \title{Builds (simple) design and contrast matrices for use with \code{\link[=fdge]{fdge()}}}
 \usage{
 fdge_model_def(x, covariate, numer = NULL, denom = NULL,
-  fixed = NULL, on_missing = c("warning", "error"), ...)
+  batch = NULL, on_missing = c("warning", "error"), ...)
 
 \method{fdge_model_def}{data.frame}(x, covariate, numer = NULL,
-  denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
+  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
   ..., contrast. = NULL, .fds = NULL)
 
 \method{fdge_model_def}{tbl}(x, covariate, numer = NULL, denom = NULL,
-  fixed = NULL, on_missing = c("warning", "error"), ...)
+  batch = NULL, on_missing = c("warning", "error"), ...)
 
 \method{fdge_model_def}{facile_frame}(x, covariate, numer = NULL,
-  denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
+  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
   ..., custom_key = NULL)
 
 \method{fdge_model_def}{FacileDataStore}(x, covariate, numer = NULL,
-  denom = NULL, fixed = NULL, on_missing = c("warning", "error"),
+  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
   ..., samples = NULL, custom_key = NULL)
 
 \method{fdge_model_def}{ReactiveFacileDataStore}(x, covariate,
-  numer = NULL, denom = NULL, fixed = NULL,
+  numer = NULL, denom = NULL, batch = NULL,
   on_missing = c("warning", "error"), ..., samples = active_samples(x),
   custom_key = user(x))
 }
@@ -44,8 +44,8 @@ make up the numerator}
 \item{denom}{character vector defining the covariate/groups that
 make up the denominator}
 
-\item{fixed}{character vector defining the covariate/groups to
-use as fixed effects}
+\item{batch}{character vector defining the covariate/groups to
+use as batch effects}
 
 \item{on_missing}{when a covariate level is missing (NA) for a sample, the
 setting of this parameter (default \code{"warn"}) will dictate the behavior
@@ -106,7 +106,7 @@ a wide covariate table. This defines the samples we will build a model on
 in its (datset, sample_id) columns, as well as any covaraites defined on
 these samples.
 
-If there are covariates used in the \code{covariate} or \code{fixed} parameters that
+If there are covariates used in the \code{covariate} or \code{batch} parameters that
 are not found in \code{colnames(x)}, we will attempt to retrieve them from the
 FacileDataStore \code{fds(x)}. If they cannot be found, this function will raise
 an error.
@@ -121,27 +121,27 @@ model_info <- efds \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor",
                  denom = "normal",
-                 fixed = "sex")
+                 batch = "sex")
 m2 <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor",
                  denom = "normal",
-                 fixed = c("sex", "stage"))
+                 batch = c("sex", "stage"))
 
 # stageIV vs stageII & stageIII
 m3 <- efds \%>\%
   filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
-                 fixed = "sex")
+                 batch = "sex")
 
 # Incomplete ttest to help with custom contrast vector
 mi <- efds \%>\%
   filter_samples(indication == "BLCA", sample_type == "tumor") \%>\%
-  fdge_model_def(covariate = "stage", fixed = "sex", contrast. = "help")
+  fdge_model_def(covariate = "stage", batch = "sex", contrast. = "help")
 
 # ANOVA across stage in BLCA, control for sex
 m3 <- efds \%>\%
   filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "stage", fixed = "sex")
+  fdge_model_def(covariate = "stage", batch = "sex")
 }

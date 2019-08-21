@@ -69,7 +69,7 @@ faro.ReactiveFacileAnalysisResultContainer <- function(x, main = "main", ...) {
 faro.ReactiveFacileMultiAnalysisResult <- function(x, main = names(x$names)[1L],
                                                    ...) {
   results <- x[["main"]]
-  assert_list(results, named = "unique")
+  assert_list(results, names = "unique")
   assert_choice(main, names(results))
   res <- results[[main]]
   faro(res)
@@ -327,7 +327,7 @@ param.BiocBox <- function(x, name = NULL, ...) {
 #' dge <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor", denom = "normal", fixed = "sex") %>%
+#'                  numer = "tumor", denom = "normal", batch = "sex") %>%
 #'   fdge()
 #' ```
 #'

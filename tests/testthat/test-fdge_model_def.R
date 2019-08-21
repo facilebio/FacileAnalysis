@@ -7,7 +7,7 @@ test_that("fdge_model_def supports simple t-test specification", {
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "sample_type",
                    numer = "tumor", denom = "normal",
-                   fixed = "sex")
+                   batch = "sex")
   expect_is(mdef, "FacileTtestModelDefinition")
   expect_equal(mdef$contrast, c(normal = -1, tumor = 1, sexf = 0))
 
@@ -16,7 +16,7 @@ test_that("fdge_model_def supports simple t-test specification", {
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "sample_type",
                    numer = "normal", denom = "tumor",
-                   fixed = "sex")
+                   batch = "sex")
   expect_is(mdef, "FacileTtestModelDefinition")
   expect_equal(mdef$contrast, c(normal = 1, tumor = -1, sexf = 0))
 })
@@ -26,7 +26,7 @@ test_that("Partial t-test spec is not allowed (no numer or denom)", {
     filter_samples(indication == "BLCA") %>%
     fdge_model_def(covariate = "sample_type",
                    numer = "normal", denom = NULL,
-                   fixed = "sex")
+                   batch = "sex")
   expect_is(mdef, "FacileFailedModelDefinition")
   expect_true(length(mdef$errors) == 1L)
 })
@@ -34,7 +34,7 @@ test_that("Partial t-test spec is not allowed (no numer or denom)", {
 test_that("fdge_model_def supports ANOVA specification", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "stage", fixed = "sex")
+    fdge_model_def(covariate = "stage", batch = "sex")
   expect_is(mdef, "FacileAnovaModelDefinition")
   expect_equal(colnames(mdef$design)[1], "(Intercept)")
   expect_equal(mdef$coef, match(c("II", "III", "IV"), colnames(mdef$design)))
@@ -50,7 +50,7 @@ test_that("fdge_model_def removes samples with NA in covariates", {
   stumor <- filter_samples(FDS, indication == "BLCA", sample_type == "tumor")
   mod.tumor <- fdge_model_def(stumor, covariate = "subtype_molecular",
                               numer = "luminal", denom = "basal",
-                              fixed = "sex")
+                              batch = "sex")
 
   # This will emit a warning since numor samples don't have stage covariates
   sall <- filter_samples(FDS, indication == "BLCA")
@@ -61,7 +61,7 @@ test_that("fdge_model_def removes samples with NA in covariates", {
   mod.all <- expect_warning({
     fdge_model_def(sall, covariate = "subtype_molecular",
                    numer = "luminal", denom = "basal",
-                   fixed = "sex")
+                   batch = "sex")
   }, warn.regex)
   in.warnings <- sapply(mod.all$warnings, function(w) grepl(warn.regex, w))
   expect_logical(in.warnings, min.len = 1L,
@@ -80,11 +80,11 @@ test_that("fdge_model_def supports retrieving test covaraites on the fly", {
   ff0 <- FDS %>%
     filter_samples(indication == "BLCA", sample_type == "tumor") %>%
     with_sample_covariates(c("stage", "sex"))
-  mref <- fdge_model_def(ff0, covariate = "stage", fixed = "sex")
+  mref <- fdge_model_def(ff0, covariate = "stage", batch = "sex")
 
   # sample descriptor without covariates under test
   ff1 <- mutate(ff0, sex = NULL)
-  mtest <- fdge_model_def(ff1, covariate = "stage", fixed = "sex")
+  mtest <- fdge_model_def(ff1, covariate = "stage", batch = "sex")
 
   expect_is(mref, "FacileAnovaModelDefinition")
   expect_is(mtest, "FacileAnovaModelDefinition")
@@ -131,13 +131,13 @@ test_that("fdge_model_def errors on non-fullrank matrices", {
   }, "NA")
   expect_class(good.model, "FacileTtestModelDefinition")
 
-  # adding `fixed = "sex"` makes this not full rank
+  # adding `batch = "sex"` makes this not full rank
   bad.model <- expect_warning({
     samples %>%
       fdge_model_def(covariate = "subtype_crc_cms",
                      numer = c("CMS1", "CMS2"),
                      denom = c("CMS3", "CMS4"),
-                     fixed = "sex")
+                     batch = "sex")
   }, "NA")
   expect_class(bad.model, "FacileFailedModelDefinition")
   expect_string(bad.model$errors, pattern = "full rank")

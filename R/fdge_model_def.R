@@ -28,8 +28,8 @@
 #'   make up the numerator
 #' @param denom character vector defining the covariate/groups that
 #'   make up the denominator
-#' @param fixed character vector defining the covariate/groups to
-#'   use as fixed effects
+#' @param batch character vector defining the covariate/groups to
+#'   use as batch effects
 #' @param on_missing when a covariate level is missing (NA) for a sample, the
 #'   setting of this parameter (default `"warn"`) will dictate the behavior
 #'   of this funciton. When `"warning"`, a warning will be raised, and the
@@ -54,31 +54,31 @@
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor",
 #'                  denom = "normal",
-#'                  fixed = "sex")
+#'                  batch = "sex")
 #' m2 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor",
 #'                  denom = "normal",
-#'                  fixed = c("sex", "stage"))
+#'                  batch = c("sex", "stage"))
 #'
 #' # stageIV vs stageII & stageIII
 #' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
 #'   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
-#'                  fixed = "sex")
+#'                  batch = "sex")
 #'
 #' # Incomplete ttest to help with custom contrast vector
 #' mi <- efds %>%
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
-#'   fdge_model_def(covariate = "stage", fixed = "sex", contrast. = "help")
+#'   fdge_model_def(covariate = "stage", batch = "sex", contrast. = "help")
 #'
 #' # ANOVA across stage in BLCA, control for sex
 #' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "stage", fixed = "sex")
+#'   fdge_model_def(covariate = "stage", batch = "sex")
 fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
-                           fixed = NULL, on_missing = c("warning", "error"),
+                           batch = NULL, on_missing = c("warning", "error"),
                            ...) {
   UseMethod("fdge_model_def", x)
 }
@@ -100,7 +100,7 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @param contrast. A custom contrast vector can be passed in for extra tricky
 #'   comparisons that we haven't figured out how to put a GUI in front of.
 fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
-                                      fixed = NULL,
+                                      batch = NULL,
                                       on_missing = c("warning", "error"), ...,
                                       contrast. = NULL,
                                       .fds = NULL) {
@@ -112,9 +112,9 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
-  if (unselected(fixed)) fixed <- NULL
+  if (unselected(batch)) batch <- NULL
 
-  assert_subset(fixed, setdiff(colnames(x), c("sample_id")))
+  assert_subset(batch, setdiff(colnames(x), c("sample_id")))
   if (!is.null(.fds)) {
     assert_facile_data_store(.fds)
   }
@@ -157,7 +157,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   x <- distinct(x, dataset, sample_id, .keep_all = TRUE)
   # Build the design matrix ----------------------------------------------------
-  req.cols <- c("dataset",  "sample_id", covariate, fixed)
+  req.cols <- c("dataset",  "sample_id", covariate, batch)
   incomplete <- !complete.cases(select(x, !!req.cols))
   if (any(incomplete)) {
     msg <- paste(sum(incomplete), "samples with NA's in required covariates")
@@ -176,8 +176,8 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     if (test_type == "anova") "" else "0 +",
     covariate)
 
-  if (!is.null(fixed)) {
-    dformula <- paste(dformula, "+", paste(fixed, collapse = " + "))
+  if (!is.null(batch)) {
+    dformula <- paste(dformula, "+", paste(batch, collapse = " + "))
   }
 
   design <- model.matrix(formula(dformula), data = x)
@@ -210,15 +210,15 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                  "Cannot estimate these covariates:",
                  paste(non_estimable, collapse = ","),
                  "\n")
-    if (is.null(fixed)) {
+    if (is.null(batch)) {
       err <- glue(err, "This is a catastrophic error, please contact ",
                   "lianoglou@dnli.com for help")
     } else {
-      check <- sapply(fixed, function(fcov) any(grepl(fcov, non_estimable)))
+      check <- sapply(batch, function(fcov) any(grepl(fcov, non_estimable)))
       if (length(check)) {
         err <- glue(err,
                     "Try removing one of these covariates from the model: ",
-                    paste(fixed[check], collapse = ","))
+                    paste(batch[check], collapse = ","))
       } else {
         err <- glue(err, "There must be a problem in sample annotation, ",
                     "please contact lianoglou@dnli.com")
@@ -292,7 +292,7 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     covariate = covariate,
     numer = numer,
     denom = denom,
-    fixed = fixed,
+    batch = batch,
     contrast. = contrast.)
   # out[["test_type"]] <- test_type
   out[["covariates"]] <- x
@@ -311,15 +311,15 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname fdge_model_def
 #' @importFrom FacileShine unselected
 fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
-                          fixed = NULL, on_missing = c("warning", "error"),
-                          ...) {
+                               batch = NULL, on_missing = c("warning", "error"),
+                               ...) {
   x <- collect(x, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
-  if (unselected(fixed)) fixed <- NULL
+  if (unselected(batch)) batch <- NULL
 
   fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
-                            denom = denom, fixed = fixed,
+                            denom = denom, batch = batch,
                             on_missing = on_missing, ...)
 }
 
@@ -329,7 +329,7 @@ fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #' in its (datset, sample_id) columns, as well as any covaraites defined on
 #' these samples.
 #'
-#' If there are covariates used in the `covariate` or `fixed` parameters that
+#' If there are covariates used in the `covariate` or `batch` parameters that
 #' are not found in `colnames(x)`, we will attempt to retrieve them from the
 #' FacileDataStore `fds(x)`. If they cannot be found, this function will raise
 #' an error.
@@ -339,7 +339,7 @@ fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname fdge_model_def
 fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
                                         denom = NULL,
-                                        fixed = NULL,
+                                        batch = NULL,
                                         on_missing = c("warning", "error"), ...,
                                         custom_key = NULL) {
   .fds <- assert_class(fds(x), "FacileDataStore")
@@ -347,11 +347,11 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
 
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
-  if (unselected(fixed)) fixed <- NULL
+  if (unselected(batch)) batch <- NULL
 
   # Retrieve any covariates from the FacileDataStore that are not present
   # in the facile_frame `x`
-  required.covs <- setdiff(c(covariate, fixed), c("dataset", "sample_id"))
+  required.covs <- setdiff(c(covariate, batch), c("dataset", "sample_id"))
   assert_character(required.covs)
 
   fetch.covs <- setdiff(required.covs, colnames(x))
@@ -363,7 +363,7 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
   x <- collect(x, n = Inf)
 
   out <- fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
-                                   denom = denom, fixed = fixed,
+                                   denom = denom, batch = batch,
                                    on_missing = on_missing, .fds = .fds, ...)
   out
 }
@@ -372,7 +372,7 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
 #' @rdname fdge_model_def
 #' @importFrom FacileShine unselected
 fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
-                                           denom = NULL, fixed = NULL,
+                                           denom = NULL, batch = NULL,
                                            on_missing = c("warning", "error"),
                                            ...,
                                            samples = NULL,
@@ -382,10 +382,10 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
 
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
-  if (unselected(fixed)) fixed <- NULL
+  if (unselected(batch)) batch <- NULL
 
   fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
-                 fixed = fixed, on_missing = on_missing,
+                 batch = batch, on_missing = on_missing,
                  custom_key = custom_key, ...)
 }
 
@@ -393,7 +393,7 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
 #' @rdname fdge_model_def
 #' @importFrom FacileShine active_samples unselected
 fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
-                                                   denom = NULL, fixed = NULL,
+                                                   denom = NULL, batch = NULL,
                                                    on_missing = c("warning", "error"),
                                                    ...,
                                                    samples = active_samples(x),
@@ -401,10 +401,10 @@ fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
   samples <- collect(samples, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
-  if (unselected(fixed)) fixed <- NULL
+  if (unselected(batch)) batch <- NULL
 
   fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
-                 fixed = fixed, on_missing = on_missing,
+                 batch = batch, on_missing = on_missing,
                  custom_key = custom_key, ...)
 }
 

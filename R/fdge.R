@@ -74,17 +74,18 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- FacileData::filter_samples(efds, indication == "BLCA")
 #' mdef <- fdge_model_def(samples, covariate = "sample_type",
-#'                        numer = "tumor", denom = "normal", fixed = "sex")
+#'                        numer = "tumor", denom = "normal", batch = "sex")
 #' dge <- fdge(mdef, method = "voom")
 #' if (interactive()) {
 #'   viz(dge)
+#'   viz(dge, "146909")
 #'   shine(dge)
 #' }
 #' dge.stats <- tidy(dge)
 #' dge.sig <- signature(dge)
 #'
 #' stage.anova <- samples %>%
-#'   fdge_model_def(covariate = "stage", fixed = "sex") %>%
+#'   fdge_model_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
 fdge <- function(x, ...) {
@@ -275,12 +276,12 @@ design.FacileDgeAnalysisResult <- function(x, ...) {
 name.FacileTtestAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
-  fixed <- param(m, "fixed")
+  batch <- param(m, "batch")
   contrast <- gsub(" ", "", m[["contrast_string"]])
   contrast <- gsub("/", ".divby.", contrast, fixed = TRUE)
   out <- sprintf("%s_%s", covname, contrast)
-  if (length(fixed)) {
-    out <- sprintf("%s_controlfor_%s", out, paste(fixed, collapse = ","))
+  if (length(batch)) {
+    out <- sprintf("%s_controlfor_%s", out, paste(batch, collapse = ","))
   }
   out
 }
@@ -290,11 +291,11 @@ name.FacileTtestAnalysisResult <- function(x, ...) {
 label.FacileTtestAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
-  fixed <- param(m, "fixed")
+  batch <- param(m, "batch")
   contrast <- m[["contrast_string"]]
   out <- sprintf("%s: %s", covname, contrast)
-  if (length(fixed)) {
-    out <- sprintf("%s (control for %s)", out, paste(fixed, collapse = ","))
+  if (length(batch)) {
+    out <- sprintf("%s (control for %s)", out, paste(batch, collapse = ","))
   }
   out
 }
@@ -305,10 +306,10 @@ name.FacileAnovaAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   clevels <- unique(samples(m)[[covname]])
-  fixed <- param(m, "fixed")
+  batch <- param(m, "batch")
   out <- sprintf("%s_%s", covname, paste(clevels, collapse = ","))
-  if (length(fixed)) {
-    out <- sprintf("%s_controlfor_%s", out, paste(fixed, collapse = ","))
+  if (length(batch)) {
+    out <- sprintf("%s_controlfor_%s", out, paste(batch, collapse = ","))
   }
   out
 }
@@ -319,10 +320,10 @@ label.FacileAnovaAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
   clevels <- unique(samples(m)[[covname]])
-  fixed <- param(m, "fixed")
+  batch <- param(m, "batch")
   out <- sprintf("%s [%s]", covname, paste(clevels, collapse = ","))
-  if (length(fixed)) {
-    out <- sprintf("%s (control for %s)", out, paste(fixed, collapse = ","))
+  if (length(batch)) {
+    out <- sprintf("%s (control for %s)", out, paste(batch, collapse = ","))
   }
   out
 }
@@ -554,7 +555,9 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 #'   `assay_type`is not `NULL`, this will be filtered to the associations
 #'   valid only for that `assay_type`. If none are found, this will be a
 #'   0-row tibble.
-fdge_methods <- function(assay_type = NULL) {
+fdge_methods <- function(assay_type = NULL,
+                         on_missing = c("error", "warning")) {
+  on_missing <- match.arg(on_missing)
   # assay_type values : rnaseq, umi, affymrna, affymirna, log2
 
   # This is a table of assay_type : dge_method possibilites. The first row
@@ -573,7 +576,8 @@ fdge_methods <- function(assay_type = NULL) {
     "isoseq",      "limma-trend",       "EList",
     "affymrna",    "limma",             "EList",
     "affymirna",   "limma",             "EList",
-    "lognorm",     "limma",             "EList")
+    "lognorm",     "limma",             "EList",
+    "real",        "ranks",             "EList")
 
   method_params <- tribble(
     ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,
@@ -585,7 +589,9 @@ fdge_methods <- function(assay_type = NULL) {
   info <- left_join(assay_methods, method_params, by = "dge_method")
 
   if (!is.null(assay_type)) {
-    assert_choice(assay_type, info[["assay_type"]])
+    if (on_missing == "error") {
+      assert_choice(assay_type, info[["assay_type"]])
+    }
     info <- info[info[["assay_type"]] == assay_type,]
   }
 

@@ -8,7 +8,7 @@
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+Experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 [![Travis build
 status](https://travis-ci.org/facileverse/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facileverse/FacileAnalysis)
 [![Codecov test
@@ -32,7 +32,8 @@ task into smaller constituent steps, the results of which can:
 2.  be explored at **different levels of interactivity**, via the
     `shine()`, `viz()`, and `report()` methods; and
 3.  act as starting (or reference) points for **the next** analysis
-    task, via the `compare()`, `ranks()`, and `signature()` methods.
+    task, either directly or by via the `ranks()`, `signature()`, or
+    `compare()` methods.
 
 You can find a more in-depth overview and philosophy of this package in
 the [FacileAnalysis vignette](FacileAnalysis.html).
@@ -46,6 +47,13 @@ links to vignettes that describe their functionality in more detail:
     Analysis](FacileAnalysis-fdge.html)
   - `fsea`: [Interactive (Gene) Set Enrichment
     Analysis](FacileAnalysis-fsea.html)
+
+**A note on the experimental lifecycle**: This package is tagged as
+“experimental” due to its limited use by a broader audience, and not
+as a sign of the commitment to its development or how long it has been
+in (internal) use. As we find the edge cases and pain points in the APIs
+through broader adoption, we expect to soon move to “maturing” (and
+eventually “stable”) [lifecycle](https://www.tidyverse.org/lifecycle/).
 
 ## Example Analysis: Differential Expression
 

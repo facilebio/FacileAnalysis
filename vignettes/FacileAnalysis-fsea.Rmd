@@ -48,7 +48,7 @@ For now, I imagine (gene) set enerichment analyses will be performed over
     dge.gsea <- samples %>% 
       fdge_model_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 fixed = "sex") %>% 
+                 batch = "sex") %>% 
       fdge() %>% 
       ffsea(gdb, pc = 1, method = c("cameraPR", "goseq", rank_by = "t"))
     ```

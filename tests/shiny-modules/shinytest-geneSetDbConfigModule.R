@@ -9,7 +9,7 @@ gdb.base <- multiGSEA::getMSigGeneSetDb("h", "human", "entrez")
 ttest.res <- FacileData::exampleFacileDataSet() %>%
   FacileData::filter_samples(indication == "CRC") %>%
   fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", fixed = "sex") %>%
+                 numer = "tumor", denom = "normal", batch = "sex") %>%
   fdge(method = "voom")
 
 modres <- FacileAnalysis::frunGadget(

@@ -17,6 +17,6 @@ A \code{ReactiveFacileDgeModelDefinition} object, the output from
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor",
                  denom = "normal",
-                 fixed = "sex")
+                 batch = "sex")
 }
 }

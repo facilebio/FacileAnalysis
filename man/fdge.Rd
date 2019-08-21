@@ -144,7 +144,7 @@ if (interactive()) {
 efds <- FacileData::exampleFacileDataSet()
 samples <- FacileData::filter_samples(efds, indication == "BLCA")
 mdef <- fdge_model_def(samples, covariate = "sample_type",
-                       numer = "tumor", denom = "normal", fixed = "sex")
+                       numer = "tumor", denom = "normal", batch = "sex")
 dge <- fdge(mdef, method = "voom")
 if (interactive()) {
   viz(dge)
@@ -154,7 +154,7 @@ dge.stats <- tidy(dge)
 dge.sig <- signature(dge)
 
 stage.anova <- samples \%>\%
-  fdge_model_def(covariate = "stage", fixed = "sex") \%>\%
+  fdge_model_def(covariate = "stage", batch = "sex") \%>\%
   fdge(method = "voom")
 anova.sig <- signature(stage.anova)
 }

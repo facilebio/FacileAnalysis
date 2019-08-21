@@ -10,11 +10,11 @@ if (!exists("gdb")) {
 ttest.res <- FDS %>%
   FacileData::filter_samples(indication == "CRC") %>%
   fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", fixed = "sex") %>%
+                 numer = "tumor", denom = "normal", batch = "sex") %>%
   fdge(method = "voom")
 anova.res <- FDS %>%
   FacileData::filter_samples(indication == "CRC", sample_type == "tumor") %>%
-  fdge_model_def(covariate = "stage", fixed = "sex") %>%
+  fdge_model_def(covariate = "stage", batch = "sex") %>%
   fdge(method = "voom")
 
 pca.res <- fpca(samples(anova.res))
@@ -71,7 +71,9 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
 })
 
 test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
-  pca1.gsea <- ffsea(pca.res, gdb, dim = 1)
+  pca1.gsea <- expect_warning({
+    ffsea(pca.res, gdb, dim = 1)
+  }, "Fraction.*low")
   mgres <- result(pca1.gsea)
 
   # check that pc-stuff are in features of gsea result.

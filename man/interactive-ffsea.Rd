@@ -42,7 +42,7 @@ gdb <- multiGSEA::exampleGeneSetDb()
 dge.crc <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", fixed = "sex") \%>\%
+                 numer = "tumor", denom = "normal", batch = "sex") \%>\%
   fdge(method = "voom")
 if (interactive()) {
   ffseaGadget(dge.crc, gdb)

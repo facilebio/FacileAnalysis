@@ -51,7 +51,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "stage", fixed = "sex")
+    fdge_model_def(covariate = "stage", batch = "sex")
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
@@ -91,13 +91,13 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
   tvn.blca <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def("sample_type", "tumor", "normal", fixed = "sex") %>%
+    fdge_model_def("sample_type", "tumor", "normal", batch = "sex") %>%
     fdge()
   tvn.crc <- FDS %>%
     filter_samples(indication == "CRC") %>%
-    fdge_model_def("sample_type", "tumor", "normal", fixed = "sex") %>%
+    fdge_model_def("sample_type", "tumor", "normal", batch = "sex") %>%
     fdge()
-  tvn.cmp <- compare(tvn.blca, tvn.crc)
+  tvn.cmp <- expect_warning(compare(tvn.blca, tvn.crc), "ALPHA")
 
   all.samples <- samples(tvn.crc) %>%
     bind_rows(samples(tvn.blca)) %>%
@@ -137,8 +137,7 @@ test_that("ttest compare() over same covariate, different numer/denom", {
   stage.4v3 <- crc.samples %>%
     fdge_model_def("stage", "IV", "III") %>%
     fdge()
-  cmp.stage <- compare(stage.2v1, stage.4v3)
-
+  cmp.stage <- expect_warning(compare(stage.2v1, stage.4v3), "ALPHA")
 })
 
 # Ranks and Signatures =========================================================
@@ -153,26 +152,26 @@ TRES <- FDS %>%
   fdge(method = "voom")
 ARES <- FDS %>%
   filter_samples(indication == "BLCA") %>%
-  fdge_model_def(covariate = "stage", fixed = "sex") %>%
+  fdge_model_def(covariate = "stage", batch = "sex") %>%
   fdge(method = "voom")
 
 test_that("ttest ranks and signatures generated correctly", {
   # Signed Ranks
   eranks.signed <- TRES %>%
-    result() %>%
+    tidy() %>%
     arrange(desc(logFC))
   ranks.signed <- TRES %>%
     ranks(signed = TRUE) %>%
-    result()
+    tidy()
   expect_equal(ranks.signed[["feature_id"]], eranks.signed[["feature_id"]])
 
   # Unsigned Ranks
   eranks.unsigned <- TRES %>%
-    result() %>%
+    tidy() %>%
     arrange(pval)
   ranks.unsigend <- TRES %>%
     ranks(signed = FALSE) %>%
-    result()
+    tidy()
   expect_equal(ranks.unsigend[["feature_id"]], eranks.unsigned[["feature_id"]])
 })
 
@@ -187,7 +186,7 @@ test_that("ranks returns anova features in expected order", {
 
   # signed anova ranks fires a warning but returns a ranking
   r <- expect_warning(ranks(ARES, signed = TRUE), "only.*unsigned")
-  expect_equal(result(r)[["feature_id"]], eranks[["feature_id"]])
+  expect_equal(tidy(r)[["feature_id"]], eranks[["feature_id"]])
 })
 
 test_that("t-test signatures generated correcty", {

@@ -37,6 +37,11 @@
 #'   fdgeGadget(viewer = "pane")
 #' dge.comp <- compare(dge.crc, dge.blca)
 #'
+#' \dontrun{
+#' tfds <- FacileDataSet("~/workspace/data/FacileData/dockerlink/FacileTcgaDataSet")
+#' tsamples <- filter_samples(tfds, indication == "BRCA")
+#' tdge <- fdgeGadget(tsamples, viewer = "browser")
+#' }
 #' report(dge.comp)
 #' shine(dge.comp)
 #' }
@@ -388,80 +393,29 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     out
   })
 
-  # adds a .key column to the data.frame, which is seq(nrow(data)) to act as the
-  # plotly selection key for brushing
-  boxdata <- eventReactive(selected_result(), {
+  # TODO: add checkbox/switch for batchcorrect on/of
+  observe({
+    mod <- req(model.())
+    test.covariate <- param(mod, "covariate")
+    batch <- param(mod, "batch")
+    enabled <- !is.null(batch)
+    if (!enabled) {
+      updateSwitchInput(session, "batch_correct", value = FALSE)
+    }
+    toggleElement("batch_correct", condition = enabled)
+  })
+
+  featureviz <- eventReactive(list(selected_result(), input$batch_correct), {
+    dge. <- req(dge())
+    mod. <- req(model.())
+    bc <- !is.null(param(mod., "batch")) && input$batch_correct
     feature <- req(selected_result())
-    # This will pull in the covariates used in the test
-    dat <- req(samples.())
-    scov <- covariate.()
-
-    if (!scov %in% colnames(dat)) {
-      dat <- with_sample_covariates(dat, scov)
-    }
-
-    dat <- with_assay_data(dat, feature, normalized = TRUE,
-                           prior.count = 0.25, spread = "id")
-
-    if (is.ttest(dge())) {
-      m <- model.()
-      cov.vals <- c(param(m, "numer"), param(m, "denom"))
-      keep <- dat[[scov]] %in% cov.vals # old school, !! isn't working
-      dat <- dat[keep,,drop = FALSE]
-    }
-
-    dat <- droplevels(dat)
-    mutate(dat, .key = seq(nrow(dat)))
+    viz(dge., feature, event_source = sample_selection, batch_correct = bc)
   })
 
-  box_ylabel <- reactive({
-    aname <- assay_name.()
-    assay_units(rfds, aname, normalized = TRUE)
-  })
-
-  # TODO: implement viz.FacileDgeAnalysisResult and replace lots of shiny bits
-  # can all of this internal code block be replaced with {
-  #   feature <- req(selected_result())
-  #   dge. <- dge()
-  #   viz(dge., feature, ...)
-  # }
   output$boxplot <- renderPlotly({
-    feature <- req(selected_result())
-    dat <- req(boxdata())
-    scov <- covariate.()
-    dge. <- dge()
-
-    if (is.ttest(dge.)) {
-      m <- req(model.())
-      numer <- param(m, "numer")
-      denom <- param(m, "denom")
-      if (length(numer) + length(denom) > 2) {
-        is.numer <- dat[[scov]] %in% numer
-        dat[["xaxe."]] <- ifelse(is.numer, "numer", "denom")
-        xaxis <- "xaxe."
-        xlabel <- "group"
-        color.by <- scov
-      } else {
-        xaxis <- scov
-        xlabel <- scov
-        color.by <- scov
-      }
-    } else {
-      xaxis <- scov
-      xlabel <- scov
-      color.by <- scov
-    }
-
-    ylbl <- box_ylabel()
-    valname <- feature[["feature_id"]]
-
-    fplot <- fboxplot(dat, xaxis, valname, with_points = TRUE,
-                      event_source = sample_selection, key = ".key",
-                      color_aes = color.by, hover = c(scov, valname),
-                      width = NULL, height = NULL, legendside = "bottom",
-                      xlabel = "", ylabel = ylbl)
-    out <- plot(fplot)
-    layout(out, title = sprintf("<b>%s</b>", feature[["symbol"]]))
+    plt <- req(featureviz())
+    plot(plt)
   })
 
   # Responds to sample-selection events on the boxplot. If no selection is
@@ -576,6 +530,9 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
   boxplot.box <- box(
     width = 12,
     id = ns("boxplotbox"),
+    switchInput(ns("batch_correct"), label = "Batch Corrected",
+                size = "mini", onLabel = "Yes", offLabel = "No",
+                value = TRUE, inline = TRUE),
     withSpinner(plotlyOutput(ns("boxplot"))))
 
   fluidRow(

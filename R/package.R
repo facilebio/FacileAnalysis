@@ -6,6 +6,8 @@
 #' @import tidyr
 NULL
 
+#' @export samples
+
 # Ubiquitously used methods from other package =================================
 
 #' @importFrom glue glue
