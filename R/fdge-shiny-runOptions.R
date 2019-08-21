@@ -13,21 +13,49 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
     stop("Invalid object passed as `model`: ", class(model)[1L])
   }
 
+  state <- reactiveValues(
+    dge_method = "__initializing__",
+    dge_methods = "__initializing__"
+  )
+
   # Sets up appropriate UI to retreive the params used to filter out
   # features measured using the selected assay
   ffilter <- callModule(fdgeFeatureFilter, "ffilter", rfds, model,
                         assay, ..., debug = debug)
 
-  # Update the dge_methods available given the currently selected assay
+  # Update the dge_methods available given the currently selected assay.
+  # The only assay types included in the dropdown are ones enumerated
+  # fdge_methods()$assay_type
+  # associated
   observe({
     ainfo <- req(assay$assay_info())
     assay_type. <- ainfo$assay_type
     req(!unselected(assay_type.))
     method. <- input$dge_method
-    methods. <- fdge_methods(assay_type.)$dge_method
+    methods. <- fdge_methods(assay_type., on_missing = "warning")$dge_method
     selected. <- if (method. %in% methods.) method. else methods.[1L]
-    updateSelectInput(session, "dge_method", choices = methods.,
-                      selected = selected.)
+    if (is.na(selected.)) {
+      # no methods available for this
+      # TODO: the assay shouldn't be available to be selected instead of this,
+      # perhaps. OR should be listed but unselectable.
+      selected. <- ""
+      methods. <- character()
+    }
+    if (selected. != state$dge_method) {
+      state$dge_method <- selected.
+    }
+    if (!setequal(state$dge_methods, methods.)) {
+      state$dge_methods <- methods.
+    }
+  })
+
+  observe({
+    choices <- state$dge_methods
+    selected <- state$dge_method
+    if (unselected(selected)) selected <- NULL
+    if (unselected(choices)) choices <- NULL
+    updateSelectInput(session, "dge_method", choices = choices,
+                      selected = selected)
   })
 
   observe({
@@ -50,10 +78,12 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   treat_lfc <- reactive(log2(input$treatfc))
 
   vals <- list(
-    dge_method = dge_method,
+    # dge_method = dge_method,
+    dge_method = reactive(state$dge_method),
     sample_weights = sample_weights,
     treat_lfc = treat_lfc,
     feature_filter = ffilter,
+    .state = state,
     .ns = session$ns)
 
   class(vals) <- c("FdgeRunOptions")
@@ -84,7 +114,9 @@ fdgeRunOptionsUI <- function(id, width = "300px", ..., debug = FALSE) {
 
 #' @noRd
 initialized.FdgeRunOptions <- function(x, ...) {
-  !unselected(x$dge_method())
+  # Waiting on: FacileAnalysis/issues/8
+  dge.method <- x$dge_method()
+  !unselected(dge.method) && dge.method != "ranks"
 }
 
 # Filtering Options ============================================================
