@@ -222,6 +222,8 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
                rank_by = rank_by, select_by = "selected",
                rank_order = rank_order, ...)
 
+  out[["params"]][["xdf"]] <- out[["params"]][["x"]]
+  out[["params"]][["x"]] <- x
   out[["params"]][["min_logFC"]] <- min_logFC
   out[["params"]][["max_padj"]] <- max_padj
   out[["params"]][["signed"]] <- signed
@@ -272,6 +274,8 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
   out <- ffsea(pc.ranks, gdb, methods = methods, rank_by = rank.column,
                rank_order = "descending", ...)
 
+  out[["params"]][["xdf"]] <- out[["params"]][["x"]]
+  out[["params"]][["x"]] <- x
   out[["params"]][["dim"]] <- dim
   out[["params"]][["signed"]] <- signed
   out
