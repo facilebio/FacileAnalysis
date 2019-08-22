@@ -26,7 +26,7 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
 #'
 #' @noRd
 viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
-                                          feature_highlight = NULL,
+                                          highlight = NULL,
                                           round_digits = 3, event_source = "A",
                                           webgl = type %in% c("volcano", "ma"),
                                           ...) {
@@ -41,6 +41,7 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
       type <- "feature"
     }
   }
+
   type <- match.arg(tolower(type), c("feature", "volcano", "ma"))
 
   if (type == "feature") {
@@ -48,10 +49,10 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
                             event_source = event_source, ...)
   } else {
     force(webgl)
-    out <- .viz_ttest_volcano(x, feature_id = feature_id,
-                              feature_highlight = feature_highlight,
-                              round_digits = round_digits,
-                              event_source = event_source, webgl = webgl, ...)
+    out <- .viz_ttest_result(x, type, feature_id = feature_id,
+                             highlight = highlight,
+                             round_digits = round_digits,
+                             event_source = event_source, webgl = webgl, ...)
   }
 
   out
@@ -71,33 +72,34 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
 
 # Helper Functions =============================================================
 
-.features_for_volcano <- function(x, feature_id = NULL, ntop = 200,
-                                  color_aes = NULL, feature_highlight = NULL,
+.features_for_dgeres <- function(x, feature_id = NULL, ntop = 200,
+                                  color_aes = NULL, highlight = NULL,
                                   ...) {
   assert_class(x, "FacileTtestAnalysisResult")
   dat.all <- tidy(ranks(x))
-  take.cols <- c("feature_id", "symbol", "name", "logFC", "pval", "padj", "t")
+  take.cols <- c("feature_id", "symbol", "name", "AveExpr",
+                 "logFC", "pval", "padj", "t")
   dat <- dat.all[, intersect(take.cols, colnames(dat.all))]
 
   topn.fids <- c(
     head(dat.all[["feature_id"]], ntop / 2),
     tail(dat.all[["feature_id"]], ntop / 2))
 
-  if (is.data.frame(feature_highlight)) {
-    feature_highlight <- feature_highlight[["feature_id"]]
+  if (is.data.frame(highlight)) {
+    highlight <- highlight[["feature_id"]]
   }
-  if (!is.character(feature_highlight)) feature_highlight <- NULL
+  if (!is.character(highlight)) highlight <- NULL
 
   if (!is.character(feature_id)) {
     feature_id <- topn.fids
   }
-  fids <- unique(c(feature_id, feature_highlight))
+  fids <- unique(c(feature_id, highlight))
 
   dat <- filter(dat, feature_id %in% fids)
-  dat <- mutate(dat, yval = -log10(pval))
+  dat <- mutate(dat, .key = seq(nrow(dat)))
 
-  if (is.character(feature_highlight)) {
-    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% feature_highlight,
+  if (is.character(highlight)) {
+    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
                                   "highlight", "background")
     color_aes <- "highlight."
   }
@@ -108,31 +110,47 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   dat
 }
 
-.viz_ttest_volcano <- function(x, feature_id = NULL, ntop = 200,
-                               round_digits = 3, event_source = "A",
-                               width = NULL, height = NULL,
-                               webgl = TRUE, dat = NULL,
-                               color_aes = NULL,
-                               hover = c("logFC", "pval", "padj", "symbol"),
-                               feature_highlight = NULL, ...) {
+.viz_ttest_result <- function(x, type = c("volcano", "ma"), feature_id = NULL,
+                              ntop = 200,
+                              round_digits = 3, event_source = "A",
+                              width = NULL, height = NULL,
+                              webgl = TRUE, dat = NULL,
+                              color_aes = NULL,
+                              hover = c("logFC", "pval", "padj", "symbol"),
+                              highlight = NULL, ...) {
+  type <- match.arg(type)
   if (is.null(dat)) {
-    dat <- .features_for_volcano(x, feature_id = feature_id, ntop = ntop,
-                                 color_aes = NULL,
-                                 feature_highlight = feature_highlight, ...)
+    dat <- .features_for_dgeres(x, feature_id = feature_id, ntop = ntop,
+                                color_aes = NULL,
+                                highlight = highlight, ...)
     color_aes <- attr(dat, "color_aes")
   }
-  assert_subset(c("feature_id", "logFC", "yval", "symbol"), colnames(dat))
+  assert_subset(
+    c("feature_id", "logFC", "pval", "AveExpr", "symbol"),
+    colnames(dat))
   if (!is.null(color_aes)) assert_subset(color_aes, colnames(dat))
   if (is.character(hover)) {
     hover <- intersect(hover, colnames(dat))
   }
+
+  if (type == "volcano") {
+    dat <- mutate(dat, xval = logFC, yval = -log10(pval))
+    xlabel <- "logFC"
+    ylabel <- "-log10(pval)"
+  } else {
+    dat <- mutate(dat, xval = AveExpr, yval = logFC)
+    xlabel <- "Average Expression"
+    ylabel <- "logFC"
+  }
+
   fp <- fscatterplot(
-    dat, c("logFC", "yval"), color_aes = color_aes,
-    hover = hover,
-    xlabel = "logFC", ylabel = "-log10(pval)",
+    dat, c("xval", "yval"), color_aes = color_aes,
+    hover = hover, key = ".key", event_source = event_source,
+    xlabel = xlabel, ylabel = ylabel,
     width = width, height = height, webgl = webgl, ...)
   fp
 }
+
 
 .viz_dge_feature <- function(x, feature_id, round_digits = 3, event_source = "A",
                              ylabel = NULL, title = NULL,

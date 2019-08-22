@@ -257,7 +257,7 @@ fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
 #' module.
 #'
 #' @export
-#' @importFrom FacileViz fscatterplot fboxplot
+#' @importFrom FacileViz fscatterplot fboxplot input_data
 #' @importFrom DT datatable dataTableProxy formatRound renderDT replaceData
 #' @importFrom plotly event_data layout
 #' @importFrom shiny downloadHandler req
@@ -393,7 +393,6 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     out
   })
 
-  # TODO: add checkbox/switch for batchcorrect on/of
   observe({
     mod <- req(model.())
     test.covariate <- param(mod, "covariate")
@@ -402,14 +401,16 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     if (!enabled) {
       updateSwitchInput(session, "batch_correct", value = FALSE)
     }
-    toggleElement("batch_correct", condition = enabled)
+    # toggleElement("batch_correct", condition = enabled)
+    toggleElement("batch_correct_container", condition = enabled)
   })
 
   featureviz <- eventReactive(list(selected_result(), input$batch_correct), {
     dge. <- req(dge())
     mod. <- req(model.())
-    bc <- !is.null(param(mod., "batch")) && input$batch_correct
+    bc <- !unselected(param(mod., "batch")) && input$batch_correct
     feature <- req(selected_result())
+    message("batch_correct: ", as.character(bc))
     viz(dge., feature, event_source = sample_selection, batch_correct = bc)
   })
 
@@ -426,7 +427,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     if (is.null(selected)) {
       selected <- tibble(dataset = character(), sample_id = character())
     } else {
-      selected <- boxdata() %>%
+      selected <- featureviz() %>%
+        input_data() %>%
         slice(as.integer(selected$key)) %>%
         select(dataset, sample_id)
     }
@@ -437,7 +439,6 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
       state$boxplot_select <- selected
     }
   }, ignoreNULL = FALSE, ignoreInit = TRUE)
-
 
   # Stats Table ----------------------------------------------------------------
 
@@ -519,10 +520,10 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
     id = ns("volcanobox"),
     box(
       width = 12, style = "padding-top: 10px",
-      tags$span("Volcano Plot", style = "font-weight: bold"),
-      switchInput(inputId = ns("volcanotoggle"), size = "mini",
+      switchInput(ns("volcanotoggle"), size = "mini",
                   onLabel = "Yes", offLabel = "No", value = FALSE,
                   inline = TRUE),
+      tags$span("Volcano Plot", style = "font-weight: bold"),
       tags$div(
         id = ns("volcanoplotdiv"),
         withSpinner(plotlyOutput(ns("volcano"))))))
@@ -530,9 +531,13 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
   boxplot.box <- box(
     width = 12,
     id = ns("boxplotbox"),
-    switchInput(ns("batch_correct"), label = "Batch Corrected",
-                size = "mini", onLabel = "Yes", offLabel = "No",
-                value = TRUE, inline = TRUE),
+    shinyjs::hidden(
+      tags$div(
+        id = ns("batch_correct_container"),
+        switchInput(ns("batch_correct"), size = "mini",
+                    onLabel = "Yes", offLabel = "No", value = TRUE,
+                    inline = TRUE),
+        tags$span("Batch Correction", style = "font-weight: bold"))),
     withSpinner(plotlyOutput(ns("boxplot"))))
 
   fluidRow(

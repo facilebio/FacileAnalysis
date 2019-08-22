@@ -105,7 +105,8 @@ report.FacilePcaAnalysisResult <- function(x, pcs = 3, with_features = TRUE,
                       zlabel = "default") {
   scatter <- viz(x, pcs = pcs, ..., xlabel = xlabel, ylabel = ylabel,
                  zlabel = zlabel, event_source = event_source, webgl = webgl)
-  cnames <- colnames(scatter$input_data)
+  # cnames <- colnames(scatter$input_data)
+  cnames <- colnames(input_data(scatter)) # $input_data)
   pc.cols <- cnames[grepl("^PC\\d+", cnames)]
 
   pcv <- x$percent_var * 100

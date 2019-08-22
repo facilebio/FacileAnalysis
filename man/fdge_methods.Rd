@@ -4,7 +4,7 @@
 \alias{fdge_methods}
 \title{A table of assay_type,dge_method combination parameters}
 \usage{
-fdge_methods(assay_type = NULL)
+fdge_methods(assay_type = NULL, on_missing = c("error", "warning"))
 }
 \arguments{
 \item{assay_type}{An optional string specifying the valid dge methods for

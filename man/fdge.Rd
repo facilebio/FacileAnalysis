@@ -148,6 +148,7 @@ mdef <- fdge_model_def(samples, covariate = "sample_type",
 dge <- fdge(mdef, method = "voom")
 if (interactive()) {
   viz(dge)
+  viz(dge, "146909")
   shine(dge)
 }
 dge.stats <- tidy(dge)
