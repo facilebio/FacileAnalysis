@@ -76,6 +76,7 @@ ffsea <- function(x, ...) {
 ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
                                                 methods = c("camera", "roast"),
                                                 ...) {
+  stop("Run fdge(x) %>% ffsea() for now")
 }
 
 #' @section Generic Set Enrichment Analysis from a table of statistics:
@@ -101,9 +102,80 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
 #'   (`rank_by = "asc"`), which arranges `x[[rank_by]]` in ascending order.
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
 #'   order.
-ffsea.data.frame <- function(x, rank_by, select_by, methods,
-                             rank_order = c("asc", "desc"), ...) {
+ffsea.data.frame <- function(x, gdb, methods,
+                             rank_by = NULL, select_by = NULL,
+                             rank_order = c("ascending", "descending"),
+                             bias_column = "effective_length", ...) {
+  assert_character(x[["feature_id"]])
+  assert_class(gdb, "GeneSetDb")
 
+  methods. <- local({
+    assert_character(methods, min.len = 1L)
+    m <- filter(.ffsea_methods(), method %in% methods)
+    assert_set_equal(m[["method"]], methods)
+    m
+  })
+
+  types <- unique(methods.[["type"]])
+
+  xx <- x
+  feature.bias <- NULL
+  if ("goseq" %in% methods.[["method"]]) {
+    if (!bias_column %in% names(x) || !is.numeric(x[[bias_column]])) {
+      warning("goseq requires a bias (length) column, we are setting this to 1")
+      xx[[bias_column]] <- 1
+    }
+    feature.bias <- xx[[bias_column]]
+  }
+
+  if ("preranked" %in% types) {
+    assert_choice(rank_by, colnames(x))
+    assert_numeric(x[[rank_by]])
+    rank_order <- match.arg(rank_order)
+    arrange.fn <- if (rank_order == "descending") dplyr::desc else list()
+    xx <- arrange_at(xx, rank_by, arrange.fn)
+  }
+
+  if ("enrichment" %in% types) {
+    assert_choice(select_by, colnames(x))
+    assert_logical(xx[[select_by]])
+    if (select_by != "significant") {
+      # currently multiGSEA() enrichment methods like goseq or hyperG require
+      # a "significant" and "direction" column
+      xx[["significant"]] <- xx[[select_by]]
+    }
+  }
+
+  split.updown <- !isFALSE(list(...)$split.updown)
+  if (split.updown) {
+    has.direction <- suppressWarnings({
+      setequal(c("up", "down"), xx[["direction"]])
+    })
+    if (!has.direction && is.numeric(xx[["logFC"]])) {
+      xx[["direction"]] <- ifelse(xx[["logFC"]] > 0, "up", "down")
+      has.direction <- TRUE
+    }
+    split.updown <- has.direction
+  }
+
+  input <- if ("preranked" %in% types) xx[[rank_by]] else xx[[select_by]]
+  names(input) <- xx[["feature_id"]]
+
+  mg <- multiGSEA(gdb, input, methods = methods,
+                  feature.bias = feature.bias,
+                  split.updown = split.updown,
+                  ..., xmeta. = xx)
+
+  out <- list(
+    result = mg,
+    params = list(methods = methods,
+                  rank_by = rank_by, select_by = select_by,
+                  rank_order = rank_order,
+                  bias_column = bias_column,
+                  x = x, gdb = gdb))
+    fds = suppressWarnings(fds(x))
+  class(out) <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
+  out
 }
 
 #' @noRd
@@ -112,47 +184,47 @@ ffsea.data.frame <- function(x, rank_by, select_by, methods,
 ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
                                             min_logFC = 1, max_padj = 0.10,
                                             rank_by = "logFC", signed = TRUE,
-                                            ...) {
+                                            rank_order = "descending", ...) {
   assert_class(gdb, "GeneSetDb")
-  assert_subset(methods, c("cameraPR", "fgsea", "geneSetTest"))
+  all.methods <- ffsea_methods(x)
+  assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
 
-  ranks. <- result(ranks(x, signed = signed, ...))
+  ranks. <- tidy(ranks(x, signed = signed, ...))
+  ranks. <- mutate(ranks.,
+                   selected = padj <= max_padj, abs(logFC) >= min_logFC,
+                   direction = ifelse(logFC > 0, "up", "down"))
   assert_choice(rank_by, colnames(ranks.))
-  assert_numeric(ranks.[[rank_by]], any.missing = FALSE)
 
-  # I can't get `arrange(ranks, desc(!!rank_by))` to work
-  ranks. <- arrange_at(ranks., rank_by, desc)
-  ranked <- setNames(ranks.[[rank_by]], ranks.[["feature_id"]])
+  take.cols <- c(
+    rank_by, "selected", "direction",
+    "symbol", "meta", "logFC", "t", "B",
+    "AveExpr", "pval", "padj", "CI.L", "CI.R")
+  take.cols <- intersect(take.cols, colnames(ranks.))
+
+  input <- select(ranks., feature_id, {{take.cols}})
 
   messages <- character()
   warnings <- character()
   errors <- character()
 
-  clazz <- c("FacileTtestFseaAnalysisResult", "FacileDgeFseaAnalysisResult")
-  classes <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
-
-  out <- list(
-    result = NULL,
-    params = list(methods = methods, min_logFC = min_logFC,
-                  max_padj = max_padj, rank_by = rank_by, x = x),
-    fds = fds.)
-
   on.exit({
     out[["messages"]] <- messages
     out[["warnings"]] <- warnings
     out[["errors"]] <- errors
-    class(out) <- c(clazz, classes)
+    class(out) <- c(
+      c("FacileTtestFseaAnalysisResult", "FacileDgeFseaAnalysisResult"),
+      class(out))
     return(out)
   })
 
-  take.cols <- c("symbol", "meta", "logFC", "t", "B", "AveExpr", "pval", "padj",
-                 "CI.L", "CI.R")
-  take.cols <- intersect(take.cols, colnames(ranks.))
-  xmeta. <- select(ranks., feature_id, {{take.cols}})
+  out <- ffsea(input, gdb, methods = methods,
+               rank_by = rank_by, select_by = "selected",
+               rank_order = rank_order, ...)
 
-  out[["result"]] <- multiGSEA(gdb, ranked, method = methods, ...,
-                               xmeta. = xmeta.)
+  out[["params"]][["min_logFC"]] <- min_logFC
+  out[["params"]][["max_padj"]] <- max_padj
+  out[["params"]][["signed"]] <- signed
   out
 }
 
@@ -189,23 +261,19 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
     out[["messages"]] <- messages
     out[["warnings"]] <- warnings
     out[["errors"]] <- errors
-    class(out) <- c(clazz, classes)
+    # class(out) <- c(clazz, classes)
+    class(out) <- c(clazz, class(out))
     return(out)
   })
 
   rank.column <- if (signed) "score" else "weight"
-  pc.ranks <- result(ranks(x, dims = dim, signed = signed, ...))
-  assert_choice(rank.column, colnames(pc.ranks))
-  vals <- assert_numeric(pc.ranks[[rank.column]])
-  names(vals) <- pc.ranks[["feature_id"]]
+  pc.ranks <- tidy(ranks(x, dims = dim, signed = signed, ...))
 
-  # xmeta. <- fds. %>%
-  #   features(aname.) %>%
-  #   transmute(feature_id, symbol = name, score, weight, biotype = meta)
+  out <- ffsea(pc.ranks, gdb, methods = methods, rank_by = rank.column,
+               rank_order = "descending", ...)
 
-  xmeta. <- pc.ranks
-  out[["result"]] <- multiGSEA(gdb, vals, methods = methods, ...,
-                               xmeta. = xmeta.)
+  out[["params"]][["dim"]] <- dim
+  out[["params"]][["signed"]] <- signed
   out
 }
 

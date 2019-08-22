@@ -10,6 +10,8 @@ NULL
 
 # Ubiquitously used methods from other package =================================
 
+#' @importFrom multiGSEA result
+#' @export result
 #' @importFrom glue glue
 #' @importFrom FacileViz plot
 #' @importFrom broom tidy

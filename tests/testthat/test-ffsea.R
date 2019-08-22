@@ -23,7 +23,7 @@ test_that("ffsea.FacileAnalysisResult transfers all feature-level statistics to 
   # This is really testing that the multGSEA hack currently in place that allows
   # us to pass in meta feature information and store it in the @logFC works.
 
-  facile.gsea <- ffsea(ttest.res, gdb, method = "cameraPR")
+  facile.gsea <- ffsea(ttest.res, gdb, methods = "cameraPR")
 
   # are the logFC, t-statistics, pvals, padj for each gene transferred
   # successfully?

@@ -142,7 +142,9 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
     req(runnable())
     args. <- runopts$args()
     gdb. <- gdb.$gdb()
-    args <- c(list(x = ares(), gdb = gdb.), args.)
+    args <- c(
+      list(x = ares(), gdb = gdb., methods = input$ffsea_methods),
+      args.)
     withProgress({
       do.call(ffsea, args)
     }, message = "Running Enrichment Analysis")
