@@ -70,6 +70,34 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
     select(mgres.cameraPR, name, pval) %>% as.data.frame())
 })
 
+test_that("goseq works with ttest result", {
+  input <- ranks(ttest.res) %>%
+    tidy() %>%
+    mutate(significant = padj <= 0.10)
+  mgres <- multiGSEA::goseq(
+    gdb,
+    selected = filter(input, significant)$feature_id,
+    universe = input$feature_id,
+    feature.bias = setNames(input$effective_length, input$feature_id))
+
+  facile.gsea <- ffsea(ttest.res, gdb, method = "goseq")
+})
+
+test_that("ffsea(anova_result) runs enrichment test", {
+  astats <- ranks(anova.res) %>%
+    tidy() %>%
+    mutate(significant = padj < 0.2)
+  fbias <- setNames(astats$effective_length, astats$feature_id)
+  scores <- setNames(astats$F, astats$feature_id)
+  mg <- multiGSEA(gdb, scores, methods = "goseq", feature.bias = fbias,
+                  xmeta. = astats)
+  mgres <- multiGSEA::result(mg)
+
+  fres <- ffsea(anova.res, gdb, methods = "goseq", max_padj = 0.2)
+  fcmp <- tidy(fres)
+  expect_equal(fcmp$pval, mgres$pval)
+})
+
 test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
   pca1.gsea <- expect_warning({
     ffsea(pca.res, gdb, dim = 1)

@@ -332,10 +332,13 @@ label.FacileAnovaAnalysisResult <- function(x, ...) {
 
 #' @export
 #' @noRd
-ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, ...) {
+ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, rank_by = "logFC",
+                                            ...) {
   ranks. <- tidy(x, ...)
   if (signed) {
-    ranks. <- arrange(ranks., desc(logFC))
+    rank_by <- assert_choice(rank_by, colnames(ranks.))
+    assert_numeric(ranks.[[rank_by]])
+    ranks. <- arrange_at(ranks., rank_by, desc)
   } else {
     ranks. <- arrange(ranks., pval)
   }

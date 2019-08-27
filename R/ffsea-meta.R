@@ -11,8 +11,7 @@
     ~type,        ~method,
     "preranked",  "cameraPR",
     "preranked",  "fgsea",
-    "enrichment", "goseq",
-    "enrichment", "hyperGeometricTest")
+    "enrichment", "enrichtest")
   if (!is.null(type)) {
     type. <- assert_choice(type, opts[["type"]])
     opts <- filter(opts, type == type.)
@@ -79,7 +78,7 @@ ffsea_method_types.FacileTtestAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 ffsea_method_types.FacileAnovaAnalysisResult <- function(x, ...) {
-  c("enrichment")
+  c("enrichtest")
 }
 
 #' @noRd

@@ -2,6 +2,10 @@
 % Please edit documentation in R/ffsea.R
 \name{ffsea}
 \alias{ffsea}
+\alias{gsea}
+\alias{GSEA}
+\alias{fsea}
+\alias{FSEA}
 \alias{result.FacileFseaAnalysisResult}
 \title{Performs Feature (Gene) Set Enrichment Analyses}
 \usage{
@@ -10,31 +14,93 @@ ffsea(x, ...)
 \method{result}{FacileFseaAnalysisResult}(x, name = "object", ...)
 }
 \arguments{
-\item{x}{A \code{FacileAnalysisResult} object}
+\item{x}{A \code{FacileAnalysisResult} object, or a data.frame with feature-level
+statistics, minimally with a \code{"feature_id"} column as well as one or more
+\code{numeric} columns to rank features on.}
 
-\item{gdb}{A \code{multiGSEA::GeneSetDb} object}
+\item{gdb}{A \code{\link[multiGSEA:GeneSetDb]{multiGSEA::GeneSetDb()}} object}
 
 \item{methods}{the GSEA methods to use on \code{x}.}
 }
 \value{
-A FacileGSEAResult object, which includes a MultiGSEAResult object
-as it's \code{result()}.
+A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
+object as it's \code{result()}. The geneset level statistics for each of the
+methods that were run are available via \code{tidy(ffsea.res, "<method_name>")}.
 }
 \description{
-\strong{For now} only GSEA methods process a pre-ranked feature set work, like
-\code{"cameraPR"} and \code{"fgsea"}.
+Currently we support running a number of feature (gene) set enrichment
+analyses downstream of a \emph{some other} \code{FacileAnalysisResult} (ie.,
+\code{[fdge() | fpca()] \%>\% ffsea()}), or over an arbitrary data.frame of
+feature-level statistics.
+
+Please refer to the examples here, as well as theh \emph{"Feature Set Analysis"}
+section of the vignette for more information.
 }
 \details{
-The default method run is simply \code{"cameraPR"}.
+:
+When running \code{ffsea} over a \code{FacileAnalysisResult}, the types of methods
+that can be run, and their configuration are preconfigured with reaonable
+defaults.
+
+When providing a generic \code{data.frame} of feature-level statistics to run
+enrichment tests over, the user has to specificy a few more parmaters.
+If running a "pre-ranked" test, (\code{method \%in\% c("cameraPR", "fgsea")}) the
+name of a numeric column in \code{x} must be specified to rank the features by,
+and the order by which to do that using the \code{rank_by} and \code{rank_order}
+arguments, respectively.
+
+If running an erichment-style test (\code{method = "enrichtest"}), the user must
+specifcy the name of a logical column that indicates (when \code{TRUE}) that a
+feature should be included for enrichment testing. The user can optionally
+specify a \code{group_by} column, like \code{"direction"}, that will be used to split
+the selected features into groups to perform more specific enrichmen tests.
+This allows you enrichment tests to be run separately for \code{"up"} and \code{"down"}
+regulated genes separately, for example. Lastly, the user can provide the
+name of another numeric column in \code{x} used to account for bias in the
+enrichment tests, such as gene length, GC content, etc.
+
+Gene sets must be supplied as a \code{\link[multiGSEA:GeneSetDb]{multiGSEA::GeneSetDb()}} object.
 }
-\section{Updates required to multiGSEA}{
+\section{GSEA Methods}{
 
-I need to update multiGSEA to take an input data.frame of differential
-expression statistics to work with goseq as well such that it doesn't have to
-run the differential expression stuff again.
+Currently, only the following GSEA methods are supported:
+\itemize{
+\item \code{"cameraPR"}: Delegates to \code{\link[limma:cameraPR]{limma::cameraPR()}} to perform a competitive
+gene set test based on feature ranks imposed downstream of an analysis
+\item \code{"fgsea"}: Delegates to \code{\link[fgsea:fgsea]{fgsea::fgsea()}} to perform another version of
+a competitive gene set test based on ranks.
+\item \code{"enrichtest"}: Performs a gene-ontology type of enrichment test. The user
+must specify the name of \code{logical} column (\code{select_by}) from the input
+which is used to indicate the features that are selected for enrichment
+analysis. The user can optionally provide the name of a \code{numeric} column
+(\code{biased_by}) and \code{character} column
+(\code{group_by}), which will adjust the enrichment test for a covariate that
+may induce a bias in the DGE results, and also run follow up enrichment
+tests based by differnt groups of features (\code{group_by}).
+For example, the result table might have a
+\code{"direction"} column, which specifies the direciton of differential
+expression (\code{"up"}, or \code{"down"}). In this case, enrichment tests will be
+run over \emph{all} features together, and then independantly for the ones that
+are \code{"up"}, and \code{"down"}.
+}
+}
 
-Once this is implemented, the a call to \code{ffsea} will also work on an Anova
-result, as well.
+\section{GSEA Statistics}{
+
+The geneset level statistics can be extracted from the
+\code{FacileFseaAnalysisResult} on a per-method basis usig the \code{tidy()} function.
+For instance, if \code{ffsea()} was called with
+\code{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR}
+results can be extracted via \code{tidy(fres, "cameraPR")}
+}
+
+\section{Development Notes}{
+
+This functionality delegates to multiGSEA to do all of the work. The
+multiGSEA interface is undergoing a bit of refactoring in order to better
+support a table of feature statistcs as input (for preranked and enrichment
+tests), so the \code{"methods"} supported via \code{ffsea()} are limited to a subset
+of the ones wrapped by multiGSEA, as enumerated below.
 }
 
 \section{Accessing Results}{
@@ -61,14 +127,15 @@ ttest.res <- efds \%>\%
   fdge_model_def(covariate = "sample_type",
                  numer = "tumor", denom = "normal", batch = "sex") \%>\%
   fdge(method = "voom")
-ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "fgsea"))
+ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
+                    biased_by = "effective_length")
 if (interactive()) {
   shine(ttest.gsea)
 }
 
 mgsea.result <- result(ttest.gsea)
 camera.stats <- tidy(ttest.gsea, "cameraPR")
-fgsea.stats <- tidy(ttest.gsea, "fgsea")
+enrich.stats <- tidy(ttest.gsea, "enrichtest")
 
 # GSEA from ANOVA result ----------------------------------------------------
 \dontrun{
@@ -89,8 +156,12 @@ pca.crc <- efds \%>\%
   fpca()
 pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 
+
 # Not yet implemented, need to get a signed weight out of eigenWeightedMean
 # right now we just have weights. Or, fully extracing the biplot code, I
 # think the weight should be the length on the PC of choice, and the sign is
 # the same.
+}
+\seealso{
+https://github.com/lianos/multiGSEA
 }

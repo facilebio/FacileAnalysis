@@ -1,26 +1,86 @@
 #' Performs Feature (Gene) Set Enrichment Analyses
 #'
-#' **For now** only GSEA methods process a pre-ranked feature set work, like
-#' `"cameraPR"` and `"fgsea"`.
+#' @description
+#' Currently we support running a number of feature (gene) set enrichment
+#' analyses downstream of a *some other* `FacileAnalysisResult` (ie.,
+#' `[fdge() | fpca()] %>% ffsea()`), or over an arbitrary data.frame of
+#' feature-level statistics.
 #'
-#' The default method run is simply `"cameraPR"`.
+#' Please refer to the examples here, as well as theh *"Feature Set Analysis"*
+#' section of the vignette for more information.
 #'
-#' @section Updates required to multiGSEA:
-#' I need to update multiGSEA to take an input data.frame of differential
-#' expression statistics to work with goseq as well such that it doesn't have to
-#' run the differential expression stuff again.
+#' @details:
+#' When running `ffsea` over a `FacileAnalysisResult`, the types of methods
+#' that can be run, and their configuration are preconfigured with reaonable
+#' defaults.
 #'
-#' Once this is implemented, the a call to `ffsea` will also work on an Anova
-#' result, as well.
+#' When providing a generic `data.frame` of feature-level statistics to run
+#' enrichment tests over, the user has to specificy a few more parmaters.
+#' If running a "pre-ranked" test, (`method %in% c("cameraPR", "fgsea")`) the
+#' name of a numeric column in `x` must be specified to rank the features by,
+#' and the order by which to do that using the `rank_by` and `rank_order`
+#' arguments, respectively.
 #'
+#' If running an erichment-style test (`method = "enrichtest"`), the user must
+#' specifcy the name of a logical column that indicates (when `TRUE`) that a
+#' feature should be included for enrichment testing. The user can optionally
+#' specify a `group_by` column, like `"direction"`, that will be used to split
+#' the selected features into groups to perform more specific enrichmen tests.
+#' This allows you enrichment tests to be run separately for `"up"` and `"down"`
+#' regulated genes separately, for example. Lastly, the user can provide the
+#' name of another numeric column in `x` with `biased_by` which can be used to
+#' account for bias in the enrichment tests, such as gene length, GC content,
+#' etc.
+#'
+#' Gene sets must be supplied as a [multiGSEA::GeneSetDb()] object.
+#'
+#' @section GSEA Methods:
+#' Currently, only the following GSEA methods are supported:
+#'
+#' * `"cameraPR"`: Delegates to [limma::cameraPR()] to perform a competitive
+#'   gene set test based on feature ranks imposed downstream of an analysis
+#' * `"fgsea"`: Delegates to [fgsea::fgsea()] to perform another version of
+#'   a competitive gene set test based on ranks.
+#' * `"enrichtest"`: Performs a gene-ontology type of enrichment test. The user
+#'   must specify the name of `logical` column (`select_by`) from the input
+#'   which is used to indicate the features that are selected for enrichment
+#'   analysis. The user can optionally provide the name of a `numeric` column
+#'   (`biased_by`) and `character` column (`group_by`), which will adjust the
+#'   enrichment test for a covariate that may induce a bias in the DGE results,
+#'   and also run follow up enrichment tests based by differnt groups of
+#'   features (`group_by`). For example, the result table might have a
+#'   `"direction"` column, which specifies the direciton of differential
+#'   expression (`"up"`, or `"down"`). In this case, enrichment tests will be
+#'   run over *all* features together, and then independantly for the ones that
+#'   are `"up"`, and `"down"`.
+#'
+#' @section GSEA Statistics:
+#' The geneset level statistics can be extracted from the
+#' `FacileFseaAnalysisResult` on a per-method basis usig the `tidy()` function.
+#' For instance, if `ffsea()` was called with
+#' `fres <- ffsea(..., methods = c("cameraPR", "enrichtest")`, the `"cameraPR`
+#' results can be extracted via `tidy(fres, "cameraPR")`
+#'
+#' @section Development Notes:
+#' This functionality delegates to multiGSEA to do all of the work. The
+#' multiGSEA interface is undergoing a bit of refactoring in order to better
+#' support a table of feature statistcs as input (for preranked and enrichment
+#' tests), so the `"methods"` supported via `ffsea()` are limited to a subset
+#' of the ones wrapped by multiGSEA, as enumerated below.
+
 #' @export
 #' @importFrom multiGSEA multiGSEA
+#' @seealso https://github.com/lianos/multiGSEA
+#' @aliases gsea GSEA fsea FSEA
 #'
-#' @param x A `FacileAnalysisResult` object
-#' @param gdb A `multiGSEA::GeneSetDb` object
+#' @param x A `FacileAnalysisResult` object, or a data.frame with feature-level
+#'   statistics, minimally with a `"feature_id"` column as well as one or more
+#'   `numeric` columns to rank features on.
+#' @param gdb A [multiGSEA::GeneSetDb()] object
 #' @param methods the GSEA methods to use on `x`.
-#' @return A FacileGSEAResult object, which includes a MultiGSEAResult object
-#'   as it's `result()`.
+#' @return A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
+#'   object as it's `result()`. The geneset level statistics for each of the
+#'   methods that were run are available via `tidy(ffsea.res, "<method_name>")`.
 #'
 #' @examples
 #' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
@@ -32,14 +92,15 @@
 #'   fdge_model_def(covariate = "sample_type",
 #'                  numer = "tumor", denom = "normal", batch = "sex") %>%
 #'   fdge(method = "voom")
-#' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "fgsea"))
+#' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
+#'                     biased_by = "effective_length")
 #' if (interactive()) {
 #'   shine(ttest.gsea)
 #' }
 #'
 #' mgsea.result <- result(ttest.gsea)
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")
-#' fgsea.stats <- tidy(ttest.gsea, "fgsea")
+#' enrich.stats <- tidy(ttest.gsea, "enrichtest")
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
 #' \dontrun{
@@ -59,6 +120,7 @@
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
+#'
 #'
 #' # Not yet implemented, need to get a signed weight out of eigenWeightedMean
 #' # right now we just have weights. Or, fully extracing the biplot code, I
@@ -80,12 +142,6 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
 }
 
 #' @section Generic Set Enrichment Analysis from a table of statistics:
-#' TODO: Write generic ffsea over a data.frame of feature statistics. This can
-#'   drive pre-ranked based GSEA, by identifying the column in `x` to `rank_by`,
-#'   as well as "enrichment" based methods, by identifying an indicator column
-#'   `select_by` in `x` flags features as "interesting" or not.
-#'
-#' TODO: Implement the universal ffsea.data.frame
 #'
 #' @noRd
 #' @export
@@ -101,11 +157,15 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
 #' @param rank_order the direction to arrange values in `rank_by`. By default
 #'   (`rank_by = "asc"`), which arranges `x[[rank_by]]` in ascending order.
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
-#'   order.
+#'   order. If `"rankded"`, then we assume that the data.frame is already
+#'   ranked as desired.
 ffsea.data.frame <- function(x, gdb, methods,
                              rank_by = NULL, select_by = NULL,
-                             rank_order = c("ascending", "descending"),
-                             bias_column = "effective_length", ...) {
+                             rank_order = "descending", group_by = NULL,
+                             biased_by = NULL, ...,
+                             feature.bias = "thebuckstopshere",
+                             xmeta. = "thebuckstopshere",
+                             groups = "thebuckstopshere") {
   assert_character(x[["feature_id"]])
   assert_class(gdb, "GeneSetDb")
 
@@ -119,21 +179,22 @@ ffsea.data.frame <- function(x, gdb, methods,
   types <- unique(methods.[["type"]])
 
   xx <- x
-  feature.bias <- NULL
-  if ("goseq" %in% methods.[["method"]]) {
-    if (!bias_column %in% names(x) || !is.numeric(x[[bias_column]])) {
-      warning("goseq requires a bias (length) column, we are setting this to 1")
-      xx[[bias_column]] <- 1
-    }
-    feature.bias <- xx[[bias_column]]
-  }
 
   if ("preranked" %in% types) {
     assert_choice(rank_by, colnames(x))
     assert_numeric(x[[rank_by]])
-    rank_order <- match.arg(rank_order)
+    if (missing(rank_order)) {
+      if (rank_by %in% c("pval", "padj")) {
+        rank_order <- "ascending"
+      } else {
+        rank_order <- "descending"
+      }
+    }
+    rank_order <- match.arg(rank_order, c("ascending", "descending", "ranked"))
     arrange.fn <- if (rank_order == "descending") dplyr::desc else list()
-    xx <- arrange_at(xx, rank_by, arrange.fn)
+    if (rank_order != "ranked") {
+      xx <- arrange_at(xx, rank_by, arrange.fn)
+    }
   }
 
   if ("enrichment" %in% types) {
@@ -144,34 +205,32 @@ ffsea.data.frame <- function(x, gdb, methods,
       # a "significant" and "direction" column
       xx[["significant"]] <- xx[[select_by]]
     }
-  }
-
-  split.updown <- !isFALSE(list(...)$split.updown)
-  if (split.updown) {
-    has.direction <- suppressWarnings({
-      setequal(c("up", "down"), xx[["direction"]])
-    })
-    if (!has.direction && is.numeric(xx[["logFC"]])) {
-      xx[["direction"]] <- ifelse(xx[["logFC"]] > 0, "up", "down")
-      has.direction <- TRUE
+    if (!is.null(group_by)) {
+      assert_choice(group_by, colnames(x))
+      assert_character(xx[[group_by]])
     }
-    split.updown <- has.direction
+    if (!is.null(biased_by)) {
+      assert_choice(biased_by, colnames(x))
+      assert_numeric(xx[[biased_by]])
+    }
   }
 
-  input <- if ("preranked" %in% types) xx[[rank_by]] else xx[[select_by]]
+  if ("preranked" %in% types) {
+    input <- xx[[rank_by]]
+  } else {
+    input <- as.integer(xx[[select_by]])
+  }
   names(input) <- xx[["feature_id"]]
 
-  mg <- multiGSEA(gdb, input, methods = methods,
-                  feature.bias = feature.bias,
-                  split.updown = split.updown,
-                  ..., xmeta. = xx)
+  mg <- multiGSEA(gdb, input, methods = methods, feature.bias = biased_by,
+                  groups = group_by, xmeta. = xx, ...)
 
   out <- list(
     result = mg,
     params = list(methods = methods,
                   rank_by = rank_by, select_by = select_by,
                   rank_order = rank_order,
-                  bias_column = bias_column,
+                  biased_by = biased_by,
                   x = x, gdb = gdb))
     fds = suppressWarnings(fds(x))
   class(out) <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
@@ -183,23 +242,26 @@ ffsea.data.frame <- function(x, gdb, methods,
 #' @importFrom multiGSEA multiGSEA
 ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
                                             min_logFC = 1, max_padj = 0.10,
-                                            rank_by = "logFC", signed = TRUE,
-                                            rank_order = "descending", ...) {
+                                            rank_by = "logFC",
+                                            signed = TRUE,
+                                            biased_by = NULL, ...,
+                                            rank_order = "thebuckstopshere",
+                                            group_by = "thebuckstopshere",
+                                            select_by = "thebuckstopshere") {
   assert_class(gdb, "GeneSetDb")
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
 
-  ranks. <- tidy(ranks(x, signed = signed, ...))
+  ranks. <- tidy(ranks(x, signed = signed, rank_by = rank_by, ...))
   ranks. <- mutate(ranks.,
-                   selected = padj <= max_padj, abs(logFC) >= min_logFC,
+                   significant = padj <= max_padj, abs(logFC) >= min_logFC,
                    direction = ifelse(logFC > 0, "up", "down"))
-  assert_choice(rank_by, colnames(ranks.))
 
   take.cols <- c(
-    rank_by, "selected", "direction",
+    "significant", "direction",
     "symbol", "meta", "logFC", "t", "B",
-    "AveExpr", "pval", "padj", "CI.L", "CI.R")
+    "AveExpr", "pval", "padj", "CI.L", "CI.R", "effective_length")
   take.cols <- intersect(take.cols, colnames(ranks.))
 
   input <- select(ranks., feature_id, {{take.cols}})
@@ -219,22 +281,37 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
   })
 
   out <- ffsea(input, gdb, methods = methods,
-               rank_by = rank_by, select_by = "selected",
-               rank_order = rank_order, ...)
+               rank_by = rank_by, rank_order = "ranked",
+               select_by = "significant", group_by = "direction",
+               biased_by = biased_by, ...)
 
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]
   out[["params"]][["x"]] <- x
   out[["params"]][["min_logFC"]] <- min_logFC
   out[["params"]][["max_padj"]] <- max_padj
   out[["params"]][["signed"]] <- signed
+  out[["fds"]] <- fds(x)
   out
 }
 
 #' @noRd
 #' @export
-ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "goseq",
+ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
                                             max_padj = 0.10, ...) {
-  stop("Not yet implemented")
+  all.methods <- ffsea_methods(x)
+  assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
+  fds. <- assert_facile_data_store(fds(x))
+
+  ranks. <- tidy(ranks(x))
+  ranks. <- mutate(ranks., significant = padj <= max_padj)
+
+  out <- ffsea(ranks., gdb, methods = methods,
+               select_by = "significant",
+               rank_order = "ranked", ...)
+  class(out) <- c(
+    c("FacileAnovaFseaAnalysisResult", "FacileDgeFseaAnalysisResult"),
+    class(out))
+  out
 }
 
 #' feature set enrichment analysis only works on one PC at a time.
@@ -357,7 +434,7 @@ tidy.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
   mgres <- x[["result"]]
   name. <- assert_choice(name, param(x, "methods"))
   out <- as.tbl(result(mgres, name.))
-  out
+  select(out, collection, name, pval, padj, padj.by.collection, everything())
 }
 
 # Ranks and Signatures =========================================================
