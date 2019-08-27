@@ -53,7 +53,7 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
                             event_source = event_source, ...)
   } else {
     force(webgl)
-    out <- .viz_ttest_result(x, type, feature_id = feature_id,
+    out <- .viz_ttest_scatter(x, type, feature_id = feature_id,
                              highlight = highlight,
                              round_digits = round_digits,
                              event_source = event_source, webgl = webgl, ...)
@@ -74,9 +74,118 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
                    event_source = event_source, ...)
 }
 
-# Helper Functions =============================================================
+#' @section Interacting with results:
+#'
+#' The `report` function will create an htmlwidget which can be explored by
+#' the analyst or dropped into an Rmarkdown report.
+#'
+#' `report(result, "dge", max_padj = 0.05, min_logFC = 1)` will create a
+#' side-by-side volcano and datatable for differential expression results.
+#'
+#' @export
+#' @importFrom crosstalk bscols
+#' @importFrom htmltools browsable tagList tags
+#' @rdname fdge
+report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
+                                             ntop = 200, max_padj = 0.10,
+                                             min_logFC = 1,
+                                             features = NULL, round_digits = 3,
+                                             event_source = "A", webgl = TRUE,
+                                             caption = NULL, ...) {
+  type <- match.arg(type)
+  treat_lfc <- x[["treat_lfc"]]
+  if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
+    warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
+    min_logFC <- treat_lfc
+  }
 
-.features_for_dgeres <- function(x, feature_id = NULL, ntop = 200,
+  fn <- if (type == "dge") .viz.dge_ttest else .viz.dge_features
+  viz. <- fn(x, ntop = ntop, max_padj = max_padj, min_logFC = min_logFC,
+             features = features, round_digits = round_digits,
+             event_source = event_source, treat_lfc = treat_lfc,
+             webgl = webgl, ...)
+
+  sdat <- viz.[["datatable"]][["data"]]
+  mdef <- model(x)
+
+  if (!is.null(caption)) {
+    caption <- tags$p(caption)
+  }
+
+  if (type == "dge") {
+    title <- viz.[["title"]]
+    designf <- mdef[["design_formula"]]
+    covariate <- param(mdef, "covariate")
+    cstring <- mdef[["contrast_string"]]
+    details <- tagList(
+      tags$p(
+        tags$strong("Design: "),
+        tags$code(designf)),
+      tags$p(
+        tags$strong("Tested: "),
+        tags$code(paste(covariate, cstring, sep = ": "))))
+
+    header <- tagList(title, details, caption)
+    out <- bscols.(header, viz.[["volcano"]], viz.[["datatable"]],
+                   widths = c(12, 5, 7))
+  } else {
+
+  }
+
+  out
+}
+
+# Ttest Scatter Helper Functions ===============================================
+
+#' Visualize the "global" scatter plot downstream of a DGE analysis, ie. the
+#' volcano or MA plot.
+.viz_ttest_scatter <- function(x, type = c("volcano", "ma"), feature_id = NULL,
+                               ntop = 200,
+                               round_digits = 3, event_source = "A",
+                               width = NULL, height = NULL,
+                               webgl = TRUE, dat = NULL,
+                               color_aes = NULL,
+                               hover = c("logFC", "pval", "padj", "symbol"),
+                               highlight = NULL, ...) {
+  type <- match.arg(type)
+  if (is.null(dat)) {
+    dat <- .data_ttest_scatter(x, feature_id = feature_id, ntop = ntop,
+                               color_aes = NULL,
+                               highlight = highlight, ...)
+    color_aes <- attr(dat, "color_aes")
+  }
+  assert_subset(
+    c("feature_id", "logFC", "pval", "AveExpr", "symbol"),
+    colnames(dat))
+  if (!is.null(color_aes)) assert_subset(color_aes, colnames(dat))
+  if (is.character(hover)) {
+    hover <- intersect(hover, colnames(dat))
+  }
+
+  if (type == "volcano") {
+    dat <- mutate(dat, xval = logFC, yval = -log10(pval))
+    xlabel <- "logFC"
+    ylabel <- "-log10(pval)"
+  } else {
+    dat <- mutate(dat, xval = AveExpr, yval = logFC)
+    xlabel <- "Average Expression"
+    ylabel <- "logFC"
+  }
+
+  fp <- fscatterplot(
+    dat, c("xval", "yval"), color_aes = color_aes,
+    hover = hover, key = ".key", event_source = event_source,
+    xlabel = xlabel, ylabel = ylabel,
+    width = width, height = height, webgl = webgl, ...)
+  fp
+}
+
+#' Extracts the data used for a "global view" of a DGE analysis, ie.
+#' gene-level *statistics* for a comparison, which one might use in volcano or
+#' MA plots.
+#'
+#' @noRd
+.data_ttest_scatter <- function(x, feature_id = NULL, ntop = 200,
                                   color_aes = NULL, highlight = NULL,
                                   ...) {
   assert_class(x, "FacileTtestAnalysisResult")
@@ -118,48 +227,12 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   dat
 }
 
-.viz_ttest_result <- function(x, type = c("volcano", "ma"), feature_id = NULL,
-                              ntop = 200,
-                              round_digits = 3, event_source = "A",
-                              width = NULL, height = NULL,
-                              webgl = TRUE, dat = NULL,
-                              color_aes = NULL,
-                              hover = c("logFC", "pval", "padj", "symbol"),
-                              highlight = NULL, ...) {
-  type <- match.arg(type)
-  if (is.null(dat)) {
-    dat <- .features_for_dgeres(x, feature_id = feature_id, ntop = ntop,
-                                color_aes = NULL,
-                                highlight = highlight, ...)
-    color_aes <- attr(dat, "color_aes")
-  }
-  assert_subset(
-    c("feature_id", "logFC", "pval", "AveExpr", "symbol"),
-    colnames(dat))
-  if (!is.null(color_aes)) assert_subset(color_aes, colnames(dat))
-  if (is.character(hover)) {
-    hover <- intersect(hover, colnames(dat))
-  }
+# Feature Level Expression Helpers =============================================
 
-  if (type == "volcano") {
-    dat <- mutate(dat, xval = logFC, yval = -log10(pval))
-    xlabel <- "logFC"
-    ylabel <- "-log10(pval)"
-  } else {
-    dat <- mutate(dat, xval = AveExpr, yval = logFC)
-    xlabel <- "Average Expression"
-    ylabel <- "logFC"
-  }
-
-  fp <- fscatterplot(
-    dat, c("xval", "yval"), color_aes = color_aes,
-    hover = hover, key = ".key", event_source = event_source,
-    xlabel = xlabel, ylabel = ylabel,
-    width = width, height = height, webgl = webgl, ...)
-  fp
-}
-
-
+#' Setup boxplot(s) for expression level data of gene(s) across the samples used
+#' in a DGE analysis.
+#'
+#' @noRd
 .viz_dge_feature <- function(x, feature_id, round_digits = 3, event_source = "A",
                              ylabel = NULL, title = NULL,
                              batch_correct = TRUE, prior.count = 0.1,
@@ -173,7 +246,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   mod <- model(x)
   assay_name <- param(x, "assay_name")
 
-  dat <- .feature_data_dge(x, fid, batch_correct = batch_correct,
+  dat <- .data_dge_feature(x, fid, batch_correct = batch_correct,
                            prior.count = prior.count, ...)
 
   numer <- param(mod, "numer")
@@ -217,7 +290,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
 
   facet_aes <- if (length(fid) > 1) "feature_name" else NULL
 
-  fplot <- fboxplot(dat, xaxis, ".value", with_points = TRUE,
+  fplot <- fboxplot(dat, xaxis, "value", with_points = TRUE,
                     event_source = event_source, key = ".key",
                     color_aes = color.by, facet_aes = facet_aes,
                     hover = c("dataset", "sample_id", test.covariate, batch),
@@ -230,7 +303,8 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   fplot
 }
 
-.feature_data_dge <- function(x, feature_id, batch_correct = TRUE,
+#' Extracts expresson data for a feature across the samples use for the test.
+.data_dge_feature <- function(x, feature_id, batch_correct = TRUE,
                               prior.count = 0.1, ...) {
   # fid <- assert_string(feature_id)
   fid <- assert_character(feature_id, min.len = 1)
@@ -244,22 +318,12 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   assay_name <- param(x, "assay_name")
   samples. <- samples(x)
 
-  # dat <- with_assay_data(samples., fid, assay_name = assay_name,
-  #                        normalized = TRUE, prior.count = prior.count,
-  #                        spread = "id", batch = batch, main = test.covariate)
-  # value.idx <- match(fid, colnames(dat))[1L]
-  # colnames(dat)[value.idx] <- ".value"
-
   dat <- fetch_assay_data(samples., fid, assay_name = assay_name,
                           normalized = TRUE, prior.count = prior.count,
-                          spread = "id", batch = batch, main = test.covariate)
-  value.idx <- match("value", colnames(dat))[1L]
-  colnames(dat)[value.idx] <- ".value"
+                          batch = batch, main = test.covariate)
 
-  dat <- left_join(samples(x), dat, by = c("dataset", "sample_id"))
   dat <- droplevels(dat)
   dat[[".key"]] <- seq(nrow(dat))
-  # dat <- mutate(dat, feature_id = fid, assay_name = assay_name)
 
   # transfer dge statistics to outgoing data.frame
   if (is.ttest(x)) {
@@ -267,7 +331,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   } else {
     xfer.cols <- c("F", "pval", "padj")
   }
-# browser()
+
   feature <- filter(features(x), feature_id == fid)
   if (nrow(feature) == 0) {
     feature <- tibble()
@@ -330,67 +394,6 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   out
 }
 
-
-#' @section Interacting with results:
-#'
-#' The `report` function will create an htmlwidget which can be explored by
-#' the analyst or dropped into an Rmarkdown report.
-#'
-#' `report(result, "dge", max_padj = 0.05, min_logFC = 1)` will create a
-#' side-by-side volcano and datatable for differential expression results.
-#'
-#' @export
-#' @importFrom crosstalk bscols
-#' @importFrom htmltools browsable tagList tags
-#' @rdname fdge
-report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
-                                             ntop = 200, max_padj = 0.10,
-                                             min_logFC = 1,
-                                             features = NULL, round_digits = 3,
-                                             event_source = "A", webgl = TRUE,
-                                             caption = NULL, ...) {
-  type <- match.arg(type)
-  treat_lfc <- x[["treat_lfc"]]
-  if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
-    warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
-    min_logFC <- treat_lfc
-  }
-
-  fn <- if (type == "dge") .viz.dge_ttest else .viz.dge_features
-  viz. <- fn(x, ntop = ntop, max_padj = max_padj, min_logFC = min_logFC,
-             features = features, round_digits = round_digits,
-             event_source = event_source, treat_lfc = treat_lfc,
-             webgl = webgl, ...)
-
-  sdat <- viz.[["datatable"]][["data"]]
-  mdef <- model(x)
-
-  if (!is.null(caption)) {
-    caption <- tags$p(caption)
-  }
-
-  if (type == "dge") {
-    title <- viz.[["title"]]
-    designf <- mdef[["design_formula"]]
-    covariate <- param(mdef, "covariate")
-    cstring <- mdef[["contrast_string"]]
-    details <- tagList(
-      tags$p(
-        tags$strong("Design: "),
-        tags$code(designf)),
-      tags$p(
-        tags$strong("Tested: "),
-        tags$code(paste(covariate, cstring, sep = ": "))))
-
-    header <- tagList(title, details, caption)
-    out <- bscols.(header, viz.[["volcano"]], viz.[["datatable"]],
-                   widths = c(12, 5, 7))
-  } else {
-
-  }
-
-  out
-}
 
 # Internal =====================================================================
 
