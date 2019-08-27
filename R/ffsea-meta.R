@@ -78,7 +78,7 @@ ffsea_method_types.FacileTtestAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 ffsea_method_types.FacileAnovaAnalysisResult <- function(x, ...) {
-  c("enrichtest")
+  c("enrichment")
 }
 
 #' @noRd

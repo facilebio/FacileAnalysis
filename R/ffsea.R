@@ -98,34 +98,23 @@
 #'   shine(ttest.gsea)
 #' }
 #'
-#' mgsea.result <- result(ttest.gsea)
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")
 #' enrich.stats <- tidy(ttest.gsea, "enrichtest")
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
-#' \dontrun{
-#' # This requires an update in mutiGSEA (to support df inputs) to run
 #' stage.anova <- efds %>%
 #'   FacileData::filter_samples(indication == "BLCA") %>%
 #'   fdge_model_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
-#' anova.gsea <- ffsea(stage.anova)
+#' anova.gsea <- ffsea(stage.anova, gdb)
 #' if (interactive()) {
 #'  shine(anova.gsea)
 #' }
-#' }
-#'
 #' # GSEA over loadings on a Principal Component -------------------------------
 #' pca.crc <- efds %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-#'
-#'
-#' # Not yet implemented, need to get a signed weight out of eigenWeightedMean
-#' # right now we just have weights. Or, fully extracing the biplot code, I
-#' # think the weight should be the length on the PC of choice, and the sign is
-#' # the same.
 ffsea <- function(x, ...) {
   UseMethod("ffsea", x)
 }
@@ -240,7 +229,8 @@ ffsea.data.frame <- function(x, gdb, methods,
 #' @noRd
 #' @export
 #' @importFrom multiGSEA multiGSEA
-ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
+ffsea.FacileTtestAnalysisResult <- function(x, gdb,
+                                            methods = c("cameraPR", "enrichtest"),
                                             min_logFC = 1, max_padj = 0.10,
                                             rank_by = "logFC",
                                             signed = TRUE,
@@ -297,7 +287,11 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb, methods = "cameraPR",
 #' @noRd
 #' @export
 ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
-                                            max_padj = 0.10, ...) {
+                                            max_padj = 0.10, biased_by = NULL,
+                                            ...,
+                                            rank_by = "thebuckstopshere",
+                                            select_by = "thebuckstopshere",
+                                            rank_order = "thebuckstopshere") {
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
@@ -307,7 +301,13 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
 
   out <- ffsea(ranks., gdb, methods = methods,
                select_by = "significant",
-               rank_order = "ranked", ...)
+               rank_by = "F", rank_order = "ranked",
+               biased_by = biased_by, ...)
+  out[["params"]][["xdf"]] <- out[["params"]][["x"]]
+  out[["params"]][["x"]] <- x
+  out[["params"]][["max_padj"]] <- max_padj
+  out[["fds"]] <- fds(x)
+
   class(out) <- c(
     c("FacileAnovaFseaAnalysisResult", "FacileDgeFseaAnalysisResult"),
     class(out))
@@ -355,6 +355,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
   out[["params"]][["x"]] <- x
   out[["params"]][["dim"]] <- dim
   out[["params"]][["signed"]] <- signed
+  out[["fds"]] <- fds(x)
   out
 }
 

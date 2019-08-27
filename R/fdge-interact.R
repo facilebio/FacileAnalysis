@@ -30,12 +30,16 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
                                           round_digits = 3, event_source = "A",
                                           webgl = type %in% c("volcano", "ma"),
                                           ...) {
+  try.tidy.class <- c("FacileFeatureSignature", "FacileFeatureRanks")
+  if (test_multi_class(feature_id, try.tidy.class)) {
+    feature_id <- tidy(feature_id)
+  }
   if (is.data.frame(feature_id)) {
     feature_id <- feature_id[["feature_id"]]
   }
 
   if (is.null(type)) {
-    if (is.null(feature_id) || length(feature_id) > 1L) {
+    if (is.null(feature_id) || length(feature_id) > 10L) {
       type <- "volcano"
     } else {
       type <- "feature"
@@ -85,6 +89,10 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
     head(dat.all[["feature_id"]], ntop / 2),
     tail(dat.all[["feature_id"]], ntop / 2))
 
+  try.tidy.class <- c("FacileFeatureSignature", "FacileFeatureRanks")
+  if (test_multi_class(highlight, try.tidy.class)) {
+    highlight <- tidy(highlight)
+  }
   if (is.data.frame(highlight)) {
     highlight <- highlight[["feature_id"]]
   }
@@ -160,7 +168,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   if (is.data.frame(feature_id)) {
     feature_id <- feature_id[["feature_id"]]
   }
-  fid <- assert_character(feature_id, min.len = 1, max.len = 1)
+  fid <- assert_character(feature_id, min.len = 1) # , max.len = 1)
 
   mod <- model(x)
   assay_name <- param(x, "assay_name")
@@ -207,9 +215,11 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
     }
   }
 
+  facet_aes <- if (length(fid) > 1) "feature_name" else NULL
+
   fplot <- fboxplot(dat, xaxis, ".value", with_points = TRUE,
                     event_source = event_source, key = ".key",
-                    color_aes = color.by,
+                    color_aes = color.by, facet_aes = facet_aes,
                     hover = c("dataset", "sample_id", test.covariate, batch),
                     width = width, height = height, legendside = legendside,
                     xlabel = "", ylabel = ylabel, title = title)
@@ -222,7 +232,8 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
 
 .feature_data_dge <- function(x, feature_id, batch_correct = TRUE,
                               prior.count = 0.1, ...) {
-  fid <- assert_string(feature_id)
+  # fid <- assert_string(feature_id)
+  fid <- assert_character(feature_id, min.len = 1)
 
   mod <- model(x)
   test.covariate <- param(mod, "covariate")
@@ -233,15 +244,22 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   assay_name <- param(x, "assay_name")
   samples. <- samples(x)
 
-  dat <- with_assay_data(samples., fid, assay_name = assay_name,
-                         normalized = TRUE, prior.count = prior.count,
-                         spread = "id", batch = batch, main = test.covariate)
-  value.idx <- match(fid, colnames(dat))[1L]
+  # dat <- with_assay_data(samples., fid, assay_name = assay_name,
+  #                        normalized = TRUE, prior.count = prior.count,
+  #                        spread = "id", batch = batch, main = test.covariate)
+  # value.idx <- match(fid, colnames(dat))[1L]
+  # colnames(dat)[value.idx] <- ".value"
+
+  dat <- fetch_assay_data(samples., fid, assay_name = assay_name,
+                          normalized = TRUE, prior.count = prior.count,
+                          spread = "id", batch = batch, main = test.covariate)
+  value.idx <- match("value", colnames(dat))[1L]
   colnames(dat)[value.idx] <- ".value"
 
+  dat <- left_join(samples(x), dat, by = c("dataset", "sample_id"))
   dat <- droplevels(dat)
   dat[[".key"]] <- seq(nrow(dat))
-  dat <- mutate(dat, feature_id = fid, assay_name = assay_name)
+  # dat <- mutate(dat, feature_id = fid, assay_name = assay_name)
 
   # transfer dge statistics to outgoing data.frame
   if (is.ttest(x)) {
@@ -249,7 +267,7 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
   } else {
     xfer.cols <- c("F", "pval", "padj")
   }
-
+# browser()
   feature <- filter(features(x), feature_id == fid)
   if (nrow(feature) == 0) {
     feature <- tibble()
