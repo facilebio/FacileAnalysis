@@ -73,8 +73,11 @@
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- FacileData::filter_samples(efds, indication == "BLCA")
+#' samples <- samples %>%
+#'   mutate(something = sample(c("a", "b"), nrow(samples), replace = TRUE))
 #' mdef <- fdge_model_def(samples, covariate = "sample_type",
-#'                        numer = "tumor", denom = "normal", batch = "sex")
+#'                        numer = "tumor", denom = "normal",
+#'                        batch = "sex")
 #' dge <- fdge(mdef, method = "voom")
 #' if (interactive()) {
 #'   viz(dge)

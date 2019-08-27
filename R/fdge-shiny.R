@@ -410,7 +410,6 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     mod. <- req(model.())
     bc <- !unselected(param(mod., "batch")) && input$batch_correct
     feature <- req(selected_result())
-    message("batch_correct: ", as.character(bc))
     viz(dge., feature, event_source = sample_selection, batch_correct = bc)
   })
 

@@ -58,6 +58,7 @@
 frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
                        title = "Facile Analysis Gadget",
                        height = 800, width = 1000, viewer = "dialog", ...,
+                       with_sample_filter = is(x, "FacileDataStore"),
                        retval = "x",
                        debug = FALSE) {
   bs4dash <- getOption("facile.bs4dash")
@@ -68,23 +69,34 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   assert_function(analysisUI)
 
   viewer <- gadget_viewer(viewer, title, width, height)
+  restrict_samples <- NULL
 
   if (is(x, "facile_frame")) {
     fds. <- fds(x)
     samples. <- x
     sample.filter <- FALSE
+    restrict_samples <- samples.
   } else if (is(x, "FacileDataStore")) {
     sample.filter <- TRUE
     fds. <- x
-    samples. <- samples(x) %>% collect(n = Inf)
+    samples. <- collect(samples(x), n = Inf)
   } else if (is(x, "FacileAnalysisResult")) {
     # ugh, this isn't going to work -- I'm writing this in to fire up a
     # ffseaGadget, whose needs to be a FacileAnalysisResult.
     sample.filter <- FALSE
     fds. <- fds(x)
-    samples. <- samples(x)
+    samples. <- collect(samples(x), n = Inf)
+    restrict_samples <- samples.
   } else {
     stop("What in the world?")
+  }
+
+  sample.filter <- sample.filter || with_sample_filter
+  xtra_covariates <- setdiff(colnames(samples.), c("dataset", "sample_id"))
+  if (length(xtra_covariates)) {
+    xtra_covariates <- as.EAVtable(samples.)
+  } else {
+    xtra_covariates <- NULL
   }
 
   assert_class(fds., "FacileDataStore")
@@ -108,6 +120,14 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   server <- function(input, output, session) {
     rfds <- ReactiveFacileDataStore(fds., "ds", user = user, samples = samples.)
     analysis <- callModule(analysisModule, "analysis", rfds, ..., debug = debug)
+
+    if (!is.null(xtra_covariates)) {
+      observe({
+        req(initialized(rfds))
+        rfds$.state$esample_annotation <- xtra_covariates
+        FacileShine::trigger(rfds, "covariates")
+      })
+    }
 
     observeEvent(input$done, {
       annotation <- FacileShine:::.empty_feature_annotation_tbl()
