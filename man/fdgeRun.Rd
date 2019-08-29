@@ -9,7 +9,7 @@ fdgeRun(input, output, session, rfds, model, with_gsea = FALSE, ...,
 }
 \arguments{
 \item{model}{A linear model definition. Can be either an "innert"
-\code{FacileDgeModelDefinition} that is returned from a call to
+\code{FacileLinearModelDefinition} that is returned from a call to
 \code{\link[=flm_def]{flm_def()}}, or the \code{ReactiveDGEModelDefinition} object returned
 from the \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.}
 

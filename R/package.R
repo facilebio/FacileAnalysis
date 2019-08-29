@@ -10,6 +10,10 @@ NULL
 
 # Ubiquitously used methods from other package =================================
 
+#' @importFrom FacileShine annotation
+#' @export annotation
+NULL
+
 #' @importFrom multiGSEA result
 #' @export result
 #' @importFrom glue glue

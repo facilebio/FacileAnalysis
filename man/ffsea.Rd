@@ -90,7 +90,7 @@ are \code{"up"}, and \code{"down"}.
 The geneset level statistics can be extracted from the
 \code{FacileFseaAnalysisResult} on a per-method basis usig the \code{tidy()} function.
 For instance, if \code{ffsea()} was called with
-\code{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR}
+\code{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR"}
 results can be extracted via \code{tidy(fres, "cameraPR")}
 }
 

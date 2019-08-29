@@ -46,10 +46,10 @@
 #' shine(dge.comp)
 #' }
 fdgeGadget <- function(x, title = "Differential Expression Analysis",
-                       height = 800, width = 1000, ...) {
+                       height = 800, width = 1000, viewer = "browser", ...) {
   assert_multi_class(x, c("FacileDataStore", "facile_frame"))
   frunGadget(fdgeAnalysis, fdgeAnalysisUI, x, title = title,
-             height = height, width = width, ...)
+             height = height, width = width, viewer = viewer, ...)
 }
 
 #' @rdname fdge-shiny
@@ -136,7 +136,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #'   assaySelect
 #'   unselected
 #' @param model A linear model definition. Can be either an "innert"
-#'   `FacileDgeModelDefinition` that is returned from a call to
+#'   `FacileLinearModelDefinition` that is returned from a call to
 #'   [flm_def()], or the `ReactiveDGEModelDefinition` object returned
 #'   from the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
@@ -146,7 +146,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
                     debug = FALSE, .reactive = TRUE) {
   assert_class(rfds, "ReactiveFacileDataStore")
-  assert_class(model, "FacileDgeModelDefinition")
+  assert_class(model, "FacileLinearModelDefinition")
 
   assay <- callModule(assaySelect, "assay", rfds, .reactive = .reactive)
   runopts <- callModule(fdgeRunOptions, "runopts", rfds, model, assay, ...)
@@ -185,7 +185,7 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
     faro = dge,
     .ns = session$ns)
 
-  # Since `model` can be a reactive version of a FacileDgeModelDefinition, I
+  # Since `model` can be a reactive version of a FacileLinearModelDefinition, I
   # don't know how to get the Ttest or ANOVA state of that model without
   # being in a reactive context and, therefore, appending it to the class
   # of the outgoing result.
@@ -239,11 +239,11 @@ fdgeRunUI <- function(id, ..., debug = FALSE) {
 #'
 #' @noRd
 #' @export
-fdge.ReactiveFacileDgeModelDefinition <- function(x, assay_name = NULL,
-                                                  method = NULL,
-                                                  filter = "default",
-                                                  with_sample_weights = FALSE,
-                                                  treat_lfc = NULL, ...) {
+fdge.ReactiveFacileLinearModelDefinition <- function(x, assay_name = NULL,
+                                                     method = NULL,
+                                                     filter = "default",
+                                                     with_sample_weights = FALSE,
+                                                     treat_lfc = NULL, ...) {
   fdge(faro(x), assay_name = assay_name, method = method, filter = filter,
        with_sample_weights = with_sample_weights, treat_lfc = treat_lfc, ...)
 }

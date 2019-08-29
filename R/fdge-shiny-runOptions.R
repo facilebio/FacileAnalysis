@@ -4,11 +4,11 @@
 
 #' @noRd
 #' @param rfds ReactiveFacileDataStore
-#' @param model a FacileDgeModelDefinition (or ReactiveFacileDgeModelDefinition)
+#' @param model a FacileLinearModelDefinition (or ReactiveFacileLinearModelDefinition)
 fdgeRunOptions <- function(input, output, session, rfds, model, assay,
                            ...) {
-  kosher <- is(model, "FacileDgeModelDefinition") ||
-    is(model, "ReactiveFacileDgeModelDefinition")
+  kosher <- is(model, "FacileLinearModelDefinition") ||
+    is(model, "ReactiveFacileLinearModelDefinition")
   if (!kosher) {
     stop("Invalid object passed as `model`: ", class(model)[1L])
   }

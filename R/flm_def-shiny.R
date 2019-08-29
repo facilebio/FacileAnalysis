@@ -17,7 +17,7 @@
 #' @importFrom shiny renderText
 #' @importFrom shinyjs toggleElement
 #' @importFrom shinyWidgets sendSweetAlert
-#' @return A `ReactiveFacileDgeModelDefinition` object, the output from
+#' @return A `ReactiveFacileLinearModelDefinition` object, the output from
 #'   [flm_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
                             debug = FALSE, .reactive = TRUE) {
@@ -127,9 +127,9 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     batchcov = batchcov,
     .ns = session$ns)
 
-  class(vals) <- c("ReactiveFacileDgeModelDefinition",
+  class(vals) <- c("ReactiveFacileLinearModelDefinition",
                    "ReactiveFacileAnalysisResult",
-                   "FacileDgeModelDefinition")
+                   "FacileLinearModelDefinition")
   vals
 }
 

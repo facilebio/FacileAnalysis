@@ -2,13 +2,13 @@
 % Please edit documentation in R/biocbox.R, R/fdge.R
 \name{biocbox}
 \alias{biocbox}
-\alias{biocbox.FacileDgeModelDefinition}
+\alias{biocbox.FacileLinearModelDefinition}
 \alias{biocbox.FacileDgeAnalysisResult}
 \title{Materializes the bioc assay container to use to run a dge test.}
 \usage{
 biocbox(x, ...)
 
-\method{biocbox}{FacileDgeModelDefinition}(x, assay_name = NULL,
+\method{biocbox}{FacileLinearModelDefinition}(x, assay_name = NULL,
   method = NULL, dge_methods = NULL, filter = "default",
   with_sample_weights = FALSE, prior_count = NULL, ...)
 

@@ -1,7 +1,7 @@
 #' Peform a differential expression analysis.
 #'
 #' Use [flm_def()] to define the design matrix and contrast to test and
-#' pass the `FacileDgeModelDefinition` object returned from that to `fdge()`
+#' pass the `FacileLinearModelDefinition` object returned from that to `fdge()`
 #' to run the desired differential testing framework (dictated by the `method`
 #' parameter) over the data. `flm_def` accepts a
 #'
@@ -119,11 +119,11 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 #' @rdname fdge
 #' @param ... passed down into inner methods, such as `biocbox` to tweak
 #'   filtering criteria, for instance
-fdge.FacileDgeModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                          filter = "default",
-                                          with_sample_weights = FALSE,
-                                          treat_lfc = NULL,
-                                          ...) {
+fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL,
+                                             filter = "default",
+                                             with_sample_weights = FALSE,
+                                             treat_lfc = NULL,
+                                             ...) {
   messages <- character()
   warnings <- character()
   errors <- character()

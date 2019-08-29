@@ -102,13 +102,13 @@ features.BiocBox <- function(x, ...)  {
 #' @return a DGEList or EList with assay data in the correct place, and all of
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
-biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
+biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              method = NULL,
                                              dge_methods = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
                                              prior_count = NULL, ...) {
-  assert_class(x, "FacileDgeModelDefinition")
+  assert_class(x, "FacileLinearModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
@@ -193,7 +193,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
 .biocbox_create <- function(xsamples, assay_name, assay_type,
                             design, filter, method, with_sample_weights,
                             prior_count, ...) {
-  assert_class(design, "FacileDgeModelDefinition")
+  assert_class(design, "FacileLinearModelDefinition")
 
   if (assay_type %in% c("rnaseq", "isoseq", "umi")) {
     create <- .biocbox_create_DGEList
@@ -293,7 +293,7 @@ biocbox.FacileDgeModelDefinition <- function(x, assay_name = NULL,
                                     # norm factors
                                     min_feature_count_tmm = 500,
                                     ...) {
-  assert_class(design, "FacileDgeModelDefinition")
+  assert_class(design, "FacileLinearModelDefinition")
   if (is.null(prior_count)) prior_count <- 2
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,

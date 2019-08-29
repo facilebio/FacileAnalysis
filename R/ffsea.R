@@ -58,7 +58,7 @@
 #' The geneset level statistics can be extracted from the
 #' `FacileFseaAnalysisResult` on a per-method basis usig the `tidy()` function.
 #' For instance, if `ffsea()` was called with
-#' `fres <- ffsea(..., methods = c("cameraPR", "enrichtest")`, the `"cameraPR`
+#' `fres <- ffsea(..., methods = c("cameraPR", "enrichtest")`, the `"cameraPR"`
 #' results can be extracted via `tidy(fres, "cameraPR")`
 #'
 #' @section Development Notes:
@@ -296,7 +296,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
 
-  ranks. <- tidy(ranks(x))
+  ranks. <- tidy(x)
   ranks. <- mutate(ranks., significant = padj <= max_padj)
 
   out <- ffsea(ranks., gdb, methods = methods,

@@ -19,7 +19,7 @@
 #' feel like if I were to implement each of the specific `*FacileAnalysisResult`
 #' methods for its sister `ReactiveFacile*AnalysisResult`, then this probably
 #' wouldn't be necessary ... I think, anyway.
-
+#'
 #' @export
 #' @return an innert FacileAnalysisResult
 faro <- function(x, ...) {

@@ -135,7 +135,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   out <- list(
     # Standard FacileAnalysisResult things
     fds = .fds)
-  class(out) <- c("FacileDgeModelDefinition", "FacileAnalysisResult")
+  class(out) <- c("FacileLinearModelDefinition", "FacileAnalysisResult")
   clazz <- "IncompleteModelDefintion"
   on.exit({
     out[["messages"]] <- messages
@@ -404,25 +404,25 @@ flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @noRd
 #' @export
-initialized.FacileDgeModelDefinition <- function(x, ...) {
+initialized.FacileLinearModelDefinition <- function(x, ...) {
   !is(x, "FacileFailedModelDefinition") && !is(x, "IncompleteModelDefintion")
 }
 
 #' @noRd
 #' @export
-samples.FacileDgeModelDefinition <- function(x, ...) {
+samples.FacileLinearModelDefinition <- function(x, ...) {
   x[["covariates"]]
 }
 
 #' @noRd
 #' @export
-design.FacileDgeModelDefinition <- function(x, ...) {
+design.FacileLinearModelDefinition <- function(x, ...) {
   x[["design"]]
 }
 
 #' @noRd
 #' @export
-result.FacileDgeModelDefinition <- function(x, ...) {
+result.FacileLinearModelDefinition <- function(x, ...) {
   x[["design"]]
 }
 
@@ -431,7 +431,7 @@ result.FacileDgeModelDefinition <- function(x, ...) {
 #' @noRd
 #' @importFrom stats formula
 #' @export
-formula.FacileDgeModelDefinition <- function(x, ..., as.string = TRUE) {
+formula.FacileLinearModelDefinition <- function(x, ..., as.string = TRUE) {
   out <- x[["design_formula"]]
   if (!as.string) {
     stop("What should we be doing with this if not return the string?")
@@ -502,13 +502,13 @@ status.FacileInteractionTestModelDefinition <- function(x, type = "message",
 
 #' @noRd
 #' @export
-print.FacileDgeModelDefinition <- function(x, ...) {
+print.FacileLinearModelDefinition <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
 #' @noRd
 #' @export
-format.FacileDgeModelDefinition <- function(x, ...) {
+format.FacileLinearModelDefinition <- function(x, ...) {
   if (is.ttest(x)) {
     testing <- "contrast"
     thetest <- paste(names(x$contrast), x$contrast,

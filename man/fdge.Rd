@@ -5,7 +5,7 @@
 \alias{report.FacileTtestAnalysisResult}
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
-\alias{fdge.FacileDgeModelDefinition}
+\alias{fdge.FacileLinearModelDefinition}
 \title{Peform a differential expression analysis.}
 \usage{
 \method{compare}{FacileTtestAnalysisResult}(x, y, ...)
@@ -21,7 +21,7 @@ fdge(x, ...)
   method = NULL, filter = "default", with_sample_weights = FALSE,
   ...)
 
-\method{fdge}{FacileDgeModelDefinition}(x, assay_name = NULL,
+\method{fdge}{FacileLinearModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", with_sample_weights = FALSE,
   treat_lfc = NULL, ...)
 }
@@ -45,7 +45,7 @@ to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[li
 }
 \description{
 Use \code{\link[=flm_def]{flm_def()}} to define the design matrix and contrast to test and
-pass the \code{FacileDgeModelDefinition} object returned from that to \code{fdge()}
+pass the \code{FacileLinearModelDefinition} object returned from that to \code{fdge()}
 to run the desired differential testing framework (dictated by the \code{method}
 parameter) over the data. \code{flm_def} accepts a
 }

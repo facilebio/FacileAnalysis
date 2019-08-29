@@ -8,7 +8,7 @@ fdgeModelDefRun(input, output, session, rfds, ..., debug = FALSE,
   .reactive = TRUE)
 }
 \value{
-A \code{ReactiveFacileDgeModelDefinition} object, the output from
+A \code{ReactiveFacileLinearModelDefinition} object, the output from
 \code{\link[=flm_def]{flm_def()}}.
 }
 \description{

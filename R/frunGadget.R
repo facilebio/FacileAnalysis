@@ -130,7 +130,9 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     }
 
     observeEvent(input$done, {
-      annotation <- FacileShine:::.empty_feature_annotation_tbl()
+      annotation <- list(
+        samples = FacileShine:::.empty_sample_annotation_tbl(),
+        features = FacileShine:::.empty_feature_annotation_tbl())
 
       if (is(x, "FacileAnalysisResult") && retval != "faro")   {
         if (retval == "x") {
@@ -185,6 +187,19 @@ interacted <- function(x, ...) {
   }
   out
 }
+
+#' @export
+#' @importFrom FacileShine annotation
+#' @noRd
+annotation.FacileAnalysisGadgetResult <- function(x, type = NULL, ...) {
+  annos <- interacted(x)[["annotation"]]
+  if (is.list(annos) && !is.null(type)) {
+    assert_choice(type, names(annos))
+    annos <- annos[[type]]
+  }
+  annos
+}
+
 
 #' @noRd
 #' @importFrom shiny browserViewer dialogViewer paneViewer
