@@ -11,7 +11,7 @@
 #'
 #' 1. Model matrix definition. The functionality is provided by the
 #'    [flm_def()] function, and the shiny interface by the
-#'    [fdgeModelDefRun()] module.
+#'    [flmDefRun()] module.
 #' 2. Differential expression analysis. The functionality is
 #'    defined by the [fdge()] function, and the shiny interface by the
 #'    [fdgeRun()] module.
@@ -64,7 +64,7 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ReactiveFacileDgeAnalysisResult`, the output from [fdge()]
 fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
-  model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
+  model <- callModule(flmDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
   view <- callModule(fdgeView, "view", rfds, dge,  ...,
                      feature_selection = session$ns("volcano"),
@@ -109,7 +109,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
   tagList(
     tags$div(id = ns("modelbox"),
              box.(title = "Model Definition", width = 12,
-                  fdgeModelDefRunUI(ns("model"), debug = debug))),
+                  flmDefRunUI(ns("model"), debug = debug))),
     tags$div(id = ns("dgebox"),
              box.(title = "Testing Parameters", width = 12,
                   fdgeRunUI(ns("dge"), debug = debug))),
@@ -138,7 +138,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #' @param model A linear model definition. Can be either an "innert"
 #'   `FacileLinearModelDefinition` that is returned from a call to
 #'   [flm_def()], or the `ReactiveDGEModelDefinition` object returned
-#'   from the [fdgeModelDefRun()] module.
+#'   from the [flmDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]
 #' @return A list of stuff. `$result` holds the `FacileDgeAnalysisResult`

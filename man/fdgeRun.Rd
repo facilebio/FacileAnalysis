@@ -11,7 +11,7 @@ fdgeRun(input, output, session, rfds, model, with_gsea = FALSE, ...,
 \item{model}{A linear model definition. Can be either an "innert"
 \code{FacileLinearModelDefinition} that is returned from a call to
 \code{\link[=flm_def]{flm_def()}}, or the \code{ReactiveDGEModelDefinition} object returned
-from the \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.}
+from the \code{\link[=flmDefRun]{flmDefRun()}} module.}
 
 \item{with_gsea}{Include option to run a GSEA?}
 

@@ -33,7 +33,7 @@ fdgeseaGadget <- function(x, title = "DGE and GSEA",
 #' @export
 fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   # fdge bits ..................................................................
-  model <- callModule(fdgeModelDefRun, "model", rfds, ..., debug = debug)
+  model <- callModule(flmDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
   dge_view <- callModule(fdgeView, "dge_view", rfds, dge,  ...,
                         feature_selection = session$ns("volcano"),
@@ -83,7 +83,7 @@ fDgeSeaAnalysisUI <- function(id, ..., debug = FALSE) {
     tags$div(
       id = ns("modelbox"),
       box.(title = "Model Definition", width = 12,
-           fdgeModelDefRunUI(ns("model"), debug = debug))),
+           flmDefRunUI(ns("model"), debug = debug))),
 
     # DGE and GSEA parameters, side-by-side
     tags$div(

@@ -6,7 +6,8 @@
 \title{Full interactive executation of GSEA, soup to nuts.}
 \usage{
 ffseaGadget(x, gdb, title = "Feature Set Enrichment Analysis",
-  height = 800, width = 1000, ..., debug = FALSE)
+  height = 800, width = 1000, viewer = "browser", ...,
+  debug = FALSE)
 
 ffseaRun(input, output, session, rfds, aresult, gdb = NULL, ...,
   debug = FALSE)

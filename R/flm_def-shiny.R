@@ -19,8 +19,8 @@
 #' @importFrom shinyWidgets sendSweetAlert
 #' @return A `ReactiveFacileLinearModelDefinition` object, the output from
 #'   [flm_def()].
-fdgeModelDefRun <- function(input, output, session, rfds, ...,
-                            debug = FALSE, .reactive = TRUE) {
+flmDefRun <- function(input, output, session, rfds, ..., debug = FALSE,
+                      .reactive = TRUE) {
   isolate. <- if (.reactive) base::identity else shiny::isolate
 
   active.samples <- reactive({
@@ -139,7 +139,7 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
 #'   categoricalSampleCovariateLevelsUI
 #' @importFrom shiny textOutput wellPanel
 #' @importFrom shinyjs hidden
-fdgeModelDefRunUI <- function(id, ..., debug = FALSE) {
+flmDefRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
   out <- tagList(

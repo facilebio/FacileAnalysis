@@ -6,7 +6,7 @@
 \title{Fully interactive differential expression analysis}
 \usage{
 fdgeGadget(x, title = "Differential Expression Analysis", height = 800,
-  width = 1000, ...)
+  width = 1000, viewer = "browser", ...)
 
 fdgeAnalysis(input, output, session, rfds, ..., debug = FALSE)
 }
@@ -29,7 +29,7 @@ These steps are:
 \enumerate{
 \item Model matrix definition. The functionality is provided by the
 \code{\link[=flm_def]{flm_def()}} function, and the shiny interface by the
-\code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.
+\code{\link[=flmDefRun]{flmDefRun()}} module.
 \item Differential expression analysis. The functionality is
 defined by the \code{\link[=fdge]{fdge()}} function, and the shiny interface by the
 \code{\link[=fdgeRun]{fdgeRun()}} module.

@@ -13,11 +13,11 @@ shiny::shinyApp(
     # shiny::wellPanel(filteredReactiveFacileDataStoreUI("ds")),
     reactiveFacileDataStoreUI("rfds"),
     shiny::tags$h2("fdgeModelDef"),
-    fdgeModelDefRunUI("model", debug = TRUE),
+    flmDefRunUI("model", debug = TRUE),
     NULL),
   server = function(input, output) {
     # rfds <- callModule(filteredReactiveFacileDataStore, "ds", fds, user = user)
     rfds <- ReactiveFacileDataStore(path, "ds")# , samples = s)
-    model <- callModule(fdgeModelDefRun, "model", rfds, debug = TRUE)
+    model <- callModule(flmDefRun, "model", rfds, debug = TRUE)
   }
 )
