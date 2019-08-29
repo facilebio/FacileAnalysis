@@ -103,11 +103,11 @@ features.BiocBox <- function(x, ...)  {
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
 biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
-                                             method = NULL,
-                                             dge_methods = NULL,
-                                             filter = "default",
-                                             with_sample_weights = FALSE,
-                                             prior_count = NULL, ...) {
+                                                method = NULL,
+                                                dge_methods = NULL,
+                                                filter = "default",
+                                                with_sample_weights = FALSE,
+                                                prior_count = NULL, ...) {
   assert_class(x, "FacileLinearModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
