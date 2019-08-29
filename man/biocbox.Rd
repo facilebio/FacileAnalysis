@@ -56,7 +56,7 @@ from a result of something generated within some FacileAnalysis.
 }
 \section{Linear Model Definitions}{
 
-This function accepts a model defined using using \code{\link[=fdge_model_def]{fdge_model_def()}} and
+This function accepts a model defined using using \code{\link[=flm_def]{flm_def()}} and
 creates the appropriate Bioconductor assay container to test the model
 given the \code{assay_name} and dge \code{method} specified by the user.
 

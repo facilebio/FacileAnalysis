@@ -5,9 +5,9 @@ if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 test_that("Correct bioc container built from model def and method spec", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal")
+    flm_def(covariate = "sample_type",
+            numer = "tumor",
+            denom = "normal")
 
   # DGEList for quasi-likelihood teseting
   bbox <- biocbox(mdef, "rnaseq", method = "edgeR-qlf")
@@ -44,9 +44,9 @@ test_that("Correct bioc container built from model def and method spec", {
 test_that("Various filter* combinations to biocbox work", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
-    fdge_model_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal")
+    flm_def(covariate = "sample_type",
+            numer = "tumor",
+            denom = "normal")
 
   all.features <- features(FDS, assay_name = "rnaseq")
 

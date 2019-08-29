@@ -326,8 +326,8 @@ param.BiocBox <- function(x, name = NULL, ...) {
 #' ```
 #' dge <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor", denom = "normal", batch = "sex") %>%
+#'   flm_def(covariate = "sample_type",numer = "tumor", denom = "normal",
+#'           batch = "sex") %>%
 #'   fdge()
 #' ```
 #'
@@ -514,7 +514,7 @@ design.NULL <- function(x, ...) NULL
 
 #' Extract the model used for an analysis
 #'
-#' For a DGE analysis, this is the fdge_model_def object
+#' For a DGE analysis, this is the flm_def object
 #'
 #' @export
 model <- function(x, ...) {

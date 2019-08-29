@@ -51,41 +51,37 @@
 #' # Look for tumor vs normal differences, controling for stage and sex
 #' model_info <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor",
-#'                  denom = "normal",
-#'                  batch = "sex")
+#'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'           batch = "sex")
 #' m2 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor",
-#'                  denom = "normal",
-#'                  batch = c("sex", "stage"))
+#'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'           batch = c("sex", "stage"))
 #'
 #' # stageIV vs stageII & stageIII
 #' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
-#'   fdge_model_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
-#'                  batch = "sex")
+#'   flm_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
+#'           batch = "sex")
 #'
 #' # Incomplete ttest to help with custom contrast vector
 #' mi <- efds %>%
 #'   filter_samples(indication == "BLCA", sample_type == "tumor") %>%
-#'   fdge_model_def(covariate = "stage", batch = "sex", contrast. = "help")
+#'   flm_def(covariate = "stage", batch = "sex", contrast. = "help")
 #'
 #' # ANOVA across stage in BLCA, control for sex
 #' m3 <- efds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "stage", batch = "sex")
-fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
-                           batch = NULL, on_missing = c("warning", "error"),
-                           ...) {
-  UseMethod("fdge_model_def", x)
+#'   flm_def(covariate = "stage", batch = "sex")
+flm_def <- function(x, covariate, numer = NULL, denom = NULL,
+                    batch = NULL, on_missing = c("warning", "error"),
+                    ...) {
+  UseMethod("flm_def", x)
 }
 
 #' @export
-#' @rdname fdge_model_def
-#' @method fdge_model_def data.frame
+#' @rdname flm_def
+#' @method flm_def data.frame
 #' @importFrom stats model.matrix
 #' @importFrom limma makeContrasts nonEstimable
 #' @importFrom FacileShine unselected
@@ -99,11 +95,11 @@ fdge_model_def <- function(x, covariate, numer = NULL, denom = NULL,
 #'
 #' @param contrast. A custom contrast vector can be passed in for extra tricky
 #'   comparisons that we haven't figured out how to put a GUI in front of.
-fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
-                                      batch = NULL,
-                                      on_missing = c("warning", "error"), ...,
-                                      contrast. = NULL,
-                                      .fds = NULL) {
+flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
+                               batch = NULL,
+                               on_missing = c("warning", "error"), ...,
+                               contrast. = NULL,
+                               .fds = NULL) {
   on_missing <- match.arg(on_missing)
   assert_subset(c("dataset", "sample_id"), colnames(x))
   assert_choice(covariate, setdiff(colnames(x), c("sample_id")))
@@ -308,19 +304,19 @@ fdge_model_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 }
 
 #' @export
-#' @rdname fdge_model_def
+#' @rdname flm_def
 #' @importFrom FacileShine unselected
-fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
-                               batch = NULL, on_missing = c("warning", "error"),
-                               ...) {
+flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
+                        batch = NULL, on_missing = c("warning", "error"),
+                        ...) {
   x <- collect(x, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
 
-  fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
-                            denom = denom, batch = batch,
-                            on_missing = on_missing, ...)
+  flm_def.data.frame(x, covariate = covariate, numer = numer,
+                     denom = denom, batch = batch,
+                     on_missing = on_missing, ...)
 }
 
 #' @section facile_frame:
@@ -336,12 +332,11 @@ fdge_model_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #'
 #' @export
 #' @importFrom FacileShine unselected
-#' @rdname fdge_model_def
-fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
-                                        denom = NULL,
-                                        batch = NULL,
-                                        on_missing = c("warning", "error"), ...,
-                                        custom_key = NULL) {
+#' @rdname flm_def
+flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
+                                 batch = NULL,
+                                 on_missing = c("warning", "error"), ...,
+                                 custom_key = NULL) {
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
 
@@ -362,21 +357,19 @@ fdge_model_def.facile_frame <- function(x, covariate, numer = NULL,
 
   x <- collect(x, n = Inf)
 
-  out <- fdge_model_def.data.frame(x, covariate = covariate, numer = numer,
-                                   denom = denom, batch = batch,
-                                   on_missing = on_missing, .fds = .fds, ...)
+  out <- flm_def.data.frame(x, covariate = covariate, numer = numer,
+                            denom = denom, batch = batch,
+                            on_missing = on_missing, .fds = .fds, ...)
   out
 }
 
 #' @export
-#' @rdname fdge_model_def
+#' @rdname flm_def
 #' @importFrom FacileShine unselected
-fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
-                                           denom = NULL, batch = NULL,
-                                           on_missing = c("warning", "error"),
-                                           ...,
-                                           samples = NULL,
-                                           custom_key = NULL) {
+flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
+                                    batch = NULL,
+                                    on_missing = c("warning", "error"),
+                                    ..., samples = NULL, custom_key = NULL) {
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
@@ -384,28 +377,27 @@ fdge_model_def.FacileDataStore <- function(x, covariate, numer = NULL,
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
 
-  fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
-                 batch = batch, on_missing = on_missing,
-                 custom_key = custom_key, ...)
+  flm_def(samples, covariate = covariate, numer = numer, denom = denom,
+          batch = batch, on_missing = on_missing,
+          custom_key = custom_key, ...)
 }
 
 #' @export
-#' @rdname fdge_model_def
+#' @rdname flm_def
 #' @importFrom FacileShine active_samples unselected
-fdge_model_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
-                                                   denom = NULL, batch = NULL,
-                                                   on_missing = c("warning", "error"),
-                                                   ...,
-                                                   samples = active_samples(x),
-                                                   custom_key = user(x)) {
+flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
+                                            denom = NULL, batch = NULL,
+                                            on_missing = c("warning", "error"),
+                                            ..., samples = active_samples(x),
+                                            custom_key = user(x)) {
   samples <- collect(samples, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
 
-  fdge_model_def(samples, covariate = covariate, numer = numer, denom = denom,
-                 batch = batch, on_missing = on_missing,
-                 custom_key = custom_key, ...)
+  flm_def(samples, covariate = covariate, numer = numer, denom = denom,
+          batch = batch, on_missing = on_missing,
+          custom_key = custom_key, ...)
 }
 
 # Accessor Functions ===========================================================

@@ -7,5 +7,5 @@
 model(x, ...)
 }
 \description{
-For a DGE analysis, this is the fdge_model_def object
+For a DGE analysis, this is the flm_def object
 }

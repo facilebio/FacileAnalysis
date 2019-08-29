@@ -56,8 +56,9 @@ specify a \code{group_by} column, like \code{"direction"}, that will be used to 
 the selected features into groups to perform more specific enrichmen tests.
 This allows you enrichment tests to be run separately for \code{"up"} and \code{"down"}
 regulated genes separately, for example. Lastly, the user can provide the
-name of another numeric column in \code{x} used to account for bias in the
-enrichment tests, such as gene length, GC content, etc.
+name of another numeric column in \code{x} with \code{biased_by} which can be used to
+account for bias in the enrichment tests, such as gene length, GC content,
+etc.
 
 Gene sets must be supplied as a \code{\link[multiGSEA:GeneSetDb]{multiGSEA::GeneSetDb()}} object.
 }
@@ -73,11 +74,10 @@ a competitive gene set test based on ranks.
 must specify the name of \code{logical} column (\code{select_by}) from the input
 which is used to indicate the features that are selected for enrichment
 analysis. The user can optionally provide the name of a \code{numeric} column
-(\code{biased_by}) and \code{character} column
-(\code{group_by}), which will adjust the enrichment test for a covariate that
-may induce a bias in the DGE results, and also run follow up enrichment
-tests based by differnt groups of features (\code{group_by}).
-For example, the result table might have a
+(\code{biased_by}) and \code{character} column (\code{group_by}), which will adjust the
+enrichment test for a covariate that may induce a bias in the DGE results,
+and also run follow up enrichment tests based by differnt groups of
+features (\code{group_by}). For example, the result table might have a
 \code{"direction"} column, which specifies the direciton of differential
 expression (\code{"up"}, or \code{"down"}). In this case, enrichment tests will be
 run over \emph{all} features together, and then independantly for the ones that
@@ -124,8 +124,8 @@ efds <- FacileData::exampleFacileDataSet()
 # GSEA from t-test result ---------------------------------------------------
 ttest.res <- efds \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
-  fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", batch = "sex") \%>\%
+  flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+          batch = "sex") \%>\%
   fdge(method = "voom")
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
                     biased_by = "effective_length")
@@ -133,34 +133,23 @@ if (interactive()) {
   shine(ttest.gsea)
 }
 
-mgsea.result <- result(ttest.gsea)
 camera.stats <- tidy(ttest.gsea, "cameraPR")
 enrich.stats <- tidy(ttest.gsea, "enrichtest")
 
 # GSEA from ANOVA result ----------------------------------------------------
-\dontrun{
-# This requires an update in mutiGSEA (to support df inputs) to run
 stage.anova <- efds \%>\%
   FacileData::filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "stage", batch = "sex") \%>\%
+  flm_def(covariate = "stage", batch = "sex") \%>\%
   fdge(method = "voom")
-anova.gsea <- ffsea(stage.anova)
+anova.gsea <- ffsea(stage.anova, gdb)
 if (interactive()) {
  shine(anova.gsea)
 }
-}
-
 # GSEA over loadings on a Principal Component -------------------------------
 pca.crc <- efds \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fpca()
 pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-
-
-# Not yet implemented, need to get a signed weight out of eigenWeightedMean
-# right now we just have weights. Or, fully extracing the biplot code, I
-# think the weight should be the length on the PC of choice, and the sign is
-# the same.
 }
 \seealso{
 https://github.com/lianos/multiGSEA

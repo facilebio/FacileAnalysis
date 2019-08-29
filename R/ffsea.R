@@ -89,8 +89,8 @@
 #' # GSEA from t-test result ---------------------------------------------------
 #' ttest.res <- efds %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
-#'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor", denom = "normal", batch = "sex") %>%
+#'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'           batch = "sex") %>%
 #'   fdge(method = "voom")
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
 #'                     biased_by = "effective_length")
@@ -104,7 +104,7 @@
 #' # GSEA from ANOVA result ----------------------------------------------------
 #' stage.anova <- efds %>%
 #'   FacileData::filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "stage", batch = "sex") %>%
+#'   flm_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.gsea <- ffsea(stage.anova, gdb)
 #' if (interactive()) {

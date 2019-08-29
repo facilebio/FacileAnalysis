@@ -46,7 +46,7 @@ For now, I imagine (gene) set enerichment analyses will be performed over
    
     ```{r, eval=FALSE}
     dge.gsea <- samples %>% 
-      fdge_model_def(covariate = "sample_type", 
+      flm_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
                  batch = "sex") %>% 
       fdge() %>% 

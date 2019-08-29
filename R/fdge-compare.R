@@ -12,10 +12,10 @@
 #'
 #' efds <- exampleFacileDataSet()
 #' dge.crc <- filter_samples(efds, indication == "CRC") %>%
-#'   fdge_model_def("sample_type", "tumor", "normal", "sex") %>%
+#'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.blca <- filter_samples(efds, indication == "BLCA") %>%
-#'   fdge_model_def("sample_type", "tumor", "normal", "sex") %>%
+#'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
 #' if (interactive()) {
@@ -249,8 +249,8 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   }
   contrast. <- glue("( {xcontrast} ) - ( {ycontrast} )")
 
-  imodel <- fdge_model_def(samples., icovariate, batch = ibatch,
-                           contrast. = contrast.)
+  imodel <- flm_def(samples., icovariate, batch = ibatch,
+                    contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 
   fdge(imodel, filter = genes.,

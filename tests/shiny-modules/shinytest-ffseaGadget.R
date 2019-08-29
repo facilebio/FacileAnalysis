@@ -20,14 +20,14 @@ if (FALSE) {
 
 ttest.res <- efds %>%
   FacileData::filter_samples(indication == "CRC") %>%
-  fdge_model_def(covariate = "sample_type",
+  flm_def(covariate = "sample_type",
                  numer = "tumor", denom = "normal", batch = "sex") %>%
   fdge(method = "voom")
 ttest.gsea <- ffseaGadget(ttest.res, gdb)
 
 stage.anova <- efds %>%
   FacileData::filter_samples(indication == "BLCA") %>%
-  fdge_model_def(covariate = "stage", batch = "sex") %>%
+  flm_def(covariate = "stage", batch = "sex") %>%
   fdge(method = "voom")
 anova.gsea <- ffseaGadget(stage.anova, gdb)
 

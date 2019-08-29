@@ -1,9 +1,9 @@
 #' Peform a differential expression analysis.
 #'
-#' Use [fdge_model_def()] to define the design matrix and contrast to test and
+#' Use [flm_def()] to define the design matrix and contrast to test and
 #' pass the `FacileDgeModelDefinition` object returned from that to `fdge()`
 #' to run the desired differential testing framework (dictated by the `method`
-#' parameter) over the data. `fdge_model_def` accepts a
+#' parameter) over the data. `flm_def` accepts a
 #'
 #' @section Differential Expression Testing Methods:
 #' The appropriate statistical framework to use for differential expression
@@ -75,7 +75,7 @@
 #' samples <- FacileData::filter_samples(efds, indication == "BLCA")
 #' samples <- samples %>%
 #'   mutate(something = sample(c("a", "b"), nrow(samples), replace = TRUE))
-#' mdef <- fdge_model_def(samples, covariate = "sample_type",
+#' mdef <- flm_def(samples, covariate = "sample_type",
 #'                        numer = "tumor", denom = "normal",
 #'                        batch = "sex")
 #' dge <- fdge(mdef, method = "voom")
@@ -88,7 +88,7 @@
 #' dge.sig <- signature(dge)
 #'
 #' stage.anova <- samples %>%
-#'   fdge_model_def(covariate = "stage", batch = "sex") %>%
+#'   flm_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
 fdge <- function(x, ...) {

@@ -9,12 +9,12 @@ if (!exists("gdb")) {
 
 ttest.res <- FDS %>%
   FacileData::filter_samples(indication == "CRC") %>%
-  fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", batch = "sex") %>%
+  flm_def(covariate = "sample_type",
+          numer = "tumor", denom = "normal", batch = "sex") %>%
   fdge(method = "voom")
 anova.res <- FDS %>%
   FacileData::filter_samples(indication == "CRC", sample_type == "tumor") %>%
-  fdge_model_def(covariate = "stage", batch = "sex") %>%
+  flm_def(covariate = "stage", batch = "sex") %>%
   fdge(method = "voom")
 
 pca.res <- fpca(samples(anova.res))

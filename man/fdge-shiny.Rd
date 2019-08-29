@@ -28,7 +28,7 @@ minimal input to this analysis is a pre-defined subset of samples to act on.
 These steps are:
 \enumerate{
 \item Model matrix definition. The functionality is provided by the
-\code{\link[=fdge_model_def]{fdge_model_def()}} function, and the shiny interface by the
+\code{\link[=flm_def]{flm_def()}} function, and the shiny interface by the
 \code{\link[=fdgeModelDefRun]{fdgeModelDefRun()}} module.
 \item Differential expression analysis. The functionality is
 defined by the \code{\link[=fdge]{fdge()}} function, and the shiny interface by the

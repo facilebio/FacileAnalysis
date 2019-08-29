@@ -93,9 +93,9 @@ efds <- exampleFacileDataSet()
 samples <- filter_samples(efds, indication == "BLCA")
 
 # Step 2: define the model (design) for the test
-model <- fdge_model_def(samples, covariate = "sample_type",
-                        numer = "tumor", denom = "normal",
-                        fixed = "sex")
+model <- flm_def(samples, covariate = "sample_type",
+                 numer = "tumor", denom = "normal",
+                 fixed = "sex")
 
 # Step 3: configure the options to run the test, which include the assay that
 #         holds the data used to test and the statistical method/framework we

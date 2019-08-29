@@ -40,7 +40,7 @@ efds <- exampleFacileDataSet()
 ```{r blcadge}
 blca.dge <- efds %>% 
   filter_samples(indication == "BLCA") %>% 
-  fdge_model_def(assay_name = "rnaseq", # can run on CNV, proteomics, etc.
+  flm_def(assay_name = "rnaseq", # can run on CNV, proteomics, etc.
                  covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
                  batch = "sex",) %>% 
@@ -59,7 +59,7 @@ report(
 ```{r crcdge}
 crc.dge <- efds %>% 
   filter_samples(indication == "CRC") %>% 
-  fdge_model_def(covariate = "sample_type", 
+  flm_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
                  batch = "sex") %>% 
   fdge(method = "voom", with_sample_weights = TRUE)

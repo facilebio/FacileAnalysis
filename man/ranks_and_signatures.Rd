@@ -32,8 +32,8 @@ testing the differential abundance of a gene across two groups of samples.
 The result of the analysis can induce both a signed and unsigned ranking on
 the genes under test.\preformatted{dge <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "BLCA") \%>\%
-  fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", batch = "sex") \%>\%
+  flm_def(covariate = "sample_type",numer = "tumor", denom = "normal",
+          batch = "sex") \%>\%
   fdge()
 }
 

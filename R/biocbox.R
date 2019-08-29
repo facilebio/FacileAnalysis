@@ -57,7 +57,7 @@ features.BiocBox <- function(x, ...)  {
 }
 
 #' @section Linear Model Definitions:
-#' This function accepts a model defined using using [fdge_model_def()] and
+#' This function accepts a model defined using using [flm_def()] and
 #' creates the appropriate Bioconductor assay container to test the model
 #' given the `assay_name` and dge `method` specified by the user.
 #'

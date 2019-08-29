@@ -1,12 +1,10 @@
-#' A shiny module that generates a linear model definition via `fdge_model_def`.
+#' A shiny module that generates a linear model definition via `flm_def`.
 #'
 #' ```
 #' model_info <- fds %>%
 #'   filter_samples(indication == "BLCA") %>%
-#'   fdge_model_def(covariate = "sample_type",
-#'                  numer = "tumor",
-#'                  denom = "normal",
-#'                  batch = "sex")
+#'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+#'           batch = "sex")
 #' ```
 #'
 #' @export
@@ -20,7 +18,7 @@
 #' @importFrom shinyjs toggleElement
 #' @importFrom shinyWidgets sendSweetAlert
 #' @return A `ReactiveFacileDgeModelDefinition` object, the output from
-#'   [fdge_model_def()].
+#'   [flm_def()].
 fdgeModelDefRun <- function(input, output, session, rfds, ...,
                             debug = FALSE, .reactive = TRUE) {
   isolate. <- if (.reactive) base::identity else shiny::isolate
@@ -83,8 +81,8 @@ fdgeModelDefRun <- function(input, output, session, rfds, ...,
     if (partial || all.dups) {
       out <- NULL
     } else {
-      out <- fdge_model_def(samples., testcov., numer = numer., denom = denom.,
-                            batch = batch.)
+      out <- flm_def(samples., testcov., numer = numer., denom = denom.,
+                     batch = batch.)
     }
     out
   })

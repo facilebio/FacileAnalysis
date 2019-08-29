@@ -44,10 +44,10 @@ to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[li
 (where appropriate) when testing (default is not to).}
 }
 \description{
-Use \code{\link[=fdge_model_def]{fdge_model_def()}} to define the design matrix and contrast to test and
+Use \code{\link[=flm_def]{flm_def()}} to define the design matrix and contrast to test and
 pass the \code{FacileDgeModelDefinition} object returned from that to \code{fdge()}
 to run the desired differential testing framework (dictated by the \code{method}
-parameter) over the data. \code{fdge_model_def} accepts a
+parameter) over the data. \code{flm_def} accepts a
 }
 \section{Comapring DGE Results}{
 
@@ -131,10 +131,10 @@ enumerated here (that were assayed) will be included in the analysis.
 
 efds <- exampleFacileDataSet()
 dge.crc <- filter_samples(efds, indication == "CRC") \%>\%
-  fdge_model_def("sample_type", "tumor", "normal", "sex") \%>\%
+  flm_def("sample_type", "tumor", "normal", "sex") \%>\%
   fdge()
 dge.blca <- filter_samples(efds, indication == "BLCA") \%>\%
-  fdge_model_def("sample_type", "tumor", "normal", "sex") \%>\%
+  flm_def("sample_type", "tumor", "normal", "sex") \%>\%
   fdge()
 dge.comp <- compare(dge.crc, dge.blca)
 if (interactive()) {
@@ -143,8 +143,11 @@ if (interactive()) {
 }
 efds <- FacileData::exampleFacileDataSet()
 samples <- FacileData::filter_samples(efds, indication == "BLCA")
-mdef <- fdge_model_def(samples, covariate = "sample_type",
-                       numer = "tumor", denom = "normal", batch = "sex")
+samples <- samples \%>\%
+  mutate(something = sample(c("a", "b"), nrow(samples), replace = TRUE))
+mdef <- flm_def(samples, covariate = "sample_type",
+                       numer = "tumor", denom = "normal",
+                       batch = "sex")
 dge <- fdge(mdef, method = "voom")
 if (interactive()) {
   viz(dge)
@@ -155,7 +158,7 @@ dge.stats <- tidy(dge)
 dge.sig <- signature(dge)
 
 stage.anova <- samples \%>\%
-  fdge_model_def(covariate = "stage", batch = "sex") \%>\%
+  flm_def(covariate = "stage", batch = "sex") \%>\%
   fdge(method = "voom")
 anova.sig <- signature(stage.anova)
 }

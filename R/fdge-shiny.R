@@ -10,7 +10,7 @@
 #' These steps are:
 #'
 #' 1. Model matrix definition. The functionality is provided by the
-#'    [fdge_model_def()] function, and the shiny interface by the
+#'    [flm_def()] function, and the shiny interface by the
 #'    [fdgeModelDefRun()] module.
 #' 2. Differential expression analysis. The functionality is
 #'    defined by the [fdge()] function, and the shiny interface by the
@@ -137,7 +137,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #'   unselected
 #' @param model A linear model definition. Can be either an "innert"
 #'   `FacileDgeModelDefinition` that is returned from a call to
-#'   [fdge_model_def()], or the `ReactiveDGEModelDefinition` object returned
+#'   [flm_def()], or the `ReactiveDGEModelDefinition` object returned
 #'   from the [fdgeModelDefRun()] module.
 #' @param with_gsea Include option to run a GSEA?
 #' @param ... passed into [fdge()]

@@ -41,8 +41,8 @@ that extract and invokes the function.
 gdb <- multiGSEA::exampleGeneSetDb()
 dge.crc <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
-  fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", batch = "sex") \%>\%
+  flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
+          batch = "sex") \%>\%
   fdge(method = "voom")
 if (interactive()) {
   ffseaGadget(dge.crc, gdb)
