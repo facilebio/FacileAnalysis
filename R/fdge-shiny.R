@@ -393,15 +393,16 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     out
   })
 
+  # Keeps track of whether or not the model and fdge result used a "batch" term.
+  # and shows/hides the UI element to view batch-corrected expression data
+  # accordingly
   observe({
     mod <- req(model.())
-    test.covariate <- param(mod, "covariate")
     batch <- param(mod, "batch")
     enabled <- !is.null(batch)
     if (!enabled) {
       updateSwitchInput(session, "batch_correct", value = FALSE)
     }
-    # toggleElement("batch_correct", condition = enabled)
     toggleElement("batch_correct_container", condition = enabled)
   })
 

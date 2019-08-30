@@ -91,7 +91,7 @@
 #'   flm_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
-fdge <- function(x, ...) {
+fdge <- function(x, ..., verbose = FALSE) {
   UseMethod("fdge", x)
 }
 
@@ -99,7 +99,8 @@ fdge <- function(x, ...) {
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                             filter = "default",
-                                            with_sample_weights = FALSE, ...) {
+                                            with_sample_weights = FALSE, ...,
+                                            verbose = FALSE) {
   res <- NextMethod(coef = x$coef)
   res
 }
@@ -110,7 +111,7 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                filter = "default",
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
-                                               ...) {
+                                               ..., verbose = FALSE) {
   res <- NextMethod(contrast = x$contrast)
   res
 }
@@ -123,7 +124,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
                                              filter = "default",
                                              with_sample_weights = FALSE,
                                              treat_lfc = NULL,
-                                             ...) {
+                                             ..., verbose = FALSE) {
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -155,6 +156,9 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
   }
 
   if (length(errors) == 0L) {
+    if (verbose) {
+      message("... retrieving expression data")
+    }
     bb <- biocbox(x, assay_name, method, dge_methods, filter,
                   with_sample_weights = with_sample_weights, ...)
     messages <- c(messages, bb[["messages"]])
@@ -176,6 +180,10 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
     use.treat <- treat_lfc > 0
     y <- result(bb)
     des <- design(bb)
+
+    if (verbose) {
+      message("... running differential expression analysis")
+    }
     result <- calculateIndividualLogFC(y, des, contrast = testme,
                                        treat.lfc = treat_lfc)
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by

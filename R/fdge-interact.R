@@ -25,6 +25,7 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
 #' for the gene(s) requested in the funciton call.
 #'
 #' @noRd
+#' @export
 viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
                                           highlight = NULL,
                                           round_digits = 3, event_source = "A",

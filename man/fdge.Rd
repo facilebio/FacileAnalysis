@@ -15,15 +15,15 @@
   features = NULL, round_digits = 3, event_source = "A",
   webgl = TRUE, caption = NULL, ...)
 
-fdge(x, ...)
+fdge(x, ..., verbose = FALSE)
 
 \method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", with_sample_weights = FALSE,
-  ...)
+  ..., verbose = FALSE)
 
 \method{fdge}{FacileLinearModelDefinition}(x, assay_name = NULL,
   method = NULL, filter = "default", with_sample_weights = FALSE,
-  treat_lfc = NULL, ...)
+  treat_lfc = NULL, ..., verbose = FALSE)
 }
 \arguments{
 \item{x}{a data source}
