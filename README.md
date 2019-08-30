@@ -67,11 +67,11 @@ We have first defined a complete differential expression analysis
 1.  identifying the subset of samples from a `FacileDataStore` to
     perform the analysis over;
 2.  defining the model (design) over the samples, ie. the covariate to
-    test and which covariates to used for fixed/batch effects
+    test and which covariates to use to control batch effects
 3.  defining the parameters to run the statistical test, ie.
     1)  the assay from the samples to run the analysis on
-    2)  the differential expression pipeline to use (limma, limma-trend,
-        voom ,etc)
+    2)  the differential expression pipeline to use (`"voom"`,
+        `"edgeR-qlf"`, `"limma-trend"`, `"limma"`)
     3)  advanced options, like the threshold to test against
         (limma/treat), or whether to incorporate sample level weights
 
@@ -89,9 +89,9 @@ efds <- exampleFacileDataSet()
 samples <- filter_samples(efds, indication == "BLCA")
 
 # Step 2: define the model (design) for the test
-model <- fdge_model_def(samples, covariate = "sample_type",
-                        numer = "tumor", denom = "normal",
-                        fixed = "sex")
+model <- flm_def(samples, covariate = "sample_type",
+                 numer = "tumor", denom = "normal",
+                 batch = "sex")
 
 # Step 3: configure the options to run the test, which include the assay that
 #         holds the data used to test and the statistical method/framework we
@@ -209,10 +209,10 @@ should do the trick, however if you need to install them indivdiually,
 do so in this order:
 
 ``` r
-devtools::install_github("denalitherapeutics/FacileData")
-devtools::install_github("denalitherapeutics/FacileViz")
-devtools::install_github("denalitherapeutics/FacileShine")
-devtools::install_github("denalitherapeutics/FacileAnalysis")
+devtools::install_github("facileverse/FacileData")
+devtools::install_github("facileverse/FacileViz")
+devtools::install_github("facileverse/FacileShine")
+devtools::install_github("facileverse/FacileAnalysis")
 ```
 
 ## Resources
