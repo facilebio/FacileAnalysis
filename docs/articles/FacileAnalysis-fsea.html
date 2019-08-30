@@ -30,7 +30,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -56,6 +56,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
+    <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
     <li>
@@ -82,7 +85,7 @@
       <h1>Facile (Gene) Set Expression Analysis</h1>
                         <h4 class="author">Steve Lianoglou</h4>
             
-            <h4 class="date">2019-06-27</h4>
+            <h4 class="date">2019-08-29</h4>
       
       
       <div class="hidden name"><code>FacileAnalysis-fsea.Rmd</code></div>
@@ -92,6 +95,8 @@
     
     
 <p><strong>Under Construction</strong></p>
+<p>The facile feature set enrichment analysis leans on the multiGSEA framework for running GSEA methods, as well as providing gene set collections via <code><a href="https://www.rdocumentation.org/packages/multiGSEA/topics/GeneSetDb-class">multiGSEA::GeneSetDb</a></code> objects.</p>
+<p>This vignette assumes that you’ve got a <code>GeneSetDb</code> object in hand named <code>gdb</code>.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(FacileData)</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(FacileAnalysis)</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3">samples &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/FacileData/topics/exampleFacileDataSet">exampleFacileDataSet</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
@@ -105,17 +110,17 @@
 </ul>
 <p>or some combination of the two.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">dge.gsea &lt;-<span class="st"> </span>samples <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="../reference/fdge_model_def.html">fdge_model_def</a></span>(<span class="dt">covariate =</span> <span class="st">"sample_type"</span>, </a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="../reference/flm_def.html">flm_def</a></span>(<span class="dt">covariate =</span> <span class="st">"sample_type"</span>, </a>
 <a class="sourceLine" id="cb2-3" data-line-number="3">             <span class="dt">numer =</span> <span class="st">"tumor"</span>, <span class="dt">denom =</span> <span class="st">"normal"</span>,</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">             <span class="dt">fixed =</span> <span class="st">"sex"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">             <span class="dt">batch =</span> <span class="st">"sex"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb2-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/fdge.html">fdge</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="../reference/fsea.html">fsea</a></span>(<span class="dt">method =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"cameraPR"</span>, <span class="st">"goseq"</span>, <span class="dt">rank_by =</span> <span class="st">"t"</span>))</a></code></pre></div>
+<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="../reference/ffsea.html">ffsea</a></span>(gdb, <span class="dt">pc =</span> <span class="dv">1</span>, <span class="dt">method =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"cameraPR"</span>, <span class="st">"goseq"</span>, <span class="dt">rank_by =</span> <span class="st">"t"</span>))</a></code></pre></div>
 </li>
 <li>
 <p>The “highly loaded” genes from the first prinicpal component of a principal components analysis (<code>fpca</code>). Deafult GSEA methods are set for each analysis result type, too, if you don’t want to specify them.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">pc1.gsea &lt;-<span class="st"> </span>samples <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb3-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="../reference/fpca.html">fpca</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/fsea.html">fsea</a></span>(<span class="dt">pc =</span> <span class="dv">1</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/ffsea.html">ffsea</a></span>(gdb, <span class="dt">pc =</span> <span class="dv">1</span>)</a></code></pre></div>
 </li>
 </ol>
 <p>In the immediate term, the GSEA functionality will lean heavily on the multiGSEA package, including the bits that enable interactivity over the results (ie. the multiGSEA.shiny package).</p>

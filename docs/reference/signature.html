@@ -65,7 +65,7 @@ insipiration strike." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -90,6 +90,9 @@ insipiration strike." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -162,7 +165,7 @@ sigs2 &lt;- FacileData::exampleFacileDataSet() %&gt;%
     <pre class="examples"><div class='input'><span class='no'>pca.sigs</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/FacileData/topics/exampleFacileDataSet'>exampleFacileDataSet</a></span>() <span class='kw'>%&gt;%</span>
   <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='fpca.html'>fpca</a></span>() <span class='kw'>%&gt;%</span>
-  <span class='fu'>signature</span>()</div><div class='output co'>#&gt; <span class='error'>Error in signature.FacilePCAFeatureRankings(ranks(x, type = type, signed = signed),     pcs = pcs, ntop = ntop, ...): object 'signed' not found</span></div></pre>
+  <span class='fu'>signature</span>()</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

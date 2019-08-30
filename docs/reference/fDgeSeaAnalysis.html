@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A table of assay_type,dge_method combination parameters — fdge_methods • FacileAnalysis</title>
+<title>An analysis module that combines differential expression with GESA. — fDgeSeaAnalysis • FacileAnalysis</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,11 +30,10 @@
 
 
 
-<meta property="og:title" content="A table of assay_type,dge_method combination parameters — fdge_methods" />
+<meta property="og:title" content="An analysis module that combines differential expression with GESA. — fDgeSeaAnalysis" />
 
-<meta property="og:description" content="This table is used to match the assay_type,dge_method combination with
-the appropriate bioc container class bioc_class, and default edgeR/limma
-model fitting params." />
+<meta property="og:description" content="This module enables the interactive configuration and execution of
+&quot;paired&quot; differential expression and feature set enrichment." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -120,46 +119,49 @@ model fitting params." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A table of assay_type,dge_method combination parameters</h1>
+    <h1>An analysis module that combines differential expression with GESA.</h1>
     
-    <div class="hidden name"><code>fdge_methods.Rd</code></div>
+    <div class="hidden name"><code>fDgeSeaAnalysis.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This table is used to match the assay_type,dge_method combination with
-the appropriate bioc container class <code>bioc_class</code>, and default edgeR/limma
-model fitting params.</p>
+    <p>This module enables the interactive configuration and execution of
+"paired" differential expression and feature set enrichment.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>fdge_methods</span>(<span class='kw'>assay_type</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"error"</span>, <span class='st'>"warning"</span>))</pre>
-    
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>assay_type</th>
-      <td><p>An optional string specifying the valid dge methods for
-a given assay type.</p></td>
-    </tr>
-    </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <pre class="usage"><span class='fu'>fDgeSeaAnalysis</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+        
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>A tibble of assay_type -&gt; method and parameter associtiations. If
-<code>assay_type</code>is not <code>NULL</code>, this will be filtered to the associations
-valid only for that <code>assay_type</code>. If none are found, this will be a
-0-row tibble.</p>
+    <p>Although the focus of the analysis workflow in this package is based on
+singular units of analysis, there are times like this where we almost always
+want to perform two anlayses together, differential expression and GSEA
+on the same contrast. This shiny-module presents an interface to both.</p>
+    
+    <h2 class="hasAnchor" id="development-thouts"><a class="anchor" href="#development-thouts"></a>Development Thouts</h2>
+
+    
+    <p>This also gives us the opportunity to exercise different methods of
+interaction between independant analysis results. In the DGE and GSEA
+scenario, for instance, we might want the linked brushing that happens within
+the <code>fdge</code> volcano to do a "significant gene set search" in the fgsea result.</p>
+<p>More specifically, maybe the volcano plot in the <code>dge_view</code> module should
+be able to broadcast the feature brushing in such a way that the "listener"
+in the <code>ffsea_vew</code> module can react to it. Similarly for the <code>ffsea_vew</code>
+module should be able to broadcast the features that are brushed within
+it to the <code>dge_vew</code> volcano and statistics tables ... or not?</p>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
+      <li><a href="#details">Details</a></li>
+
+      <li><a href="#development-thouts">Development Thouts</a></li>
           </ul>
 
   </div>

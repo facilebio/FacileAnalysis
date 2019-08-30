@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A table of assay_type,dge_method combination parameters — fdge_methods • FacileAnalysis</title>
+<title>Full interactive executation of GSEA, soup to nuts. — ffseaGadget • FacileAnalysis</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,11 +30,11 @@
 
 
 
-<meta property="og:title" content="A table of assay_type,dge_method combination parameters — fdge_methods" />
+<meta property="og:title" content="Full interactive executation of GSEA, soup to nuts. — ffseaGadget" />
 
-<meta property="og:description" content="This table is used to match the assay_type,dge_method combination with
-the appropriate bioc container class bioc_class, and default edgeR/limma
-model fitting params." />
+<meta property="og:description" content="For now, feature set enrichment analysis are only performed downstream of
+a FacileAnalysisResult. This requires that we have an ffsea method defined
+for the specific class of the result, ie. ffsea.FacilePcaAnalysisResult." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -120,47 +120,79 @@ model fitting params." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A table of assay_type,dge_method combination parameters</h1>
+    <h1>Full interactive executation of GSEA, soup to nuts.</h1>
     
-    <div class="hidden name"><code>fdge_methods.Rd</code></div>
+    <div class="hidden name"><code>interactive-ffsea.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This table is used to match the assay_type,dge_method combination with
-the appropriate bioc container class <code>bioc_class</code>, and default edgeR/limma
-model fitting params.</p>
+    <p>For now, feature set enrichment analysis are only performed downstream of
+a <code>FacileAnalysisResult</code>. This requires that we have an ffsea method defined
+for the specific class of the result, ie. <code>ffsea.FacilePcaAnalysisResult</code>.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>fdge_methods</span>(<span class='kw'>assay_type</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"error"</span>, <span class='st'>"warning"</span>))</pre>
+    <pre class="usage"><span class='fu'>ffseaGadget</span>(<span class='no'>x</span>, <span class='no'>gdb</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Feature Set Enrichment Analysis"</span>,
+  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>, <span class='no'>...</span>,
+  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+
+<span class='fu'>ffseaRun</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>aresult</span>, <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>,
+  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>assay_type</th>
-      <td><p>An optional string specifying the valid dge methods for
-a given assay type.</p></td>
+      <th>x</th>
+      <td><p>A FacileAnalysisResult that has an implemented <code>ffsea.*</code> method</p></td>
+    </tr>
+    <tr>
+      <th>gdb</th>
+      <td><p>A <code>GeneSetDb</code> to use for the FSEA.</p></td>
+    </tr>
+    <tr>
+      <th>aresult</th>
+      <td><p>A <code>FacileAnalysisResult</code> that has a <code>ffsea.*</code> method defined.</p></td>
+    </tr>
+    <tr>
+      <th>gdb</th>
+      <td><p>A GeneSetDb object to use for testing.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="custom-run-configuration"><a class="anchor" href="#custom-run-configuration"></a>Custom Run Configuration</h2>
 
-    <p>A tibble of assay_type -&gt; method and parameter associtiations. If
-<code>assay_type</code>is not <code>NULL</code>, this will be filtered to the associations
-valid only for that <code>assay_type</code>. If none are found, this will be a
-0-row tibble.</p>
+    
+    <p>The options presented to the user for running a feature set enrichment
+analysis on a <code>FacilePcaAnalysisResult</code> will be different than the ones
+made available for an enrichment analysis over a <code>FacileTtestAnalysisResult</code>
+or even a <code>FacileAnovaAnalysisResult</code>.</p>
+<p>As such, each type of result should define a UI that accepts the appropriate
+parameters for its corresponding <code>ffsea.*</code> method, and a server function
+that extract and invokes the function.</p>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='no'>gdb</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>multiGSEA</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/multiGSEA/topics/examples'>exampleGeneSetDb</a></span>()
+<span class='no'>dge.crc</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/FacileData/topics/exampleFacileDataSet'>exampleFacileDataSet</a></span>() <span class='kw'>%&gt;%</span>
+  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
+          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='fdge.html'>fdge</a></span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"voom"</span>)
+<span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
+  <span class='fu'>ffseaGadget</span>(<span class='no'>dge.crc</span>, <span class='no'>gdb</span>)
+}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
-          </ul>
+      <li><a href="#custom-run-configuration">Custom Run Configuration</a></li>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
   </div>
 </div>

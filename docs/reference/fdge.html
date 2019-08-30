@@ -32,10 +32,10 @@
 
 <meta property="og:title" content="Peform a differential expression analysis. — compare.FacileTtestAnalysisResult" />
 
-<meta property="og:description" content="Use fdge_model_def() to define the design matrix and contrast to test and
-pass the FacileDgeModelDefinition object returned from that to fdge()
+<meta property="og:description" content="Use flm_def() to define the design matrix and contrast to test and
+pass the FacileLinearModelDefinition object returned from that to fdge()
 to run the desired differential testing framework (dictated by the method
-parameter) over the data. fdge_model_def accepts a" />
+parameter) over the data. flm_def accepts a" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -66,7 +66,7 @@ parameter) over the data. fdge_model_def accepts a" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -91,6 +91,9 @@ parameter) over the data. fdge_model_def accepts a" />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -125,10 +128,10 @@ parameter) over the data. fdge_model_def accepts a" />
 
     <div class="ref-description">
     
-    <p>Use <code><a href='fdge_model_def.html'>fdge_model_def()</a></code> to define the design matrix and contrast to test and
-pass the <code>FacileDgeModelDefinition</code> object returned from that to <code>fdge()</code>
+    <p>Use <code><a href='flm_def.html'>flm_def()</a></code> to define the design matrix and contrast to test and
+pass the <code>FacileLinearModelDefinition</code> object returned from that to <code>fdge()</code>
 to run the desired differential testing framework (dictated by the <code>method</code>
-parameter) over the data. <code>fdge_model_def</code> accepts a</p>
+parameter) over the data. <code>flm_def</code> accepts a</p>
     
     </div>
 
@@ -141,17 +144,17 @@ parameter) over the data. <code>fdge_model_def</code> accepts a</p>
   <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>round_digits</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>event_source</span> <span class='kw'>=</span> <span class='st'>"A"</span>,
   <span class='kw'>webgl</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>caption</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
 
-<span class='fu'>fdge</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+<span class='fu'>fdge</span>(<span class='no'>x</span>, <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
 <span class='co'># S3 method for FacileAnovaModelDefinition</span>
 <span class='fu'>fdge</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>, <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='no'>...</span>)
+  <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-<span class='co'># S3 method for FacileDgeModelDefinition</span>
+<span class='co'># S3 method for FacileLinearModelDefinition</span>
 <span class='fu'>fdge</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>, <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>treat_lfc</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+  <span class='kw'>treat_lfc</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -188,7 +191,9 @@ to use <code><a href='https://www.rdocumentation.org/packages/limma/topics/array
     <h2 class="hasAnchor" id="comapring-dge-results"><a class="anchor" href="#comapring-dge-results"></a>Comapring DGE Results</h2>
 
     
-    <p>We can compare two Ttest results</p>
+    <p>We can compare two Ttest results.</p>
+<p>The filtering strategy in the interaction model dictates that the union
+of all features found in <code>x</code> are <code>y</code> are used in the test.</p>
     
     <h2 class="hasAnchor" id="interacting-with-results"><a class="anchor" href="#interacting-with-results"></a>Interacting with results</h2>
 
@@ -220,33 +225,68 @@ mean, uses  <code>lima::arrayWeights()</code> when <code>with_sample_weights = T
 <code>lima::arrayWeights()</code> when <code>with_sample_weights = TRUE</code></p></li>
 </ul>
     
+    <h2 class="hasAnchor" id="feature-filtering-strategy"><a class="anchor" href="#feature-filtering-strategy"></a>Feature Filtering Strategy</h2>
+
+    
+    <p>You will almost always want to filter out lowly abundant features before
+performing differential expression analysis. For this reason, when the
+<code>filter</code> parameter is set to <code>"default"</code>, the filtering strategy is largely
+is largely based on the logic found in <code><a href='https://www.rdocumentation.org/packages/edgeR/topics/filterByExpr'>edgeR::filterByExpr()</a></code>.</p>
+<p>When <code>fdge</code> analysis is perfomd on count data, the filtering is precisely
+perfomed by this function, using <code><a href='design.html'>design(x)</a></code> as the design paratmer to
+<code>filterByExpr</code>. You can modify the filtering behavior by passing any
+named parameters found in the <code><a href='https://www.rdocumentation.org/packages/edgeR/topics/filterByExpr'>edgeR::filterByExpr()</a></code> function down to it via
+<code>fdge</code>'s <code>...</code> parameter (don't pass <code>design</code>, as this is already defined).</p>
+<p>There are times when you want to tweak this behavior in ways that aren't
+exactly supported by <code>filterByExpr</code>. You can pass in a "feature descriptor"
+(a character vector of feature ids, or a data.frame with a "feature_id"
+column) into the following parameters:</p><ul>
+<li><p><code>filter_universe</code>: The features enumerated in this parameter will restrict
+the universe of features that can potentially be included in the downstream
+analysis. The <code>filterByExpr()</code> logic will happen downstream of this
+universe. The default value is <code>NULL</code>, which specifies the universe of
+features to be all of the ones measured using this assay.</p></li>
+<li><p><code>filter_require</code>: The <code>filterByExpr</code> logic happens first on the universe
+of features as parameterized. All features enumerated here will be forcibly
+included in the analysis, regardless of their expression levels. The
+defalut value is <code>NULL</code>, which means no genes will be "recovered" if they
+don't pass "filter muster".</p></li>
+<li><p><code>filter</code>: If a feature descriptor is provided here, then only the features
+enumerated here (that were assayed) will be included in the analysis.</p></li>
+</ul>
+    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Comparing two T-test results ----------------------------------------------</span>
 <span class='co'># Let's compare the tumor vs normal DGE results in CRC vs BLCA</span>
 
 <span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='fu'>exampleFacileDataSet</span>()</div><div class='output co'>#&gt; <span class='error'>Error in exampleFacileDataSet(): could not find function "exampleFacileDataSet"</span></div><div class='input'><span class='no'>dge.crc</span> <span class='kw'>&lt;-</span> <span class='fu'>filter_samples</span>(<span class='no'>efds</span>, <span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'><a href='fdge_model_def.html'>fdge_model_def</a></span>(<span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fdge</span>()</div><div class='output co'>#&gt; <span class='error'>Error in filter_samples(efds, indication == "CRC"): could not find function "filter_samples"</span></div><div class='input'><span class='no'>dge.blca</span> <span class='kw'>&lt;-</span> <span class='fu'>filter_samples</span>(<span class='no'>efds</span>, <span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'><a href='fdge_model_def.html'>fdge_model_def</a></span>(<span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fdge</span>()</div><div class='output co'>#&gt; <span class='error'>Error in filter_samples(efds, indication == "BLCA"): could not find function "filter_samples"</span></div><div class='input'><span class='no'>dge.comp</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>dge.crc</span>, <span class='no'>dge.blca</span>)</div><div class='output co'>#&gt; <span class='error'>Error in compare(dge.crc, dge.blca): object 'dge.crc' not found</span></div><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
   <span class='fu'><a href='FacileAnalysisResultViz.html'>report</a></span>(<span class='no'>dge.comp</span>)
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>dge.comp</span>)
 }
 <span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/FacileData/topics/exampleFacileDataSet'>exampleFacileDataSet</a></span>()
 <span class='no'>samples</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>efds</span>, <span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>)
-<span class='no'>mdef</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fdge_model_def.html'>fdge_model_def</a></span>(<span class='no'>samples</span>, <span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>,
-                       <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>, <span class='kw'>fixed</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
+<span class='no'>samples</span> <span class='kw'>&lt;-</span> <span class='no'>samples</span> <span class='kw'>%&gt;%</span>
+  <span class='fu'>mutate</span>(<span class='kw'>something</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/sample'>sample</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"a"</span>, <span class='st'>"b"</span>), <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/nrow'>nrow</a></span>(<span class='no'>samples</span>), <span class='kw'>replace</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>))</div><div class='output co'>#&gt; <span class='error'>Error in mutate(., something = sample(c("a", "b"), nrow(samples), replace = TRUE)): could not find function "mutate"</span></div><div class='input'><span class='no'>mdef</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='no'>samples</span>, <span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>,
+                       <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
+                       <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
 <span class='no'>dge</span> <span class='kw'>&lt;-</span> <span class='fu'>fdge</span>(<span class='no'>mdef</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"voom"</span>)
-<span class='no'>dge.sig</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>dge</span>)</div><div class='output co'>#&gt; <span class='error'>Error in UseMethod("signature", x): no applicable method for 'signature' applied to an object of class "c('Facile%sFeatureRanks%s', 'FacileFeatureRanks', 'FacileAnalysisResult')"</span></div><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
+<span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
   <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>dge</span>)
+  <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>dge</span>, <span class='st'>"146909"</span>)
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>dge</span>)
 }
+<span class='no'>dge.stats</span> <span class='kw'>&lt;-</span> <span class='fu'>tidy</span>(<span class='no'>dge</span>)
+<span class='no'>dge.sig</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>dge</span>)
 
 <span class='no'>stage.anova</span> <span class='kw'>&lt;-</span> <span class='no'>samples</span> <span class='kw'>%&gt;%</span>
-  <span class='fu'><a href='fdge_model_def.html'>fdge_model_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"stage"</span>, <span class='kw'>fixed</span> <span class='kw'>=</span> <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"stage"</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fdge</span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"voom"</span>)
-<span class='no'>anova.sig</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>stage.anova</span>)</div><div class='output co'>#&gt; <span class='error'>Error in UseMethod("signature", x): no applicable method for 'signature' applied to an object of class "c('Facile%sFeatureRanks%s', 'FacileFeatureRanks', 'FacileAnalysisResult')"</span></div></pre>
+<span class='no'>anova.sig</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>stage.anova</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -258,6 +298,8 @@ mean, uses  <code>lima::arrayWeights()</code> when <code>with_sample_weights = T
       <li><a href="#interacting-with-results">Interacting with results</a></li>
 
       <li><a href="#differential-expression-testing-methods">Differential Expression Testing Methods</a></li>
+
+      <li><a href="#feature-filtering-strategy">Feature Filtering Strategy</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

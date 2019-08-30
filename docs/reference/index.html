@@ -60,7 +60,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -85,6 +85,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -169,10 +172,28 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="dot-data_dge_feature.html">.data_dge_feature()</a></code> </p>
+        </td>
+        <td><p>Extracts expresson data for a feature across the samples use for the test.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="dot-viz_ttest_scatter.html">.viz_ttest_scatter()</a></code> </p>
+        </td>
+        <td><p>Visualize the "global" scatter plot downstream of a DGE analysis, ie. the
+volcano or MA plot.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fDgeSeaAnalysis.html">fDgeSeaAnalysis()</a></code> </p>
+        </td>
+        <td><p>An analysis module that combines differential expression with GESA.</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="faro.html">faro()</a></code> </p>
         </td>
-        <td><p>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-ReactiveFacileAnalysis</p></td>
+        <td><p>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.</p></td>
       </tr><tr>
         
         <td>
@@ -185,12 +206,6 @@ ReactiveFacileAnalysis</p></td>
           <p><code><a href="fdge.html">compare(<i>&lt;FacileTtestAnalysisResult&gt;</i>)</a></code> <code><a href="fdge.html">report(<i>&lt;FacileTtestAnalysisResult&gt;</i>)</a></code> <code><a href="fdge.html">fdge()</a></code> </p>
         </td>
         <td><p>Peform a differential expression analysis.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="fdgeModelDefRun.html">fdgeModelDefRun()</a></code> </p>
-        </td>
-        <td><p>A shiny module that generates a linear model definition via <code>fdge_model_def</code>.</p></td>
       </tr><tr>
         
         <td>
@@ -212,7 +227,32 @@ ReactiveFacileAnalysis</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="fdge_model_def.html">fdge_model_def()</a></code> </p>
+          <p><code><a href="fdgeseaGadget.html">fdgeseaGadget()</a></code> </p>
+        </td>
+        <td><p>Gadget to run both DGE and GSEA</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="ffsea.html">ffsea()</a></code> <code><a href="ffsea.html">result(<i>&lt;FacileFseaAnalysisResult&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Performs Feature (Gene) Set Enrichment Analyses</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="ffsea_methods.html">ffsea_methods()</a></code> </p>
+        </td>
+        <td><p>Returns the types of featureset enrichment methods available over different
+types of results.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="flmDefRun.html">flmDefRun()</a></code> </p>
+        </td>
+        <td><p>A shiny module that generates a linear model definition via <code>flm_def</code>.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="flm_def.html">flm_def()</a></code> </p>
         </td>
         <td><p>Builds (simple) design and contrast matrices for use with <code>fdge()</code></p></td>
       </tr><tr>
@@ -244,13 +284,7 @@ ReactiveFacileAnalysis</p></td>
         <td>
           <p><code><a href="frunGadget.html">frunGadget()</a></code> </p>
         </td>
-        <td><p>Wraps FacileAnalysis modules into a gadget.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="fsea.html">fsea()</a></code> </p>
-        </td>
-        <td><p>Performs Gene Set Enrichment Analyses</p></td>
+        <td><p>Support harness to initialize and launch a shiny gadget over a facile object.</p></td>
       </tr><tr>
         
         <td>
@@ -260,9 +294,15 @@ ReactiveFacileAnalysis</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="hello.html">hello()</a></code> </p>
+          <p><code><a href="interacted.html">interacted()</a></code> </p>
         </td>
-        <td><p>Hello, World!</p></td>
+        <td><p>Extracts interactions over an object that happened in a gadget</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="interactive-ffsea.html">ffseaGadget()</a></code> <code><a href="interactive-ffsea.html">ffseaRun()</a></code> </p>
+        </td>
+        <td><p>Full interactive executation of GSEA, soup to nuts.</p></td>
       </tr><tr>
         
         <td>
@@ -274,7 +314,7 @@ ReactiveFacileAnalysis</p></td>
         <td>
           <p><code><a href="param.html">param()</a></code> </p>
         </td>
-        <td><p>Extract the value of a parameter used in a FacileAnalysis result</p></td>
+        <td><p>Extract the value of a parameter(s) used in a FacileAnalysis result</p></td>
       </tr><tr>
         
         <td>
@@ -287,6 +327,12 @@ ReactiveFacileAnalysis</p></td>
           <p><code><a href="signature.html">signature()</a></code> </p>
         </td>
         <td><p>Converts an analysis result into a "signature" type of thing.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="signed.html">signed()</a></code> </p>
+        </td>
+        <td><p>Are these results (ranks, signatures) signed?</p></td>
       </tr><tr>
         
         <td>

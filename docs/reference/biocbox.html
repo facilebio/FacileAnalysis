@@ -65,7 +65,7 @@ from a result of something generated within some FacileAnalysis." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -90,6 +90,9 @@ from a result of something generated within some FacileAnalysis." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -132,7 +135,7 @@ from a result of something generated within some FacileAnalysis.</p>
 
     <pre class="usage"><span class='fu'>biocbox</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='co'># S3 method for FacileDgeModelDefinition</span>
+<span class='co'># S3 method for FacileLinearModelDefinition</span>
 <span class='fu'>biocbox</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dge_methods</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
   <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>prior_count</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
@@ -199,7 +202,7 @@ to test the model in <code>mdef</code>.</p>
     <h2 class="hasAnchor" id="linear-model-definitions"><a class="anchor" href="#linear-model-definitions"></a>Linear Model Definitions</h2>
 
     
-    <p>This function accepts a model defined using using <code><a href='fdge_model_def.html'>fdge_model_def()</a></code> and
+    <p>This function accepts a model defined using using <code><a href='flm_def.html'>flm_def()</a></code> and
 creates the appropriate Bioconductor assay container to test the model
 given the <code>assay_name</code> and dge <code>method</code> specified by the user.</p>
 <p>This function currently supports retrieving data and whipping it into
@@ -212,6 +215,7 @@ with one form limma or another.</p>
 then differentially tested using the limma-trended pipeline</p></li>
 </ul>
     <p>TODO: support affymrna, affymirna, etc. assay types</p>
+<p>The "filter" parameters are described in the <code><a href='fdge.html'>fdge()</a></code> function for now.</p>
     
     <h2 class="hasAnchor" id="faciledgeanalysisresult"><a class="anchor" href="#faciledgeanalysisresult"></a>FacileDgeAnalysisResult</h2>
 

@@ -63,7 +63,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -88,6 +88,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -126,17 +129,17 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>pcs</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+    <pre class="usage"><span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for facile_frame</span>
-<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>pcs</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>,
+<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>,
   <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/Sys.getenv'>Sys.getenv</a></span>(<span class='st'>"USER"</span>), <span class='no'>...</span>)
 
 <span class='co'># S3 method for matrix</span>
-<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>pcs</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>pcs</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>, <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>dims</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>, <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>scale.</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -188,9 +191,10 @@ covariates, then the manually provided ones will supersede the internals.</p>
 }
 
 <span class='no'>pca.gdb</span> <span class='kw'>&lt;-</span> <span class='no'>pca.crc</span> <span class='kw'>%&gt;%</span>
-  <span class='fu'><a href='signature.html'>signature</a></span>(<span class='kw'>pcs</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>3</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'><a href='signature.html'>signature</a></span>(<span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>3</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>result</span>() <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>multiGSEA</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/multiGSEA/topics/GeneSetDb-class'>GeneSetDb</a></span>()</div><div class='output co'>#&gt; <span class='error'>Error in signature.FacilePCAFeatureRankings(ranks(x, type = type, signed = signed),     pcs = pcs, ntop = ntop, ...): object 'signed' not found</span></div><div class='input'>
+  <span class='kw pkg'>multiGSEA</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/multiGSEA/topics/GeneSetDb-class'>GeneSetDb</a></span>()
+
 <span class='co'># All samples --------------------------------------------------------------</span>
 <span class='no'>pca.all</span> <span class='kw'>&lt;-</span> <span class='fu'>fpca</span>(<span class='no'>efds</span>)
 <span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {

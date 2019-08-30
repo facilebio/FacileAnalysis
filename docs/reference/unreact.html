@@ -67,7 +67,7 @@ but it is purposefully not exported." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -92,6 +92,9 @@ but it is purposefully not exported." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -159,6 +162,10 @@ the <code>set_fds()</code> and <code>fds()</code> setters and getters), with the
 <p>This function needs to be called within the gadget, ie. I'm pretty sure it
 needs to fire in a reactive environment, which you get in the
 <code>observeEvent(intput$done, { ... })</code> expression.</p>
+<p>NOTE: I don't want to export this function, or its class-speficic
+implementation, but when this package is library()/loaded, and one of its
+functions calls it inernally, for some reason the <code>unreact.default</code> function
+isn't found ...</p>
     
 
   </div>

@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Introduction to the FacileAnalysis Framework • FacileAnalysis</title>
+<title>Reproducing genomic anlayses the facile way • FacileAnalysis</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to the FacileAnalysis Framework">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Reproducing genomic anlayses the facile way">
 <meta property="og:description" content="">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -82,75 +82,47 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Introduction to the FacileAnalysis Framework</h1>
+      <h1>Reproducing genomic anlayses the facile way</h1>
                         <h4 class="author">Steve Lianoglou</h4>
             
-            <h4 class="date">5/17/2019</h4>
+            <h4 class="date">2019-08-29</h4>
       
       
-      <div class="hidden name"><code>FacileAnalysis.Rmd</code></div>
+      <div class="hidden name"><code>FacileAnalysis-examples.Rmd</code></div>
 
     </div>
 
     
     
-<p>Note: this document is a scratchpad right now. Much of the README document will replace these contents and be further expanded upon.</p>
-<div id="scratch" class="section level2">
+<div id="overview" class="section level2">
 <h2 class="hasAnchor">
-<a href="#scratch" class="anchor"></a>Scratch</h2>
-<p>The FacileAnalysis package defines a set of analysis tasks over genomic data housed in a container that implements the FacileData API (aka a <code>FacileDataStore</code>).</p>
-<p>We also attempt to provide a generalized grammar (defined as S3 generics) over their results such that they can be re-used in various contexts, which include:</p>
+<a href="#overview" class="anchor"></a>Overview</h2>
+<p>The goal of this vignette is to collect examples of a variety of publically available analyses and redo them using the packages available in the facileverse. This is useful in two ways:</p>
 <ol style="list-style-type: decimal">
-<li>interactive exploration of results (via shiny modules and gadgets)</li>
-<li>conveniant reporting of results in serialized (shiny-detached) modalities, like Rmarkdown reports</li>
-<li>further (potentially interactive) interrogation on a line of inquiry that was the impetus for the analysis task itself (ie. feeding a differential expression result into a gene set enrichment analysis)</li>
+<li>this can help guide the development of packages within the facileverse by identifying things we can’t do yet, or should be able to do more easily; and</li>
+<li>gives examples for end-users of how to perform common analysis tasks within this framework.</li>
 </ol>
-<p>Analyses implemented within this package include:</p>
+<p>Examples can be collected from:</p>
 <ol style="list-style-type: decimal">
-<li>Principal Components Analysis (fpca)</li>
-<li>Differential Expression Analysis (fdge)</li>
-<li>Feature (Gene) Set Enrichment Analysis (ffsea)</li>
-</ol>
-<p>Additional analyses can be added within this package, or as new packages which import and implement the FacileAnalysis S3 API from here.</p>
-</div>
-<div id="facileanalysis-api" class="section level2">
-<h2 class="hasAnchor">
-<a href="#facileanalysis-api" class="anchor"></a>FacileAnalysis API</h2>
-<ul>
-<li>S3 methods
-<ul>
-<li>result.FacileAnalysisResult() and result.ReactiveFacileAnalysisResult()</li>
-<li>viz()</li>
-<li>report()</li>
-<li>shine()</li>
-<li>ranks() and signature()</li>
-</ul>
-</li>
-<li>Interactive Invocation</li>
-</ul>
-<p>As much as possible, a “complete” analysis should be broken down into intermediate steps. For instance, a complete differential expresion analysis from a FacileDataStore is defined as.</p>
-<ol style="list-style-type: decimal">
-<li>filtering down to the samples used for the test</li>
-<li>defining the model over the samples, ie. the covariate to test and which covariates to used for fixed/batch effects</li>
-<li>defining the parameters to run the statistical test, ie.
-<ol style="list-style-type: lower-roman">
-<li>the assay from the samples to run the analysis on</li>
-<li>the differential expression pipeline to use (limma, limma-trend, voom ,etc)</li>
-<li>advanced options, like the threshold to test against (limma/treat), or whether to incorporate sample level weights</li>
+<li>Publically available workflows for data analysis, such as those found in:
+<ol style="list-style-type: lower-alpha">
+<li>
+<a href="https://www.bioconductor.org/packages/release/BiocViews.html#___Workflow">Bioconductor Workflow</a> packages.</li>
+<li>
+<a href="https://www.bioconductor.org/help/course-materials/">Bioconductor Courses</a>.</li>
+<li>Other places?</li>
 </ol>
 </li>
+<li>Questions asked on the <a href="https://support.bioconductor.org/">bioconductor</a> or <a href="https://www.biostars.org/">biostars</a> support sites</li>
 </ol>
 </div>
-<div id="required-shiny" class="section level2">
+<div id="hitlist" class="section level2">
 <h2 class="hasAnchor">
-<a href="#required-shiny" class="anchor"></a>Required Shiny</h2>
-<p><code>&lt;fanalysis&gt;</code> is a place holder for one othe core functions that are implemented as a facile analysis module, ie.<code>"fdge"</code>, <code>"ffsea"</code>, <code>"fpca"</code>, etc.</p>
+<a href="#hitlist" class="anchor"></a>Hitlist</h2>
 <ul>
-<li>
-<code>&lt;fanalysis&gt;Analysis</code>: a wrapper module that incorporates all the internal modules for each step of the analysis pipeline. The <code>fdgeAnalysis</code> module, for instance, is a wrapper to modules that provide an interface to the steps of a differential expression analysis.</li>
-<li>
-<code>&lt;fanalysis&gt;Gadget</code>: includes some wrapper boilerplat that enables the <code>&lt;fanalysis&gt;Analysis</code> to be invoked into a gadget from a FacileDataStore, or a <code>facile_sample_frame</code>
-</li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RnaSeqGeneEdgeRQL.html">edgeR-QLF genes to reads to pahtways workflow</a></li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RNAseq123.html">glimma 1-2-3 biocworkflow</a></li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/rnaseqGene.html">rnaseqGene DESeq2 workflow</a></li>
 </ul>
 </div>
   </div>
@@ -160,9 +132,8 @@
       <h2 class="hasAnchor">
 <a href="#tocnav" class="anchor"></a>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
-<li><a href="#scratch">Scratch</a></li>
-      <li><a href="#facileanalysis-api">FacileAnalysis API</a></li>
-      <li><a href="#required-shiny">Required Shiny</a></li>
+<li><a href="#overview">Overview</a></li>
+      <li><a href="#hitlist">Hitlist</a></li>
       </ul>
 </div>
       </div>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Wraps FacileAnalysis modules into a gadget. — frunGadget • FacileAnalysis</title>
+<title>Support harness to initialize and launch a shiny gadget over a facile object. — frunGadget • FacileAnalysis</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,12 +30,10 @@
 
 
 
-<meta property="og:title" content="Wraps FacileAnalysis modules into a gadget. — frunGadget" />
+<meta property="og:title" content="Support harness to initialize and launch a shiny gadget over a facile object. — frunGadget" />
 
-<meta property="og:description" content="If x is a facile_frame, than the analysis is strictly performed over the
-samples defined by the facile_frame. If it is a FacileDataStore, then
-a UI is provided to filter into the sample space by the
-FacileShine::filteredReactiveFacileDataStoreUI() module." />
+<meta property="og:description" content="This function handles much of the book keeping code required to setup a shiny
+gadget around a facile object x. There are two" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -66,7 +64,7 @@ FacileShine::filteredReactiveFacileDataStoreUI() module." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -91,6 +89,9 @@ FacileShine::filteredReactiveFacileDataStoreUI() module." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -118,23 +119,22 @@ FacileShine::filteredReactiveFacileDataStoreUI() module." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Wraps FacileAnalysis modules into a gadget.</h1>
+    <h1>Support harness to initialize and launch a shiny gadget over a facile object.</h1>
     
     <div class="hidden name"><code>frunGadget.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>If <code>x</code> is a <code>facile_frame</code>, than the analysis is strictly performed over the
-samples defined by the <code>facile_frame</code>. If it is a <code>FacileDataStore</code>, then
-a UI is provided to filter into the sample space by the
-<code>FacileShine::filteredReactiveFacileDataStoreUI()</code> module.</p>
+    <p>This function handles much of the book keeping code required to setup a shiny
+gadget around a facile object <code>x</code>. There are two</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>frunGadget</span>(<span class='no'>analysisModule</span>, <span class='no'>analysisUI</span>, <span class='no'>x</span>, <span class='kw'>user</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/Sys.getenv'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
-  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Facile Analysis Gadget"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>600</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
-  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Facile Analysis Gadget"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"dialog"</span>, <span class='no'>...</span>, <span class='kw'>with_sample_filter</span> <span class='kw'>=</span> <span class='fu'>is</span>(<span class='no'>x</span>,
+  <span class='st'>"FacileDataStore"</span>), <span class='kw'>retval</span> <span class='kw'>=</span> <span class='st'>"x"</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -178,6 +178,29 @@ from the <code>analysisModule</code>, as well as am <code>annotation</code> tibb
 information from brushing of smaples (or features) -- depending on what
 the gadget is working over.</p>
     
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This allows us to (shiny)-interact over objects (<code>x</code>) that have been created
+programmaticaly during an analysis, and return relevant interactive events
+over <code>x</code>, or derivative analysis results back to the workspace.</p>
+    
+    <h2 class="hasAnchor" id="flavors-of-x"><a class="anchor" href="#flavors-of-x"></a>Flavors of x</h2>
+
+    
+    <p>We want to support building interactive components over different types of
+facile objects (<code>x</code>). When <code>x</code> is a:</p><ul>
+<li><p><code>FacileDataStore</code> the analysis module will include a
+<code>FacileShine::filteredReactiveFacileDataStoreUI()</code>, which allows the user
+to interactrively subset down to the samples that the analysis module will
+have access to and analyze. The user can then configure and run and
+analysis, and subsequently interact with the results.</p></li>
+<li><p><code>facile_sample_frame</code> the analysis module will be initialized to work over
+the samples defined in the facile_frame. The user will then configure the
+anlaysis to run from there and be able to interact with the results.</p></li>
+<li><p><code>FacileAnalysisResult</code> will launch the view over the analysis result,
+allowing the user to interact with and explore the result.</p></li>
+</ul>
+    
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -186,6 +209,10 @@ the gadget is working over.</p>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
+
+      <li><a href="#flavors-of-x">Flavors of x</a></li>
           </ul>
 
   </div>

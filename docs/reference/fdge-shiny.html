@@ -64,7 +64,7 @@ differential expression analysis over a predefined set of samples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -89,6 +89,9 @@ differential expression analysis over a predefined set of samples." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -129,7 +132,7 @@ differential expression analysis over a predefined set of samples.</p>
     </div>
 
     <pre class="usage"><span class='fu'>fdgeGadget</span>(<span class='no'>x</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Differential Expression Analysis"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
-  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='no'>...</span>)
+  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>, <span class='no'>...</span>)
 
 <span class='fu'>fdgeAnalysis</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
@@ -153,8 +156,8 @@ steps, each of which provides its own shiny module and interface. The
 minimal input to this analysis is a pre-defined subset of samples to act on.</p>
 <p>These steps are:</p><ol>
 <li><p>Model matrix definition. The functionality is provided by the
-<code><a href='fdge_model_def.html'>fdge_model_def()</a></code> function, and the shiny interface by the
-<code><a href='fdgeModelDefRun.html'>fdgeModelDefRun()</a></code> module.</p></li>
+<code><a href='flm_def.html'>flm_def()</a></code> function, and the shiny interface by the
+<code><a href='flmDefRun.html'>flmDefRun()</a></code> module.</p></li>
 <li><p>Differential expression analysis. The functionality is
 defined by the <code><a href='fdge.html'>fdge()</a></code> function, and the shiny interface by the
 <code><a href='fdgeRun.html'>fdgeRun()</a></code> module.</p></li>
@@ -175,21 +178,32 @@ by the <code><a href='fdgeView.html'>fdgeView()</a></code> module.</p></li>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/interactive'>interactive</a></span>()) {
-<span class='co'># run tumor vs normal comparisons vs each, then run compare() on the results</span>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>options</a></span>(<span class='kw'>facile.log.level.fshine</span> <span class='kw'>=</span> <span class='st'>"trace"</span>)
-<span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='fu'>exampleFacileDataSet</span>()
-<span class='no'>dge.crc</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>fdgeGadget</span>(<span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>)
-<span class='no'>dge.blca</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>fdgeGadget</span>(<span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"pane"</span>)
-<span class='no'>dge.comp</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>dge.crc</span>, <span class='no'>dge.blca</span>)
+    <pre class="examples"><div class='input'>if (interactive()) {
+# run tumor vs normal comparisons vs each, then run compare() on the results
+options(facile.log.level.fshine = "trace")
+efds <- FacileData::exampleFacileDataSet()
+dge.crc <- efds %>%
+  FacileData::filter_samples(indication == "CRC") %>%
+  fdgeGadget(viewer = "pane")
+dge.blca <- efds %>%
+  filter_samples(indication == "BLCA") %>%
+  fdgeGadget(viewer = "pane")
+dge.comp <- compare(dge.crc, dge.blca)
 
-<span class='fu'><a href='FacileAnalysisResultViz.html'>report</a></span>(<span class='no'>dge.comp</span>)
-<span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>dge.comp</span>)
-}</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error: &lt;text&gt;:14:0: unexpected end of input</span>
+#&gt; <span class='error'>12: </span>
+#&gt; <span class='error'>13: </span>
+#&gt; <span class='error'>   ^</span></div><span class='co'># NOT RUN {</span>
+<span class='no'>tfds</span> <span class='kw'>&lt;-</span> <span class='fu'>FacileDataSet</span>(<span class='st'>"~/workspace/data/FacileData/dockerlink/FacileTcgaDataSet"</span>)
+<span class='no'>tsamples</span> <span class='kw'>&lt;-</span> <span class='fu'>filter_samples</span>(<span class='no'>tfds</span>, <span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BRCA"</span>)
+<span class='no'>tdge</span> <span class='kw'>&lt;-</span> <span class='fu'>fdgeGadget</span>(<span class='no'>tsamples</span>, <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>)
+<span class='co'># }</span><div class='input'>report(dge.comp)
+shine(dge.comp)
+}
+</div><div class='output co'>#&gt; <span class='error'>Error: &lt;text&gt;:3:1: unexpected '}'</span>
+#&gt; <span class='error'>2: shine(dge.comp)</span>
+#&gt; <span class='error'>3: }</span>
+#&gt; <span class='error'>   ^</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

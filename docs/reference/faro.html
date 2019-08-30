@@ -6,8 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-ReactiveFacileAnalysis — faro • FacileAnalysis</title>
+<title>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container. — faro • FacileAnalysis</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -31,13 +30,12 @@ ReactiveFacileAnalysis — faro • FacileAnalysis</title>
 
 
 
-<meta property="og:title" content="Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-ReactiveFacileAnalysis — faro" />
+<meta property="og:title" content="Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container. — faro" />
 
-<meta property="og:description" content="Due to the potential hybrid-nature of analysis workflow, we are not always
-certain that a FacileAnalysisResult used by a module that did not create it
-(ie. the dgeres object in the fdgeView() is a
-ReactiveFacileAnalysisResult, or simply an innert FacileAnalysisResult." />
+<meta property="og:description" content="FacileAnalysisResult object can be stored within a
+ReactiveFacileAnalysis, or a FacileMultiAnalysisResult (which is a
+collection of FacileAnalysisResults returned from a &quot;multi-analysis&quot; view,
+like fDgeSeaAnalysis())" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -68,7 +66,7 @@ ReactiveFacileAnalysisResult, or simply an innert FacileAnalysisResult." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -93,6 +91,9 @@ ReactiveFacileAnalysisResult, or simply an innert FacileAnalysisResult." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -120,18 +121,17 @@ ReactiveFacileAnalysisResult, or simply an innert FacileAnalysisResult." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a
-ReactiveFacileAnalysis</h1>
+    <h1>Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.</h1>
     
     <div class="hidden name"><code>faro.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Due to the potential hybrid-nature of analysis workflow, we are not always
-certain that a FacileAnalysisResult used by a module that did not create it
-(ie. the <code>dgeres</code> object in the <code><a href='fdgeView.html'>fdgeView()</a></code> is a
-<code>ReactiveFacileAnalysisResult</code>, or simply an innert <code>FacileAnalysisResult</code>.</p>
+    <p><code>FacileAnalysisResult</code> object can be stored within a
+<code>ReactiveFacileAnalysis</code>, or a <code>FacileMultiAnalysisResult</code> (which is a
+collection of FacileAnalysisResults returned from a "multi-analysis" view,
+like <code><a href='fDgeSeaAnalysis.html'>fDgeSeaAnalysis()</a></code>)</p>
     
     </div>
 
@@ -143,7 +143,11 @@ certain that a FacileAnalysisResult used by a module that did not create it
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>So that we don't have to always check for these things, we call this method
+    <p>Due to the potential hybrid-nature of analysis workflow, we are not always
+certain that a FacileAnalysisResult used by a module that did not create it
+(ie. the <code>dgeres</code> object in the <code><a href='fdgeView.html'>fdgeView()</a></code> is a
+<code>ReactiveFacileAnalysisResult</code>, or simply an innert <code>FacileAnalysisResult</code>.</p>
+<p>So that we don't have to always check for these things, we call this method
 so that we get access to the <code>FacileAnalysisResult</code> object itself.</p>
 <p>As an aside, I know this is a bit of a cop-out to doing full-blown OO. I
 feel like if I were to implement each of the specific <code>*FacileAnalysisResult</code>

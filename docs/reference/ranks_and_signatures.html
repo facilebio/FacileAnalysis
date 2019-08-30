@@ -67,7 +67,7 @@ returns a ranking induced over the features (or samples) from the analysis." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -92,6 +92,9 @@ returns a ranking induced over the features (or samples) from the analysis." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
+    </li>
     <li>
       <a href="../articles/FacileAnalysis-fdge.html">Facile Differential Expression Analysis</a>
     </li>
@@ -162,8 +165,8 @@ testing the differential abundance of a gene across two groups of samples.
 The result of the analysis can induce both a signed and unsigned ranking on
 the genes under test.</p><pre>dge &lt;- FacileData::exampleFacileDataSet() %&gt;%
   FacileData::filter_samples(indication == "BLCA") %&gt;%
-  fdge_model_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", fixed = "sex") %&gt;%
+  flm_def(covariate = "sample_type",numer = "tumor", denom = "normal",
+          batch = "sex") %&gt;%
   fdge()
 </pre>
     <p>Ranking the results of the DGE by ascending <em>p</em>-value will provide an
