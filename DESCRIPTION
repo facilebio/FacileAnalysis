@@ -44,7 +44,8 @@ Suggests:
 Remotes:
     facileverse/FacileData,
     facileverse/FacileShine,
-    facileverse/FacileViz
+    facileverse/FacileViz,
+    lianos/multiGSEA@develop
 biocViews:
     DifferentialExpression,
     GeneExpression,
