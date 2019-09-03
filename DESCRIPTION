@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -42,9 +42,9 @@ Suggests:
     knitr,
     testthat
 Remotes:
-    denalitherapeutics/FacileData,
-    denalitherapeutics/FacileShine,
-    denalitherapeutics/FacileViz
+    facileverse/FacileData,
+    facileverse/FacileShine,
+    facileverse/FacileViz
 biocViews:
     DifferentialExpression,
     GeneExpression,
