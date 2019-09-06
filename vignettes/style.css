@@ -1,0 +1,83 @@
+/* ------------------ callout boxes ----------------------------------------- */
+/* let's take desiree's approach and merge with the multiGSEA style           */
+div.caution, div.demo, div.download, div.note, div.tip, div.wip {
+  margin: 10px 10px 10px 0px;
+  min-height: 55px;
+  padding: 2px 40px 2px 85px;
+  background-position: 5px 5px, 68px 0px;
+  background-repeat: no-repeat, repeat-y;
+  width: 90%;
+}
+
+div.caution {
+  background-image: url("images/icons/caution.png"), url('images/icons/callout-border.png');
+}
+
+div.demo {
+  background-image: url("images/icons/example.png"), url('images/icons/callout-border.png');
+}
+
+div.download {
+  background-image: url("images/icons/download.png"), url('images/icons/callout-border.png');
+}
+
+div.note {
+  background-image: url("images/icons/note.png"), url('images/icons/callout-border.png');
+}
+
+div.tip {
+ background-image: url("images/icons/tip.png"), url('images/icons/callout-border.png');
+}
+
+div.warning {
+  background-image: url("images/icons/warning.png"), url('images/icons/callout-border.png');
+}
+
+div.wip {
+  background-image: url("images/icons/wip.png"), url('images/icons/callout-border.png');
+}
+
+/* http://desiree.rbind.io/post/2019/making-tip-boxes-with-bookdown-and-rmarkdown/ */
+
+/*
+div.caution, div.demo, div.download, div.note, div.tip, div.wip {
+  padding: 1em;
+  margin: 1em 0;
+  padding-left: 100px;
+  background-size: 70px;
+  background-repeat: no-repeat;
+  background-position: 15px center;
+  min-height: 120px;
+  color: #1f5386;
+  background-color: #bed3ec;
+  border: solid 5px #dfedff;
+}
+
+div.caution {
+  background-image: url("images/icons/caution.png");
+}
+
+div.demo {
+  background-image: url("images/icons/example.png");
+}
+
+div.download {
+  background-image: url("images/icons/download.png");
+}
+
+div.note {
+  background-image: url("images/icons/note.png");
+}
+
+div.tip {
+ background-image: url("images/icons/tip.png");
+}
+
+div.warning {
+  background-image: url("images/icons/warning.png");
+}
+
+div.wip {
+  background-image: url("images/icons/wip.png");
+}
+*/

@@ -1,0 +1,132 @@
+---
+title: "RNA-seq Analysis: The Facile Way (for coders)"
+author: "Steve Lianoglou"
+date: "5/17/2019"
+output: 
+  rmarkdown::html_vignette:
+    css: ["style.css", "vignette.css"]
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+
+# Get inspired by this blogplost for a slick way to create note/callout boxes
+# using pandoc-style custom divs:
+# http://desiree.rbind.io/post/2019/making-tip-boxes-with-bookdown-and-rmarkdown/
+```
+
+# Overview
+
+This tutorial provides some examples of the common maneuvers analysts perform
+when analyzying RNA-seq data. We will endeavor to highlight how you can dip
+into an out of interactivity while driving this analysis primarily through code.
+
+We will assume that you have already processed the raw fastq and 
+phenotypic data into a standard Bioconductor expression container, like a
+[SummarizedExperiment][SE], and will use the data provided in the 
+[parathyroidSE][parathyroidSE] data package as a starting point here.
+
+:::tip
+If you are looking for help wrangling raw RNA-seq data into something like a
+SummarizedExperiment object, we currently favor processing the reads using
+either [salmon][salmon] or [kallisto][kallisto], then importing these results
+using the [tximport][tximport] package.
+:::
+
+<!--
+A note if we move this to a "single" page in the facileverse blogdown site:
+To add images to posts:
+1. Add them to the `/static/img` folder
+2. Reference the image using a relative path: ![my-image](/img/my-image.png)
+-->
+
+# Setup
+
+Let's setup our R environment to get facile!
+
+```{r init, message=FALSE, warning=FALSE}
+library(SummarizedExperiment)
+library(FacileData)
+library(FacileAnalysis)
+library(dplyr)
+library(plotly)
+theme_set(theme_bw())
+```
+
+## Prepare the FacileDataSet
+
+Until we develop the [FacileBioc][FacileBioc] package to provide the FacileData
+API over standard Bioconductor assay containers, we have to first convert the
+SummarizedExperiment into a FacileDataSet.
+
+You'll have to install the *parathyroidSE* package if you haven't done that
+already, then load the gene counts into your workspace.
+
+```{r se-load, eval = FALSE}
+if (FALSE) {
+  BiocManager::install("parathyroidSE")
+}
+data("parathyroidGenesSE", package = "parathyroidSE")
+```
+
+We'll need to manipulate the sample-level (`colData()`) and gene-level 
+(`rowData()`) information a bit before conversion:
+
+### Sample Level Information:
+
+We really only want to keep the `"patient"`, `"treatment"`, and `"time"`
+covariates from `colData()`, so we'll trim the `colData()` down to just those
+columns.
+
+We'll also want to manipulate the levels of the `"patient"` and `"time"` factors
+to ensure they are valid R **variable names**, ie. we'll change `24h` to `hrs24`
+in the `"time"` factor.
+
+```{r se-trim}
+se <- parathyroidGenesSE
+cdata <- transform(
+  colData(parathyroidGenesSE),
+  time = factor(paste0("hrs_", sub("h", "", as.character(time)))),
+  patient = factor(paste0("patient_", as.character(patient))))
+cdata <- cdata[, c("patient", "treatment", "time")]
+colData(se) <- cdata
+```
+
+### Gene Leve Information
+
+You'll notice that there is no gene-level information provided here.
+
+
+:::tip
+You are probably wondering why we are bothering to manipulate the `"time"`
+factor levels into something that is a valid R variable name. Here's why:
+often times while you're running different sorts of exploratory data
+analyses, through some sequence of `"gather"`-ing, `"spread"`-ing, and
+joining sample-level data, it is not uncommon for factor levels to end up as
+columns of a data.frame.
+
+Ensuring that they are "proper R variable" names up front avoids problems you
+might run into when using non standard evaluation with whatever dplyr mojo, `model.matrix(...)`, or whatever else these data often find themselves subject
+to.
+:::
+
+
+[//]: # Markdown References ----------------------------------------------------
+
+[FacileBioc]: https://github.com/facileverse/FacileBioc
+[kallisto]: https://pachterlab.github.io/kallisto/
+[parathyroidSE]: http://bioconductor.org/packages/parathyroidSE
+[salmon]: https://combine-lab.github.io/salmon/
+[SE]: http://bioconductor.org/packages/SummarizedExperiment
+[tximport]: http://bioconductor.org/packages/tximport

@@ -16,6 +16,7 @@ Imports:
     broom,
     checkmate,
     crosstalk,
+    dplyr,
     DT,
     edgeR,
     FacileData,
@@ -40,6 +41,8 @@ Imports:
     tidyr
 Suggests:
     knitr,
+    parathyroidSE,
+    SummarizedExperiment,
     testthat
 Remotes:
     facileverse/FacileData,
