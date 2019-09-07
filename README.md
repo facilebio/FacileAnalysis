@@ -109,21 +109,7 @@ qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
 ```
 
 … or DESeq2, perhaps? No problem, [we accept pull
-requests](https://github.com/denalitherapeutics/FacileAnalysis/pulls)
-:-)
-
-**Note** that `fdge` is running over the RNA-seq data stored in the
-“rnaseq” assay. If the datastore had a `"CNV"` assay matrix, one could
-find regions of differential copy number between tumor and normal like
-so:
-
-``` r
-cnv.dge <- fdge(model, assay_name = "CNV", method = "limma-trend")
-```
-
-We are using a `limma-trend` pipeline there, which might not be
-appropriate. Developers can develop their own `method` for differential
-copy number analysis and plug it in there.
+requests](https://github.com/denalitherapeutics/FacileAnalysis/pulls)\!
 
 ## Interrogation of Analyses at Different Levels of Interactivity
 
@@ -145,7 +131,7 @@ the end-user to fully interrogate the results.
 shine(vdge)
 ```
 
-<img src="man/figures/fdge-shine.png" width="50%" />
+<img src="man/figures/fdge-shine.gif" width="75%" />
 
 ### Interactive Graphics via viz()
 
@@ -225,3 +211,9 @@ devtools::install_github("facileverse/FacileAnalysis")
   - [Open an
     issue](https://github.com/facileverse/FacileAnalysis/issues) (GitHub
     issues for bug reports and feature requests)
+
+## Acknowledgements
+
+  - We used the [screengif](https://github.com/dergachev/screengif) tool
+    to convert screen-capture \*.mov files to animated gifs. Thanks
+    \[@dergachev\](<https://github.com/dergachev>)\!

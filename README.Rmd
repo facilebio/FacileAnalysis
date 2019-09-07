@@ -84,7 +84,7 @@ The example below identifies genes differentially expression between tumor and
 normal samples (and controlling for sex) in the "BLCA" indication of the example
 TCGA dataset included in the [FacileData][faciledata] package.
 
-```{r voom-analysis, eval = FALSE}
+```{r voom-analysis, eval = FALSE, message=FALSE}
 library(FacileData)
 library(FacileAnalysis)
 efds <- exampleFacileDataSet()
@@ -127,11 +127,11 @@ The `shine(aresult, ...)` method provides the richest interactive view over a
 `FacileAnalysisResult` by launching a [shiny gadget][sgadget] that enables
 the end-user to fully interrogate the results.
 
-```{r shine, eval = FALSE}
+```{r shine, eval=FALSE, message=FALSE, warning=FALSE}
 shine(vdge)
 ```
 
-<img src="man/figures/fdge-shine.png" width="50%" />
+<img src="man/figures/fdge-shine.gif" width="75%" />
 
 ### Interactive Graphics via viz()
 
