@@ -184,18 +184,13 @@ equivalent to the `vdge` result, which was entirely generated programmatically.
 
 ## Installation
 
-The `FacileAnalysis` package uses all of the "facileverse" packages, so those
-need to be installed first.
-
-A simple `devtools::install_github("denalitherapeutics/FacileAnalysis")` should
-do the trick, however if you need to install them indivdiually, do so in this
-order:
+Because the packages in the facileverse have not officially been released yet
+and they also depend heavily on [bioconductor][bioc] packages, we recommend
+using the [BiocManager][biocmanager] package for installation.
 
 ```{r, eval = FALSE}
-devtools::install_github("facileverse/FacileData")
-devtools::install_github("facileverse/FacileViz")
-devtools::install_github("facileverse/FacileShine")
-devtools::install_github("facileverse/FacileAnalysis")
+# install.packages("BiocManager")
+BiocManager::install("facileverse/FacileAnalysis")
 ```
 
 ## Resources
@@ -210,7 +205,9 @@ devtools::install_github("facileverse/FacileAnalysis")
 * We used the [screengif](https://github.com/dergachev/screengif) tool to
   convert screen-capture *.mov files to animated gifs. Thanks 
   [@dergachev](https://github.com/dergachev)!
-  
+
+[bioc]: https://bioconductor.org
+[biocmanager]: https://cran.r-project.org/package=BiocManager
 [faciledata]: https://facileverse.github.io/FacileData
 [facileanalysis]: https://facileverse.github.io/FacileAnalysis
 [fpcavign]: FacileAnalysis-fpca.html

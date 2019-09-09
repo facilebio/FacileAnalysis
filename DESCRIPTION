@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -11,7 +11,7 @@ Description: Provides modularized versions of analyses that are commonly
     by analysts using the "vizualize" or "shine" functions, and embedded into
     Rmarkdown reports using their respective "report" functions.
 Depends:
-    R (>= 3.5)
+    R (>= 3.6)
 Imports:
     broom,
     checkmate,
@@ -29,6 +29,7 @@ Imports:
     matrixStats,
     miniUI,
     multiGSEA (>= 0.12.13),
+    multiGSEA.shiny (>= 0.1.12),
     plotly (>= 4.9.0),
     readxl,
     rlang,
@@ -48,7 +49,8 @@ Remotes:
     facileverse/FacileData,
     facileverse/FacileShine,
     facileverse/FacileViz,
-    lianos/multiGSEA@develop
+    lianos/multiGSEA@develop,
+    lianos/multiGSEA.shiny@develop
 biocViews:
     DifferentialExpression,
     GeneExpression,

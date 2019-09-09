@@ -410,6 +410,20 @@ initialized.FacileLinearModelDefinition <- function(x, ...) {
 
 #' @noRd
 #' @export
+samples.FacileTtestModelDefinition <- function(x, tested_only = FALSE, ...) {
+  out <- x[["covariates"]]
+  if (tested_only) {
+    cov <- param(x, "covariate")
+    num <- param(x, "numer")
+    den <- param(x, "denom")
+    out <- filter(out, .data[[cov]] %in% c(num, den))
+  }
+  out
+}
+
+
+#' @noRd
+#' @export
 samples.FacileLinearModelDefinition <- function(x, ...) {
   x[["covariates"]]
 }

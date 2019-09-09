@@ -493,7 +493,7 @@ signature.FacileAnovaFeatureRanks <- function(x, max_padj = 0.10,
 #' @noRd
 #' @export
 samples.FacileDgeAnalysisResult <- function(x, ...) {
-  samples(model(x))
+  samples(model(x), ...)
 }
 
 #' @section FacileDgeAnalysisResult:

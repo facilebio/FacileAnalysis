@@ -187,18 +187,15 @@ programmatically.
 
 ## Installation
 
-The `FacileAnalysis` package uses all of the “facileverse” packages, so
-those need to be installed first.
-
-A simple `devtools::install_github("denalitherapeutics/FacileAnalysis")`
-should do the trick, however if you need to install them indivdiually,
-do so in this order:
+Because the packages in the facileverse have not officially been
+released yet and they also depend heavily on
+[bioconductor](https://bioconductor.org) packages, we recommend using
+the [BiocManager](https://cran.r-project.org/package=BiocManager)
+package for installation.
 
 ``` r
-devtools::install_github("facileverse/FacileData")
-devtools::install_github("facileverse/FacileViz")
-devtools::install_github("facileverse/FacileShine")
-devtools::install_github("facileverse/FacileAnalysis")
+# install.packages("BiocManager")
+BiocManager::install("facileverse/FacileAnalysis")
 ```
 
 ## Resources

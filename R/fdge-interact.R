@@ -322,7 +322,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   dat <- fetch_assay_data(samples., fid, assay_name = assay_name,
                           normalized = TRUE, prior.count = prior.count,
                           batch = batch, main = test.covariate)
-
+  if (is(x, "FacileTtestAnalysisResult")) {
+    dat <- semi_join(dat, samples(x, tested_only = TRUE))
+  }
   dat <- droplevels(dat)
   dat[[".key"]] <- seq(nrow(dat))
 
