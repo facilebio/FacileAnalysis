@@ -1,10 +1,15 @@
 ---
-title: "RNA-seq Analysis: The Facile Way (for coders)"
+title: "RNA-seq Analysis: The Facile Way"
 author: "Steve Lianoglou"
 date: "5/17/2019"
-output: 
-  rmarkdown::html_vignette:
-    css: ["style.css", "vignette.css"]
+output:
+  rmarkdown::html_document:
+    css: "custom.css"
+    highlight: pygments
+    toc: true
+    toc_float: true
+    fig_width: 6
+bibliography: library.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to FacileAnalysis}
   %\VignetteEngine{knitr::rmarkdown}
@@ -39,8 +44,9 @@ modular fashion, and their results (a `FacileAnalysisResult` object) can be:
    functions. These provide javascript- and shiny-based views over their
    results. The former is particularly useful when reporting results in an
    Rmarkdown document, and the later are useful when analysts are doing some
-   self-exploration of their results. The modules used to create the shiny
-   views can also be weaved together into a larger interactive applications.
+   self-exploration of their results while banging at this data through code.
+   The modules used to create the shiny views can also be weaved together into
+   larger interactive applications.
 
 3. serialized into a more thorough set of interactive visualizations via a
    `report()` function, which is also suitable for use in an Rmarkdown
@@ -168,11 +174,10 @@ Features stored in a `FacileDataSet` need to specify the following elements:
    to put the gene biotype there
 
 The SummarizedExperiment we have only provides the ensembl gene identifiers for
-these data, so we'll have to get these information elsewhere, and we'll use the
-*biomaRt* package to do that. According to the [*parathyroidSE*][parathyroidSE] 
-vignette, the ensembl v72 annotations were used for processing. This version 
-isn't available to us  within biomaRt (via `listEnsemblArchives()`), so we'll
-pick the closest one to  it (v75).
+these data, so we'll have to get these information using the *biomaRt* package.
+The [airway vignette][airway] says that reads were aligned with STAR against the
+GRCh37 and Ensembl v75 anotations. Luckily this Ensembl version is available
+via biomaRt (`listEnsemblArchives()`), so we will connect to and query that.
 
 ```r
 bm <- loadNamespace("biomaRt")
@@ -226,9 +231,6 @@ xfds <- as.FacileDataSet(
   se, 
   path = tempfile(),
   dataset_name = "FacileAirwayDataSet",
-  # dataset_meta = paste(
-  #   "DPN and Tamoxifen treatments of parathyroid adenoma cells",
-  #   "(GSE37211)",
   assay_name = "gene_counts",
   assay_description = "Gene counts from airway package",
   assay_type = "rnaseq",
@@ -252,6 +254,7 @@ data, so we'll calculate that here, as well.
 
 ```{r dds}
 dds <- DESeqDataSet(se, design = ~ cell + dex)
+dds <- DESeq(dds)
 vsd <- vst(dds, blind = FALSE)
 ```
 
@@ -269,18 +272,24 @@ plotPCA(vsd, intgroup = c("dex", "cell"))
 ```
 
 That simultaneously runs the principal components analysis and plots the result.
+This is fine for visualiztion purposes, but what if we wanted to work with the
+PCA result further?
 
-In the facile paradigm, we will first run the PCA, then interact with the
-result of that analysis itself (ie. plot it). We also do not have access to the
-variance stabilized data from a FacileDataSet, however using higher values for
-`prior.count` has *approximately* the same effect.
+In the facile paradigm, we will first run the PCA, then interact with the result
+of the analysis itself. Instead of just plotting the data in the reduced
+dimensions, we can now identify which genes (and pathways) are highly loaded on
+the principla components, as well.
+
+Unfortutanetly, we do not have access to the variance stabilized data within
+the FacileDataSet. We will try to approximate this, however, by adding a higher
+`prior.count` to the normalized data (counts per milliion).
 
 ```{r}
 pca <- fpca(xfds, prior.count = 5)
 viz(pca, color_aes = c("dex", "cell"))
 ```
 
-This is a bit different than the PCA on the `vsd` data, but perhaps close enough.
+It's not exactly like the `vsd` data, but close enough for our purposes.
 
 :::note
 You can also run `fpca` on the `vsd` object directly, and you would have gotten
@@ -289,7 +298,7 @@ following:
 
 ```{r fpcavsd, eval = FALSE}
 vpca <- fpca(vsd)
-viz(vpca, color_aes = c("dex", "cell")
+viz(vpca, color_aes = c("dex", "cell"))
 ```
 :::
 
@@ -317,6 +326,11 @@ cpca <- fpca(xfds, batch = "cell", ntop = 5000)
 viz(cpca, dims = 1:3, color_aes = "dex", shape_aes = "cell")
 ```
 
+:::warning
+There is a [bug when mapping aesthetics to shapes](https://github.com/facileverse/FacileViz/issues/4) in the 3d plot. The `N052611`
+and `N061011` cells should not both be circles.
+:::
+
 #### Interrogating a PCA Result
 
 The benefit of having the `fpca()` result (`cpca`) in your hand is that you
@@ -339,17 +353,21 @@ pc.genes %>%
 
 We can even perform GSEA over any dimension of the PCA result via the `ffsea()`
 function (Facile Feature Set Enrichment). This will rank genes by their loadings
-on the desred PC of interest, and perform a pre-ranked GSEA method (by default,
-we use `limma::cameraPR`).
+on the specified PC of interest, then perform a pre-ranked GSEA test 
+(by default, we use `limma::cameraPR`).
+
+The core of our GSEA functionality is provided by the [multiGSEA][multiGSEA]
+package. This includes easy accessor functions for geneset collection retrieval
+(as a `multiGSEA::GeneSetDb` object), as well as delegation of GSEA methods for
+analysis.
 
 For this, we'll need a geneset collection stored in a `multiGSEA::GeneSetDb`
 object. We'll use the MSigDB hallmark genesets for this purpose, and run both
 `"cameraPR"` and `"fgsea"`.
 
-```{r pcagsea}
-gdb.hallmark <- multiGSEA::getMSigGeneSetDb("H", "human", "ensembl")
-pca.gsea <- ffsea(cpca, gdb.hallmark, dim = 1, 
-                  methods = c("cameraPR", "fgsea"))
+```{r pcagsea, message=FALSE, warning=FALSE}
+gdb <- multiGSEA::getMSigGeneSetDb(c("H", "reactome"), "human", "ensembl")
+pca.gsea <- ffsea(cpca, gdb, dim = 1, methods = c("cameraPR", "fgsea"))
 ```
 
 You can now interactively interrogate the result of the `pca.gsea` object via
@@ -377,12 +395,12 @@ update (ie. logFC is shown here, but that's not correct).
 
 ## Differential Expression Analysis
 
-In the rnaseqGene workflow, we are testing the differential expression of
-the `dex` treatment while controling for the `cell` identity. The design formula
-used there was `~ cell + dex`, and was set during the call to `DESeqDataSet()`.
+The rnaseqGene workflow tests the differential expression of the `dex` treatment
+while controling for the `cell` identity. The design formula used there was 
+`~ cell + dex`, and was set during the call to `DESeqDataSet()`. We'll just
+materialize these results into a data.frame:
 
 ```{r rundeseq}
-dds <- DESeq(dds)
 dex.dds <- results(dds) %>% 
   as.data.frame() %>% 
   subset(!is.na(pvalue)) %>% 
@@ -523,7 +541,6 @@ performed downstream of the differential expression result. We need to specify
 the geneset collection to use for GSEA, as well as the methods performed.
 
 ```{r}
-gdb <- multiGSEA::getMSigGeneSetDb("c5", "human", "ensembl")
 dge.gsea <- ffsea(dex.vm, gdb, methods = c("enrichtest", "cameraPR"))
 ```
 
@@ -533,6 +550,7 @@ shine(dge.gsea)
 
 [//]: # Markdown References ----------------------------------------------------
 
+[airway]: http://bioconductor.org/packages/release/data/experiment/vignettes/airway/inst/doc/airway.html
 [deseq2]: http://bioconductor.org/packages/DESeq2
 [FacileBioc]: https://github.com/facileverse/FacileBioc
 [kallisto]: https://pachterlab.github.io/kallisto/
