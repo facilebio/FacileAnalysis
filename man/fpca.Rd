@@ -7,15 +7,15 @@
 \title{Runs a facile PCA}
 \usage{
 fpca(x, dims = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, ...)
+  col_covariates = NULL, batch = NULL, ...)
 
 \method{fpca}{facile_frame}(x, dims = 5, ntop = 500,
-  row_covariates = NULL, col_covariates = NULL, assay_name = NULL,
-  custom_key = Sys.getenv("USER"), ...)
+  row_covariates = NULL, col_covariates = NULL, batch = NULL,
+  assay_name = NULL, custom_key = Sys.getenv("USER"), ...)
 
 \method{fpca}{matrix}(x, dims = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, use_irlba = dims < 7, center = TRUE,
-  scale. = FALSE, ...)
+  col_covariates = NULL, batch = NULL, use_irlba = dims < 7,
+  center = TRUE, scale. = FALSE, ...)
 }
 \arguments{
 \item{x}{a data container}

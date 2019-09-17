@@ -46,7 +46,13 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
   # ffsea. In the future we need to plug into a GeneSetDb provider to
   # define this.
   gdb.base <- reactive({
-    if (is(gdb, "GeneSetDb")) {
+    req(ares())
+    if (is(gdb, "reactive")) {
+      gdb. <- gdb()
+      if (!is(gdb., "GeneSetDb")) {
+        gdb. <- NULL
+      }
+    } else if (is(gdb, "GeneSetDb")) {
       gdb. <- gdb
     } else if (is(gdb, "ReactiveGeneSetDb")) {
       gdb. <- gdb$gdb()

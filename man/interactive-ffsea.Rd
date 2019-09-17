@@ -5,7 +5,7 @@
 \alias{ffseaRun}
 \title{Full interactive executation of GSEA, soup to nuts.}
 \usage{
-ffseaGadget(x, gdb, title = "Feature Set Enrichment Analysis",
+ffseaGadget(x, gdb = NULL, title = "Feature Set Enrichment Analysis",
   height = 800, width = 1000, viewer = "browser", ...,
   debug = FALSE)
 

@@ -206,6 +206,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   if (is.data.frame(highlight)) {
     highlight <- highlight[["feature_id"]]
   }
+  if (is.factor(highlight)) highlight <- as.character(highlight)
   if (!is.character(highlight)) highlight <- NULL
 
   if (!is.character(feature_id)) {
@@ -323,7 +324,8 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                           normalized = TRUE, prior.count = prior.count,
                           batch = batch, main = test.covariate)
   if (is(x, "FacileTtestAnalysisResult")) {
-    dat <- semi_join(dat, samples(x, tested_only = TRUE))
+    dat <- semi_join(dat, samples(x, tested_only = TRUE),
+                     by = c("dataset", "sample_id"))
   }
   dat <- droplevels(dat)
   dat[[".key"]] <- seq(nrow(dat))

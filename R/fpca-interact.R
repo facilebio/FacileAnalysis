@@ -2,7 +2,7 @@
 
 #' @noRd
 #' @export
-viz.FacilePcaAnalysisResult <- function(x, pcs = 2, ...,
+viz.FacilePcaAnalysisResult <- function(x, dims = 2, ...,
                                         height = 400,
                                         width = 700,
                                         xlabel = "default",
@@ -11,19 +11,19 @@ viz.FacilePcaAnalysisResult <- function(x, pcs = 2, ...,
                                         event_source = "A",
                                         webgl = FALSE) {
   xx <- result(x)
-  assert_integerish(pcs, lower = 1L)
-  if (length(pcs) == 1L) {
-    assert_int(pcs, lower = 2, upper = 3L)
-    pcs <- 1:pcs
+  assert_integerish(dims, lower = 1L)
+  if (length(dims) == 1L) {
+    assert_int(dims, lower = 2, upper = 3L)
+    dims <- 1:dims
   }
-  assert_int(length(pcs), lower = 1L, upper = 3L)
-  pcs <- unique(pcs)
+  assert_int(length(dims), lower = 1L, upper = 3L)
+  dims <- unique(dims)
 
   pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
-  pc.cols.req <- paste0("PC", pcs)
+  pc.cols.req <- paste0("PC", dims)
   pc.cols <- intersect(pc.cols.req, pc.cols.all)
 
-  if (length(pc.cols) != length(pcs)) {
+  if (length(pc.cols) != length(dims)) {
     stop("There's something awry with the pc columns you requested")
   }
 

@@ -142,6 +142,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     return(out)
   }
 
+  if (is.factor(filter)) {
+    filter <- as.character(filter)
+  }
   if (!is.null(filter)) {
     if (test_multi_class(filter, c("data.frame", "tbl"))) {
       filter <- filter[["feature_id"]]

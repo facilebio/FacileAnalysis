@@ -1,0 +1,237 @@
+---
+title: "RNA-seq Analysis: The Facile Way (for coders)"
+author: "Steve Lianoglou"
+date: "5/17/2019"
+output: 
+  rmarkdown::html_vignette:
+    css: ["style.css", "vignette.css"]
+vignette: >
+  %\VignetteIndexEntry{Introduction to FacileAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+
+# Get inspired by this blogplost for a slick way to create note/callout boxes
+# using pandoc-style custom divs:
+# http://desiree.rbind.io/post/2019/making-tip-boxes-with-bookdown-and-rmarkdown/
+```
+
+## Overview
+
+This tutorial provides some examples of the common maneuvers analysts perform
+when analyzying RNA-seq data. We will endeavor to highlight how you can dip
+into an out of interactivity while driving this analysis primarily through code.
+
+We will assume that you have already processed the raw fastq and 
+phenotypic data into a standard Bioconductor expression container, like a
+[SummarizedExperiment][SE], and will use the data provided in the 
+[parathyroidSE][parathyroidSE] data package as a starting point here.
+
+:::tip
+If you are looking for help wrangling raw RNA-seq data into something like a
+SummarizedExperiment object, we currently favor processing the reads using
+either [salmon][salmon] or [kallisto][kallisto], then importing these results
+using the [tximport][tximport] package.
+:::
+
+<!--
+A note if we move this to a "single" page in the facileverse blogdown site:
+To add images to posts:
+1. Add them to the `/static/img` folder
+2. Reference the image using a relative path: ![my-image](/img/my-image.png)
+-->
+
+## Setup
+
+Let's setup our R environment to get facile!
+
+```{r init, message=FALSE, warning=FALSE}
+library(SummarizedExperiment)
+library(FacileData)
+library(FacileAnalysis)
+library(dplyr)
+library(plotly)
+theme_set(theme_bw())
+```
+
+### Prepare the FacileDataSet
+
+We first need to convert our data into a `FacileDataSet`. All we need for that
+is a "well-formed" standard Bioconductor assay container (SummarizedExperiment,
+DGEList, ExpressionSet, etc.). By "well-formed" we mostly mean one that has some
+minimal feature- and smaple-level metadata.
+
+You'll have to install the *parathyroidSE* package if you haven't done that
+already, then load the gene counts into your workspace.
+
+```{r se-load, message=FALSE, warning=FALSE}
+if (FALSE) {
+  BiocManager::install("parathyroidSE")
+}
+data("parathyroidGenesSE", package = "parathyroidSE")
+```
+
+We will need to manipulate the sample-level (`colData()`) and gene-level 
+(`rowData()`) information a bit before conversion. For the `colData()` we will
+subset down the columns to only keep the ones that are of phenotypic interest.
+For the `rowData()`, we will have to get the corresponding gene symbols for the
+ensembl identifiers in the data.
+
+#### Sample Level Information:
+
+We really only want to keep the `"patient"`, `"treatment"`, and `"time"`
+covariates from `colData()`, so we'll trim the `colData()` down to just those
+columns.
+
+We'll also want to manipulate the levels of the `"patient"` and `"time"` factors
+to ensure they are valid R **variable names**, ie. we'll change `24h` to `hrs24`
+in the `"time"` factor.
+
+```{r se-trim}
+se <- parathyroidGenesSE
+cdata <- transform(
+  colData(parathyroidGenesSE),
+  time = factor(paste0("hrs_", sub("h", "", as.character(time)))),
+  patient = factor(paste0("patient_", as.character(patient))))
+cdata <- cdata[, c("patient", "treatment", "time")]
+colData(se) <- cdata
+```
+
+:::tip
+You are probably wondering why we are bothering to manipulate the `"time"`
+factor levels into something that is a valid R variable name. Here's why:
+often times while you're running different sorts of exploratory data
+analyses, through some sequence of `"gather"`-ing, `"spread"`-ing, and
+joining sample-level data, it is not uncommon for factor levels to end up as
+columns of a data.frame.
+
+Ensuring that the factor loevels are "proper R variable" names up front avoids
+problems you might run into when using non standard evaluation with whatever
+dplyr mojo, `model.matrix(...)`, or whatever else these data often find
+themselves subject
+to.
+:::
+
+
+#### Gene Leve Information
+
+Features stored in a `FacileDataSet` need to specify the following elements:
+
+* `feature_id`: This is the esnembl gene identifer
+* `feature_type`: We use `"ensgid"` here to specify these are ensembl gene
+   identifiers.
+* `name`: For genes, we'll use the gene symbol
+* `meta`: This can be used for anything, but for "gene" feature spaces, I like
+   to put the gene biotype there
+
+The SummarizedExperiment we have only provides the ensembl gene identifiers for
+these data, so we'll have to get these information elsewhere, and we'll use the
+*biomaRt* package to do that. According to the [*parathyroidSE*][parathyroidSE] 
+vignette, the ensembl v72 annotations were used for processing. This version 
+isn't available to us  within biomaRt (via `listEnsemblArchives()`), so we'll
+pick the closest one to  it (v75).
+
+```r
+bm <- loadNamespace("biomaRt")
+mart <- bm$useMart(
+  host = "feb2014.archive.ensembl.org",
+  biomart = "ENSEMBL_MART_ENSEMBL",
+  dataset = "hsapiens_gene_ensembl")
+mart.info <- bm$getBM(
+  attributes = c("ensembl_gene_id", "hgnc_symbol", "gene_biotype"),
+  filters = "ensembl_gene_id",
+  values = rownames(se),
+  mart = mart)
+```
+
+The query above retrieves the data we need, but it can take a long and variable
+amount of time to run. To save time while compiling this vignette, we have
+serialized the result of the query, and will use that here.
+
+```{r load-local}
+mart.info <- local({
+  fn <- system.file("extdata", "parathyroidSE-gene-info.csv.gz",
+                    package = "FacileAnalysis")
+  read.csv(gzfile(fn, "rt"), stringsAsFactors = FALSE)
+})
+```
+
+Lastly, the column names of the `gene.info` table need to be tweaked, and we
+can only keep the rows that are shared between the gene information we
+retrieved, and the ones that are in the SummarizedExperiment.
+
+```{r massage-rows}
+gene.info <- mart.info %>% 
+  transmute(feature_id = ensembl_gene_id,
+            feature_type = "ensgid",
+            name = hgnc_symbol, 
+            meta = gene_biotype) %>% 
+  filter(feature_id %in% rownames(se), !duplicated(feature_id)) %>% 
+  DataFrame()
+rownames(gene.info) <- gene.info$feature_id
+
+se <- se[gene.info$feature_id,]
+rowData(se) <- gene.info
+```
+
+Now we can create the FacileDataSet with a simple call to `as.FacileDataSet()`,
+by providing the groomed SummarizedExperiment, and a path to store the converted
+data.
+
+```{r}
+xfds <- as.FacileDataSet(
+  se, 
+  path = tempfile(),
+  dataset_name = "FacileParathyroidDataSet",
+  # dataset_meta = paste(
+  #   "DPN and Tamoxifen treatments of parathyroid adenoma cells",
+  #   "(GSE37211)",
+  assay_name = "gene_counts",
+  assay_description = "Gene counts by GenomicRanges::summarizeOverlaps",
+  assay_type = "rnaseq",
+  organism = "Homo sapiens")
+```
+
+## QC
+
+### PCA
+
+```{r}
+pca <- fpca(xfds)
+viz(pca, color_aes = "patient")
+```
+
+```{r}
+pcap <- fpca(xfds, batch = "patient")
+viz(pcap, color_aes = "patient")
+```
+
+```{r}
+viz(pcap, color_aes = "time", shape_aes = "treatment")
+```
+
+:::note
+The [FacileBioc][FacileBioc] package will provide functionality that will enable
+you to use standard Bioconductor assay containers without physially converting
+them to a `FacileDataSet`, however these data will stil need to provide the
+expect feature information in their `rowData()`.
+:::
+
+[//]: # Markdown References ----------------------------------------------------
+
+[FacileBioc]: https://github.com/facileverse/FacileBioc
+[kallisto]: https://pachterlab.github.io/kallisto/
+[parathyroidSE]: http://bioconductor.org/packages/parathyroidSE
+[salmon]: https://combine-lab.github.io/salmon/
+[SE]: http://bioconductor.org/packages/SummarizedExperiment
+[tximport]: http://bioconductor.org/packages/tximport

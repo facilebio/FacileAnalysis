@@ -424,6 +424,12 @@ fds.FacileAnalysisResult <- function(x) {
   return(x[["fds"]])
 }
 
+#' @noRd
+#' @export
+organism.FacileAnalysisResult <- function(x, ...) {
+  organism(fds(x), ...)
+}
+
 # Vizualization and Rmarkdon reporting =========================================
 
 #' Methods to interactively explore and report FacileAnalysisResults.

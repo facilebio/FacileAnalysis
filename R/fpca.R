@@ -50,7 +50,7 @@
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
 fpca <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
-                 col_covariates = NULL, ...) {
+                 col_covariates = NULL, batch = NULL, ...) {
   UseMethod("fpca", x)
 }
 
@@ -58,13 +58,13 @@ fpca <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
 #' @export
 fpca.FacileDataStore <- function(x, dims = 5, ntop = 500,
                                  row_covariates = NULL, col_covariates = NULL,
-                                 assay_name = default_assay(x),
+                                 batch = NULL, assay_name = default_assay(x),
                                  custom_key = Sys.getenv("USER"), ...,
                                  samples = NULL) {
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
-  fpca(samples, dims, ntop, row_covariates, col_covariates, assay_name,
+  fpca(samples, dims, ntop, row_covariates, col_covariates, batch, assay_name,
        custom_key, ...)
 }
 
@@ -80,7 +80,7 @@ fpca.FacileDataStore <- function(x, dims = 5, ntop = 500,
 #' @export
 fpca.facile_frame <- function(x, dims = 5, ntop = 500,
                               row_covariates = NULL, col_covariates = NULL,
-                              assay_name = NULL,
+                              batch = NULL, assay_name = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
@@ -106,7 +106,7 @@ fpca.facile_frame <- function(x, dims = 5, ntop = 500,
   # element
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
 
-  out <- fpca(y, dims, ntop, ...)
+  out <- fpca(y, dims, ntop, batch = batch, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   out[["result"]] <- out[["result"]] %>%
@@ -135,7 +135,7 @@ fpca.facile_frame <- function(x, dims = 5, ntop = 500,
 #' @export
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
-                         col_covariates = x$samples,
+                         col_covariates = x$samples,  batch = NULL,
                          prior.count = 3, assay_name = "counts", ...) {
   if (assay_name == "counts") {
     m <- edgeR::cpm(x, prior.count = prior.count, log = TRUE)
@@ -143,15 +143,56 @@ fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
     m <- x[[assay_name]]
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, ...)
+
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
-  if ("dataset" %in% colnames(x$samples)) {
-    out[["samples"]][["dataset"]] <- x$samples[["dataset"]]
+  if ("dataset" %in% colnames(col_covariates)) {
+    out[["samples"]][["dataset"]] <- col_covariates[["dataset"]]
   }
-  if ("sample_id" %in% colnames(x$samples)) {
-    out[["samples"]][["sample_id"]] <- x$samples[["sample_id"]]
+  if ("sample_id" %in% colnames(col_covariates)) {
+    out[["samples"]][["sample_id"]] <- col_covariates[["sample_id"]]
+  }
+
+  out
+}
+
+#' This should be able to work on things like DESeqTransform objects, as well.
+#' @noRd
+#' @export
+fpca.SummarizedExperiment <- function(x, dims = 5, ntop = 500,
+                                      row_covariates = NULL,
+                                      col_covariates = NULL,  batch = NULL,
+                                      assay_name = assayNames(x)[1L], ...) {
+  ns <- tryCatch(loadNamespace("SummarizedExperiment"), error = function(e) NULL)
+  if (is.null(ns)) stop("SummarizedExperiment required")
+  ns4 <- tryCatch(loadNamespace("S4Vectors"), error = function(e) NULL)
+  if (is.null(ns4)) stop("S4Vectors required")
+
+  if (is.null(row_covariates)) {
+    row_covariates <- ns4$as.data.frame.DataTable(ns$rowData(x))
+  }
+  if (is.null(col_covariates)) {
+    col_covariates <- ns4$as.data.frame.DataTable(ns$colData(x))
+  }
+
+  if (is.null(assay_name)) {
+    m <- ns$assays(x)[[1L]]
+  } else {
+    m <- ns$assay(x, assay_name)
+  }
+  assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
+
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, ...)
+
+  out[["params"]][["assay_name"]] <- assay_name
+
+  if ("dataset" %in% colnames(col_covariates)) {
+    out[["samples"]][["dataset"]] <- col_covariates[["dataset"]]
+  }
+  if ("sample_id" %in% colnames(col_covariates)) {
+    out[["samples"]][["sample_id"]] <- col_covariates[["sample_id"]]
   }
 
   out
@@ -160,10 +201,10 @@ fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
 #' @noRd
 #' @export
 fpca.EList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
-                       col_covariates = x$targets,
+                       col_covariates = x$targets,  batch = NULL,
                        prior.count = 3, assay_name = "E", ...) {
   assert_choice(assay_name,  names(x))
-  out <- fpca(x$E, dims, ntop, row_covariates, col_covariates, ...)
+  out <- fpca(x$E, dims, ntop, row_covariates, col_covariates, batch, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   if ("dataset" %in% colnames(x$targets)) {
@@ -181,7 +222,8 @@ fpca.EList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL, use_irlba = dims < 7,
+                        col_covariates = NULL, batch = NULL,
+                        use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
   messages <- character()
   warnings <- character()
@@ -204,6 +246,10 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
     assert_true(ncol(x) == nrow(col_covariates))
     assert_character(rownames(col_covariates))
     assert_true(all(colnames(x) == rownames(col_covariates)))
+  }
+
+  if (!is.null(batch)) {
+    x <- remove_batch_effect(x, col_covariates, batch = batch, ...)
   }
 
   rv <- matrixStats::rowVars(x)

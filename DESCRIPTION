@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.2
+Version: 0.2.3
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -19,7 +19,7 @@ Imports:
     dplyr,
     DT,
     edgeR,
-    FacileData,
+    FacileData (>= 0.10.3),
     FacileShine,
     FacileViz,
     glue,
@@ -41,6 +41,8 @@ Imports:
     tools,
     tidyr
 Suggests:
+    curl,
+    DESeq2,
     knitr,
     parathyroidSE,
     SummarizedExperiment,
@@ -57,7 +59,7 @@ biocViews:
     GeneSetEnrichment,
     Pathways,
     DimensionReduction
-License: Apache Version 2.0
+License: apache-2.0
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

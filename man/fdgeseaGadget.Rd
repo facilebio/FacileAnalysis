@@ -4,9 +4,17 @@
 \alias{fdgeseaGadget}
 \title{Gadget to run both DGE and GSEA}
 \usage{
-fdgeseaGadget(x, title = "DGE and GSEA", height = 800, width = 1000,
-  ...)
+fdgeseaGadget(x, gdb = NULL, title = "DGE and GSEA", height = 800,
+  width = 1000, ...)
 }
 \description{
 Gadget to run both DGE and GSEA
+}
+\examples{
+\dontrun{
+gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+efds <- FacileData::exampleFacileDataSet()
+xs <- FacileData::filter_samples(efds, indication == "CRC")
+fdgeseaGadget(xs, gdb)
+}
 }

@@ -19,11 +19,14 @@
 #' if (interactive()) {
 #'   ffseaGadget(dge.crc, gdb)
 #' }
-ffseaGadget <- function(x, gdb, title = "Feature Set Enrichment Analysis",
+ffseaGadget <- function(x, gdb = NULL,
+                        title = "Feature Set Enrichment Analysis",
                         height = 800, width = 1000, viewer = "browser", ...,
                         debug = FALSE) {
   assert_class(x, "FacileAnalysisResult")
-  assert_class(gdb, "GeneSetDb")
+  if (!is.null(gdb)) {
+    assert_class(gdb, "GeneSetDb")
+  }
   frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, aresult = x, gdb = gdb,
              title = title, height = height, width = width, viewer = viewer,
              ..., retval = "faro", debug = debug)

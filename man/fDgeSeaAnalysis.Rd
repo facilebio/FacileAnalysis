@@ -4,7 +4,8 @@
 \alias{fDgeSeaAnalysis}
 \title{An analysis module that combines differential expression with GESA.}
 \usage{
-fDgeSeaAnalysis(input, output, session, rfds, ..., debug = FALSE)
+fDgeSeaAnalysis(input, output, session, rfds, gdb = NULL, ...,
+  debug = FALSE)
 }
 \description{
 This module enables the interactive configuration and execution of
@@ -16,7 +17,7 @@ singular units of analysis, there are times like this where we almost always
 want to perform two anlayses together, differential expression and GSEA
 on the same contrast. This shiny-module presents an interface to both.
 }
-\section{Development Thouts}{
+\section{Development Thougts}{
 
 This also gives us the opportunity to exercise different methods of
 interaction between independant analysis results. In the DGE and GSEA

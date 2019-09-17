@@ -1,10 +1,17 @@
 #' Gadget to run both DGE and GSEA
 #'
 #' @export
-fdgeseaGadget <- function(x, title = "DGE and GSEA",
+#' @examples
+#' \dontrun{
+#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' efds <- FacileData::exampleFacileDataSet()
+#' xs <- FacileData::filter_samples(efds, indication == "CRC")
+#' fdgeseaGadget(xs, gdb)
+#' }
+fdgeseaGadget <- function(x, gdb = NULL, title = "DGE and GSEA",
                           height = 800, width = 1000, ...) {
   assert_multi_class(x, c("FacileDataStore", "facile_frame"))
-  frunGadget(fDgeSeaAnalysis, fDgeSeaAnalysisUI, x, title = title,
+  frunGadget(fDgeSeaAnalysis, fDgeSeaAnalysisUI, x, gdb = gdb, title = title,
              height = height, width = width, ...)
 }
 
@@ -18,7 +25,7 @@ fdgeseaGadget <- function(x, title = "DGE and GSEA",
 #' want to perform two anlayses together, differential expression and GSEA
 #' on the same contrast. This shiny-module presents an interface to both.
 #'
-#' @section Development Thouts:
+#' @section Development Thougts:
 #' This also gives us the opportunity to exercise different methods of
 #' interaction between independant analysis results. In the DGE and GSEA
 #' scenario, for instance, we might want the linked brushing that happens within
@@ -31,7 +38,8 @@ fdgeseaGadget <- function(x, title = "DGE and GSEA",
 #' it to the `dge_vew` volcano and statistics tables ... or not?
 #'
 #' @export
-fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
+fDgeSeaAnalysis <- function(input, output, session, rfds, gdb = NULL, ...,
+                            debug = FALSE) {
   # fdge bits ..................................................................
   model <- callModule(flmDefRun, "model", rfds, ..., debug = debug)
   dge <- callModule(fdgeRun, "dge", rfds, model, ..., debug = debug)
@@ -41,7 +49,7 @@ fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
                         debug = debug)
 
   # ffsea bits .................................................................
-  fsea <- callModule(ffseaRun, "fsea", rfds, dge, gdb, ..., debug = debug)
+  fsea <- callModule(ffseaRun, "fsea", rfds, dge, gdb = gdb, ..., debug = debug)
   fsea_view <- callModule(ffseaView, "fsea_view", rfds, fsea, ...,
                           debug = FALSE)
 
@@ -70,6 +78,7 @@ fDgeSeaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
 }
 
 
+#' @export
 #' @noRd
 #' @importFrom shinydashboard tabBox
 #' @importFrom shinyjs hidden

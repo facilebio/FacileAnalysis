@@ -8,21 +8,25 @@
 
 <title>Support harness to initialize and launch a shiny gadget over a facile object. — frunGadget • FacileAnalysis</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,11 +34,12 @@
 
 
 
-<meta property="og:title" content="Support harness to initialize and launch a shiny gadget over a facile object. — frunGadget" />
 
+<meta property="og:title" content="Support harness to initialize and launch a shiny gadget over a facile object. — frunGadget" />
 <meta property="og:description" content="This function handles much of the book keeping code required to setup a shiny
 gadget around a facile object x. There are two" />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -46,6 +51,7 @@ gadget around a facile object x. There are two" />
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
+
 
 
   </head>
@@ -64,7 +70,7 @@ gadget around a facile object x. There are two" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.3</span>
       </span>
     </div>
 
@@ -72,7 +78,7 @@ gadget around a facile object x. There are two" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -90,6 +96,9 @@ gadget around a facile object x. There are two" />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way (for coders)</a>
+    </li>
+    <li>
       <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
     </li>
     <li>
@@ -104,7 +113,6 @@ gadget around a facile object x. There are two" />
   </ul>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         
       </ul>
@@ -114,6 +122,7 @@ gadget around a facile object x. There are two" />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -125,17 +134,15 @@ gadget around a facile object x. There are two" />
     </div>
 
     <div class="ref-description">
-    
     <p>This function handles much of the book keeping code required to setup a shiny
 gadget around a facile object <code>x</code>. There are two</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>frunGadget</span>(<span class='no'>analysisModule</span>, <span class='no'>analysisUI</span>, <span class='no'>x</span>, <span class='kw'>user</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/Sys.getenv'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
+    <pre class="usage"><span class='fu'>frunGadget</span>(<span class='no'>analysisModule</span>, <span class='no'>analysisUI</span>, <span class='no'>x</span>, <span class='kw'>user</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
   <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Facile Analysis Gadget"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
   <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"dialog"</span>, <span class='no'>...</span>, <span class='kw'>with_sample_filter</span> <span class='kw'>=</span> <span class='fu'>is</span>(<span class='no'>x</span>,
   <span class='st'>"FacileDataStore"</span>), <span class='kw'>retval</span> <span class='kw'>=</span> <span class='st'>"x"</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -167,27 +174,26 @@ respectively.</p></td>
     <tr>
       <th>viewer</th>
       <td><p><code>"dialog"</code> (default), <code>"browser"</code>, or <code>"pane"</code>. See description
-from <a href='https://www.rdocumentation.org/packages/shiny/topics/runGadget'>shiny::runGadget</a></p></td>
+from <a href='https://rdrr.io/pkg/shiny/man/runGadget.html'>shiny::runGadget</a></p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>a subclass of <code>FacileAnalysisGadgetResult</code> which holds the result
 from the <code>analysisModule</code>, as well as am <code>annotation</code> tibble, that can hold
 information from brushing of smaples (or features) -- depending on what
 the gadget is working over.</p>
-    
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>This allows us to (shiny)-interact over objects (<code>x</code>) that have been created
 programmaticaly during an analysis, and return relevant interactive events
 over <code>x</code>, or derivative analysis results back to the workspace.</p>
-    
     <h2 class="hasAnchor" id="flavors-of-x"><a class="anchor" href="#flavors-of-x"></a>Flavors of x</h2>
 
     
-    <p>We want to support building interactive components over different types of
+
+<p>We want to support building interactive components over different types of
 facile objects (<code>x</code>). When <code>x</code> is a:</p><ul>
 <li><p><code>FacileDataStore</code> the analysis module will include a
 <code>FacileShine::filteredReactiveFacileDataStoreUI()</code>, which allows the user
@@ -200,23 +206,21 @@ anlaysis to run from there and be able to interact with the results.</p></li>
 <li><p><code>FacileAnalysisResult</code> will launch the view over the analysis result,
 allowing the user to interact with and explore the result.</p></li>
 </ul>
-    
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-
       <li><a href="#details">Details</a></li>
-
       <li><a href="#flavors-of-x">Flavors of x</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -224,13 +228,16 @@ allowing the user to interact with and explore the result.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

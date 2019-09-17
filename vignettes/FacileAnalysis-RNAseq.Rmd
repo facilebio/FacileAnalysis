@@ -26,16 +26,56 @@ set.seed(0xFEED)
 # http://desiree.rbind.io/post/2019/making-tip-boxes-with-bookdown-and-rmarkdown/
 ```
 
-# Overview
+## Overview
 
 This tutorial provides some examples of the common maneuvers analysts perform
-when analyzying RNA-seq data. We will endeavor to highlight how you can dip
-into an out of interactivity while driving this analysis primarily through code.
+when analyzying RNA-seq data. Generally speaking, some of the guiding principles
+of the analyses within the FacileAnalysis package is that they are made in a
+modular fashion, and their results (a `FacileAnalysisResult` object) can be:
 
-We will assume that you have already processed the raw fastq and 
-phenotypic data into a standard Bioconductor expression container, like a
-[SummarizedExperiment][SE], and will use the data provided in the 
-[parathyroidSE][parathyroidSE] data package as a starting point here.
+1. transformed into tabular form via a call to `tidy()`.
+
+2. interactivey explored by the analyst using the the `viz()` and `shine()`
+   functions. These provide javascript- and shiny-based views over their
+   results. The former is particularly useful when reporting results in an
+   Rmarkdown document, and the later are useful when analysts are doing some
+   self-exploration of their results. The modules used to create the shiny
+   views can also be weaved together into a larger interactive applications.
+
+3. serialized into a more thorough set of interactive visualizations via a
+   `report()` function, which is also suitable for use in an Rmarkdown
+   document.
+
+3. used as inputs to other analyses. In this report we show how:
+   a. A `FacilePcaAnalysisResult` can be used as input to perform GSEA along
+      a particular dimension.
+   b. A `FacileTtestAnalysisResult` can be used as input to perform GSEA.
+
+We'll try to exercise these within this vignette. At the end of this tutorial, 
+we will also show you how to run these analysis strictly via shiny gadgets and 
+manipulate the returned objects with code, as well.
+
+We will approximately follow along with the [rnaseqGene][rnaseqGene]
+bioconductor workflow, which analyzes the [airway][airway] dataset using the
+[DESeq2][deseq2] framework. This vignette will perform the analyzes outlined
+there, and then provide the comparable facile version of the analysis.
+
+:::note
+The FacileAnalysis package currently only provides edgeR- and limma-based
+methods for differential expression analysis. This does not represent any bias
+against using DESeq2, as we are in fact very fond of it, however these were the
+easiest ones to wrap into this package for now. Future versions of the
+FacileAnalysis package may include DESeq2 as an option for performing these
+analyses (esepcially if someone would like to provide a patch)!
+:::
+
+## Data Preparation
+
+The rnaseqGene vignette outlines how you can go from raw reads to a quantitated
+experiment, that lives in a [SummarizedExperiment][SE], for example. We will
+skip the data pre-processing, and just assume that your data is already made
+available in some bioconductor-blessed assay container, such as a
+SummarizedExperiment, DGEList, ExpressionSet, etc.
 
 :::tip
 If you are looking for help wrangling raw RNA-seq data into something like a
@@ -51,82 +91,453 @@ To add images to posts:
 2. Reference the image using a relative path: ![my-image](/img/my-image.png)
 -->
 
-# Setup
+### Prepare the FacileDataSet
 
-Let's setup our R environment to get facile!
+We first need to convert our data into a `FacileDataSet`. All we need for that
+is a "well-formed" standard Bioconductor assay container (SummarizedExperiment,
+DGEList, ExpressionSet, etc.). By "well-formed" we mostly mean one that has some
+minimal feature- and smaple-level metadata.
 
-```{r init, message=FALSE, warning=FALSE}
+You'll have to install the *airway* package if you haven't done that already, 
+then load the gene counts into your workspace.
+
+```{r se-load, message=FALSE, warning=FALSE}
+if (FALSE) {
+  BiocManager::install("airway")
+}
+
+library(DESeq2)
 library(SummarizedExperiment)
 library(FacileData)
-library(FacileAnalysis)
+# library(FacileAnalysis)
+devtools::load_all(".")
 library(dplyr)
 library(plotly)
 theme_set(theme_bw())
+
+data("airway", package = "airway")
 ```
 
-## Prepare the FacileDataSet
+We will need to manipulate the sample-level (`colData()`) and gene-level 
+(`rowData()`) information a bit before conversion. For the `colData()` we will
+subset down the columns to only keep the ones that are of phenotypic interest.
+For the `rowData()`, we will have to get the corresponding gene symbols for the
+ensembl identifiers in the data.
 
-Until we develop the [FacileBioc][FacileBioc] package to provide the FacileData
-API over standard Bioconductor assay containers, we have to first convert the
-SummarizedExperiment into a FacileDataSet.
+#### Sample Level Information:
 
-You'll have to install the *parathyroidSE* package if you haven't done that
-already, then load the gene counts into your workspace.
-
-```{r se-load, eval = FALSE}
-if (FALSE) {
-  BiocManager::install("parathyroidSE")
-}
-data("parathyroidGenesSE", package = "parathyroidSE")
-```
-
-We'll need to manipulate the sample-level (`colData()`) and gene-level 
-(`rowData()`) information a bit before conversion:
-
-### Sample Level Information:
-
-We really only want to keep the `"patient"`, `"treatment"`, and `"time"`
-covariates from `colData()`, so we'll trim the `colData()` down to just those
-columns.
-
-We'll also want to manipulate the levels of the `"patient"` and `"time"` factors
-to ensure they are valid R **variable names**, ie. we'll change `24h` to `hrs24`
-in the `"time"` factor.
+We really only want to keep the `"cell"`, and `"dex"` covariates from
+`colData()`, and we'll further want to relevel the `"dex"` factor as done
+in the rnaseqGene workflow.
 
 ```{r se-trim}
-se <- parathyroidGenesSE
+se <- airway
 cdata <- transform(
-  colData(parathyroidGenesSE),
-  time = factor(paste0("hrs_", sub("h", "", as.character(time)))),
-  patient = factor(paste0("patient_", as.character(patient))))
-cdata <- cdata[, c("patient", "treatment", "time")]
+  colData(se),
+  cell = cell,
+  dex = relevel(dex, "untrt"))
+cdata <- cdata[, c("cell", "dex")]
 colData(se) <- cdata
 ```
 
-### Gene Leve Information
-
-You'll notice that there is no gene-level information provided here.
-
-
-:::tip
-You are probably wondering why we are bothering to manipulate the `"time"`
-factor levels into something that is a valid R variable name. Here's why:
-often times while you're running different sorts of exploratory data
+:::note
+When massaging the sample level metadata into shape, we advise you to ensure
+that the levels of factors found in your experiment are also valid R variable
+names. For instance, if you have a `time` factor, with levels like
+`"24h"`, and `"48h"`, please consider re-encoding these to `"h24"` and `"h48"`.
+Here's why: often times while you're running different sorts of exploratory data
 analyses, through some sequence of `"gather"`-ing, `"spread"`-ing, and
 joining sample-level data, it is not uncommon for factor levels to end up as
 columns of a data.frame.
 
-Ensuring that they are "proper R variable" names up front avoids problems you
-might run into when using non standard evaluation with whatever dplyr mojo, `model.matrix(...)`, or whatever else these data often find themselves subject
-to.
+Ensuring that the factor loevels are "proper R variable" names up front avoids
+problems you might run into when using non standard evaluation with whatever
+dplyr mojo, `model.matrix(...)`, or whatever else these data often find
+themselves subject to.
+:::
+
+#### Gene Leve Information
+
+Features stored in a `FacileDataSet` need to specify the following elements:
+
+* `feature_id`: This is the esnembl gene identifer
+* `feature_type`: We use `"ensgid"` here to specify these are ensembl gene
+   identifiers.
+* `name`: For genes, we'll use the gene symbol
+* `meta`: This can be used for anything, but for "gene" feature spaces, I like
+   to put the gene biotype there
+
+The SummarizedExperiment we have only provides the ensembl gene identifiers for
+these data, so we'll have to get these information elsewhere, and we'll use the
+*biomaRt* package to do that. According to the [*parathyroidSE*][parathyroidSE] 
+vignette, the ensembl v72 annotations were used for processing. This version 
+isn't available to us  within biomaRt (via `listEnsemblArchives()`), so we'll
+pick the closest one to  it (v75).
+
+```r
+bm <- loadNamespace("biomaRt")
+mart <- bm$useMart(
+  host = "feb2014.archive.ensembl.org",
+  biomart = "ENSEMBL_MART_ENSEMBL",
+  dataset = "hsapiens_gene_ensembl")
+mart.info <- bm$getBM(
+  attributes = c("ensembl_gene_id", "hgnc_symbol", "gene_biotype"),
+  filters = "ensembl_gene_id",
+  values = rownames(se),
+  mart = mart)
+```
+
+The query above retrieves the data we need, but it can take a long and variable
+amount of time to run. To save time while compiling this vignette, we have
+serialized the result of the query, and will use that here.
+
+```{r load-local}
+mart.info <- local({
+  fn <- system.file("extdata", "airway-gene-info.csv.gz",
+                    package = "FacileAnalysis")
+  read.csv(gzfile(fn, "rt"), stringsAsFactors = FALSE)
+})
+```
+
+Lastly, the column names of the `gene.info` table need to be tweaked, and we
+can only keep the rows that are shared between the gene information we
+retrieved, and the ones that are in the SummarizedExperiment.
+
+```{r massage-rows}
+gene.info <- mart.info %>% 
+  transmute(feature_id = ensembl_gene_id,
+            feature_type = "ensgid",
+            name = hgnc_symbol, 
+            meta = gene_biotype) %>% 
+  filter(feature_id %in% rownames(se), !duplicated(feature_id)) %>% 
+  DataFrame()
+rownames(gene.info) <- gene.info$feature_id
+
+se <- se[gene.info$feature_id,]
+rowData(se) <- gene.info
+```
+
+Now we can create the FacileDataSet with a simple call to `as.FacileDataSet()`,
+by providing the groomed SummarizedExperiment, and a path to store the converted
+data.
+
+```{r}
+xfds <- as.FacileDataSet(
+  se, 
+  path = tempfile(),
+  dataset_name = "FacileAirwayDataSet",
+  # dataset_meta = paste(
+  #   "DPN and Tamoxifen treatments of parathyroid adenoma cells",
+  #   "(GSE37211)",
+  assay_name = "gene_counts",
+  assay_description = "Gene counts from airway package",
+  assay_type = "rnaseq",
+  organism = "Homo sapiens")
+```
+
+:::note
+The [FacileBioc][FacileBioc] package will provide functionality that will enable
+you to use standard Bioconductor assay containers without physially converting
+them to a `FacileDataSet`, however these data will stil need to provide the
+expect feature information in their `rowData()`.
 :::
 
 
+### Prepare the DESeqDataSet
+
+Let's create a `dds` object so we can perform the `DESeq2` maneuvers on these
+data, and compare them with the facile version of the analyses. The worklow
+suggests you to perform some exploratory analyses using variance stablised
+data, so we'll calculate that here, as well.
+
+```{r dds}
+dds <- DESeqDataSet(se, design = ~ cell + dex)
+vsd <- vst(dds, blind = FALSE)
+```
+
+## QC
+
+### PCA plot
+
+Let's jump to the [PCA plot](https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#pca-plot) section of the rnaseqGene workflow.
+
+Plotting the samples on their principal components in the vignette was performed
+with the following command:
+
+```{r ddspcas}
+plotPCA(vsd, intgroup = c("dex", "cell"))
+```
+
+That simultaneously runs the principal components analysis and plots the result.
+
+In the facile paradigm, we will first run the PCA, then interact with the
+result of that analysis itself (ie. plot it). We also do not have access to the
+variance stabilized data from a FacileDataSet, however using higher values for
+`prior.count` has *approximately* the same effect.
+
+```{r}
+pca <- fpca(xfds, prior.count = 5)
+viz(pca, color_aes = c("dex", "cell"))
+```
+
+This is a bit different than the PCA on the `vsd` data, but perhaps close enough.
+
+:::note
+You can also run `fpca` on the `vsd` object directly, and you would have gotten
+the same result as provided from the `plotPCA()` call. You can try the
+following:
+
+```{r fpcavsd, eval = FALSE}
+vpca <- fpca(vsd)
+viz(vpca, color_aes = c("dex", "cell")
+```
+:::
+
+We can assign covariates to different aesthetic properties, like shape, as well:
+
+```{r}
+viz(pca, color_aes = "dex", shape_aes = "cell")
+```
+
+#### Removing Batch Effects
+
+When we perform the differential expression analysis, we will want to analyze
+the treatment effects (`dex`) while controling for the celltype `cell`. The
+data retrieval functions in the core `FacileData` package allow for batch
+correction of normalized data using a simplified wrapper to limma's
+`removeBatchEffect()` function (see `?FacileData::remove_batch_effect`).
+
+This functionality is triggered when a covariate(s) is provided in a `batch`
+argument, as shown in the code below. Note that we set `ntop` to 5000, which
+uses the top 1000 most variable genes for analysis (instead of the default
+500). We do this to better perform GSEA on the PCA result afterwards.
+
+```{r}
+cpca <- fpca(xfds, batch = "cell", ntop = 5000)
+viz(cpca, dims = 1:3, color_aes = "dex", shape_aes = "cell")
+```
+
+#### Interrogating a PCA Result
+
+The benefit of having the `fpca()` result (`cpca`) in your hand is that you
+can perform further action on it.
+
+We've shown how you can "visualize" it in different ways, via the `viz()`
+function. But we can also identify the genes that are "highly" loaded along
+the principal components.
+
+The `tidy()` function will return a table with the coordinates of each sample
+on the PCs. `ranks()` and `signature()` returns the loadings of the genes
+on each dimension, and the top `ntop` genes on each dimension, respectively.
+
+```{r}
+pc.genes <- signature(cpca, dims = 1:2, ntop = 20)
+pc.genes %>% 
+  tidy() %>% 
+  select(symbol, feature_id, dimension, score, meta)
+```
+
+We can even perform GSEA over any dimension of the PCA result via the `ffsea()`
+function (Facile Feature Set Enrichment). This will rank genes by their loadings
+on the desred PC of interest, and perform a pre-ranked GSEA method (by default,
+we use `limma::cameraPR`).
+
+For this, we'll need a geneset collection stored in a `multiGSEA::GeneSetDb`
+object. We'll use the MSigDB hallmark genesets for this purpose, and run both
+`"cameraPR"` and `"fgsea"`.
+
+```{r pcagsea}
+gdb.hallmark <- multiGSEA::getMSigGeneSetDb("H", "human", "ensembl")
+pca.gsea <- ffsea(cpca, gdb.hallmark, dim = 1, 
+                  methods = c("cameraPR", "fgsea"))
+```
+
+You can now interactively interrogate the result of the `pca.gsea` object via
+the object's `shine()` method. This will instantiated a shiny gadget that allows
+you to browse through the reuslts.
+
+```{r shinepcagsea, eval = FALSE}
+# TODO: Create animated give of shine(pca.gsea)
+shine(pca.gsea)
+```
+
+And you can visualize the loadings of the genes on PC1 like so.
+
+```{r}
+viz(pca.gsea, name = "HALLMARK_ADIPOGENESIS")
+```
+
+:::note
+The GSEA functionality is performed by the [multiGSEA][multiGSEA] package.
+Please read that vignette to learn more about its functionality. Also note
+taht performing GSEA on anything but logFC's or t-statistics is new (like
+gene loadings on a principal component). The "units" plotted need to be
+update (ie. logFC is shown here, but that's not correct).
+:::
+
+## Differential Expression Analysis
+
+In the rnaseqGene workflow, we are testing the differential expression of
+the `dex` treatment while controling for the `cell` identity. The design formula
+used there was `~ cell + dex`, and was set during the call to `DESeqDataSet()`.
+
+```{r rundeseq}
+dds <- DESeq(dds)
+dex.dds <- results(dds) %>% 
+  as.data.frame() %>% 
+  subset(!is.na(pvalue)) %>% 
+  transform(feature_id = rownames(.)) %>% 
+  select(feature_id, pvalue, log2FoldChange, padj, everything()) %>% 
+  arrange(pvalue)
+```
+
+On the facile side, we break down the differential expression workflow into two
+explicit steps. First we define the linear model we will use for testing via the
+`flm_def()` function.
+
+To define which samples will be tested against each other, we first specify the
+`covariate` used for the sample grouping. The levels of the `covariate` that
+specify the samples that belong in the "numerator" of the fold change
+calculation are specified by the `numer` parameter. The `denom` parameter
+specifies denominator. The `batch` covarite can be used if there is a covariate
+we want to control for, like `"cell"` in this case.
+
+```{r flm-def}
+xlm <- flm_def(xfds, covariate = "dex", numer = "trt", denom = "untrt",
+               batch = "cell")
+```
+
+Now that we have the linear model defined, we can perform a differential
+expression analysis over it via the `fdge()` function. Using this funciton,
+we need to specify:
+
+1. `assay_name`: The assay container that holds the assay data we want to 
+   perform the test against. The `xfds` dataset only has one assay 
+   (`"gene_counts"`) of type `"rnaseq"`(`assay_info(xfds)`), so no need to
+   specify this.
+2. The method to use to perform the analysis. The methods we can use are
+   defined by the type of assay data the assay matrix has. Our `"gene_counts"`
+   assay is of type `"rnaseq"`. So far, we support the use of the `"edgeR-qlf"`,
+   `"voom"`, and `"limma-trend"` pipelines for rnaseq analysis
+   (see the output from `fdge_methosd("rnaseq")`).
+
+There are optional parameters we can pass in to tweak the analysis, for
+instance:
+
+i. `treat_lfc` accepts a log2 value which will be used to perform a test
+   against a minimal thershold, using limma's (or edgeR's) *treat* framework.
+ii. `filter` can be used to customize the policy used to remove lowly
+   expressed genes.
+iii. `use_sample_weights` can be set to `TRUE` if you want to leverage limma's
+   `arrayWeights` or `voomWithQualityWeights` (depending on the `method`
+   specified).
+
+You can see more details in the `?fdge` manual page.
+
+To make our results as comparable to the DESeq results as possible, we will
+pass the gene identifiers used in the DESeq analysis into the `filter` paramater
+so we get statistics on those same genes. We'll use the the voom framework for 
+our initial analysis:
+
+```{r fdge-dex}
+dex.vm <- fdge(xlm, method = "voom", filter = dex.dds$feature_id)
+```
+
+The `shine()` function will enable you to interactively explore the result
+via a shiny gadget. Note that since we corrected for `"cell"` in our analysis,
+the sample-level expression value for each gene is shown in its batch-corrected
+values. You can toggle batch correction off to see the effect it has on the
+data.
+
+```{r fdge-shine, eval=FALSE}
+shine(dex.vm)
+```
+
+<!-- TODO: Add shine(dex.vm) animated gif -->
+
+You can extract the differential statistics via the `tidy()` function. The
+`ranks()` function first arranges the results by their significance, the result
+of which you also pass to `tidy()`:
+
+```{r}
+vm.res <- dex.vm %>% 
+  ranks(signed = FALSE) %>% 
+  tidy() %>% 
+  select(feature_id, symbol, logFC, pval, padj)
+head(vm.res, 20)
+```
+
+The `viz()` function on an `fdge()` result can be used to make a volcano plot,
+MA plot, or the expression profiles of a set of genes you want to observe
+directly.
+
+We can view what the differential expression of the top result looks like,
+with and without batch corrected values.
+
+```{r}
+viz(dex.vm, feature_id = head(vm.res, 1))
+```
+
+```{r}
+viz(dex.vm, feature_id = head(vm.res, 1), batch_correct = FALSE)
+```
+
+Or we can make a volcano plot, and highlight which of the genes were also in
+DESeq2's top 50 results. By default, these plots use webgl, but we still
+restrict it to only show the top 1500 genes in the volcano. You can set this
+to `Inf` to show all of them.
+
+```{r}
+viz(dex.vm, type = "volcano", ntop = 1500,
+    highlight = head(dex.dds$feature_id, 50))
+```
+
+... or an MA plot ...
+
+```{r}
+viz(dex.vm, type = "ma", ntop = 1500,
+    highlight = head(dex.dds$feature_id, 50))
+```
+
+How concordant are the DESeq2 and voom results?
+
+```{r}
+cmp <- dex.dds %>% 
+  inner_join(select(tidy(dex.vm), feature_id, symbol, logFC, pval, padj, t),
+             by = "feature_id")
+```
+
+```{r}
+ggplot(cmp, aes(x = log2FoldChange, y = logFC)) +
+  geom_point(alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  xlab("DESeq2 log2FC") +
+  ylab("voom log2FC") +
+  ggtitle("logFC comparison bewteen DESeq2 and facile-voom result")
+```
+
+## Gene Set Enrichment Analysis
+
+As is the case in the PCA -> GSEA analysis performed above, GSEA here is
+performed downstream of the differential expression result. We need to specify
+the geneset collection to use for GSEA, as well as the methods performed.
+
+```{r}
+gdb <- multiGSEA::getMSigGeneSetDb("c5", "human", "ensembl")
+dge.gsea <- ffsea(dex.vm, gdb, methods = c("enrichtest", "cameraPR"))
+```
+
+```{r eval=FALSE}
+shine(dge.gsea)
+```
+
 [//]: # Markdown References ----------------------------------------------------
 
+[deseq2]: http://bioconductor.org/packages/DESeq2
 [FacileBioc]: https://github.com/facileverse/FacileBioc
 [kallisto]: https://pachterlab.github.io/kallisto/
-[parathyroidSE]: http://bioconductor.org/packages/parathyroidSE
+[multiGSEA]: https://github.com/lianos/multiGSEA
+[rnaseqGene]: https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
 [salmon]: https://combine-lab.github.io/salmon/
 [SE]: http://bioconductor.org/packages/SummarizedExperiment
 [tximport]: http://bioconductor.org/packages/tximport
