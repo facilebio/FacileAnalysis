@@ -195,9 +195,7 @@ asamples %>%
 dds <- dds[features(xfds)$feature_id,]
 ```
 
-## QC
-
-### PCA plot
+## Principal Components Analysis
 
 Let's jump to the [PCA plot](https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#pca-plot) section of the rnaseqGene workflow.
 
@@ -255,7 +253,7 @@ and map this covariate to the color aesthetic.
 viz(pca, color_aes = "treatment", shape_aes = "cell_line")
 ```
 
-#### Removing Batch Effects
+### Removing Batch Effects
 
 When we perform the differential expression analysis, we will want to analyze
 the treatment effects (`"treatment"`) while controling for the celltype 
@@ -278,7 +276,7 @@ There is a [bug when mapping aesthetics to shapes](https://github.com/facilevers
 and `N061011` cells should not both be circles.
 :::
 
-#### Interrogating a PCA Result
+### Interrogating a PCA Result
 
 The benefit of having the `fpca()` result (`cpca`) in your hand is that you
 can perform further action on it.
