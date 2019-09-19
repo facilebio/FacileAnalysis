@@ -184,16 +184,24 @@ vdge2 <- fdgeGadget(samples)
 
 Or we can perform the whole thing via a GUI which lets us select the
 subset of samples and run the differential expression analysis without
-using any code at all:
+using any code at
+all:
 
 ``` r
 vdge3 <- fdgeGadget(efds)
 ```
 
+<img src="docs/articles/images/animated/vignette-fdgeGadget-trim.gif" width="75%" />
+
 Assuming the same filtering and testing strategies were selected in the
 GUI using the `fdgeGadget` calls above, the objects they return will all
 be equivalent to the `vdge` result, which was entirely generated
 programmatically.
+
+**Note**: the screen capture of the `fdgeGadget()` above actually
+corresponds to the analyses in the [RNA-seq the facile
+way](https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
+vignette.
 
 ## Installation
 
