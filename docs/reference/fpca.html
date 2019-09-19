@@ -34,6 +34,8 @@
 
 
 
+  <link href="../extra.css" rel="stylesheet">
+  
 
 <meta property="og:title" content="Runs a facile PCA — fpca" />
 <meta property="og:description" content="The code here is largely inspired by DESeq2's plotPCA." />
@@ -95,7 +97,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way (for coders)</a>
+      <a href="../articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way</a>
     </li>
     <li>
       <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
@@ -137,17 +139,17 @@
     </div>
 
     <pre class="usage"><span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for facile_frame</span>
 <span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>,
-  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>), <span class='no'>...</span>)
+  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>), <span class='no'>...</span>)
 
 <span class='co'># S3 method for matrix</span>
 <span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>dims</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>, <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>scale.</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>dims</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>,
+  <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>scale.</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -239,7 +241,7 @@ covariates, then the manually provided ones will supersede the internals.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
 
       </footer>

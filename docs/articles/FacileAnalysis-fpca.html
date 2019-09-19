@@ -7,9 +7,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Facile Principal Components Analysis • FacileAnalysis</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Facile Principal Components Analysis">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Facile Principal Components Analysis">
 <meta property="og:description" content="">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -30,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.3</span>
       </span>
     </div>
 
@@ -38,7 +40,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -56,6 +58,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way</a>
+    </li>
+    <li>
       <a href="../articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
     </li>
     <li>
@@ -79,6 +84,7 @@
 <!--/.navbar -->
 
       
+
       </header><script src="FacileAnalysis-fpca_files/htmlwidgets-1.3/htmlwidgets.js"></script><script src="FacileAnalysis-fpca_files/plotly-binding-4.9.0/plotly.js"></script><script src="FacileAnalysis-fpca_files/typedarray-0.1/typedarray.min.js"></script><script src="FacileAnalysis-fpca_files/jquery-1.11.3/jquery.min.js"></script><link href="FacileAnalysis-fpca_files/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet">
 <script src="FacileAnalysis-fpca_files/crosstalk-1.0.0/js/crosstalk.min.js"></script><link href="FacileAnalysis-fpca_files/plotly-htmlwidgets-css-1.46.1/plotly-htmlwidgets.css" rel="stylesheet">
 <script src="FacileAnalysis-fpca_files/plotly-main-1.46.1/plotly-latest.min.js"></script><div class="row">
@@ -103,25 +109,27 @@
 <li>Extract the highly loaded genes (and genesets) from each PC</li>
 </ul>
 <p>Easy to run a PCA over the rnaseq data, or whatever other assy you got there (CNV, proteomics, take your pick)</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(FacileData)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(FacileAnalysis)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(dplyr)</a>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(FacileData)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(FacileAnalysis)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(dplyr)</a>
 <a class="sourceLine" id="cb1-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">pca.crc &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/FacileData/topics/exampleFacileDataSet">exampleFacileDataSet</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">pca.crc &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html">exampleFacileDataSet</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb1-6" data-line-number="6"><span class="st">  </span><span class="kw">filter_samples</span>(indication <span class="op">==</span><span class="st"> "CRC"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb1-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/fpca.html">fpca</a></span>(<span class="dt">assay_name =</span> <span class="st">"rnaseq"</span>)</a></code></pre></div>
 <p>Vizualize the results:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw"><a href="../reference/FacileAnalysisResultViz.html">viz</a></span>(pca.crc, <span class="dt">pcs =</span> <span class="dv">2</span>, <span class="dt">color_aes =</span> <span class="st">"sample_type"</span>,</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="dt">hover =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"sex"</span>, <span class="st">"sample_type"</span>, <span class="st">"sample_id"</span>))</a></code></pre></div>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="dt">hover =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"sex"</span>, <span class="st">"sample_type"</span>, <span class="st">"sample_id"</span>))</a></code></pre></div>
 <div id="htmlwidget-6a1ea247c626d3383a52" style="width:800px;height:400px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-6a1ea247c626d3383a52">{"x":{"visdat":{"56d31dce7ed4":["function () ","plotlyVisDat"]},"cur_data":"56d31dce7ed4","attrs":{"56d31dce7ed4":{"x":{},"y":{},"key":[],"legendgroup":null,"showlegend":true,"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter","mode":"markers","color":{},"colors":["#999999","#FF7F00"],"symbol":["circle"],"marker":{"size":8},"text":{},"inherit":true}},"layout":{"width":800,"height":400,"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"PC1 (50.37%)"},"yaxis":{"domain":[0,1],"automargin":true,"title":"PC2 (19.36%)"},"dragmode":"select","hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false,"displaylogo":false},"data":[{"x":[67.2846949314857,64.7428900833287,71.1858831999432],"y":[-18.5043642919739,-4.39149153414327,-19.5171597647137],"showlegend":true,"type":"scatter","mode":"markers","marker":{"color":"rgba(153,153,153,1)","symbol":"circle","size":8,"line":{"color":"rgba(153,153,153,1)"}},"text":["sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-2675-11A-01R-1723-07","sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-5659-11A-01R-1653-07","sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-5662-11A-01R-1653-07"],"name":"normal","textfont":{"color":"rgba(153,153,153,1)"},"error_y":{"color":"rgba(153,153,153,1)"},"error_x":{"color":"rgba(153,153,153,1)"},"line":{"color":"rgba(153,153,153,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[-5.86136220275235,-20.5403857243385,-40.419868926328,-19.6024713628982,-44.0757373475299,-13.206460641317,-2.53747748029913,-23.2659960297699,-29.1879634032821,3.06317591879835,-13.6193974593939,6.04047644435322],"y":[11.4810284872955,-1.22616426798943,-28.7005727350488,-11.8625630155723,-45.6571796200593,19.6823672717925,21.9646005761457,29.7045343695614,-21.2407228545933,24.2090778084841,20.2259707275697,23.8326388432453],"showlegend":true,"type":"scatter","mode":"markers","marker":{"color":"rgba(255,127,0,1)","symbol":"circle","size":8,"line":{"color":"rgba(255,127,0,1)"}},"text":["sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2670-01A-02R-0821-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2671-01A-01R-1410-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2672-01A-01R-0826-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2674-01A-02R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2676-01A-01R-0826-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2677-01A-01R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2680-01A-01R-1410-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2683-01A-01R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-3809-01A-01R-1022-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-6141-01A-11R-1774-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-AA-3502-01A-01R-1410-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-AA-3522-01A-01R-0821-07"],"name":"tumor","textfont":{"color":"rgba(255,127,0,1)"},"error_y":{"color":"rgba(255,127,0,1)"},"error_x":{"color":"rgba(255,127,0,1)"},"line":{"color":"rgba(255,127,0,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>Need to fix up <code><a href="../reference/FacileAnalysisResultViz.html">report()</a></code></p>
+<script type="application/json" data-for="htmlwidget-6a1ea247c626d3383a52">{"x":{"visdat":{"56a522e6ae0e":["function () ","plotlyVisDat"]},"cur_data":"56a522e6ae0e","attrs":{"56a522e6ae0e":{"x":{},"y":{},"key":[],"legendgroup":null,"showlegend":true,"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter","mode":"markers","color":{},"colors":["#999999","#FF7F00"],"symbol":["circle"],"marker":{"size":8},"text":{},"inherit":true}},"layout":{"width":800,"height":400,"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"PC1 (50.37%)"},"yaxis":{"domain":[0,1],"automargin":true,"title":"PC2 (19.36%)"},"dragmode":"select","hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false,"displaylogo":false},"data":[{"x":[67.2846949314857,64.7428900833287,71.1858831999432],"y":[-18.5043642919739,-4.39149153414327,-19.5171597647137],"showlegend":true,"type":"scatter","mode":"markers","marker":{"color":"rgba(153,153,153,1)","symbol":"circle","size":8,"line":{"color":"rgba(153,153,153,1)"}},"text":["sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-2675-11A-01R-1723-07","sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-5659-11A-01R-1653-07","sex: m<br>sample_type: normal<br>sample_id: TCGA-A6-5662-11A-01R-1653-07"],"name":"normal","textfont":{"color":"rgba(153,153,153,1)"},"error_y":{"color":"rgba(153,153,153,1)"},"error_x":{"color":"rgba(153,153,153,1)"},"line":{"color":"rgba(153,153,153,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[-5.86136220275235,-20.5403857243385,-40.419868926328,-19.6024713628982,-44.0757373475299,-13.206460641317,-2.53747748029913,-23.2659960297699,-29.1879634032821,3.06317591879835,-13.6193974593939,6.04047644435322],"y":[11.4810284872955,-1.22616426798943,-28.7005727350488,-11.8625630155723,-45.6571796200593,19.6823672717925,21.9646005761457,29.7045343695614,-21.2407228545933,24.2090778084841,20.2259707275697,23.8326388432453],"showlegend":true,"type":"scatter","mode":"markers","marker":{"color":"rgba(255,127,0,1)","symbol":"circle","size":8,"line":{"color":"rgba(255,127,0,1)"}},"text":["sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2670-01A-02R-0821-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2671-01A-01R-1410-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2672-01A-01R-0826-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-2674-01A-02R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2676-01A-01R-0826-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2677-01A-01R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2680-01A-01R-1410-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-2683-01A-01R-0821-07","sex: f<br>sample_type: tumor<br>sample_id: TCGA-A6-3809-01A-01R-1022-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-A6-6141-01A-11R-1774-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-AA-3502-01A-01R-1410-07","sex: m<br>sample_type: tumor<br>sample_id: TCGA-AA-3522-01A-01R-0821-07"],"name":"tumor","textfont":{"color":"rgba(255,127,0,1)"},"error_y":{"color":"rgba(255,127,0,1)"},"error_x":{"color":"rgba(255,127,0,1)"},"line":{"color":"rgba(255,127,0,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>Need to fix up <code><a href="../reference/FacileAnalysisResultViz.html">report()</a></code></p>
 <p>Not sure how to <code><a href="../reference/compare.html">compare()</a></code> two PCA results …</p>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+
       </div>
 
 </div>
+
 
 
       <footer><div class="copyright">
@@ -129,12 +137,14 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>

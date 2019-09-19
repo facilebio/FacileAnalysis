@@ -10,7 +10,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Analysis routines over a FacileDataStore">
+<script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<meta property="og:title" content="Analysis routines over a FacileDataStore">
 <meta property="og:description" content='Provides modularized versions of analyses that are commonly
     performed over genomics data. Analysis results can be interactively explored
     by analysts using the "vizualize" or "shine" functions, and embedded into
@@ -60,7 +61,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way (for coders)</a>
+      <a href="articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way</a>
     </li>
     <li>
       <a href="articles/FacileAnalysis-examples.html">Reproducing genomic anlayses the facile way</a>
@@ -102,7 +103,11 @@
 <li>be explored at <strong>different levels of interactivity</strong>, via the <code><a href="reference/FacileAnalysisResultViz.html">shine()</a></code>, <code><a href="reference/FacileAnalysisResultViz.html">viz()</a></code>, and <code><a href="reference/FacileAnalysisResultViz.html">report()</a></code> methods; and</li>
 <li>act as starting (or reference) points for <strong>the next</strong> analysis task, either directly or by via the <code><a href="reference/ranks_and_signatures.html">ranks()</a></code>, <code><a href="reference/signature.html">signature()</a></code>, or <code><a href="reference/compare.html">compare()</a></code> methods.</li>
 </ol>
-<p>You can find a more in-depth overview and philosophy of this package in the <a href="FacileAnalysis.html">FacileAnalysis vignette</a>.</p>
+<p>Please refer to the <a href="https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html">RNA-seq Analysis: The Facile Way</a> to get an idea of how to use these tools when analyzing RNA-seq data.</p>
+<!--
+You can find a more in-depth overview and philosophy of this package in the
+[FacileAnalysis vignette][pkgvign] (this is incomplete).
+-->
 <p>The analyses implemented within this package are listed below, with links to vignettes that describe their functionality in more detail:</p>
 <ul>
 <li>
@@ -173,6 +178,9 @@
 <a class="sourceLine" id="cb5-2" data-line-number="2">  <span class="st">"Differential expression of tumor vs normal samples, in the TCGA bladder"</span></a>
 <a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="st">"cancer indication (BLCA)"</span>)</a>
 <a class="sourceLine" id="cb5-4" data-line-number="4"><span class="kw"><a href="reference/FacileAnalysisResultViz.html">report</a></span>(vdge, <span class="dt">caption =</span> cap)</a></code></pre></div>
+<!--
+<img src="man/figures/fdge-report.gif" width = "75%" />
+-->
 </div>
 </div>
 <div id="hybrid-analyses" class="section level2">
@@ -208,7 +216,7 @@
 <h2 class="hasAnchor">
 <a href="#acknowledgements" class="anchor"></a>Acknowledgements</h2>
 <ul>
-<li>We used the <a href="https://github.com/dergachev/screengif">screengif</a> tool to convert screen-capture *.mov files to animated gifs. Thanks [@dergachev](<a href="https://github.com/dergachev" class="uri">https://github.com/dergachev</a>)!</li>
+<li>Thanks to Morten Just, who developed the <a href="https://github.com/mortenjust/droptogif">droptogif</a>, which we used to convert screen-captured <code>*.mov</code> files to animated gifs.</li>
 </ul>
 </div>
 </div>
@@ -247,7 +255,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
 
       </footer>

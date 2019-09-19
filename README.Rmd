@@ -42,8 +42,13 @@ smaller constituent steps, the results of which can:
 3. act as starting (or reference) points for **the next** analysis task, either
    directly or by via the `ranks()`, `signature()`, or `compare()` methods.
 
+Please refer to the [RNA-seq Analysis: The Facile Way][rnafway] to get an idea
+of how to use these tools when analyzing RNA-seq data.
+
+<!--
 You can find a more in-depth overview and philosophy of this package in the
-[FacileAnalysis vignette][pkgvign].
+[FacileAnalysis vignette][pkgvign] (this is incomplete).
+-->
 
 The analyses implemented within this package are listed below, with links to
 vignettes that describe their functionality in more detail:
@@ -157,6 +162,10 @@ cap <- paste(
 report(vdge, caption = cap)
 ```
 
+<!--
+<img src="man/figures/fdge-report.gif" width = "75%" />
+-->
+
 ## Hybrid Analyses
 
 The same differential expression analysis that created the `vdge` object above
@@ -217,6 +226,7 @@ BiocManager::install("facileverse/FacileAnalysis")
 [htmlwidgets]: https://www.htmlwidgets.org
 [issues]: https://github.com/facileverse/FacileAnalysis/issues
 [pkgvign]: FacileAnalysis.html
+[rnafway]: https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html
 [PR]: https://github.com/denalitherapeutics/FacileAnalysis/pulls
 [qlf]: https://f1000research.com/articles/5-1438
 [sgadget]: https://shiny.rstudio.com/articles/gadgets.html

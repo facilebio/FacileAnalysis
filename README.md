@@ -35,8 +35,14 @@ task into smaller constituent steps, the results of which can:
     task, either directly or by via the `ranks()`, `signature()`, or
     `compare()` methods.
 
-You can find a more in-depth overview and philosophy of this package in
-the [FacileAnalysis vignette](FacileAnalysis.html).
+Please refer to the [RNA-seq Analysis: The Facile
+Way](https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
+to get an idea of how to use these tools when analyzing RNA-seq data.
+
+<!--
+You can find a more in-depth overview and philosophy of this package in the
+[FacileAnalysis vignette][pkgvign] (this is incomplete).
+-->
 
 The analyses implemented within this package are listed below, with
 links to vignettes that describe their functionality in more detail:
@@ -158,6 +164,10 @@ cap <- paste(
 report(vdge, caption = cap)
 ```
 
+<!--
+<img src="man/figures/fdge-report.gif" width = "75%" />
+-->
+
 ## Hybrid Analyses
 
 The same differential expression analysis that created the `vdge` object
@@ -211,6 +221,6 @@ BiocManager::install("facileverse/FacileAnalysis")
 
 ## Acknowledgements
 
-  - We used the [screengif](https://github.com/dergachev/screengif) tool
-    to convert screen-capture \*.mov files to animated gifs. Thanks
-    \[@dergachev\](<https://github.com/dergachev>)\!
+  - Thanks to Morten Just, who developed the
+    [droptogif](https://github.com/mortenjust/droptogif), which we used
+    to convert screen-captured `*.mov` files to animated gifs.
