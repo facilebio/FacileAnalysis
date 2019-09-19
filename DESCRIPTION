@@ -44,8 +44,8 @@ Suggests:
     curl,
     DESeq2,
     knitr,
-    parathyroidSE,
     SummarizedExperiment,
+    sva,
     testthat
 Remotes:
     facileverse/FacileData,

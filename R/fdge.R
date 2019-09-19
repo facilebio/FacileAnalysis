@@ -211,9 +211,12 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
     result <- select(result, feature_type, everything())
   }
 
+  # We'll stick on the lib.size and norm.factors on these samples so that
+  # downstream queries over this result will use the same normalization factors
+  # when retrieving data as well.
   if (is(y, "DGEList") || is(y, "EList")) {
     samples. <- samples(x)
-    sinfo <- if (is(y, "DGElist")) y[["samples"]] else y[["targets"]]
+    sinfo <- if (is(y, "DGEList")) y[["samples"]] else y[["targets"]]
     for (cname in c("lib.size", "norm.factors")) {
       if (cname %in% colnames(sinfo) && is.numeric(sinfo[[cname]])) {
         samples.[[cname]] <- sinfo[[cname]]

@@ -202,9 +202,9 @@ BiocManager::install("facileverse/FacileAnalysis")
 
 ## Acknowledgements
 
-* We used the [screengif](https://github.com/dergachev/screengif) tool to
-  convert screen-capture *.mov files to animated gifs. Thanks 
-  [@dergachev](https://github.com/dergachev)!
+* Thanks to Morten Just, who developed the 
+  [droptogif](https://github.com/mortenjust/droptogif), which we used to
+  convert screen-captured `*.mov` files to animated gifs.
 
 [bioc]: https://bioconductor.org
 [biocmanager]: https://cran.r-project.org/package=BiocManager

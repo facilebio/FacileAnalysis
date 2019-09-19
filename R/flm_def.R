@@ -167,9 +167,9 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   # of the tested covariate that do not appear in our sample space
   x <- droplevels(x)
 
-  dformula <- paste(
-    "~",
-    if (test_type == "anova") "" else "0 +",
+  dformula <- paste0(
+    "~ ",
+    if (test_type == "anova") NULL else "0 + ",
     covariate)
 
   if (!is.null(batch)) {
@@ -524,20 +524,19 @@ print.FacileLinearModelDefinition <- function(x, ...) {
 #' @export
 format.FacileLinearModelDefinition <- function(x, ...) {
   if (is.ttest(x)) {
-    testing <- "contrast"
-    thetest <- paste(names(x$contrast), x$contrast,
-                     sep = ": ", collapse = " || ")
+    testing <- sprintf("Testing contrast over `%s` covariate:\n  %s",
+                       param(x, "covariate"),
+                       x[["contrast_string"]])
   } else {
-    testing <- "coefficient"
-    thetest <- paste(colnames(design(x))[x$coef], collapse = "|")
+    testing <- sprintf("Running ANOVA over the levels of the `%s` coefficient",
+                       param(x, "covariate"))
   }
   out <- paste(
     "===========================================================\n",
     sprintf("%s\n", class(x)[1L]),
     "-----------------------------------------------------------\n",
     "Design: ", formula(x), "\n",
-    sprintf("Testing `%s` (%s):\n    %s\n", x[["covariate"]],
-            testing, thetest),
+    testing, "\n",
     "===========================================================\n",
     sep = "")
   out
