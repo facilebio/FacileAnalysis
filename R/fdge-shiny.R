@@ -426,14 +426,14 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     filename = function() {
       feature <- req(selected_result())
       req(nrow(feature) == 1L)
-
-      name <- paste0(feature[["feature_id"]], "_expression")
       symbol <- feature$symbol
-      if (is.na(symbol) || unselected(symbol)) {
-        name <- paste(symbol, name, sep = "_")
+      name <- "expression"
+      if (!is.na(symbol) && !unselected(symbol)) {
+        name <- paste(name, symbol, sep = "_")
       }
+      name <- paste(name, feature[["feature_id"]], sep = "_")
       if (batch_corrected() && input$batch_correct) {
-        name <- paste0(name, "_batch_corrected")
+        name <- paste(name, "batch-corrected", sep = "_")
       }
       paste0(name, ".csv")
     },
