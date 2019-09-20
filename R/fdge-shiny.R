@@ -308,6 +308,12 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   model. <- reactive(model(req(dge())))
   covariate. <- reactive(param(req(model.()), "covariate"))
 
+  batch_corrected <- reactive({
+    mod <- req(model.())
+    batch <- param(mod, "batch")
+    !is.null(batch)
+  })
+
   # Two versions of the result table are stored:
   # 1. `dge.stats.all`: always the full table; and
   # 2. `dge.stats`: the subset of (1) which corresponds to the currently
@@ -397,19 +403,16 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
   # and shows/hides the UI element to view batch-corrected expression data
   # accordingly
   observe({
-    mod <- req(model.())
-    batch <- param(mod, "batch")
-    enabled <- !is.null(batch)
-    if (!enabled) {
+    enable_toggle <- batch_corrected()
+    if (!enable_toggle) {
       updateSwitchInput(session, "batch_correct", value = FALSE)
     }
-    toggleElement("batch_correct_container", condition = enabled)
+    toggleElement("batch_correct_container", condition = enable_toggle)
   })
 
   featureviz <- eventReactive(list(selected_result(), input$batch_correct), {
     dge. <- req(dge())
-    mod. <- req(model.())
-    bc <- !unselected(param(mod., "batch")) && input$batch_correct
+    bc <- batch_corrected() && input$batch_correct
     feature <- req(selected_result())
     viz(dge., feature, event_source = sample_selection, batch_correct = bc)
   })
@@ -418,6 +421,30 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     plt <- req(featureviz())
     plot(plt)
   })
+
+  output$boxplotdl <- downloadHandler(
+    filename = function() {
+      feature <- req(selected_result())
+      req(nrow(feature) == 1L)
+
+      name <- paste0(feature[["feature_id"]], "_expression")
+      symbol <- feature$symbol
+      if (is.na(symbol) || unselected(symbol)) {
+        name <- paste(symbol, name, sep = "_")
+      }
+      if (batch_corrected() && input$batch_correct) {
+        name <- paste0(name, "_batch_corrected")
+      }
+      paste0(name, ".csv")
+    },
+    content = function(file) {
+      dat <- req(featureviz()) %>%
+        FacileViz::input_data() %>%
+        select(dataset, sample_id, feature_id, feature_name, value) %>%
+        with_sample_covariates()
+      write.csv(dat, file, row.names = FALSE)
+    }
+  )
 
   # Responds to sample-selection events on the boxplot. If no selection is
   # active, this is NULL, otherwise it's <dataset>__<sample_id>-pastd
@@ -546,6 +573,7 @@ fdgeViewUI <- function(id, ..., debug = FALSE) {
       width = 5,
       id = ns("vizcolumn"),
       boxplot.box,
+      downloadButton(ns("boxplotdl"), "Download Data"),
       volcano.box),
     # Stats Table Column
     column(

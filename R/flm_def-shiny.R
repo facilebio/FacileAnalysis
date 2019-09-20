@@ -145,25 +145,25 @@ flmDefRunUI <- function(id, ..., debug = FALSE) {
   out <- tagList(
     fluidRow(
       column(
-        3,
+        2,
         categoricalSampleCovariateSelectUI(
           ns("testcov"),
           label = "Group to test",
           multiple = FALSE)),
       column(
-        3,
+        4,
         categoricalSampleCovariateLevelsUI(
           ns("numer"),
           label = "Numerator",
           multiple = TRUE)),
       column(
-        3,
+        4,
         categoricalSampleCovariateLevelsUI(
           ns("denom"),
           label = "Denominator",
           multiple = TRUE)),
       column(
-        3,
+        2,
         categoricalSampleCovariateSelectUI(
           ns("batchcov"),
           label = "Control for",

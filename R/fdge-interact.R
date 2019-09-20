@@ -270,7 +270,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     finfo <- features(fds(x), assay_name = assay_name, feature_id = fid)
     name <- finfo[["name"]]
     if (nchar(name) == 0 || is.na(name)) {
-      title <- feature
+      title <- fid
     } else {
       title <- sprintf("%s (%s)", name, fid)
     }
