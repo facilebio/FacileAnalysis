@@ -76,6 +76,36 @@ FacileAnalysis package may include DESeq2 as an option for performing these
 analyses (esepcially if someone would like to provide a patch)!
 :::
 
+## Setup
+
+Before we get started, you'll need to ensure that the facile packages are
+installed and up to date. You should also be running the latest versions of R
+(3.6.1) and Bioconductor (release 3.9).
+
+The following call should be all you need to get going with the facile
+ecosystem:
+
+```r
+BiocManager::install("facileverse/FacileAnalysis")
+```
+
+This should install all of the necessary Bioconductor and CRAN pacakges, along
+with the following ones form github:
+
+* [facileverse/FacileData](https://github.com/facileverse/FacileData)
+* [facileverse/FacileViz](https://github.com/facileverse/FacileViz)
+* [facileverse/FacileShine](https://github.com/facileverse/FacileShine)
+* [facileverse/FacileAnalysis](https://github.com/facileverse/FacileAnalysis)
+* [lianos/multiGSEA@develop](https://github.com/lianos/multiGSEA)
+* [lianos/multiGSEA.shine@develop](https://github.com/lianos/multiGSEA.shiny)
+
+We also use data from the [airway][airway] and [parathyroidSE][parathyroid]
+bioconductor packages, so make sure those are installed as well.
+
+```r
+BiocManager::install(c("airway", "parathyroidSE"))
+```
+
 ## Data Preparation
 
 The rnaseqGene vignette outlines how you can go from raw reads to a quantitated
@@ -116,9 +146,6 @@ To add images to posts:
 -->
 
 ```{r se-load, message=FALSE, warning=FALSE}
-# Install the airway package if you don't have it already
-# BiocManager::install("airway")
-
 library(DESeq2)
 library(SummarizedExperiment)
 library(FacileData)
