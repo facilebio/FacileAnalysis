@@ -58,7 +58,7 @@ modular fashion, and their results (a `FacileAnalysisResult` object) can be:
       a particular dimension.
    b. A `FacileTtestAnalysisResult` can be used as input to perform GSEA.
 
-We'll try to exercise these within this vignette. At the end of this tutorial, 
+We will exercise these within this vignette. At the end of this tutorial, 
 we will also show you how to run these analysis strictly via shiny gadgets and 
 manipulate the returned objects with code, as well.
 
@@ -73,7 +73,7 @@ methods for differential expression analysis. This does not represent any bias
 against using DESeq2, as we are in fact very fond of it, however these were the
 easiest ones to wrap into this package for now. Future versions of the
 FacileAnalysis package may include DESeq2 as an option for performing these
-analyses (esepcially if someone would like to provide a patch)!
+analyses (especially if someone would like to provide a patch)!
 :::
 
 ## Setup
@@ -110,7 +110,7 @@ BiocManager::install(c("airway", "parathyroidSE"))
 
 The rnaseqGene vignette outlines how you can go from raw reads to a quantitated
 experiment, that lives in a [SummarizedExperiment][SE], for example. Those
-results are repated (and stored) in the [airway][airway] data package, which
+results are repeated (and stored) in the [airway][airway] data package, which
 they then use for the analyses the perform there.
 
 The [FacileDataSet Assembly][fdsassembly] vignette outlines how we can go from
@@ -121,7 +121,7 @@ when assembling multiple datasets into one FacileDataSet by combining the
 FacileDataSet.
 
 The steps [FacileDataSet Assembly][fdsassembly] vignette are also encapsulated
-in the `FacileData::assemble_example_dataset()`, which we will use to materialze
+in the `FacileData::assemble_example_dataset()`, which we will use to materialize
 a FacileDataSet that contains the airway data, that we will use to analyze here.
 
 :::note
@@ -160,8 +160,8 @@ data("airway", package = "airway")
 ### Prepare the DESeqDataSet
 
 Let's create a `dds` object so we can perform the `DESeq2` maneuvers on these
-data, and compare them with the facile version of the analyses. The worklow
-suggests you to perform some exploratory analyses using variance stablised
+data, and compare them with the facile version of the analyses. The workflow
+suggests you perform some exploratory analyses using variance stablised
 data, so we'll calculate that here, as well.
 
 ```{r dds, message=FALSE, warning=FALSE}
@@ -174,7 +174,7 @@ vsd <- vst(dds, blind = FALSE)
 
 As we previously mentioned, we can use the
 `FacileData::assemble_example_dataset()` to generate the FacileDataSet that
-has the samples we want for analysis.
+contains the samples we want for analysis.
 
 We will first create the FacileDataSet, then subset out only the "airway"
 samples, which will be used as the basis for all "facile"-versions of the
@@ -202,7 +202,7 @@ asamples %>%
 ```
 
 Or perhaps we just need to decorate these samples with a subset of the
-covariates and some expression data in order ot answer whatever our immediate
+covariates and some expression data in order to answer whatever our immediate
 next question is:
 
 ```{r}
@@ -210,7 +210,6 @@ asamples %>%
   with_sample_covariates("treatment") %>% 
   with_assay_data("ENSG00000101347", assay_name = "gene_counts")
 ```
-
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -242,7 +241,7 @@ interact with the result of the analysis itself. Now, instead of just plotting t
 data in the reduced dimensions, we can identify which genes (and pathways) are
 highly loaded on the principal components, as well.
 
-Unfortutanetly, we do not have access to the variance stabilized data within
+Unfortunately, we do not have access to the variance stabilized data within
 the FacileDataSet. We will try to approximate this, however, by adding a higher
 `prior.count` to the normalized data (counts per milliion).
 
@@ -258,8 +257,8 @@ viz(pca, color_aes = c("treatment", "cell_line"))
    `"treatment"`, with `"control"` and `"dex"` as its levels. The `"cell"`
    covariate was renamed to `"cell_line"`.
    
-2. The PCA plot is appreciably different than the one produced using the
-   variance stabilized data. We can fun a facile version of the PCA analysis
+2. The PCA plot is appreciably different from the one produced using the
+   variance stabilized data. We can place a facile version of the PCA analysis
    over the `vsd` data to compare the PCA itself, like so:
    
     ```r
@@ -282,7 +281,7 @@ viz(pca, color_aes = "treatment", shape_aes = "cell_line")
 
 ### Removing Batch Effects
 
-When we perform the differential expression analysis, we will want to analyze
+When we perform the differential expression analysis, we want to analyze
 the treatment effects (`"treatment"`) while controling for the celltype 
 `"cell_line"`. The data retrieval functions in the core `FacileData` package 
 allow for batch correction of normalized data using a simplified wrapper to 
@@ -290,7 +289,7 @@ limma's `removeBatchEffect()` function (see `?FacileData::remove_batch_effect`).
 
 This functionality is triggered when a covariate(s) is provided in a `batch`
 argument, as shown in the code below. Note that we set `ntop` to 5000, which
-uses the top 1000 most variable genes for analysis (instead of the default
+uses the top 5000 most variable genes for analysis (instead of the default
 500). We do this to better perform GSEA on the PCA result afterwards.
 
 ```{r, message=FALSE, warning=FALSE}
@@ -361,9 +360,9 @@ viz(pca.gsea, name = "HALLMARK_ADIPOGENESIS")
 :::note
 The GSEA functionality is performed by the [multiGSEA][multiGSEA] package.
 Please read that vignette to learn more about its functionality. Also note
-taht performing GSEA on anything but logFC's or t-statistics is new (like
+that performing GSEA on anything but logFC's or t-statistics is new (like
 gene loadings on a principal component). The "units" plotted need to be
-update (ie. logFC is shown here, but that's not correct).
+updated (ie. logFC is shown here, but that's not correct).
 :::
 
 ## Differential Expression Analysis
@@ -415,7 +414,7 @@ we need to specify:
    `"voom"`, and `"limma-trend"` pipelines for rnaseq analysis
    (see the output from `fdge_methosd("rnaseq")`).
 
-There are optional parameters we can pass in to tweak the analysis, for
+There are optional parameters we can specify to tweak the analysis, for
 instance:
 
 i. `treat_lfc` accepts a log2 value which will be used to perform a test
