@@ -23,8 +23,13 @@ NULL
 
 # Externally defined generics to re-export on package load ---------------------
 
-#' @export tidy
-NULL
+#' @importFrom broom tidy
+#' @export
+broom::tidy
+
+#' @importFrom magrittr %>%
+#' @export
+magrittr::`%>%`
 
 # dplyr API
 

@@ -4,35 +4,83 @@
 \alias{fpca}
 \alias{fpca.facile_frame}
 \alias{fpca.matrix}
-\title{Runs a facile PCA}
+\title{Runs a principal components analysis, the facile way.}
 \usage{
-fpca(x, dims = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, batch = NULL, ...)
-
-\method{fpca}{facile_frame}(x, dims = 5, ntop = 500,
+fpca(x, assay_name = NULL, dims = 5, ntop = 500,
   row_covariates = NULL, col_covariates = NULL, batch = NULL,
-  assay_name = NULL, custom_key = Sys.getenv("USER"), ...)
+  main = NULL, ...)
+
+\method{fpca}{facile_frame}(x, assay_name = NULL, dims = 5,
+  ntop = 500, row_covariates = NULL, col_covariates = NULL,
+  batch = NULL, main = NULL, custom_key = Sys.getenv("USER"), ...)
 
 \method{fpca}{matrix}(x, dims = 5, ntop = 500, row_covariates = NULL,
   col_covariates = NULL, batch = NULL, use_irlba = dims < 7,
   center = TRUE, scale. = FALSE, ...)
 }
 \arguments{
-\item{x}{a data container}
+\item{x}{a facile data container (FacileDataSet), or a \code{facile_frame}
+(refer to the FacileDataStore (facile_frame) section.}
+
+\item{assay_name}{the name of the assay to extract data from to perform the
+PCA. If not specified, default assays are taken for each type of assay
+container (ie. \code{default_assay(facile container)}, \code{"counts"} for a
+\code{DGEList}, \code{assayNames(SummarizedExperiment)[1L]}, etc.)}
+
+\item{dims}{the number of PC's to calculate (minimum is 3).}
+
+\item{ntop}{the number of features (genes) to include in the PCA. Genes are
+ranked by decreasing variance across the samples in \code{x}.}
+
+\item{row_covariates, col_covariates}{data.frames that provie meta information
+for the features (rows) and samples (columns). The default is to get
+these values from "the obvious places" given \code{x} (\code{$genes} and \code{$samples}
+for a DGEList, or the sample and feature-level covariate database tables
+from a FacileDataSet, for example).}
+
+\item{batch, main}{specify the covariates to use for batch effect removal.
+Refer to the \code{\link[FacileData:remove_batch_effect]{FacileData::remove_batch_effect()}} help for more information.}
 }
 \value{
 an fpca result
 }
 \description{
-The code here is largely inspired by DESeq2's plotPCA.
+Performs a principal components analysis over a specified assay from the
+(subset of) samples in a FacileDataStore.
 }
 \details{
+The \code{FacilePcaAnalysisResult} produced here can be used in "the usual" ways,
+ie. can be \code{viz}-ualized. \code{shine()} and \code{report()} still need to be
+implemented. Importantly / interestingly, you can shoot this result into
+\code{\link[=ffsea]{ffsea()}} to perform gene set enrichment analysis over a specified
+dimension to identify functional categories loaded onto differend PCs.
+}
+\section{Development Notes}{
+
+\enumerate{
+\item \href{https://github.com/facileverse/FacileAnalysis/issues/11}{Implement shine()}
+\item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement report()}
+}
+
+Note that there are methods defined for other assay containers, like an
+\code{edgeR::DGEList}, \code{limma::EList}, and \code{SummarizedExperiment}. If these are
+called directly, their downstream use within the facile ecosystem isn't
+yet fully supported. Development of the
+\href{https://github.com/facileverse/FacileBioc}{FacileBioc package}
+will address this.
+}
+
+\section{Random Things to elaborate on}{
+
+The code here is largely inspired by DESeq2's plotPCA.
+
 You should look at factominer:
 \itemize{
 \item http://factominer.free.fr/factomethods/index.html
 \item http://factominer.free.fr/graphs/factoshiny.html
 }
 }
+
 \section{Teaching and Tutorials}{
 
 
@@ -60,6 +108,15 @@ pca.crc <- efds \%>\%
   fpca()
 if (interactive()) {
   report(pca.crc, color_aes = "sample_type")
+}
+
+# Same PCA as above, but regress "sex" out of samples first.
+pca.crcs <- efds \%>\%
+  FacileData::filter_samples(indication == "CRC") \%>\%
+  fpca(batch = "sex")
+if (interactive()) {
+  viz(pca.crc, color_aes = "sex")
+  viz(pca.crcs, color_aes = "sex")
 }
 
 pca.gdb <- pca.crc \%>\%

@@ -1,5 +1,26 @@
-#' Runs a facile PCA
+#' Runs a principal components analysis, the facile way.
 #'
+#' Performs a principal components analysis over a specified assay from the
+#' (subset of) samples in a FacileDataStore.
+#'
+#' The `FacilePcaAnalysisResult` produced here can be used in "the usual" ways,
+#' ie. can be `viz`-ualized. `shine()` and `report()` still need to be
+#' implemented. Importantly / interestingly, you can shoot this result into
+#' [ffsea()] to perform gene set enrichment analysis over a specified
+#' dimension to identify functional categories loaded onto differend PCs.
+#'
+#' @section Development Notes:
+#' 1. [Implement `shine()`](https://github.com/facileverse/FacileAnalysis/issues/11)
+#' 2. [Implement `report()`](https://github.com/facileverse/FacileAnalysis/issues/12)
+#'
+#' Note that there are methods defined for other assay containers, like an
+#' `edgeR::DGEList`, `limma::EList`, and `SummarizedExperiment`. If these are
+#' called directly, their downstream use within the facile ecosystem isn't
+#' yet fully supported. Development of the
+#' [FacileBioc package](https://github.com/facileverse/FacileBioc)
+#' will address this.
+#'
+#' @section Random Things to elaborate on:
 #' The code here is largely inspired by DESeq2's plotPCA.
 #'
 #' You should look at factominer:
@@ -15,7 +36,22 @@
 #' @export
 #' @rdname fpca
 #'
-#' @param x a data container
+#' @param x a facile data container (FacileDataSet), or a `facile_frame`
+#'   (refer to the FacileDataStore (facile_frame) section.
+#' @param assay_name the name of the assay to extract data from to perform the
+#'   PCA. If not specified, default assays are taken for each type of assay
+#'   container (ie. `default_assay(facile container)`, `"counts"` for a
+#'   `DGEList`, `assayNames(SummarizedExperiment)[1L]`, etc.)
+#' @param dims the number of PC's to calculate (minimum is 3).
+#' @param ntop the number of features (genes) to include in the PCA. Genes are
+#'   ranked by decreasing variance across the samples in `x`.
+#' @param row_covariates,col_covariates data.frames that provie meta information
+#'   for the features (rows) and samples (columns). The default is to get
+#'   these values from "the obvious places" given `x` (`$genes` and `$samples`
+#'   for a DGEList, or the sample and feature-level covariate database tables
+#'   from a FacileDataSet, for example).
+#' @param batch,main specify the covariates to use for batch effect removal.
+#'   Refer to the [FacileData::remove_batch_effect()] help for more information.
 #' @return an fpca result
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
@@ -26,6 +62,15 @@
 #'   fpca()
 #' if (interactive()) {
 #'   report(pca.crc, color_aes = "sample_type")
+#' }
+#'
+#' # Same PCA as above, but regress "sex" out of samples first.
+#' pca.crcs <- efds %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   fpca(batch = "sex")
+#' if (interactive()) {
+#'   viz(pca.crc, color_aes = "sex")
+#'   viz(pca.crcs, color_aes = "sex")
 #' }
 #'
 #' pca.gdb <- pca.crc %>%
@@ -49,23 +94,26 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
-                 col_covariates = NULL, batch = NULL, ...) {
+fpca <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+                 row_covariates = NULL, col_covariates = NULL, batch = NULL,
+                 main = NULL, ...) {
   UseMethod("fpca", x)
 }
 
 #' @noRd
 #' @export
-fpca.FacileDataStore <- function(x, dims = 5, ntop = 500,
-                                 row_covariates = NULL, col_covariates = NULL,
-                                 batch = NULL, assay_name = default_assay(x),
+fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
+                                 ntop = 500, row_covariates = NULL,
+                                 col_covariates = NULL, batch = NULL,
+                                 main = NULL,
                                  custom_key = Sys.getenv("USER"), ...,
                                  samples = NULL) {
+  assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
-  fpca(samples, dims, ntop, row_covariates, col_covariates, batch, assay_name,
-       custom_key, ...)
+  fpca(samples, assay_name, dims, ntop, row_covariates, col_covariates,
+       batch, main, custom_key, ...)
 }
 
 #' @section FacileDataStore (facile_frame):
@@ -78,10 +126,11 @@ fpca.FacileDataStore <- function(x, dims = 5, ntop = 500,
 #'
 #' @rdname fpca
 #' @export
-fpca.facile_frame <- function(x, dims = 5, ntop = 500,
-                              row_covariates = NULL, col_covariates = NULL,
-                              batch = NULL, assay_name = NULL,
+fpca.facile_frame <- function(x, assay_name = NULL, dims = 5,
+                              ntop = 500, row_covariates = NULL,
+                              col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
+  assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
   x <- collect(x, n = Inf)
@@ -99,14 +148,13 @@ fpca.facile_frame <- function(x, dims = 5, ntop = 500,
   if (is.null(assay_name)) {
     assay_name <- default_assay(.fds)
   }
-
   # (lazily) turning this into a DGEList to leverage the already-implented
   # feature and sample anntation alignment written up in there. The desired
   # assay data (from assay_matrix) will be stored in the DGEList's $count
   # element
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
 
-  out <- fpca(y, dims, ntop, batch = batch, ...)
+  out <- fpca(y, dims = dims, ntop = ntop, batch = batch, main = main, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   out[["result"]] <- out[["result"]] %>%
@@ -134,9 +182,11 @@ fpca.facile_frame <- function(x, dims = 5, ntop = 500,
 #' @noRd
 #' @export
 #' @importFrom edgeR cpm
-fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
-                         col_covariates = x$samples,  batch = NULL,
-                         prior.count = 3, assay_name = "counts", ...) {
+fpca.DGEList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+                         row_covariates = x$genes, col_covariates = x$samples,
+                         batch = NULL, main = NULL, prior.count = 3, ...) {
+  if (is.null(assay_name)) assay_name <- "counts"
+
   if (assay_name == "counts") {
     m <- edgeR::cpm(x, prior.count = prior.count, log = TRUE)
   } else {
@@ -144,7 +194,7 @@ fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, ...)
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -158,13 +208,36 @@ fpca.DGEList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
   out
 }
 
+#' @noRd
+#' @export
+fpca.EList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+                       row_covariates = x$genes, col_covariates = x$targets,
+                       batch = NULL, prior.count = 3, ...) {
+  if (is.null(assay_name)) assay_name <- "E"
+  assert_choice(assay_name,  names(x))
+
+  m <- x[[assay_name]]
+
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+  out[["params"]][["assay_name"]] <- assay_name
+
+  if ("dataset" %in% colnames(x$targets)) {
+    out[["samples"]][["dataset"]] <- x$targets[["dataset"]]
+  }
+  if ("sample_id" %in% colnames(x$targets)) {
+    out[["samples"]][["sample_id"]] <- x$targets[["sample_id"]]
+  }
+
+  out
+}
+
 #' This should be able to work on things like DESeqTransform objects, as well.
 #' @noRd
 #' @export
-fpca.SummarizedExperiment <- function(x, dims = 5, ntop = 500,
-                                      row_covariates = NULL,
+fpca.SummarizedExperiment <- function(x, assay_name = NULL, dims = 5,
+                                      ntop = 500, row_covariates = NULL,
                                       col_covariates = NULL,  batch = NULL,
-                                      assay_name = assayNames(x)[1L], ...) {
+                                      ...) {
   ns <- tryCatch(loadNamespace("SummarizedExperiment"), error = function(e) NULL)
   if (is.null(ns)) stop("SummarizedExperiment required")
   ns4 <- tryCatch(loadNamespace("S4Vectors"), error = function(e) NULL)
@@ -184,7 +257,7 @@ fpca.SummarizedExperiment <- function(x, dims = 5, ntop = 500,
   }
   assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, ...)
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -193,25 +266,6 @@ fpca.SummarizedExperiment <- function(x, dims = 5, ntop = 500,
   }
   if ("sample_id" %in% colnames(col_covariates)) {
     out[["samples"]][["sample_id"]] <- col_covariates[["sample_id"]]
-  }
-
-  out
-}
-
-#' @noRd
-#' @export
-fpca.EList <- function(x, dims = 5, ntop = 500, row_covariates = x$genes,
-                       col_covariates = x$targets,  batch = NULL,
-                       prior.count = 3, assay_name = "E", ...) {
-  assert_choice(assay_name,  names(x))
-  out <- fpca(x$E, dims, ntop, row_covariates, col_covariates, batch, ...)
-  out[["params"]][["assay_name"]] <- assay_name
-
-  if ("dataset" %in% colnames(x$targets)) {
-    out[["samples"]][["dataset"]] <- x$targets[["dataset"]]
-  }
-  if ("sample_id" %in% colnames(x$targets)) {
-    out[["samples"]][["sample_id"]] <- x$targets[["sample_id"]]
   }
 
   out
