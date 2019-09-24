@@ -107,15 +107,14 @@ pca.crc <- efds \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fpca()
 if (interactive()) {
-  report(pca.crc, color_aes = "sample_type")
+  # report(pca.crc, color_aes = "sample_type")
+  viz(pca.crc, color_aes = "sex")
 }
 
 # Same PCA as above, but regress "sex" out of samples first.
-pca.crcs <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+pca.crcs <- samples(pca.crc) \%>\%
   fpca(batch = "sex")
 if (interactive()) {
-  viz(pca.crc, color_aes = "sex")
   viz(pca.crcs, color_aes = "sex")
 }
 
@@ -128,7 +127,7 @@ pca.gdb <- pca.crc \%>\%
 pca.all <- fpca(efds)
 if (interactive()) {
   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
-  report(pca.all, color_aes = "indication", shape_aes = "sample_type")
+  # report(pca.all, color_aes = "indication", shape_aes = "sample_type")
 }
 
 

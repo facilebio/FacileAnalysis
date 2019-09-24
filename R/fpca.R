@@ -62,6 +62,7 @@
 #'   fpca()
 #' if (interactive()) {
 #'   # report(pca.crc, color_aes = "sample_type")
+#'   shine(pca.crc)
 #'   viz(pca.crc, color_aes = "sex")
 #' }
 #'
@@ -343,6 +344,7 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
     # Standard FacileAnalysisResult things
     # fds = .fds,
     params = list(dims = dims, ntop = ntop, use_irlba = use_irlba,
+                  batch = batch, main = main,
                   center = center, scale. = scale.),
     messages = messages,
     warnings = warnings,
@@ -361,7 +363,8 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
 #' @export
 initialized.FacilePcaAnalysisResult <- function(x, ...) {
   stat.table <- tidy(x)
-  is.data.frame(stat.table) && nrow(stat.table) == nrow(samples(x))
+  is.data.frame(stat.table) &&
+    nrow(stat.table) == nrow(samples(x))
 }
 
 #' @noRd

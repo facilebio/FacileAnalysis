@@ -112,43 +112,93 @@ fpcaRunUI <- function(id, ..., debug = FALSE) {
 #' @importFrom FacileShine
 #'   initialized
 #'   categoricalAestheticMap
+#' @importFrom FacileViz with_aesthetics
 #' @importFrom plotly
 #'   renderPlotly
 #' @importFrom shiny
 #'   isolate
 #'   reactive
 #'   req
-fpcaView <- function(input, output, session, rfds, result, ..., debug = FALSE) {
-  result. <- reactive({
-    req(isolate(initialized(rfds)))
-    if (is(result, "FacilePcaAnalysisResult")) {
-      out <- result
-    } else {
-      out <- req(result$result())
+fpcaView <- function(input, output, session, rfds, pcares, ...,
+                     feature_selection = session$ns("features"),
+                     sample_selection = session$ns("samples"),
+                     debug = FALSE) {
+
+  state <- reactiveValues(
+    # store brushed samples from scatterplot
+    scatter_select = tibble(assay_name = character(), feature_id = character()))
+
+  pca <- reactive({
+    req(initialized(pcares))
+    faro(pcares)
+  })
+
+  # When a new fpca result is produced, we may want to reset a few things.
+  # Trigger that UI restting/cleanup work here.
+  observeEvent(pca(), {
+    # Hide volcanobox completely if new dge is not a ttest
+    # toggleElement("volcanobox", condition = is.ttest(dge()))
+    # New results should turn off the volcano toggleSwitch if it is a ttest
+    # updateSwitchInput(session, "volcanotoggle", value = FALSE)
+    pca. <- req(pca())
+    pcs <- names(pca.$percent_var)
+    updateSelectInput(session, "xaxis", choices = pcs, selected = pcs[1])
+    updateSelectInput(session, "yaxis", choices = pcs, selected = pcs[2])
+    updateSelectInput(session, "zaxis", choices = pcs, selected = "")
+  }, priority = 5) # upping priority so some withProgress things hide quick
+
+  assay_name. <- reactive(param(req(pca()), "assay_name"))
+  samples. <- reactive(samples(req(pca())))
+
+  batch_corrected <- reactive({
+    batch <- param(req(pca()), "batch")
+    !is.null(batch)
+  })
+
+
+  aes <- callModule(categoricalAestheticMap, "aes", rfds,
+                    color = TRUE, shape = TRUE, group = FALSE, facet = FALSE,
+                    hover = TRUE, ..., debug = debug)
+
+  rdat.core <- reactive({
+    # Turn tidy() into a reactive_facile_frame if it's not (because it came
+    # in through `shine()`). We want to use the
+    # `FacileShine::with_aesthetics.reactive_facile_frame` function to handle
+    # the aes module transparently.
+    out <- req(pca()) %>%
+      tidy() %>%
+      mutate(key. = seq(nrow(.)))
+
+    if (!is(out, "reactive_facile_frame")) {
+      out <- as_facile_frame(out, rfds, "reactive_facile_frame")
     }
-    req(is(out, "FacilePcaAnalysisResult"))
-    message("... fpca result retrieved")
     out
   })
 
-  aes <- callModule(categoricalAestheticMap, "aes", rfds,
-                    group = FALSE, facet = FALSE, ..., debug = debug)
+  rdat <- reactive({
+    req(rdat.core()) %>%
+      with_aesthetics(aes)
+  })
 
   output$pcaplot <- renderPlotly({
-    res <- req(result.())
-    req(is(res, "FacilePcaAnalysisResult"))
+    dat. <- req(rdat())
 
-    # NOTE: It looks like covariate() keeps firing, fix!
-    # Also FacileShine/tests/shiny-modules/shinytest-facileScatterPlot.R
-    # has same issue.
-    color. <- aes$color$covariate()
-    if (unselected(color.)) color. <- NULL
-    shape. <- aes$shape$covariate()
-    if (unselected(shape.)) shape. <- NULL
+    .aes <- isolate(aes$map())
+    hover. <- unique(unlist(unname(.aes), recursive = TRUE))
+    if (length(hover.) == 0) hover. <- NULL
 
-    v <- viz(res, color_aes = color., shape_aes = shape.)
-    message("... viz generataed")
-    plot(v)
+    axes <- intersect(c(input$xaxis, input$yaxis, input$zaxis),
+                      colnames(dat.))
+    req(length(axes) >= 2)
+
+    plt <- fscatterplot(dat., axes,
+                        xlabel = "PC1", ylabel = "PC2",
+                        width = NULL, height = NULL,
+                        hover = hover.,
+                        color_aes = .aes$color, shape_aes = .aes$shape,
+                        webgl = TRUE, event_source = sample_selection,
+                        key = "key.")
+    plot(plt)
   })
 }
 
@@ -160,9 +210,17 @@ fpcaViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(
     fluidRow(
+      column(4, selectInput(ns("xaxis"), "X axis", choices = NULL)),
+      column(4, selectInput(ns("yaxis"), "Y axis", choices = NULL)),
+      column(4, selectInput(ns("zaxis"), "Z axis", choices = NULL))),
+    fluidRow(
       column(
         12,
-        wellPanel(categoricalAestheticMapUI(ns("aes"), group = FALSE)))),
+        wellPanel(
+          categoricalAestheticMapUI(
+            ns("aes"),
+            color = TRUE, shape = TRUE, hover = TRUE,
+            group = FALSE)))),
     fluidRow(
       column(12, plotlyOutput(ns("pcaplot")))))
 }
