@@ -50,13 +50,16 @@ Performs a principal components analysis over a specified assay from the
 }
 \details{
 The \code{FacilePcaAnalysisResult} produced here can be used in "the usual" ways,
-ie. can be \code{viz}-ualized. \code{shine()} and \code{report()} still need to be
-implemented. Importantly / interestingly, you can shoot this result into
-\code{\link[=ffsea]{ffsea()}} to perform gene set enrichment analysis over a specified
-dimension to identify functional categories loaded onto differend PCs.
+ie. can be \code{viz}-ualized. \code{shine()} is 1/4th-implemented, and \code{report()}
+has not been worked on yet.
+
+Importantly / interestingly, you can shoot this result into \code{\link[=ffsea]{ffsea()}} to
+perform gene set enrichment analysis over a specified dimension to identify
+functional categories loaded onto differend PCs.
 }
 \section{Development Notes}{
 
+Follow progress on implementation of \code{shine()} and \code{report()} below:
 \enumerate{
 \item \href{https://github.com/facileverse/FacileAnalysis/issues/11}{Implement shine()}
 \item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement report()}
@@ -108,6 +111,7 @@ pca.crc <- efds \%>\%
   fpca()
 if (interactive()) {
   # report(pca.crc, color_aes = "sample_type")
+  shine(pca.crc)
   viz(pca.crc, color_aes = "sex")
 }
 

@@ -4,12 +4,16 @@
 #' (subset of) samples in a FacileDataStore.
 #'
 #' The `FacilePcaAnalysisResult` produced here can be used in "the usual" ways,
-#' ie. can be `viz`-ualized. `shine()` and `report()` still need to be
-#' implemented. Importantly / interestingly, you can shoot this result into
-#' [ffsea()] to perform gene set enrichment analysis over a specified
-#' dimension to identify functional categories loaded onto differend PCs.
+#' ie. can be `viz`-ualized. `shine()` is 1/4th-implemented, and `report()`
+#' has not been worked on yet.
+#'
+#' Importantly / interestingly, you can shoot this result into [ffsea()] to
+#' perform gene set enrichment analysis over a specified dimension to identify
+#' functional categories loaded onto differend PCs.
 #'
 #' @section Development Notes:
+#' Follow progress on implementation of `shine()` and `report()` below:
+#'
 #' 1. [Implement `shine()`](https://github.com/facileverse/FacileAnalysis/issues/11)
 #' 2. [Implement `report()`](https://github.com/facileverse/FacileAnalysis/issues/12)
 #'
