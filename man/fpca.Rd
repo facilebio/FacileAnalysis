@@ -15,8 +15,8 @@ fpca(x, assay_name = NULL, dims = 5, ntop = 500,
   batch = NULL, main = NULL, custom_key = Sys.getenv("USER"), ...)
 
 \method{fpca}{matrix}(x, dims = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, batch = NULL, use_irlba = dims < 7,
-  center = TRUE, scale. = FALSE, ...)
+  col_covariates = NULL, batch = NULL, main = NULL,
+  use_irlba = dims < 7, center = TRUE, scale. = FALSE, ...)
 }
 \arguments{
 \item{x}{a facile data container (FacileDataSet), or a \code{facile_frame}

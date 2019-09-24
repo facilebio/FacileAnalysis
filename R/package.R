@@ -27,9 +27,9 @@ NULL
 #' @export
 broom::tidy
 
-#' @importFrom magrittr %>%
+#' @importFrom FacileData %>%
 #' @export
-magrittr::`%>%`
+FacileData::`%>%`
 
 # dplyr API
 

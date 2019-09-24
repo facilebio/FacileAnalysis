@@ -61,15 +61,14 @@
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' if (interactive()) {
-#'   report(pca.crc, color_aes = "sample_type")
+#'   # report(pca.crc, color_aes = "sample_type")
+#'   viz(pca.crc, color_aes = "sex")
 #' }
 #'
 #' # Same PCA as above, but regress "sex" out of samples first.
-#' pca.crcs <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' pca.crcs <- samples(pca.crc) %>%
 #'   fpca(batch = "sex")
 #' if (interactive()) {
-#'   viz(pca.crc, color_aes = "sex")
 #'   viz(pca.crcs, color_aes = "sex")
 #' }
 #'
@@ -82,7 +81,7 @@
 #' pca.all <- fpca(efds)
 #' if (interactive()) {
 #'   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
-#'   report(pca.all, color_aes = "indication", shape_aes = "sample_type")
+#'   # report(pca.all, color_aes = "indication", shape_aes = "sample_type")
 #' }
 #'
 #'
@@ -105,9 +104,8 @@ fpca <- function(x, assay_name = NULL, dims = 5, ntop = 500,
 fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
                                  ntop = 500, row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
-                                 main = NULL,
-                                 custom_key = Sys.getenv("USER"), ...,
-                                 samples = NULL) {
+                                 main = NULL, custom_key = Sys.getenv("USER"),
+                                 ..., samples = NULL) {
   assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
@@ -212,7 +210,7 @@ fpca.DGEList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
 #' @export
 fpca.EList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
                        row_covariates = x$genes, col_covariates = x$targets,
-                       batch = NULL, prior.count = 3, ...) {
+                       batch = NULL, main = NULL, ...) {
   if (is.null(assay_name)) assay_name <- "E"
   assert_choice(assay_name,  names(x))
 
@@ -237,7 +235,7 @@ fpca.EList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
 fpca.SummarizedExperiment <- function(x, assay_name = NULL, dims = 5,
                                       ntop = 500, row_covariates = NULL,
                                       col_covariates = NULL,  batch = NULL,
-                                      ...) {
+                                      main = NULL, ...) {
   ns <- tryCatch(loadNamespace("SummarizedExperiment"), error = function(e) NULL)
   if (is.null(ns)) stop("SummarizedExperiment required")
   ns4 <- tryCatch(loadNamespace("S4Vectors"), error = function(e) NULL)
@@ -276,7 +274,7 @@ fpca.SummarizedExperiment <- function(x, assay_name = NULL, dims = 5,
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
-                        col_covariates = NULL, batch = NULL,
+                        col_covariates = NULL, batch = NULL, main = NULL,
                         use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
   messages <- character()

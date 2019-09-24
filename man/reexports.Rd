@@ -12,8 +12,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{broom}{\code{\link[broom]{tidy}}}
+  \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
 
-  \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
+  \item{broom}{\code{\link[broom]{tidy}}}
 }}
 
