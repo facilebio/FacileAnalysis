@@ -20,7 +20,7 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, ...,
                                         zlabel = "default",
                                         event_source = "A",
                                         webgl = FALSE) {
-  xx <- result(x)
+  xx <- tidy(x)
   assert_integerish(dims, lower = 1L)
   if (length(dims) == 1L) {
     assert_int(dims, lower = 2, upper = 3L)
@@ -40,7 +40,7 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, ...,
   # slimdown the data.frame to only include the PCs user asked for and rest
   # of the covariate data.
   xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
-  xx <- xx[, xx.cols, drop = FALSE]
+  xx <- select(xx, {{xx.cols}})
 
   pcv <- x$percent_var * 100
 

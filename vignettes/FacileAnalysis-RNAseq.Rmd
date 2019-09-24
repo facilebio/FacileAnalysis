@@ -247,7 +247,73 @@ the FacileDataSet. We will try to approximate this, however, by adding a higher
 
 ```{r, message=FALSE, warning=FALSE}
 pca <- fpca(asamples, prior.count = 5)
-viz(pca, color_aes = c("treatment", "cell_line"))
+```
+
+### Interrogating a PCA Result
+
+The benefit of having the `fpca()` result (`pca`) in your hand is that you
+can perform further action on it. `FacileAnalysisResult` objects, like `pca` 
+in this case, provide a number of functions that enable their interrogation at
+different levels of interactivity.
+
+#### Just show me the numbers with tidy()
+
+For the most basic interpretation of analysis results, every
+`FacileAnalysisResult` object provides its results in some tabular form via a
+`tidy()` function. For instance, `tidy(pca)` will provide the coordinates of the
+`asamples` used as its input in the lower dimensional space over the principal
+components:
+
+```{r}
+tidy(pca)
+```
+
+The `ranks(fpca())` produces a table of features that are highly loaded along
+the PCs we calculated. `signature(fpca())` produces a summary of ranks, which
+provides the `ntop` features positively and negatively loaded on each PC.
+
+```{r}
+signature(pca, ntop = 10) %>% 
+  tidy() %>% 
+  select(name, symbol, feature_id, score)
+```
+
+#### Deep Interaction via shine()
+
+Using shiny to provide interactive modules that have access to all of the data
+in the `FacileDataSet` provides the richest and most interactive way to explore
+the results of an analysis.
+
+For a `FacilePcaAnalysisResult`, the `shine()` presents the user with shiny
+gadget that providesa an interactive scatter plot of the samples over the
+PC's of choice. The scatterplot can be modified to map the various sample-level
+covariates to the aesthetics of the plot. Furthermore, the user is presented
+with the features (genes) that are loaded most strongly along each principal
+component.
+
+```{r shine-pca, eval = FALSE}
+shine(pca)
+```
+
+<img src="images/animated/vignette-shine-fpca.gif" width="75%" />
+
+:::tip
+In order to help users better understand what might be driving the variance
+along each of the principal components, users can also perform gene set
+enrichment analysis along a given PC. This provides the opportunity to see
+if groups of genes are loaded together no the PC. An example of this is given
+in the next section, after we remove batch effects from this data.
+:::
+
+#### Embeddable interactive graphics with viz()
+
+We can embed a javascript-powered interactive scatter plot from the PCA plot
+using the `viz` function. We use its `color_aes` and `shape_aes` to map the
+same sample-level covariates to aeshtetics in the plot, as we did when we
+explored this object via `shine()`, above.
+
+```{r}
+viz(pca, color_aes = "treatment", shape_aes = "cell_line")
 ```
 
 :::note
@@ -256,7 +322,7 @@ viz(pca, color_aes = c("treatment", "cell_line"))
    translated a bit. Specifically, the `"dex"` covariate was renamed to
    `"treatment"`, with `"control"` and `"dex"` as its levels. The `"cell"`
    covariate was renamed to `"cell_line"`.
-   
+
 2. The PCA plot is appreciably different from the one produced using the
    variance stabilized data. We can place a facile version of the PCA analysis
    over the `vsd` data to compare the PCA itself, like so:
@@ -266,18 +332,6 @@ viz(pca, color_aes = c("treatment", "cell_line"))
     viz(vpca, color_aes = c("dex", "cell"))
     ```
 :::
-
-`FacileAnalysisResult` objects, like `pca` here, can also summon data from
-the FacileDataSet in the same way we did with the `with_*` functions over the
-`asamples` above.
-
-In this case, we know that `"treatment"` sample-level covariate is defined over
-the samples used for the `fpca()` analysis, so we can visualize the pca result,
-and map this covariate to the color aesthetic.
-
-```{r}
-viz(pca, color_aes = "treatment", shape_aes = "cell_line")
-```
 
 ### Removing Batch Effects
 
@@ -297,30 +351,7 @@ cpca <- fpca(asamples, batch = "cell_line", ntop = 5000)
 viz(cpca, dims = 1:3, color_aes = "treatment", shape_aes = "cell_line")
 ```
 
-:::warning
-There is a [bug when mapping aesthetics to shapes](https://github.com/facileverse/FacileViz/issues/4) in the 3d plot. The `N052611`
-and `N061011` cells should not both be circles.
-:::
-
-### Interrogating a PCA Result
-
-The benefit of having the `fpca()` result (`cpca`) in your hand is that you
-can perform further action on it.
-
-We've shown how you can "visualize" it in different ways, via the `viz()`
-function. But we can also identify the genes that are "highly" loaded along
-the principal components.
-
-The `tidy()` function will return a table with the coordinates of each sample
-on the PCs. `ranks()` and `signature()` returns the loadings of the genes
-on each dimension, and the top `ntop` genes on each dimension, respectively.
-
-```{r}
-pc.genes <- signature(cpca, dims = 1:2, ntop = 20) %>% 
-  tidy() %>% 
-  select(symbol, feature_id, dimension, score, meta)
-head(pc.genes)
-```
+#### Further interrogation of PCA via GSEA
 
 We can even perform GSEA over any dimension of the PCA result via the `ffsea()`
 function (Facile Feature Set Enrichment). This will rank genes by their loadings
@@ -440,13 +471,11 @@ dex.vm <- fdge(xlm, method = "voom", filter = dex.dds$feature_id)
 
 ### Interpreting the DGE Result
 
-`FacileAnalysisResult` objects, like `dex.vm` in this case, provide a number
-of functions that enable their interrogation at different levels of
-interactivity.
-
-All `FacileAnalysisResult` objects provide their results in some tabular form
-via a `tidy()` function. For instance, `tidy(dex.vm)` will provide the
-differential statistics (log-fold-change, pvalues, etc.) from this analysis:
+As mentioned previously in the PCA section, every `FacileAnalysisResult` will
+provide a `tidy()` function, which will provide the results of its analysis
+in tabluar form. In this case, `tidy(fdge())` returns a table of the gene-level
+differential expression statistics, such as the log-fold-change (`"logFC"`),
+*p*-value (`"pval"`), and the false discovery rate (`"FDR"`).
 
 ```{r}
 vm.res <- tidy(dex.vm) %>% 
@@ -456,10 +485,6 @@ head(vm.res, 20)
 ```
 
 #### Deep Interaction via shine()
-
-Using shiny to provide interactive modules that have access to all of the data
-in the FacileDataSet provides the richest and most interactive way to explore
-the results of an analysis.
 
 The `shine()` function over an `fdge()` result presents the user with the
 table of gene-level differential expression statistics, which is linked to
@@ -903,10 +928,10 @@ This is still a work in progress. Not every analysis type is developed to the
 same level of maturity. For instance:
 
 * `report()` isn't implented for `ffsea()` and `fpca()` objects
-* `shine(fpca())` isn't yet implemented
+* `shine(fpca())` is functional, but still needs some more work.
 
-... and you'll find some other wires to trip over. Please
-[file bug reports][bugs] when you do!
+... and you'll find some other wires to trip over.
+Please [file bug reports][bugs] when you do!
 
 
 [//]: # Markdown References ----------------------------------------------------

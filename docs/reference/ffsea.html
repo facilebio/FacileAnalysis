@@ -76,7 +76,7 @@ section of the vignette for more information." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.5</span>
       </span>
     </div>
 
@@ -176,7 +176,7 @@ statistics, minimally with a <code>"feature_id"</code> column as well as one or 
 
     <p>A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
 object as it's <code>result()</code>. The geneset level statistics for each of the
-methods that were run are available via <code>tidy(ffsea.res, "&lt;method_name&gt;")</code>.</p>
+methods that were run are available via <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(ffsea.res, "&lt;method_name&gt;")</a></code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>:
@@ -228,10 +228,10 @@ are <code>"up"</code>, and <code>"down"</code>.</p></li>
     
 
 <p>The geneset level statistics can be extracted from the
-<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code>tidy()</code> function.
+<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> function.
 For instance, if <code>ffsea()</code> was called with
 <code>fres &lt;- ffsea(..., methods = c("cameraPR", "enrichtest")</code>, the <code>"cameraPR"</code>
-results can be extracted via <code>tidy(fres, "cameraPR")</code></p>
+results can be extracted via <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(fres, "cameraPR")</a></code></p>
     <h2 class="hasAnchor" id="development-notes"><a class="anchor" href="#development-notes"></a>Development Notes</h2>
 
     
@@ -245,11 +245,11 @@ of the ones wrapped by multiGSEA, as enumerated below.</p>
 
     
 
-<p>We are in a bit of a schizophrenic state right now, where <code>tidy()</code> is
+<p>We are in a bit of a schizophrenic state right now, where <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> is
 being the de-facto way to answer "tidy" like results (instead of result()).</p>
 <p>This is not to say that <code>result()</code> can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
-MultiGSEAResult object itself, and <code>tidy(ffsea.result)</code> will dispatch
+MultiGSEAResult object itself, and <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(ffsea.result)</a></code> will dispatch
 to <code><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>multiGSEA::result()</a></code> to fetch the gsea statistcs for the method
 requested.</p><pre>mgres &lt;- result(ffsea.res) # return the MultiGSEAResult object
 camera.stats &lt;- tidy(ffsea.res, name = "cameraPR")
@@ -275,8 +275,8 @@ camera.stats &lt;- tidy(ffsea.res, name = "cameraPR")
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>ttest.gsea</span>)
 }
 
-<span class='no'>camera.stats</span> <span class='kw'>&lt;-</span> <span class='fu'>tidy</span>(<span class='no'>ttest.gsea</span>, <span class='st'>"cameraPR"</span>)
-<span class='no'>enrich.stats</span> <span class='kw'>&lt;-</span> <span class='fu'>tidy</span>(<span class='no'>ttest.gsea</span>, <span class='st'>"enrichtest"</span>)
+<span class='no'>camera.stats</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='no'>ttest.gsea</span>, <span class='st'>"cameraPR"</span>)
+<span class='no'>enrich.stats</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='no'>ttest.gsea</span>, <span class='st'>"enrichtest"</span>)
 
 <span class='co'># GSEA from ANOVA result ----------------------------------------------------</span>
 <span class='no'>stage.anova</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>

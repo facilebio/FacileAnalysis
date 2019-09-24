@@ -465,7 +465,7 @@ signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
                                             collection_name = class(x)[1L],
                                             ranking_columns = x[["ranking_columns"]],
                                             ...) {
-  res. <- result(x)
+  res. <- tidy(x)
 
   if (!is.null(dims)) {
     dims <- assert_integerish(dims, lower = 1)
@@ -479,24 +479,22 @@ signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
   if (isTRUE(x$params$signed)) {
     sig.up <- res. %>%
       group_by(dimension) %>%
-      arrange(rank) %>%
-      slice(1:min(ntop, n())) %>%
+      slice(1:ntop) %>%
       mutate(name = paste(dimension, "pos")) %>%
       ungroup()
     sig.down <- res. %>%
       group_by(dimension) %>%
-      arrange(desc(rank)) %>%
-      slice(1:min(ntop, n())) %>%
+      slice(max(1, n() - ntop + 1L):n()) %>%
       mutate(name = paste(dimension, "neg")) %>%
       ungroup()
     sig <- sig.up %>%
       bind_rows(sig.down) %>%
-      arrange(dimension, rank)
+      arrange(dimension, desc(score))
   } else {
     sig <- res. %>%
       group_by(dimension) %>%
-      arrange(rank) %>%
-      slice(1:min(ntop, n())) %>%
+      # head(ntop) %>%
+      slice(1:ntop) %>%
       mutate(name = paste(dimension, "unsigned")) %>%
       ungroup()
   }

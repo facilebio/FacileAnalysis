@@ -112,7 +112,7 @@ fpcaRunUI <- function(id, ..., debug = FALSE) {
 #' @importFrom FacileShine
 #'   initialized
 #'   categoricalAestheticMap
-#' @importFrom FacileViz with_aesthetics
+#' @importFrom FacileViz with_aesthetics fscatterplot input_data
 #' @importFrom plotly
 #'   renderPlotly
 #' @importFrom shiny
@@ -133,15 +133,18 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     faro(pcares)
   })
 
+  pcs_calculated <- reactive({
+    pca. <- req(pca())
+    names(pca.$percent_var)
+  })
+
   # When a new fpca result is produced, we may want to reset a few things.
   # Trigger that UI restting/cleanup work here.
   observeEvent(pca(), {
-    # Hide volcanobox completely if new dge is not a ttest
-    # toggleElement("volcanobox", condition = is.ttest(dge()))
-    # New results should turn off the volcano toggleSwitch if it is a ttest
-    # updateSwitchInput(session, "volcanotoggle", value = FALSE)
     pca. <- req(pca())
-    pcs <- names(pca.$percent_var)
+    pcs <- req(pcs_calculated())
+    pcs <- setNames(seq(pcs), pcs)
+
     updateSelectInput(session, "xaxis", choices = pcs, selected = pcs[1])
     updateSelectInput(session, "yaxis", choices = pcs, selected = pcs[2])
     updateSelectInput(session, "zaxis", choices = pcs, selected = "")
@@ -155,57 +158,56 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     !is.null(batch)
   })
 
-
   aes <- callModule(categoricalAestheticMap, "aes", rfds,
                     color = TRUE, shape = TRUE, group = FALSE, facet = FALSE,
                     hover = TRUE, ..., debug = debug)
 
-  rdat.core <- reactive({
-    # Turn tidy() into a reactive_facile_frame if it's not (because it came
-    # in through `shine()`). We want to use the
-    # `FacileShine::with_aesthetics.reactive_facile_frame` function to handle
-    # the aes module transparently.
-    out <- req(pca()) %>%
-      tidy() %>%
-      mutate(key. = seq(nrow(.)))
+  pcaviz <- reactive({
+    pca. <- req(pca())
+    pc.calcd <- pcs_calculated()
+    req(length(pc.calcd) >= 2)
+    axes <- intersect(c(input$xaxis, input$yaxis, input$zaxis), seq(pc.calcd))
+    req(length(axes) >= 2)
 
-    if (!is(out, "reactive_facile_frame")) {
-      out <- as_facile_frame(out, rfds, "reactive_facile_frame")
-    }
-    out
-  })
-
-  rdat <- reactive({
-    req(rdat.core()) %>%
-      with_aesthetics(aes)
+    aes.map <- aes$map()
+    viz(pca., axes, color_aes = aes.map$color, shape_aes = aes.map$shape,
+        hover = aes.map$hover, width = NULL, height = NULL)
   })
 
   output$pcaplot <- renderPlotly({
-    dat. <- req(rdat())
-
-    .aes <- isolate(aes$map())
-    hover. <- unique(unlist(unname(.aes), recursive = TRUE))
-    if (length(hover.) == 0) hover. <- NULL
-
-    axes <- intersect(c(input$xaxis, input$yaxis, input$zaxis),
-                      colnames(dat.))
-    req(length(axes) >= 2)
-
-    plt <- fscatterplot(dat., axes,
-                        xlabel = "PC1", ylabel = "PC2",
-                        width = NULL, height = NULL,
-                        hover = hover.,
-                        color_aes = .aes$color, shape_aes = .aes$shape,
-                        webgl = TRUE, event_source = sample_selection,
-                        key = "key.")
-    plot(plt)
+    plot(req(pcaviz()))
   })
+
+  feature.ranks <- reactive({
+    req(pca()) %>%
+      signature(signed = TRUE, ntop = 50) %>%
+      tidy()
+  })
+
+  output$loadings <- DT::renderDT({
+    dat <- req(feature.ranks()) %>%
+      select(dimension, symbol, feature_id, score) %>%
+      mutate(dimension = factor(dimension))
+    dtopts <- list(deferRender = TRUE, scrollY = 300,
+                   # scroller = TRUE,
+                   pageLength = 15,
+                   lengthMenu = c(15, 30, 50))
+    num.cols <- colnames(dat)[sapply(dat, is.numeric)]
+
+    dt <- datatable(dat, filter = "top",
+                    style = "bootstrap",
+                    class = "display", width = "100%", rownames = FALSE,
+                    selection = "none",
+                    options = dtopts)
+    formatRound(dt, num.cols, 3)
+  }, server = TRUE)
 }
 
 #' @noRd
 #' @importFrom FacileShine categoricalAestheticMapUI
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny NS
+#' @importFrom shinycssloaders withSpinner
 fpcaViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(
@@ -222,5 +224,9 @@ fpcaViewUI <- function(id, ..., debug = FALSE) {
             color = TRUE, shape = TRUE, hover = TRUE,
             group = FALSE)))),
     fluidRow(
-      column(12, plotlyOutput(ns("pcaplot")))))
+      column(7, plotlyOutput(ns("pcaplot"))),
+      column(
+        5,
+        tags$h4("Feature Loadings"),
+        withSpinner(DT::DTOutput(ns("loadings"))))))
 }
