@@ -238,8 +238,8 @@ PCA result further?
 
 In the facile paradigm, we will first run the PCA over the airway samples, then
 interact with the result of the analysis itself. Now, instead of just plotting the
-data in the reduced dimensions, we can identify which genes (and pathways) are
-highly loaded on the principal components, as well.
+data in the reduced dimensions, we can also identify which genes (and pathways)
+highly loaded on the principal components.
 
 Unfortunately, we do not have access to the variance stabilized data within
 the FacileDataSet. We will try to approximate this, however, by adding a higher
@@ -251,15 +251,14 @@ pca <- fpca(asamples, prior.count = 5)
 
 ### Interrogating a PCA Result
 
-The benefit of having the `fpca()` result (`pca`) in your hand is that you
-can perform further action on it. `FacileAnalysisResult` objects, like `pca` 
-in this case, provide a number of functions that enable their interrogation at
-different levels of interactivity.
+The benefit of having the `fpca()` result (`pca`) itself, and not just the plot
+is that you can perform further action on it. `FacileAnalysisResult` objects,
+like `pca` in this case, provide a number of functions that enable their interrogation at different levels of interactivity.
 
 #### Just show me the numbers with tidy()
 
 For the most basic interpretation of analysis results, every
-`FacileAnalysisResult` object provides its results in some tabular form via a
+`FacileAnalysisResult` object provides its results in tabular form via a
 `tidy()` function. For instance, `tidy(pca)` will provide the coordinates of the
 `asamples` used as its input in the lower dimensional space over the principal
 components:
@@ -268,9 +267,9 @@ components:
 tidy(pca)
 ```
 
-The `ranks(fpca())` produces a table of features that are highly loaded along
-the PCs we calculated. `signature(fpca())` produces a summary of ranks, which
-provides the `ntop` features positively and negatively loaded on each PC.
+The `ranks(fpca())` function produces a table of features that are highly loaded
+along the PCs calculated. `signature(fpca())` produces a summary of the ranks,
+by taking the `ntop` features positively and negatively loaded on each PC.
 
 ```{r}
 signature(pca, ntop = 10) %>% 
@@ -284,33 +283,31 @@ Using shiny to provide interactive modules that have access to all of the data
 in the `FacileDataSet` provides the richest and most interactive way to explore
 the results of an analysis.
 
-For a `FacilePcaAnalysisResult`, the `shine()` presents the user with shiny
-gadget that providesa an interactive scatter plot of the samples over the
-PC's of choice. The scatterplot can be modified to map the various sample-level
-covariates to the aesthetics of the plot. Furthermore, the user is presented
-with the features (genes) that are loaded most strongly along each principal
-component.
+For a `FacilePcaAnalysisResult`, the `shine()` method presents the user with a
+shiny gadget that providesa an interactive scatter plot of the samples over the
+PC's of choice. The scatterplot can be modified by mapping the various
+sample-level covariates to the aesthetics of the plot. Furthermore, the user is
+presented with the features (genes) that are loaded most highly along each
+principal component.
 
-```{r shine-pca, eval = FALSE}
+```{r shine-pca, eval = FALSE, warning=FALSE, message=FALSE}
 shine(pca)
 ```
 
 <img src="images/animated/vignette-shine-fpca.gif" width="75%" />
 
 :::tip
-In order to help users better understand what might be driving the variance
-along each of the principal components, users can also perform gene set
-enrichment analysis along a given PC. This provides the opportunity to see
-if groups of genes are loaded together no the PC. An example of this is given
-in the next section, after we remove batch effects from this data.
+Users can also perform a gene set enrichment analysis (GSEA) over dimensions of
+an `fpca()` result using the `ffsea()` function,
+[as shown below](#further-interrogation-of-pca-via-gsea), to better interpret
+what biological processes the PC's might be associated with.
 :::
 
 #### Embeddable interactive graphics with viz()
 
-We can embed a javascript-powered interactive scatter plot from the PCA plot
-using the `viz` function. We use its `color_aes` and `shape_aes` to map the
-same sample-level covariates to aeshtetics in the plot, as we did when we
-explored this object via `shine()`, above.
+We can embed a javascript-powered interactive scatter plot of the `pca` result
+using the `viz` function. We use the `color_aes` and `shape_aes`, we can map the
+same sample-level covariates to aeshtetics in the plot produced.
 
 ```{r}
 viz(pca, color_aes = "treatment", shape_aes = "cell_line")
@@ -339,7 +336,8 @@ When we perform the differential expression analysis, we want to analyze
 the treatment effects (`"treatment"`) while controling for the celltype 
 `"cell_line"`. The data retrieval functions in the core `FacileData` package 
 allow for batch correction of normalized data using a simplified wrapper to 
-limma's `removeBatchEffect()` function (see `?FacileData::remove_batch_effect`).
+the `limma::removeBatchEffect()` function
+(see `?FacileData::remove_batch_effect`).
 
 This functionality is triggered when a covariate(s) is provided in a `batch`
 argument, as shown in the code below. Note that we set `ntop` to 5000, which
@@ -382,7 +380,8 @@ shine(pca.gsea)
 
 <img src="images/animated/vignette-shine-pca-gsea.gif" width="75%" />
 
-And you can visualize the loadings of the genes on PC1 like so.
+And you can visualize the loadings of the genes from a given geneset on the
+principal component, like so:
 
 ```{r}
 viz(pca.gsea, name = "HALLMARK_ADIPOGENESIS")
@@ -490,10 +489,8 @@ The `shine()` function over an `fdge()` result presents the user with the
 table of gene-level differential expression statistics, which is linked to
 a view over the expression of the gene of interest over the given contrast.
 
-Note that since we corrected for `"cell"` in our analysis, the sample-level
-expression value for each gene is shown in its batch-corrected values. You can 
+Since `"cell_line"` was used as a batch term in the linear model, the sample-level expression values plotted (by default) are batch-corrected. You can
 toggle batch correction off to see the effect it has on the data.
-
 
 ```{r fdge-shine, eval=FALSE, message=FALSE, warning=FALSE}
 shine(dex.vm)
@@ -501,16 +498,16 @@ shine(dex.vm)
 
 <img src="images/animated/vignette-shine-dge-short.gif" width="75%" />
 
-You can visualize and interact with a volcano plot as well. This is turned off
-by default, however, since it currently creates an interactive scatter plot
-view over all of the (potentiall thousands) genes analyzed. This can overwhelm
-CPUs with lower end GPUs.
+You can visualize and interact with a volcano plot as well. Drawing the volcano
+plot is initially disabled, however, since it currently creates an interactive
+scatter plot view over all of the (potentially thousands) genes analyzed. This
+can overwhelm CPUs with lower end GPUs.
 
 #### Embeddable interactive graphics via viz()
 
 The `viz()` function on an `fdge()` result can be used to make a volcano plot,
-MA plot, or the expression profiles of a set of genes you want to observe
-directly.
+MA plot, or to show the expression profiles of a set of genes across the groups
+that were tested.
 
 We can view what the differential expression of the top result looks like,
 with and without batch corrected values.
@@ -519,12 +516,16 @@ with and without batch corrected values.
 viz(dex.vm, feature_id = head(vm.res, 1))
 ```
 
+In the same way that you can disable plotting individual expression values
+in the shiny gadget, you can also turn it off here, as well:
+
 ```{r}
 viz(dex.vm, feature_id = head(vm.res, 1), batch_correct = FALSE)
 ```
 
 :::note
-You could retrieve and plot these data manually, like so:
+This is how you can query the `FacileDataSet` directly to retrieve these
+expressoin values and plot them manually.
 
 ```{r}
 dat.bc <- asamples %>% 
@@ -594,10 +595,20 @@ report(
     "effect"))
 ```
 
-### Analyzing these a bit differently
+### Using the edgeR quasi-likelihood framework
 
-We can also take the same linear model setup and test it using the edgeR-qlf
+We have tested our contrast of interest using the limma/voom statistical
+framework (`fdge(xlm, method = "voom")`), but you might want to use a different
 framework.
+
+Currently the following options are supported to test rnaseq-like data:
+
+```{r}
+fdge_methods("rnaseq")
+```
+
+You can swap out `"voom"` for any of the methods listed there. Let's use the
+[edgeR quasi-likelihood framework][edgerqlf], instead:
 
 ```{r}
 dex.qlf <- fdge(xlm, method = "edgeR-qlf", filter = dex.dds$feature_id)
@@ -606,9 +617,9 @@ dex.qlf <- fdge(xlm, method = "edgeR-qlf", filter = dex.dds$feature_id)
 ### Did the fdge() analysis work?
 
 Now that we've looked at some ways to interact with our results, and tweak
-the way in which they run, it would be nice to know if the simplified interface
-we present here can run an analyses that produces accurate and comparable
-results.
+the way in which they were run, it would be nice to know if the simplified
+interface presented in the facile ecosystem runs analyses that produces accurate
+and comparable results.
 
 We can check to see how concordant the statistics generated by the `"voom"` and
 `"edgeR-qlf"` methods produced via `fdge()` are when compared to the DESeq2
@@ -640,13 +651,18 @@ cmp %>%
   pairs(main = "logFC comparison", pch = 16, col = "#3f3f3f33")
 ```
 
-Let's compare how concordant the pvales are from each of the three analyses.
+:::tip
+The [`test-fdge.R`][fdgetests] unit tests ensures that the results produced via
+the facile `flm_def() %>% fdge()` pipeline are the same as the ones produced
+using their corresponding standard bioconductor maneuvers over the same data.
+:::
 
 ## Gene Set Enrichment Analysis
 
 As is the case in the PCA -> GSEA analysis performed above, GSEA here is
 performed downstream of the differential expression result. We need to specify
-the geneset collection to use for GSEA, as well as the methods performed.
+the geneset collection to use for GSEA, as well as the GSEA methods we want to
+perform.
 
 ```{r, message=FALSE, warn=FALSE, eval=FALSE}
 dge.gsea <- ffsea(dex.vm, gdb, methods = c("enrichtest", "cameraPR"))
@@ -661,10 +677,9 @@ shine(dge.gsea)
 ```
 
 :::note
-The shiny gadget will look similar to the one shown depicted above, that we
-called on the GSEA result of the gene loadings over the first dimension of
-the PCA (ie. `shine(pca.gsea)`. We're not including the animated gif here in
-the vignette just to save (HD) space.
+The shiny gadget will look similar to the one produced by running `ffsea()` on
+the `fpca()` result, [depicted above](#further-interrogation-of-pca-via-gsea).
+The screen capture is not included in this vignette to save (HD) space.
 :::
 
 ## Side Loading Data (for svaseq)
@@ -940,6 +955,8 @@ Please [file bug reports][bugs] when you do!
 [bugs]: https://github.com/facileverse/FacileAnalysis/issues
 [crosstalk]: https://rstudio.github.io/crosstalk/
 [deseq2]: http://bioconductor.org/packages/DESeq2
+[fdgetests]: https://github.com/facileverse/FacileAnalysis/blob/master/tests/testthat/test-fdge.R
+[edgerqlf]: https://f1000research.com/articles/5-1438/v2
 [FacileBioc]: https://github.com/facileverse/FacileBioc
 [fdsassembly]: https://facileverse.github.io/FacileData/articles/FacileDataSet-assembly.html
 [kallisto]: https://pachterlab.github.io/kallisto/

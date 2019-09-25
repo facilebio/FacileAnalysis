@@ -220,12 +220,9 @@ BiocManager::install("facileverse/FacileAnalysis")
 
   - [facileverse.github.io/FacileAnalysis](https://facileverse.github.io/FacileAnalysis)
     (online documentation and vignettes)
-  - [Ask a
-    question](https://groups.google.com/forum/#!forum/facileverse)
-    (Google Group Q\&A Site)
   - [Open an
     issue](https://github.com/facileverse/FacileAnalysis/issues) (GitHub
-    issues for bug reports and feature requests)
+    issues for questions, bug reports, and feature requests)
 
 ## Acknowledgements
 
