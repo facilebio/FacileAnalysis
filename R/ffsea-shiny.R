@@ -65,7 +65,8 @@ ffseaAnalysisUI <- function(id, ...) {
   tagList(
     tags$div(
       id = ns("runbox"),
-      box(title = "Configure Feature Set Analysis", width = 12,
+      box(title = "Configure Feature Set Analysis",
+          width = 12,
           ffseaRunUI(ns("run")))),
     hidden(
       tags$div(
@@ -100,10 +101,6 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
     faro(aresult)
   })
 
-  # Enable user to configure the GeneSetDb used for testing
-  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, aresult = aresult,
-                     gdb = gdb, ..., debug = debug)
-
   # When the AnalysisResult changes, update the runopts UI based on the specific
   # subclass of the AnalysisResult we have at play
   runopts <- callModule(ffseaRunOpts, "runopts", rfds, aresult = aresult, ...,
@@ -128,7 +125,6 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   runnable <- reactive({
     !unselected(input$ffsea_methods) &&
       initialized(ares()) &&
-      initialized(gdb.) &&
       initialized(runopts)
   })
 
@@ -145,7 +141,7 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   fsea_res <- eventReactive(input$runbtn, {
     req(runnable())
     args. <- runopts$args()
-    gdb. <- gdb.$gdb()
+    gdb. <- runopts$gdb$gdb()
     args <- c(
       list(x = ares(), gdb = gdb., methods = input$ffsea_methods),
       args.)
@@ -176,19 +172,16 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
   tagList(
-    tags$div(
-      id = ns("gdb-container"),
-      geneSetDbConfigUI(ns("gdb"))),
     fluidRow(
       column(
-        3,
-        pickerInput(ns("ffsea_methods"), "Analysis Methods", choices = NULL,
+        4,
+        pickerInput(ns("ffsea_methods"), "Methods", choices = NULL,
                     multiple = TRUE)),
       column(
         1,
         tags$div(
           style = "padding-top: 1.7em",
-          ffseaRunOptsUI(ns("runopts"), width = "300px"))),
+          ffseaRunOptsUI(ns("runopts"), width = "350px"))),
       column(1, actionButton(ns("runbtn"), "Run", style = "margin-top: 1.7em"))
     )
   )

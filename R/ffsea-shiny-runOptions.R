@@ -21,6 +21,10 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, ...,
     faro(aresult)
   })
 
+  # Enable user to configure the GeneSetDb used for testing
+  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, aresult = aresult,
+                     gdb = gdb, ..., debug = debug)
+
   observeEvent(ares(), {
     ares. <- req(ares())
     aclass <- class(ares.)[1L]
@@ -59,6 +63,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, ...,
   vals <- list(
     args = args,
     aclass = reactive(state$aclass),
+    gdb = gdb.,
     .state = state,
     .ns = session$ns)
   class(vals) <- "FfseaRunOptions"
@@ -78,7 +83,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, ...,
 #' @return a list with `$ui` for the tagList of interface components and
 #'   `$args`, which is a list of name/value pairs for the default arguments
 #'   of the ffsea.* function implementation.
-ffseaRunOptsUI <- function(id, width = "300px", ..., debug = FALSE) {
+ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
   ns <- NS(id)
   dropdownButton(
     inputId = ns("opts"),
@@ -88,7 +93,10 @@ ffseaRunOptsUI <- function(id, width = "300px", ..., debug = FALSE) {
     tags$div(
       id = ns("ffseaRunOptsContainer"),
       # style = "height: 400px",
-      uiOutput(ns("ui"))))
+      uiOutput(ns("ui"))),
+    tags$div(
+      id = ns("gdb-container"),
+      shiny::wellPanel(geneSetDbConfigUI(ns("gdb")))))
 }
 
 # Helper Functions =============================================================
@@ -97,9 +105,10 @@ ffseaRunOptsUI <- function(id, width = "300px", ..., debug = FALSE) {
 #' @export
 initialized.FfseaRunOptions <- function(x, ...) {
   args <- x$args()
-  is.list(args) &&
+  args.set <- is.list(args) &&
     length(args) > 0L &&
     all(sapply(args, function(arg) !(is.null(arg) || is.na(arg))))
+  args.set && initialized(x$gdb)
 }
 
 #' @noRd

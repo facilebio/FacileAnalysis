@@ -133,8 +133,6 @@ geneSetDbConfigUI <- function(id, ..., debug = FALSE) {
 #' @noRd
 #' @export
 initialized.ReactiveGeneSetDb <- function(x, ...) {
-  gdb. <- x$gdb()
-  # is(gdb., "GeneSetDb") && is.conformed(gdb.)
-  is(gdb., "GeneSetDb")
+  is(x$gdb(), "GeneSetDb")
 }
 
