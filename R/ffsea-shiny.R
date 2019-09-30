@@ -103,8 +103,8 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
 
   # When the AnalysisResult changes, update the runopts UI based on the specific
   # subclass of the AnalysisResult we have at play
-  runopts <- callModule(ffseaRunOpts, "runopts", rfds, aresult = aresult, ...,
-                        debug = debug)
+  runopts <- callModule(ffseaRunOpts, "runopts", rfds, aresult = aresult,
+                        gdb = gdb, ..., debug = debug)
 
 
   # Updates the set-enrichment methods when the analysis result changes.
