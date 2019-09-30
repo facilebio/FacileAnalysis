@@ -231,7 +231,8 @@ ffsea.data.frame <- function(x, gdb, methods,
 #' @importFrom multiGSEA multiGSEA
 ffsea.FacileTtestAnalysisResult <- function(x, gdb,
                                             methods = c("cameraPR", "enrichtest"),
-                                            min_logFC = 1, max_padj = 0.10,
+                                            min_logFC = param(x, "treat_lfc"),
+                                            max_padj = 0.10,
                                             rank_by = "logFC",
                                             signed = TRUE,
                                             biased_by = NULL, ...,
@@ -242,8 +243,11 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
+  if (is.null(min_logFC)) min_logFC <- 0
+  assert_number(min_logFC, lower = 0, finite = TRUE)
 
   ranks. <- tidy(ranks(x, signed = signed, rank_by = rank_by, ...))
+
   ranks. <- mutate(ranks.,
                    significant = padj <= max_padj, abs(logFC) >= min_logFC,
                    direction = ifelse(logFC > 0, "up", "down"))
