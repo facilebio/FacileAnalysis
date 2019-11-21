@@ -129,7 +129,8 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #'
 #' @rdname fpca
 #' @export
-fpca.facile_frame <- function(x, assay_name = NULL, dims = 5,
+fpca.facile_frame <- function(x, assay_name = NULL,
+                              dims = min(5, nrow(x) - 1L),
                               ntop = 500, row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -185,7 +186,8 @@ fpca.facile_frame <- function(x, assay_name = NULL, dims = 5,
 #' @noRd
 #' @export
 #' @importFrom edgeR cpm
-fpca.DGEList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+fpca.DGEList <- function(x, assay_name = NULL,
+                         dims = min(5, ncol(x) - 1L), ntop = 500,
                          row_covariates = x$genes, col_covariates = x$samples,
                          batch = NULL, main = NULL, prior.count = 3, ...) {
   if (is.null(assay_name)) assay_name <- "counts"
@@ -213,7 +215,8 @@ fpca.DGEList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
 
 #' @noRd
 #' @export
-fpca.EList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+fpca.EList <- function(x, assay_name = NULL,
+                       dims = min(5, ncol(x) - 1L), ntop = 500,
                        row_covariates = x$genes, col_covariates = x$targets,
                        batch = NULL, main = NULL, ...) {
   if (is.null(assay_name)) assay_name <- "E"
@@ -234,10 +237,48 @@ fpca.EList <- function(x, assay_name = NULL, dims = 5, ntop = 500,
   out
 }
 
+#' @noRd
+#' @export
+fpca.ExpressionSet <- function(x, assay_name = NULL,
+                               dims = min(5, ncol(x) - 1L),
+                               ntop = 500, row_covariates = NULL,
+                               col_covariates = NULL,  batch = NULL,
+                               main = NULL, ...) {
+  ns <- tryCatch(loadNamespace("Biobase"), error = function(e) NULL)
+  if (is.null(ns)) stop("Biobase package required")
+
+  if (is.null(row_covariates)) {
+    row_covariates <- ns$fData(x)
+  }
+  if (is.null(col_covariates)) {
+    col_covariates <- ns$pData(x)
+  }
+
+  if (is.null(assay_name)) {
+    assay_name <- ns$assayDataElementNames(x)[[1L]]
+  }
+  m <- ns$assayDataElement(x, assay_name)
+  assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
+
+  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+
+  out[["params"]][["assay_name"]] <- assay_name
+
+  if ("dataset" %in% colnames(col_covariates)) {
+    out[["samples"]][["dataset"]] <- col_covariates[["dataset"]]
+  }
+  if ("sample_id" %in% colnames(col_covariates)) {
+    out[["samples"]][["sample_id"]] <- col_covariates[["sample_id"]]
+  }
+
+  out
+
+}
 #' This should be able to work on things like DESeqTransform objects, as well.
 #' @noRd
 #' @export
-fpca.SummarizedExperiment <- function(x, assay_name = NULL, dims = 5,
+fpca.SummarizedExperiment <- function(x, assay_name = NULL,
+                                      dims = min(5, ncol(x) - 1L),
                                       ntop = 500, row_covariates = NULL,
                                       col_covariates = NULL,  batch = NULL,
                                       main = NULL, ...) {
@@ -278,7 +319,8 @@ fpca.SummarizedExperiment <- function(x, assay_name = NULL, dims = 5,
 #' @rdname fpca
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
-fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
+fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), ntop = 500,
+                        row_covariates = NULL,
                         col_covariates = NULL, batch = NULL, main = NULL,
                         use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
@@ -286,7 +328,9 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
   warnings <- character()
   errors <- character()
 
-  assert_int(dims, lower = 3L, upper = min(nrow(x), ncol(x)))
+  if (min(dim(x)) < 2L) stop("Can't run PCA on a one-dimensional matrix")
+  # When using irlba, n has to be strictly less than min(dim(xx))
+  assert_int(dims, lower = 1L, upper = min(dim(x)) - 1L)
   assert_flag(use_irlba)
 
   if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
@@ -333,6 +377,9 @@ fpca.matrix <- function(x, dims = 5, ntop = 500, row_covariates = NULL,
 
   if (is(col_covariates, "data.frame")) {
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
+  }
+  if (!"sample_id" %in% colnames(dat)) {
+    dat[["sample_id"]] <- rownames(dat)
   }
 
   samples. <- tibble(dataset = "dataset", sample_id = colnames(x))
