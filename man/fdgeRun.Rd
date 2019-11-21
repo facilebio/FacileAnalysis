@@ -4,8 +4,17 @@
 \alias{fdgeRun}
 \title{Shiny module to configure and run fdge over a predefined model.}
 \usage{
-fdgeRun(input, output, session, rfds, model, with_gsea = FALSE, ...,
-  debug = FALSE, .reactive = TRUE)
+fdgeRun(
+  input,
+  output,
+  session,
+  rfds,
+  model,
+  with_gsea = FALSE,
+  ...,
+  debug = FALSE,
+  .reactive = TRUE
+)
 }
 \arguments{
 \item{model}{A linear model definition. Can be either an "innert"
@@ -18,7 +27,7 @@ from the \code{\link[=flmDefRun]{flmDefRun()}} module.}
 \item{...}{passed into \code{\link[=fdge]{fdge()}}}
 }
 \value{
-A list of stuff. \code{$result} holds the \code{FacileDgeAnalysisResult}
+A list of stuff. \verb{$result} holds the \code{FacileDgeAnalysisResult}
 wrapped in a \code{reactive()}.
 }
 \description{

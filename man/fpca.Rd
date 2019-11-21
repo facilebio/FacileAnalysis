@@ -6,17 +6,44 @@
 \alias{fpca.matrix}
 \title{Runs a principal components analysis, the facile way.}
 \usage{
-fpca(x, assay_name = NULL, dims = 5, ntop = 500,
-  row_covariates = NULL, col_covariates = NULL, batch = NULL,
-  main = NULL, ...)
+fpca(
+  x,
+  assay_name = NULL,
+  dims = 5,
+  ntop = 500,
+  row_covariates = NULL,
+  col_covariates = NULL,
+  batch = NULL,
+  main = NULL,
+  ...
+)
 
-\method{fpca}{facile_frame}(x, assay_name = NULL, dims = 5,
-  ntop = 500, row_covariates = NULL, col_covariates = NULL,
-  batch = NULL, main = NULL, custom_key = Sys.getenv("USER"), ...)
+\method{fpca}{facile_frame}(
+  x,
+  assay_name = NULL,
+  dims = min(5, nrow(x) - 1L),
+  ntop = 500,
+  row_covariates = NULL,
+  col_covariates = NULL,
+  batch = NULL,
+  main = NULL,
+  custom_key = Sys.getenv("USER"),
+  ...
+)
 
-\method{fpca}{matrix}(x, dims = 5, ntop = 500, row_covariates = NULL,
-  col_covariates = NULL, batch = NULL, main = NULL,
-  use_irlba = dims < 7, center = TRUE, scale. = FALSE, ...)
+\method{fpca}{matrix}(
+  x,
+  dims = min(5, ncol(x) - 1L),
+  ntop = 500,
+  row_covariates = NULL,
+  col_covariates = NULL,
+  batch = NULL,
+  main = NULL,
+  use_irlba = dims < 7,
+  center = TRUE,
+  scale. = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a facile data container (FacileDataSet), or a \code{facile_frame}
@@ -24,7 +51,7 @@ fpca(x, assay_name = NULL, dims = 5, ntop = 500,
 
 \item{assay_name}{the name of the assay to extract data from to perform the
 PCA. If not specified, default assays are taken for each type of assay
-container (ie. \code{default_assay(facile container)}, \code{"counts"} for a
+container (ie. \verb{default_assay(facile container)}, \code{"counts"} for a
 \code{DGEList}, \code{assayNames(SummarizedExperiment)[1L]}, etc.)}
 
 \item{dims}{the number of PC's to calculate (minimum is 3).}
@@ -34,7 +61,7 @@ ranked by decreasing variance across the samples in \code{x}.}
 
 \item{row_covariates, col_covariates}{data.frames that provie meta information
 for the features (rows) and samples (columns). The default is to get
-these values from "the obvious places" given \code{x} (\code{$genes} and \code{$samples}
+these values from "the obvious places" given \code{x} (\verb{$genes} and \verb{$samples}
 for a DGEList, or the sample and feature-level covariate database tables
 from a FacileDataSet, for example).}
 
@@ -61,8 +88,8 @@ functional categories loaded onto differend PCs.
 
 Follow progress on implementation of \code{shine()} and \code{report()} below:
 \enumerate{
-\item \href{https://github.com/facileverse/FacileAnalysis/issues/11}{Implement shine()}
-\item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement report()}
+\item \href{https://github.com/facileverse/FacileAnalysis/issues/11}{Implement \code{shine()}}
+\item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement \code{report()}}
 }
 
 Note that there are methods defined for other assay containers, like an

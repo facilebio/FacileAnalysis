@@ -4,8 +4,7 @@
 \alias{.data_dge_feature}
 \title{Extracts expresson data for a feature across the samples use for the test.}
 \usage{
-.data_dge_feature(x, feature_id, batch_correct = TRUE,
-  prior.count = 0.1, ...)
+.data_dge_feature(x, feature_id, batch_correct = TRUE, prior.count = 0.1, ...)
 }
 \description{
 Extracts expresson data for a feature across the samples use for the test.

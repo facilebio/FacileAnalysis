@@ -15,8 +15,8 @@ report(x, ...)
 \arguments{
 \item{x}{A \code{FacileAnalysisResult} object}
 
-\item{...}{passed down to the \code{x}-specific \code{vizualize.*}, \code{report.*}, and
-\code{shine.*} functions.}
+\item{...}{passed down to the \code{x}-specific \verb{vizualize.*}, \verb{report.*}, and
+\verb{shine.*} functions.}
 }
 \description{
 The \code{vizualize}, \code{shine}, and \code{report} triumverate provide the analyst with

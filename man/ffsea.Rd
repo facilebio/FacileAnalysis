@@ -30,7 +30,7 @@ methods that were run are available via \code{tidy(ffsea.res, "<method_name>")}.
 \description{
 Currently we support running a number of feature (gene) set enrichment
 analyses downstream of a \emph{some other} \code{FacileAnalysisResult} (ie.,
-\code{[fdge() | fpca()] \%>\% ffsea()}), or over an arbitrary data.frame of
+\verb{[fdge() | fpca()] \%>\% ffsea()}), or over an arbitrary data.frame of
 feature-level statistics.
 
 Please refer to the examples here, as well as theh \emph{"Feature Set Analysis"}
@@ -90,7 +90,7 @@ are \code{"up"}, and \code{"down"}.
 The geneset level statistics can be extracted from the
 \code{FacileFseaAnalysisResult} on a per-method basis usig the \code{tidy()} function.
 For instance, if \code{ffsea()} was called with
-\code{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR"}
+\verb{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR"}
 results can be extracted via \code{tidy(fres, "cameraPR")}
 }
 

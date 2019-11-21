@@ -8,9 +8,16 @@
 \usage{
 biocbox(x, ...)
 
-\method{biocbox}{FacileLinearModelDefinition}(x, assay_name = NULL,
-  method = NULL, dge_methods = NULL, filter = "default",
-  with_sample_weights = FALSE, prior_count = NULL, ...)
+\method{biocbox}{FacileLinearModelDefinition}(
+  x,
+  assay_name = NULL,
+  method = NULL,
+  dge_methods = NULL,
+  filter = "default",
+  with_sample_weights = FALSE,
+  prior_count = NULL,
+  ...
+)
 
 \method{biocbox}{FacileDgeAnalysisResult}(x, ...)
 }
@@ -46,7 +53,7 @@ data for, as well as the covariates used in downstream analysis}
 }
 \value{
 a DGEList or EList with assay data in the correct place, and all of
-the covariates in the \code{$samples} or \code{$targerts} data.frame that are requied
+the covariates in the \verb{$samples} or \verb{$targerts} data.frame that are requied
 to test the model in \code{mdef}.
 }
 \description{

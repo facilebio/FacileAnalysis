@@ -34,14 +34,15 @@ set.seed(0xFEED)
 
 ## Overview
 
-This tutorial provides some examples of the common maneuvers analysts perform
-when analyzying RNA-seq data. Generally speaking, some of the guiding principles
-of the analyses within the FacileAnalysis package is that they are made in a
-modular fashion, and their results (a `FacileAnalysisResult` object) can be:
+This tutorial provides examples of how to perform common maneuvers employed
+during the analysis of RNA-seq data within the facile ecosystem. Generally
+speaking, some of the guiding principles of the analyses within the
+FacileAnalysis package is that they are made in a modular fashion, and their
+results (a `FacileAnalysisResult` object) can be:
 
 1. transformed into tabular form via a call to `tidy()`.
 
-2. interactivey explored by the analyst using the the `viz()` and `shine()`
+2. interactivey explored by the analyst using the `viz()` and `shine()`
    functions. These provide javascript- and shiny-based views over their
    results. The former is particularly useful when reporting results in an
    Rmarkdown document, and the later are useful when analysts are doing some
@@ -108,10 +109,10 @@ BiocManager::install(c("airway", "parathyroidSE"))
 
 ## Data Preparation
 
-The rnaseqGene vignette outlines how you can go from raw reads to a quantitated
-experiment, that lives in a [SummarizedExperiment][SE], for example. Those
-results are repeated (and stored) in the [airway][airway] data package, which
-they then use for the analyses the perform there.
+The [rnaseqGene][rnaseqGene] vignette outlines how you can go from raw reads to
+a quantitated experiment, that lives in a [SummarizedExperiment][SE], for
+example. Those results are repeated (and stored) in the [airway][airway] data
+package, which they then use for the analyses the perform there.
 
 The [FacileDataSet Assembly][fdsassembly] vignette outlines how we can go from
 a list of already-quantitated bioconductor assay containers into a

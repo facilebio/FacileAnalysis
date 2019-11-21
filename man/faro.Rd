@@ -25,7 +25,7 @@ So that we don't have to always check for these things, we call this method
 so that we get access to the \code{FacileAnalysisResult} object itself.
 
 As an aside, I know this is a bit of a cop-out to doing full-blown OO. I
-feel like if I were to implement each of the specific \code{*FacileAnalysisResult}
+feel like if I were to implement each of the specific \verb{*FacileAnalysisResult}
 methods for its sister \code{ReactiveFacile*AnalysisResult}, then this probably
 wouldn't be necessary ... I think, anyway.
 }

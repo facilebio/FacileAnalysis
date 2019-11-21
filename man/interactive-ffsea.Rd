@@ -5,21 +5,25 @@
 \alias{ffseaRun}
 \title{Full interactive executation of GSEA, soup to nuts.}
 \usage{
-ffseaGadget(x, gdb = NULL, title = "Feature Set Enrichment Analysis",
-  height = 800, width = 1000, viewer = "browser", ...,
-  debug = FALSE)
+ffseaGadget(
+  x,
+  gdb = NULL,
+  title = "Feature Set Enrichment Analysis",
+  height = 800,
+  width = 1000,
+  viewer = "browser",
+  ...,
+  debug = FALSE
+)
 
-ffseaRun(input, output, session, rfds, aresult, gdb = NULL, ...,
-  debug = FALSE)
+ffseaRun(input, output, session, rfds, aresult, gdb = NULL, ..., debug = FALSE)
 }
 \arguments{
-\item{x}{A FacileAnalysisResult that has an implemented \code{ffsea.*} method}
-
-\item{gdb}{A \code{GeneSetDb} to use for the FSEA.}
-
-\item{aresult}{A \code{FacileAnalysisResult} that has a \code{ffsea.*} method defined.}
+\item{x}{A FacileAnalysisResult that has an implemented \verb{ffsea.*} method}
 
 \item{gdb}{A GeneSetDb object to use for testing.}
+
+\item{aresult}{A \code{FacileAnalysisResult} that has a \verb{ffsea.*} method defined.}
 }
 \description{
 For now, feature set enrichment analysis are only performed downstream of
@@ -34,7 +38,7 @@ made available for an enrichment analysis over a \code{FacileTtestAnalysisResult
 or even a \code{FacileAnovaAnalysisResult}.
 
 As such, each type of result should define a UI that accepts the appropriate
-parameters for its corresponding \code{ffsea.*} method, and a server function
+parameters for its corresponding \verb{ffsea.*} method, and a server function
 that extract and invokes the function.
 }
 

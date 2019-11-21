@@ -4,8 +4,14 @@
 \alias{with_sample_covs}
 \title{Retrieves sample covariates with option to use custom covariates by user.}
 \usage{
-with_sample_covs(x, covariates = NULL, custom_covariates = NULL,
-  custom_key = Sys.getenv("USER"), ..., verbose = FALSE)
+with_sample_covs(
+  x,
+  covariates = NULL,
+  custom_covariates = NULL,
+  custom_key = Sys.getenv("USER"),
+  ...,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{x}{a sample descriptor (facile_frame)}

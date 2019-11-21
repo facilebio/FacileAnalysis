@@ -5,10 +5,22 @@
 \title{Visualize the "global" scatter plot downstream of a DGE analysis, ie. the
 volcano or MA plot.}
 \usage{
-.viz_ttest_scatter(x, type = c("volcano", "ma"), feature_id = NULL,
-  ntop = 200, round_digits = 3, event_source = "A", width = NULL,
-  height = NULL, webgl = TRUE, dat = NULL, color_aes = NULL,
-  hover = c("logFC", "pval", "padj", "symbol"), highlight = NULL, ...)
+.viz_ttest_scatter(
+  x,
+  type = c("volcano", "ma"),
+  feature_id = NULL,
+  ntop = 200,
+  round_digits = 3,
+  event_source = "A",
+  width = NULL,
+  height = NULL,
+  webgl = TRUE,
+  dat = NULL,
+  color_aes = NULL,
+  hover = c("logFC", "pval", "padj", "symbol"),
+  highlight = NULL,
+  ...
+)
 }
 \description{
 Visualize the "global" scatter plot downstream of a DGE analysis, ie. the

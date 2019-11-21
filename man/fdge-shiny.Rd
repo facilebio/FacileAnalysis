@@ -5,8 +5,14 @@
 \alias{fdgeAnalysis}
 \title{Fully interactive differential expression analysis}
 \usage{
-fdgeGadget(x, title = "Differential Expression Analysis", height = 800,
-  width = 1000, viewer = "browser", ...)
+fdgeGadget(
+  x,
+  title = "Differential Expression Analysis",
+  height = 800,
+  width = 1000,
+  viewer = "browser",
+  ...
+)
 
 fdgeAnalysis(input, output, session, rfds, ..., debug = FALSE)
 }

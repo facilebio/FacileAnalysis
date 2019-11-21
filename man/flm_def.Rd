@@ -9,27 +9,72 @@
 \alias{flm_def.ReactiveFacileDataStore}
 \title{Builds (simple) design and contrast matrices for use with \code{\link[=fdge]{fdge()}}}
 \usage{
-flm_def(x, covariate, numer = NULL, denom = NULL, batch = NULL,
-  on_missing = c("warning", "error"), ...)
+flm_def(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...
+)
 
-\method{flm_def}{data.frame}(x, covariate, numer = NULL, denom = NULL,
-  batch = NULL, on_missing = c("warning", "error"), ...,
-  contrast. = NULL, .fds = NULL)
+\method{flm_def}{data.frame}(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...,
+  contrast. = NULL,
+  .fds = NULL
+)
 
-\method{flm_def}{tbl}(x, covariate, numer = NULL, denom = NULL,
-  batch = NULL, on_missing = c("warning", "error"), ...)
+\method{flm_def}{tbl}(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...
+)
 
-\method{flm_def}{facile_frame}(x, covariate, numer = NULL,
-  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
-  ..., custom_key = NULL)
+\method{flm_def}{facile_frame}(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...,
+  custom_key = NULL
+)
 
-\method{flm_def}{FacileDataStore}(x, covariate, numer = NULL,
-  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
-  ..., samples = NULL, custom_key = NULL)
+\method{flm_def}{FacileDataStore}(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...,
+  samples = NULL,
+  custom_key = NULL
+)
 
-\method{flm_def}{ReactiveFacileDataStore}(x, covariate, numer = NULL,
-  denom = NULL, batch = NULL, on_missing = c("warning", "error"),
-  ..., samples = active_samples(x), custom_key = user(x))
+\method{flm_def}{ReactiveFacileDataStore}(
+  x,
+  covariate,
+  numer = NULL,
+  denom = NULL,
+  batch = NULL,
+  on_missing = c("warning", "error"),
+  ...,
+  samples = active_samples(x),
+  custom_key = user(x)
+)
 }
 \arguments{
 \item{x}{a dataset}
@@ -49,7 +94,7 @@ use as batch effects}
 \item{on_missing}{when a covariate level is missing (NA) for a sample, the
 setting of this parameter (default \code{"warn"}) will dictate the behavior
 of this funciton. When \code{"warning"}, a warning will be raised, and the
-message will be stored in the \code{$warning} element of the resul. Otherwise,
+message will be stored in the \verb{$warning} element of the resul. Otherwise,
 when \code{"error"}. See the "Missing Covariates" section for more information.}
 
 \item{contrast.}{A custom contrast vector can be passed in for extra tricky
@@ -58,13 +103,13 @@ comparisons that we haven't figured out how to put a GUI in front of.}
 \value{
 a list with:
 \itemize{
-\item \code{$test}: "ttest" or "anova"
-\item \code{$covariates}: the pData over the samples (datset,sample_id, ...)
-\item \code{$design}: the design matrix (always 0-intercept)
-\item \code{$contrast}: the contrast vector that defines the comparison asked for
-\item \code{$messages}: A character vector of messages generated
-\item \code{$warnings}: A character vector of warnings generated
-\item \code{$errors}: A character vector of errors generated
+\item \verb{$test}: "ttest" or "anova"
+\item \verb{$covariates}: the pData over the samples (datset,sample_id, ...)
+\item \verb{$design}: the design matrix (always 0-intercept)
+\item \verb{$contrast}: the contrast vector that defines the comparison asked for
+\item \verb{$messages}: A character vector of messages generated
+\item \verb{$warnings}: A character vector of warnings generated
+\item \verb{$errors}: A character vector of errors generated
 }
 }
 \description{
@@ -86,13 +131,13 @@ case. In this case, if \code{on_missing} is set to "error", an error will be
 thrown, otherwise a message will be set in the \code{warning} list element.
 
 The samples that the differential expression should be run on will be
-enumerated by the \code{(dataset,sample_id)} pair in the \code{result$covariates}
+enumerated by the \verb{(dataset,sample_id)} pair in the \code{result$covariates}
 tibble.
 }
 
 \section{data.frame}{
 
-The \code{*.data.frame} function definition assumes that \code{x} is a data.frame of
+The \verb{*.data.frame} function definition assumes that \code{x} is a data.frame of
 samples (dataset,sample_id) and the covariates defined on these samples
 (ie. all the other columns of \code{x}) contain a superset of the variable names
 used in the construction of the design matrix for the model definition.

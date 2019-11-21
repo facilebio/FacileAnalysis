@@ -4,8 +4,14 @@
 \alias{fdgeseaGadget}
 \title{Gadget to run both DGE and GSEA}
 \usage{
-fdgeseaGadget(x, gdb = NULL, title = "DGE and GSEA", height = 800,
-  width = 1000, ...)
+fdgeseaGadget(
+  x,
+  gdb = NULL,
+  title = "DGE and GSEA",
+  height = 800,
+  width = 1000,
+  ...
+)
 }
 \description{
 Gadget to run both DGE and GSEA

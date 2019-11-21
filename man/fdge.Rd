@@ -10,20 +10,42 @@
 \usage{
 \method{compare}{FacileTtestAnalysisResult}(x, y, ...)
 
-\method{report}{FacileTtestAnalysisResult}(x, type = c("dge",
-  "features"), ntop = 200, max_padj = 0.1, min_logFC = 1,
-  features = NULL, round_digits = 3, event_source = "A",
-  webgl = TRUE, caption = NULL, ...)
+\method{report}{FacileTtestAnalysisResult}(
+  x,
+  type = c("dge", "features"),
+  ntop = 200,
+  max_padj = 0.1,
+  min_logFC = 1,
+  features = NULL,
+  round_digits = 3,
+  event_source = "A",
+  webgl = TRUE,
+  caption = NULL,
+  ...
+)
 
 fdge(x, ..., verbose = FALSE)
 
-\method{fdge}{FacileAnovaModelDefinition}(x, assay_name = NULL,
-  method = NULL, filter = "default", with_sample_weights = FALSE,
-  ..., verbose = FALSE)
+\method{fdge}{FacileAnovaModelDefinition}(
+  x,
+  assay_name = NULL,
+  method = NULL,
+  filter = "default",
+  with_sample_weights = FALSE,
+  ...,
+  verbose = FALSE
+)
 
-\method{fdge}{FacileLinearModelDefinition}(x, assay_name = NULL,
-  method = NULL, filter = "default", with_sample_weights = FALSE,
-  treat_lfc = NULL, ..., verbose = FALSE)
+\method{fdge}{FacileLinearModelDefinition}(
+  x,
+  assay_name = NULL,
+  method = NULL,
+  filter = "default",
+  with_sample_weights = FALSE,
+  treat_lfc = NULL,
+  ...,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{x}{a data source}
@@ -117,9 +139,10 @@ universe. The default value is \code{NULL}, which specifies the universe of
 features to be all of the ones measured using this assay.
 \item \code{filter_require}: The \code{filterByExpr} logic happens first on the universe
 of features as parameterized. All features enumerated here will be forcibly
-included in the analysis, regardless of their expression levels. The
-defalut value is \code{NULL}, which means no genes will be "recovered" if they
-don't pass "filter muster".
+included in the analysis, irrespective of whether they would have passed
+the perscribed filter criteria or not. The defalut value for this argument
+is \code{NULL}, which means no genes are forcibly included in the analysis when
+they do not pass muster given the filtering criteria.
 \item \code{filter}: If a feature descriptor is provided here, then only the features
 enumerated here (that were assayed) will be included in the analysis.
 }

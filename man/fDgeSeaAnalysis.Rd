@@ -4,8 +4,7 @@
 \alias{fDgeSeaAnalysis}
 \title{An analysis module that combines differential expression with GESA.}
 \usage{
-fDgeSeaAnalysis(input, output, session, rfds, gdb = NULL, ...,
-  debug = FALSE)
+fDgeSeaAnalysis(input, output, session, rfds, gdb = NULL, ..., debug = FALSE)
 }
 \description{
 This module enables the interactive configuration and execution of
