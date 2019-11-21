@@ -51,9 +51,10 @@
 #'   features to be all of the ones measured using this assay.
 #' * `filter_require`: The `filterByExpr` logic happens first on the universe
 #'   of features as parameterized. All features enumerated here will be forcibly
-#'   included in the analysis, regardless of their expression levels. The
-#'   defalut value is `NULL`, which means no genes will be "recovered" if they
-#'   don't pass "filter muster".
+#'   included in the analysis, irrespective of whether they would have passed
+#'   the perscribed filter criteria or not. The defalut value for this argument
+#'   is `NULL`, which means no genes are forcibly included in the analysis when
+#'   they do not pass muster given the filtering criteria.
 #' * `filter`: If a feature descriptor is provided here, then only the features
 #'   enumerated here (that were assayed) will be included in the analysis.
 #'

@@ -65,8 +65,8 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
   idge <- .interaction_fdge(x, y)
   if (is.null(idge)) {
     samples. <- bind_rows(samples(x), samples(y))
-    samples. <- distinct(samples., dataset, sample_id)
     samples. <- set_fds(samples., fds.)
+    samples. <- distinct(samples., dataset, sample_id)
   } else {
     samples. <- samples(idge)
   }

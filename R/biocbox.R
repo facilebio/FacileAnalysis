@@ -294,10 +294,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                     filter_require = NULL,
                                     # minimum gene count to reset lib.size and
                                     # norm factors
-                                    min_feature_count_tmm = 500,
-                                    ...) {
+                                    min_feature_count_tmm = 500, ...) {
   assert_class(design, "FacileLinearModelDefinition")
   if (is.null(prior_count)) prior_count <- 2
+  warnings <- character()
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
                       filter = filter,
@@ -343,7 +343,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     if (with_sample_weights) {
       out <- voomWithQualityWeights(y, y[["design"]], ...)
     } else {
-      out <- voom(y, y$design, save.plot = TRUE, ...)
+      out <- .voom_dots(y, y$design, ...)
     }
   } else if (method %in% c("limma-trend", "limma")) {
     elist <- list()
@@ -361,7 +361,21 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   dropped <- setdiff(rownames(dat[["y"]]), rownames(out))
+  attr(out, "warnings") <- warnings
   out
+}
+
+#' Defines a voom method that can accept dots (and toss them)
+#'
+#' @noRd
+#' @importFrom limma voom
+.voom_dots <- function(counts, design = NULL, lib.size = NULL,
+                       normalize.method = "none",  block = NULL,
+                       correlation = NULL, weights = NULL, span = 0.5,
+                       plot = FALSE, save.plot = TRUE, ...) {
+  voom(counts, design, lib.size = lib.size, normalize.method = normalize.method,
+       block = block, correlation = correlation, weights = weights, span = span,
+       plot = plot, save.plot = save.plot)
 }
 
 #' @noRd

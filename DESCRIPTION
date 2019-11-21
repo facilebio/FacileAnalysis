@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.8
+Version: 0.2.9
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -63,4 +63,4 @@ License: apache-2.0
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
