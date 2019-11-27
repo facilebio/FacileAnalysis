@@ -532,7 +532,7 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
     test <- mdef[["contrast_string"]]
     des.cols <- names(mdef$contrast[mdef$contrast != 0])
   } else {
-    test <- sprintf("%s (%s)", mdef[["covariate"]],
+    test <- sprintf("%s (%s)", param(mdef, "covariate"),
                     paste(colnames(des)[mdef[["coef"]]], collapse = "|"))
     des.cols <- c(1, mdef$coef)
   }
@@ -556,7 +556,6 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
     sep = "")
   out
 }
-
 
 # Helpers ======================================================================
 

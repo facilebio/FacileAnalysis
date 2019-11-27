@@ -22,7 +22,7 @@
 #'   report(dge.comp)
 #'   shine(dge.comp)
 #' }
-compare.FacileTtestAnalysisResult <- function(x, y, ...) {
+compare.FacileTtestAnalysisResult <- function(x, y, rerun = TRUE, ...) {
   # TODO: assert_comparable(x, y, ...)
   # TODO: assert_comparable.FacileDgeAnalysisResult <- function(...)
   assert_class(x, "FacileTtestAnalysisResult")
@@ -59,17 +59,21 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
     return(out)
   })
 
-  xres <- tidy(x)
-  yres <- tidy(y)
-
-  idge <- .interaction_fdge(x, y)
+  idge <- .interaction_fdge(x, y, rerun = rerun)
   if (is.null(idge)) {
     samples. <- bind_rows(samples(x), samples(y))
     samples. <- set_fds(samples., fds.)
     samples. <- distinct(samples., dataset, sample_id)
   } else {
-    samples. <- samples(idge)
+    samples. <- samples(idge[["result"]])
+    if (idge[["rerun"]]) {
+      x <- idge[["x"]]
+      y <- idge[["y"]]
+    }
   }
+
+  xres <- tidy(x)
+  yres <- tidy(y)
 
   meta.cols <- c("feature_type", "feature_id", "symbol", "meta")
   drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
@@ -81,16 +85,17 @@ compare.FacileTtestAnalysisResult <- function(x, y, ...) {
     by = meta.cols)
 
   if (!is.null(idge)) {
-    ires <- select(tidy(idge), !!c(meta.cols, stat.cols))
+    ires <- select(tidy(idge[["result"]]), !!c(meta.cols, stat.cols))
     xystats <- left_join(xystats, ires, by = meta.cols)
     # put stats for interaction test up front, followed by *.x, *.y
     xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
   }
 
   out <- list(
-    result = idge,
+    result = idge[["result"]],
     xystats = xystats,
     samples = samples.,
+    xres = x, yres = y,
     # Standard FacileAnalysisResult things
     fds = fds.,
     messages = messages,
@@ -134,7 +139,7 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
+viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   hover <- c(
     # feature metadata
     "symbol", "feature_id", "meta",
@@ -159,7 +164,7 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
 #'
 #' If we can't generate an interaction result, this will return NULL.
 #' @noRd
-.interaction_fdge <- function(x, y, ...) {
+.interaction_fdge <- function(x, y, rerun = FALSE, ...) {
   xmod <- model(x)
   ymod <- model(y)
   xres <- tidy(x)
@@ -253,10 +258,22 @@ report.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
                     contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 
-  fdge(imodel, filter = genes.,
-       method = param(x, "method"),
-       assay_name = param(x, "assay_name"),
-       with_sample_weights = param(x, "with_sample_weights"))
+  ires <- fdge(imodel, filter = genes.,
+               method = param(x, "method"),
+               assay_name = param(x, "assay_name"),
+               with_sample_weights = param(x, "with_sample_weights"))
+
+  rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
+  if (rerun) {
+    x2 <- fdge(xmod, filter = genes., method = param(x, "method"),
+               assay_name = param(x, "assay_name"),
+               with_sample_weights = param(x, "with_sample_weights"))
+    y2 <- fdge(ymod, filter = genes., method = param(y, "method"),
+               assay_name = param(y, "assay_name"),
+               with_sample_weights = param(y, "with_sample_weights"))
+  }
+
+  list(result = ires, x = x2, y = y2, rerun = rerun)
 }
 
 #' @noRd
