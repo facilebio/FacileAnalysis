@@ -1,11 +1,17 @@
+#' @rdname fdge
+#' @export
+#'
 #' @section Comapring DGE Results:
 #' We can compare two Ttest results.
 #'
 #' The filtering strategy in the interaction model dictates that the union
 #' of all features found in `x` are `y` are used in the test.
 #'
-#' @rdname fdge
-#' @export
+#' @param rerun When comparing two results, the features analyzed in each may
+#'   differ, making comparisons between the two objects sparse, at times.
+#'   When `rerun = TRUE` (default), the original linear models are rerun with
+#'   their features set to `union(features(x), features(y))`.
+#'
 #' @examples
 #' # Comparing two T-test results ----------------------------------------------
 #' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
@@ -22,7 +28,12 @@
 #'   report(dge.comp)
 #'   shine(dge.comp)
 #' }
-compare.FacileTtestAnalysisResult <- function(x, y, rerun = TRUE, ...) {
+compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
+                                              rerun = TRUE, ...) {
+  messages <- character()
+  warnings <- character()
+  errors <- character()
+
   # TODO: assert_comparable(x, y, ...)
   # TODO: assert_comparable.FacileDgeAnalysisResult <- function(...)
   assert_class(x, "FacileTtestAnalysisResult")
@@ -33,22 +44,29 @@ compare.FacileTtestAnalysisResult <- function(x, y, rerun = TRUE, ...) {
     param(x, "assay_name") == param(y, "assay_name"),
     param(x, "method") == param(y, "method"))
 
-  messages <- character()
-  warnings <- character()
-  errors <- character()
+  if (!is.null(treat_lfc)) {
+    if (!test_number(treat_lfc, lower = 0)) {
+      warnings <- c(
+        warnings,
+        "Illegal parameter passed to `treat_lfc`. It is being ignored")
+      treat_lfc <- 0
+    }
+  } else {
+    treat_lfc <- 0
+  }
 
   # override downstream with "failed/incomplete/with_i_stats" version of class?
   clazz <- NULL
   classes <- c("FacileTtestComparisonAnalysisResult",
                "FacileTtestAnalysisResult",
                "FacileDgeAnalysisResult",
-               "FacileAnalysisComparisonComparison",
+               "FacileComparisonAnalysis",
                "FacileAnalysisResult")
 
   out <- list(
     result = NULL,
     xystats = NULL,
-    params = list(x = x, y = y),
+    params = list(x = x, y = y, treat_lfc = treat_lfc),
     fds = fds.)
 
   on.exit({
@@ -59,16 +77,19 @@ compare.FacileTtestAnalysisResult <- function(x, y, rerun = TRUE, ...) {
     return(out)
   })
 
-  idge <- .interaction_fdge(x, y, rerun = rerun)
+  idge <- .interaction_fdge(x, y, treat_lfc = treat_lfc, rerun = rerun)
   if (is.null(idge)) {
     samples. <- bind_rows(samples(x), samples(y))
     samples. <- set_fds(samples., fds.)
     samples. <- distinct(samples., dataset, sample_id)
   } else {
+    classes <- c("FacileTtestComparisonInteractionAnalysisResult", classes)
     samples. <- samples(idge[["result"]])
     if (idge[["rerun"]]) {
-      x <- idge[["x"]]
-      y <- idge[["y"]]
+      # This is non-orthodox-facile:
+      # 1. the x,y params may not be the precise versions that were sent in here
+      out[["params"]][["x"]] <- x <- idge[["x"]]
+      out[["params"]][["y"]] <- y <- idge[["y"]]
     }
   }
 
@@ -88,19 +109,13 @@ compare.FacileTtestAnalysisResult <- function(x, y, rerun = TRUE, ...) {
     ires <- select(tidy(idge[["result"]]), !!c(meta.cols, stat.cols))
     xystats <- left_join(xystats, ires, by = meta.cols)
     # put stats for interaction test up front, followed by *.x, *.y
-    xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
+    # xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
+    xystats <- select(xystats, {{meta.cols}}, {{stat.cols}}, everything())
   }
 
-  out <- list(
-    result = idge[["result"]],
-    xystats = xystats,
-    samples = samples.,
-    xres = x, yres = y,
-    # Standard FacileAnalysisResult things
-    fds = fds.,
-    messages = messages,
-    warnings = warnings,
-    errors = errors)
+  out[["result"]] <- idge[["result"]]
+  out[["xystats"]] <- xystats
+  out[["samples"]] <- samples.
 
   out
 }
@@ -164,7 +179,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
 #'
 #' If we can't generate an interaction result, this will return NULL.
 #' @noRd
-.interaction_fdge <- function(x, y, rerun = FALSE, ...) {
+.interaction_fdge <- function(x, y, treat_lfc = NULL, rerun = FALSE, ...) {
   xmod <- model(x)
   ymod <- model(y)
   xres <- tidy(x)
@@ -177,7 +192,8 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     return(NULL)
   }
 
-  warning("Properly running the interaction model here is still ALPHA",
+  warning("Properly running the interaction model here is still ALPHA\n  ",
+          "https://github.com/facileverse/FacileAnalysis/issues/19",
           immediate. = TRUE)
 
   xsamples <- samples(xmod)
@@ -261,7 +277,8 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   ires <- fdge(imodel, filter = genes.,
                method = param(x, "method"),
                assay_name = param(x, "assay_name"),
-               with_sample_weights = param(x, "with_sample_weights"))
+               with_sample_weights = param(x, "with_sample_weights"),
+               treat_lfc = treat_lfc)
 
   rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
   if (rerun) {

@@ -8,7 +8,7 @@
 \alias{fdge.FacileLinearModelDefinition}
 \title{Peform a differential expression analysis.}
 \usage{
-\method{compare}{FacileTtestAnalysisResult}(x, y, ...)
+\method{compare}{FacileTtestAnalysisResult}(x, y, treat_lfc = NULL, rerun = TRUE, ...)
 
 \method{report}{FacileTtestAnalysisResult}(
   x,
@@ -49,6 +49,11 @@ fdge(x, ..., verbose = FALSE)
 }
 \arguments{
 \item{x}{a data source}
+
+\item{rerun}{When comparing two results, the features analyzed in each may
+differ, making comparisons between the two objects sparse, at times.
+When \code{rerun = TRUE} (default), the original linear models are rerun with
+their features set to \code{union(features(x), features(y))}.}
 
 \item{...}{passed down into inner methods, such as \code{biocbox} to tweak
 filtering criteria, for instance}

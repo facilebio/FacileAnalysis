@@ -98,7 +98,7 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, assay_name = NULL, dims = 5, ntop = 500,
+fpca <- function(x, assay_name = NULL, dims = 5, filter = "default", ntop = 500,
                  row_covariates = NULL, col_covariates = NULL, batch = NULL,
                  main = NULL, ...) {
   UseMethod("fpca", x)
@@ -107,7 +107,8 @@ fpca <- function(x, assay_name = NULL, dims = 5, ntop = 500,
 #' @noRd
 #' @export
 fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
-                                 ntop = 500, row_covariates = NULL,
+                                 filter = "default", ntop = 500,
+                                 row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
                                  main = NULL, custom_key = Sys.getenv("USER"),
                                  ..., samples = NULL) {
@@ -115,7 +116,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
-  fpca(samples, assay_name, dims, ntop, row_covariates, col_covariates,
+  fpca(samples, assay_name, dims, filter, ntop, row_covariates, col_covariates,
        batch, main, custom_key, ...)
 }
 
@@ -131,7 +132,8 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #' @export
 fpca.facile_frame <- function(x, assay_name = NULL,
                               dims = min(5, nrow(x) - 1L),
-                              ntop = 500, row_covariates = NULL,
+                              filter = "default", ntop = 500,
+                              row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
   assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
@@ -158,7 +160,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   # element
   y <- as.DGEList(x, covariates = col.covariates, assay_name = assay_name)
 
-  out <- fpca(y, dims = dims, ntop = ntop, batch = batch, main = main, ...)
+  out <- fpca(y, dims = dims, filter = filter, ntop = ntop, batch = batch,
+              main = main, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   out[["result"]] <- out[["result"]] %>%
@@ -187,7 +190,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 #' @export
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, assay_name = NULL,
-                         dims = min(5, ncol(x) - 1L), ntop = 500,
+                         dims = min(5, ncol(x) - 1L),
+                         filter = "default", ntop = 500,
                          row_covariates = x$genes, col_covariates = x$samples,
                          batch = NULL, main = NULL, prior.count = 3, ...) {
   if (is.null(assay_name)) assay_name <- "counts"
@@ -199,7 +203,8 @@ fpca.DGEList <- function(x, assay_name = NULL,
     assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
   }
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+  out <- fpca(m, dims, filter, ntop, row_covariates, col_covariates, batch,
+              main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -216,7 +221,8 @@ fpca.DGEList <- function(x, assay_name = NULL,
 #' @noRd
 #' @export
 fpca.EList <- function(x, assay_name = NULL,
-                       dims = min(5, ncol(x) - 1L), ntop = 500,
+                       dims = min(5, ncol(x) - 1L),
+                       filter = "default", ntop = 500,
                        row_covariates = x$genes, col_covariates = x$targets,
                        batch = NULL, main = NULL, ...) {
   if (is.null(assay_name)) assay_name <- "E"
@@ -224,7 +230,8 @@ fpca.EList <- function(x, assay_name = NULL,
 
   m <- x[[assay_name]]
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+  out <- fpca(m, dims, filter, ntop, row_covariates, col_covariates, batch,
+              main, ...)
   out[["params"]][["assay_name"]] <- assay_name
 
   if ("dataset" %in% colnames(x$targets)) {
@@ -241,9 +248,9 @@ fpca.EList <- function(x, assay_name = NULL,
 #' @export
 fpca.ExpressionSet <- function(x, assay_name = NULL,
                                dims = min(5, ncol(x) - 1L),
-                               ntop = 500, row_covariates = NULL,
-                               col_covariates = NULL,  batch = NULL,
-                               main = NULL, ...) {
+                               filter = "default", ntop = 500,
+                               row_covariates = NULL, col_covariates = NULL,
+                               batch = NULL, main = NULL, ...) {
   ns <- tryCatch(loadNamespace("Biobase"), error = function(e) NULL)
   if (is.null(ns)) stop("Biobase package required")
 
@@ -260,7 +267,8 @@ fpca.ExpressionSet <- function(x, assay_name = NULL,
   m <- ns$assayDataElement(x, assay_name)
   assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+  out <- fpca(m, dims, filter, ntop, row_covariates, col_covariates, batch,
+              main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -279,7 +287,8 @@ fpca.ExpressionSet <- function(x, assay_name = NULL,
 #' @export
 fpca.SummarizedExperiment <- function(x, assay_name = NULL,
                                       dims = min(5, ncol(x) - 1L),
-                                      ntop = 500, row_covariates = NULL,
+                                      filter = "default", ntop = 500,
+                                      row_covariates = NULL,
                                       col_covariates = NULL,  batch = NULL,
                                       main = NULL, ...) {
   ns <- tryCatch(loadNamespace("SummarizedExperiment"), error = function(e) NULL)
@@ -301,7 +310,8 @@ fpca.SummarizedExperiment <- function(x, assay_name = NULL,
   }
   assert_matrix(m, "numeric", nrows = nrow(x), ncols = ncol(x))
 
-  out <- fpca(m, dims, ntop, row_covariates, col_covariates, batch, main, ...)
+  out <- fpca(m, dims, filter, ntop, row_covariates, col_covariates, batch,
+              main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
 
@@ -319,10 +329,10 @@ fpca.SummarizedExperiment <- function(x, assay_name = NULL,
 #' @rdname fpca
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
-fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), ntop = 500,
-                        row_covariates = NULL,
-                        col_covariates = NULL, batch = NULL, main = NULL,
-                        use_irlba = dims < 7,
+fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L),
+                        filter = "default", ntop = 500,
+                        row_covariates = NULL, col_covariates = NULL,
+                        batch = NULL, main = NULL, use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
   messages <- character()
   warnings <- character()
@@ -353,8 +363,23 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), ntop = 500,
     x <- remove_batch_effect(x, col_covariates, batch = batch, ...)
   }
 
-  rv <- matrixStats::rowVars(x)
-  take <- head(order(rv, decreasing = TRUE), ntop)
+  if (test_string(filter) && filter == "default") {
+    rv <- matrixStats::rowVars(x)
+    take <- head(order(rv, decreasing = TRUE), ntop)
+  } else {
+    if (test_multi_class(filter, c("data.frame", "tbl"))) {
+      filter <- filter[["feature_id"]]
+    }
+    assert_character(filter, min.len = 2)
+    take <- match(filter, rownames(x))
+    if (any(is.na(take))) {
+      stop("The pca filtering strategy only allows you to specify rownames ",
+           "(features) to use for PCA, and the ones you specified do not ",
+           "exactly match rownames(x), see:\n  ",
+           "https://github.com/facileverse/FacileAnalysis/issues/20")
+    }
+    ntop <- length(take)
+  }
 
   xx <- x[take,,drop = FALSE]
   row_covariates <- row_covariates[take,,drop = FALSE]
@@ -394,7 +419,8 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), ntop = 500,
     samples = samples.,
     # Standard FacileAnalysisResult things
     # fds = .fds,
-    params = list(dims = dims, ntop = ntop, use_irlba = use_irlba,
+    params = list(dims = dims, filter = filter, ntop = ntop,
+                  use_irlba = use_irlba,
                   batch = batch, main = main,
                   center = center, scale. = scale.),
     messages = messages,
@@ -493,6 +519,12 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
   }
   pvar <- x[["percent_var"]]
   ranks.[["percent_var_dim"]] <- pvar[ranks.[["dimension"]]]
+
+  # Put informative columns up front
+  upfront <- c("feature_id", "name", "symbol", "dimension", "rank", "score",
+               "weight")
+  upfront <- intersect(upfront, colnames(ranks.))
+  ranks. <- select(ranks., {{upfront}}, everything())
 
   out <- list(
     result = ranks.,
