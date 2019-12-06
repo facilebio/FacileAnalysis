@@ -280,8 +280,8 @@ fpca.ExpressionSet <- function(x, assay_name = NULL,
   }
 
   out
-
 }
+
 #' This should be able to work on things like DESeqTransform objects, as well.
 #' @noRd
 #' @export
