@@ -20,6 +20,8 @@ fpcaGadget <- function(x, title = "Principal Components Analysis", ...) {
 
 # Embeddable Analysis Module ===================================================
 
+#' @noRd
+#' @export
 fpcaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   pca <- callModule(fpcaRun, "pca", rfds, ..., debug = debug)
   view <- callModule(fpcaView, "view", rfds, pca, ..., debug = debug)
@@ -33,6 +35,8 @@ fpcaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   vals
 }
 
+#' @noRd
+#' @export
 fpcaAnalysisUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(
@@ -44,6 +48,7 @@ fpcaAnalysisUI <- function(id, ..., debug = FALSE) {
 
 #' Minimal shiny module to run fpca
 #'
+#' @export
 #' @importFrom FacileShine
 #'   active_samples
 #'   assaySelect
@@ -81,6 +86,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE) {
 }
 
 #' @noRd
+#' @export
 #' @importFrom FacileShine
 #'   assaySelectUI
 #' @importFrom shiny
@@ -109,6 +115,7 @@ fpcaRunUI <- function(id, ..., debug = FALSE) {
 # Visualize PCA ================================================================
 
 #' @noRd
+#' @export
 #' @importFrom FacileShine
 #'   initialized
 #'   categoricalAestheticMap
@@ -204,6 +211,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
 }
 
 #' @noRd
+#' @export
 #' @importFrom FacileShine categoricalAestheticMapUI
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny NS

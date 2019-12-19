@@ -326,19 +326,19 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
 
     y <- y[keep,,keep.lib.sizes = FALSE]
-    y <- calcNormFactors(y)
+    y <- suppressWarnings(calcNormFactors(y)) # partial match of `p` to `probs`
   } else {
     # update lib.size and normfactors if enough genes here
     if (nrow(y) > min_feature_count_tmm) {
       y <- y[rep(TRUE, nrow(y)),,keep.lib.sizes = FALSE]
-      y <- calcNormFactors(y)
+      y <- suppressWarnings(calcNormFactors(y)) # partial match of `p` to `probs`
     }
   }
 
   y$design <- des.matrix
 
   if (method == "edgeR-qlf") {
-    out <- estimateDisp(y, y[["design"]], robust = TRUE)
+    out <- suppressWarnings(estimateDisp(y, y[["design"]], robust = TRUE))
   } else if (method == "voom") {
     if (with_sample_weights) {
       out <- voomWithQualityWeights(y, y[["design"]], ...)

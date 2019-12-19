@@ -268,7 +268,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     }
   }
   if (!test_string(title) && !isFALSE(title)) {
-    finfo <- features(fds(x), assay_name = assay_name, feature_id = fid)
+    finfo <- features(fds(x), assay_name = assay_name, feature_ids = fid)
     name <- finfo[["name"]]
     if (nchar(name) == 0 || is.na(name)) {
       title <- fid

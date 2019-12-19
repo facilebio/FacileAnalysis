@@ -31,6 +31,10 @@ broom::tidy
 #' @export
 FacileData::`%>%`
 
+#' @importFrom shiny callModule
+#' @export
+shiny::callModule
+
 # dplyr API
 
 # @export distinct

@@ -5,6 +5,7 @@
 \alias{reexports}
 \alias{tidy}
 \alias{\%>\%}
+\alias{callModule}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -15,5 +16,7 @@ below to see their documentation.
   \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
 
   \item{broom}{\code{\link[broom]{tidy}}}
+
+  \item{shiny}{\code{\link[shiny]{callModule}}}
 }}
 

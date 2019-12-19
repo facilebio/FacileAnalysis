@@ -185,6 +185,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
     if (verbose) {
       message("... running differential expression analysis")
     }
+
     result <- calculateIndividualLogFC(y, des, contrast = testme,
                                        treat.lfc = treat_lfc)
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by

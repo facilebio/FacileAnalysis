@@ -113,7 +113,7 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
   ui <- miniPage(
     useShinyjs(),
     useSweetAlert(),
-    gadgetTitleBar(title),
+    if (interactive()) gadgetTitleBar(title) else NULL,
     miniContentPanel(ui.content),
     NULL)
 
@@ -169,7 +169,13 @@ frunGadget <- function(analysisModule, analysisUI, x, user = Sys.getenv("USER"),
     })
   }
 
-  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+  if (interactive()) {
+    runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+  } else {
+    # Running in an Rmd with runtime: shiny?
+    opts <- list(height = height)
+    shiny::shinyApp(ui = ui, server = server, options = opts)
+  }
 }
 
 #' Extracts interactions over an object that happened in a gadget

@@ -116,7 +116,10 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   observeEvent(available_methods(), {
     methods <- req(available_methods())
     choices <- split(methods[["method"]], methods[["type"]])
+
     selected <- unname(sapply(choices, "[", 1L))
+    # disable encirhmentest testing by default
+    selected <- unname(sapply(choices[names(choices) != "enrichment"], "[", 1L))
     opts <- NULL
     updatePickerInput(session, "ffsea_methods", selected = selected,
                       choices = choices, choicesOpt = opts)

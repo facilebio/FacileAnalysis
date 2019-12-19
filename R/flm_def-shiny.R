@@ -19,8 +19,8 @@
 #' @importFrom shinyWidgets sendSweetAlert
 #' @return A `ReactiveFacileLinearModelDefinition` object, the output from
 #'   [flm_def()].
-flmDefRun <- function(input, output, session, rfds, ..., debug = FALSE,
-                      .reactive = TRUE) {
+flmDefRun <- function(input, output, session, rfds, default_covariate = NULL,
+                      ..., debug = FALSE, .reactive = TRUE) {
   isolate. <- if (.reactive) base::identity else shiny::isolate
 
   active.samples <- reactive({
@@ -31,7 +31,9 @@ flmDefRun <- function(input, output, session, rfds, ..., debug = FALSE,
   })
 
   testcov <- callModule(categoricalSampleCovariateSelect, "testcov",
-                        rfds, include1 = FALSE, ..., .with_none = FALSE,
+                        rfds, include1 = FALSE,
+                        default_covariate = default_covariate,
+                        ..., .with_none = FALSE,
                         .reactive = .reactive)
   # the "batch" covariate is what I'm calling the extra/batch-level
   # covariates. the entry selected in the testcov is removed from the
