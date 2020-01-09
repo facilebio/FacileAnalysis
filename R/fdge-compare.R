@@ -154,7 +154,8 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
+viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
+                                                    feature_id = NULL, ...) {
   hover <- c(
     # feature metadata
     "symbol", "feature_id", "meta",
@@ -163,13 +164,23 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
     # stats from interaction model, if it was run
     "logFC", "padj")
   d <- tidy(x)
-  if (!is.null(x[["dge"]])) {
+
+  if (!is.null(feature_id)) {
+    assert_multi_class(feature_id, c("character", "data.frame"))
+    if (is.data.frame(feature_id)) {
+      .feature_id <- feature_id[["feature_id"]]
+    } else {
+      .feature_id <- feature_id
+    }
+    d <- filter(d, feature_id %in% .feature_id)
+  } else if (!is.null(x[["dge"]])) {
     d <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
   } else {
     d <- filter(d, padj.x <= max_padj | padj.y <= max_padj)
   }
+
   hover <- intersect(hover, colnames(d))
-  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE)
+  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE, ...)
 }
 
 #' Helper function to run an interaction model to generate statistics when
@@ -238,7 +249,8 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
   # have rows with NA values for covariates that come from the `batch`
   # covaraites used in either x or y. If this is the case, I guess we just have
   # to remove that covariate from the model(?)
-  has.na <- sapply(samples., function(vals) any(is.na(vals)))
+  test.na <- unique(c(icovariate, ibatch))
+  has.na <- sapply(samples.[, test.na], function(vals) any(is.na(vals)))
   has.na <- names(has.na)[has.na]
   if (length(has.na)) {
     msg <- paste("The following covariates have samples with NA values, and",
@@ -282,15 +294,15 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1, ...) {
 
   rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
   if (rerun) {
-    x2 <- fdge(xmod, filter = genes., method = param(x, "method"),
-               assay_name = param(x, "assay_name"),
-               with_sample_weights = param(x, "with_sample_weights"))
-    y2 <- fdge(ymod, filter = genes., method = param(y, "method"),
-               assay_name = param(y, "assay_name"),
-               with_sample_weights = param(y, "with_sample_weights"))
+    x <- fdge(xmod, filter = genes., method = param(x, "method"),
+              assay_name = param(x, "assay_name"),
+              with_sample_weights = param(x, "with_sample_weights"))
+    y <- fdge(ymod, filter = genes., method = param(y, "method"),
+              assay_name = param(y, "assay_name"),
+              with_sample_weights = param(y, "with_sample_weights"))
   }
 
-  list(result = ires, x = x2, y = y2, rerun = rerun)
+  list(result = ires, x = x, y = y, rerun = rerun)
 }
 
 #' @noRd
