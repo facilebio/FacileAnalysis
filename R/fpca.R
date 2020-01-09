@@ -98,16 +98,16 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, assay_name = NULL, dims = 5, filter = "default", ntop = 500,
-                 row_covariates = NULL, col_covariates = NULL, batch = NULL,
-                 main = NULL, ...) {
+fpca <- function(x, assay_name = NULL, dims = 5, filter = "default",
+                 ntop = 1000, row_covariates = NULL, col_covariates = NULL,
+                 batch = NULL, main = NULL, ...) {
   UseMethod("fpca", x)
 }
 
 #' @noRd
 #' @export
 fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
-                                 filter = "default", ntop = 500,
+                                 filter = "default", ntop = 1000,
                                  row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
                                  main = NULL, custom_key = Sys.getenv("USER"),
@@ -132,7 +132,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #' @export
 fpca.facile_frame <- function(x, assay_name = NULL,
                               dims = min(5, nrow(x) - 1L),
-                              filter = "default", ntop = 500,
+                              filter = "default", ntop = 1000,
                               row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -191,7 +191,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 #' @importFrom edgeR cpm
 fpca.DGEList <- function(x, assay_name = NULL,
                          dims = min(5, ncol(x) - 1L),
-                         filter = "default", ntop = 500,
+                         filter = "default", ntop = 1000,
                          row_covariates = x$genes, col_covariates = x$samples,
                          batch = NULL, main = NULL, prior.count = 3, ...) {
   if (is.null(assay_name)) assay_name <- "counts"
@@ -222,7 +222,7 @@ fpca.DGEList <- function(x, assay_name = NULL,
 #' @export
 fpca.EList <- function(x, assay_name = NULL,
                        dims = min(5, ncol(x) - 1L),
-                       filter = "default", ntop = 500,
+                       filter = "default", ntop = 1000,
                        row_covariates = x$genes, col_covariates = x$targets,
                        batch = NULL, main = NULL, ...) {
   if (is.null(assay_name)) assay_name <- "E"
@@ -248,7 +248,7 @@ fpca.EList <- function(x, assay_name = NULL,
 #' @export
 fpca.ExpressionSet <- function(x, assay_name = NULL,
                                dims = min(5, ncol(x) - 1L),
-                               filter = "default", ntop = 500,
+                               filter = "default", ntop = 1000,
                                row_covariates = NULL, col_covariates = NULL,
                                batch = NULL, main = NULL, ...) {
   ns <- tryCatch(loadNamespace("Biobase"), error = function(e) NULL)
@@ -287,7 +287,7 @@ fpca.ExpressionSet <- function(x, assay_name = NULL,
 #' @export
 fpca.SummarizedExperiment <- function(x, assay_name = NULL,
                                       dims = min(5, ncol(x) - 1L),
-                                      filter = "default", ntop = 500,
+                                      filter = "default", ntop = 1000,
                                       row_covariates = NULL,
                                       col_covariates = NULL,  batch = NULL,
                                       main = NULL, ...) {
@@ -330,7 +330,7 @@ fpca.SummarizedExperiment <- function(x, assay_name = NULL,
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L),
-                        filter = "default", ntop = 500,
+                        filter = "default", ntop = 1000,
                         row_covariates = NULL, col_covariates = NULL,
                         batch = NULL, main = NULL, use_irlba = dims < 7,
                         center = TRUE, scale. = FALSE, ...) {
