@@ -188,6 +188,11 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
 
     result <- calculateIndividualLogFC(y, des, contrast = testme,
                                        treat.lfc = treat_lfc)
+
+    if (assay_type == "qpcrdct") {
+      result[["logFC"]] <- -1 * result[["logFC"]]
+    }
+
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
     rownames(result) <- result[["featureId"]]
@@ -595,7 +600,8 @@ fdge_methods <- function(assay_type = NULL,
     "affymrna",    "limma",             "EList",
     "affymirna",   "limma",             "EList",
     "lognorm",     "limma",             "EList",
-    "real",        "ranks",             "EList")
+    "real",        "ranks",             "EList",
+    "qpcrdct",     "limma",             "EList")
 
   method_params <- tribble(
     ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,

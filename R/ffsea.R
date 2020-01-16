@@ -236,9 +236,18 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
                                             rank_by = "logFC",
                                             signed = TRUE,
                                             biased_by = NULL, ...,
-                                            rank_order = "thebuckstopshere",
-                                            group_by = "thebuckstopshere",
-                                            select_by = "thebuckstopshere") {
+                                            rank_order = "ranked",
+                                            group_by = "direction",
+                                            select_by = "significant") {
+  if (assert_string(rank_order) != "ranked") {
+    warning("non-default value used for `rank_order`")
+  }
+  if (assert_string(group_by) != "direction") {
+    warning("non-default value used for `group_by`")
+  }
+  if (assert_string(select_by) != "significant") {
+    warning("non-default value used for `select_by`")
+  }
   assert_class(gdb, "GeneSetDb")
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
@@ -293,9 +302,20 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
 ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
                                             max_padj = 0.10, biased_by = NULL,
                                             ...,
-                                            rank_by = "thebuckstopshere",
-                                            select_by = "thebuckstopshere",
-                                            rank_order = "thebuckstopshere") {
+                                            rank_by = "F",
+                                            select_by = "significant",
+                                            rank_order = "ranked",
+                                            biased_by = NULL) {
+  if (assert_string(rank_by) != "F") {
+    warning("non-default value used for `rank_order`")
+  }
+  if (assert_string(select_by) != "significant") {
+    warning("non-default value used for `select_by`")
+  }
+  if (assert_string(rank_order) != "ranked") {
+    warning("non-default value used for `group_by`")
+  }
+
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
@@ -304,9 +324,8 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
   ranks. <- mutate(ranks., significant = padj <= max_padj)
 
   out <- ffsea(ranks., gdb, methods = methods,
-               select_by = "significant",
-               rank_by = "F", rank_order = "ranked",
-               biased_by = biased_by, ...)
+               select_by = select_by, rank_by = rank_by,
+               rank_order = rank_order, biased_by = biased_by, ...)
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]
   out[["params"]][["x"]] <- x
   out[["params"]][["max_padj"]] <- max_padj
@@ -437,7 +456,8 @@ samples.FacileFseaAnalysisResult <- function(x, ...) {
 tidy.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
                                           ...) {
   mgres <- x[["result"]]
-  name. <- assert_choice(name, param(x, "methods"))
+  # name. <- assert_choice(name, param(x, "methods"))
+  name. <- assert_choice(name, multiGSEA::resultNames(mgres))
   out <- as.tbl(result(mgres, name.))
   select(out, collection, name, pval, padj, padj.by.collection, everything())
 }
