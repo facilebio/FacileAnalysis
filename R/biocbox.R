@@ -136,7 +136,8 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
   ainfo <- assay_info(.fds, assay_name)
   assay_type <- ainfo[["assay_type"]]
-  if (!assay_type %in% c("rnaseq", "umi", "normcounts", "lognorm")) {
+  valid_methods <- fdge_methods(assay_type)
+  if (nrow(valid_methods) == 0) {
     errors <- paste("DGE analysis not implemented for this assay_type: ",
                     assay_type)
     return(out)
@@ -198,13 +199,22 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                             prior_count, ...) {
   assert_class(design, "FacileLinearModelDefinition")
 
-  if (assay_type %in% c("rnaseq", "isoseq", "umi")) {
-    create <- .biocbox_create_DGEList
-  } else if (assay_type %in% c("normcounts", "lognorm")) {
-    create <- .biocbox_create_EList
-  } else {
+  amethods <- fdge_methods(assay_type)
+  if (nrow(amethods) == 0) {
     stop(paste("DGE analysis not implemented for this assay_type: ",
                assay_type))
+  }
+  xmethod <- filter(amethods, dge_method == method)
+  if (nrow(xmethod) != 1L) {
+    stop("Unexpected state, method parameter not legal: ", method)
+  }
+  bioc.class <- xmethod[["bioc_class"]]
+  if (bioc.class == "DGEList") {
+    create <- .biocbox_create_DGEList
+  } else if (bioc.class == "EList") {
+    create <- .biocbox_create_EList
+  } else {
+    stop("Unexpxected state, ildefined bioc.class for method: ", bioc.class)
   }
 
   bbox <- create(xsamples, assay_name = assay_name,
@@ -217,7 +227,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 }
 
 #' @noRd
-.get_DGEList <- function(xsamples, design, assay_name,
+.get_DGEList <- function(xsamples, design, assay_name, assay_type,
                          filter, filter_universe, filter_require, ...) {
   if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
     filter_require <- filter_require[["feature_id"]]
@@ -234,12 +244,17 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
   }
 
-  do.filterByExpr <- test_string(filter) && filter == "default"
+  amethod <- fdge_methods(assay_type)
+
+  do.filterByExpr <- test_string(filter) &&
+    filter == "default" &&
+    isTRUE(amethod[["default_filter"]])
+
   if (!do.filterByExpr) {
     if (test_multi_class(filter, c("data.frame", "tbl"))) {
       filter_universe <- filter[["feature_id"]]
-    } else {
-      filter_universe <- filter
+    } else if (test_string(filter) && filter == "default") {
+      filter_universe <- NULL
     }
     if (!is.character(filter_universe) && !is.null(filter_universe)) {
       stop("filter argument is of illegal type: ", class(filter)[1L])
@@ -300,13 +315,13 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   warnings <- character()
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
+                      assay_type = assay_type,
                       filter = filter,
                       filter_universe = filter_universe,
                       filter_require = filter_require)
   y <- dat[["y"]]
   des.matrix <- design(design)[colnames(y),,drop=FALSE]
 
-  do.filterByExpr <- test_string(filter) && filter == "default"
   if (dat[["filter_run"]]) {
     dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
     dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
@@ -383,8 +398,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 #' @importFrom limma arrayWeights
 .biocbox_create_EList <- function(xsamples, assay_name, assay_type,
                                   design, filter, method, with_sample_weights,
-                                  prior_count = 0.25,
+                                  prior_count = 0.2,
                                   filter_min_expr = 1,
+                                  filter_universe = NULL,
                                   filter_require = character(), ...) {
   if (is.null(prior_count)) prior_count <- 0.25
 
@@ -393,6 +409,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   # normalized = FALSE
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
+                      assay_type = assay_type,
                       filter = filter,
                       filter_universe = filter_universe,
                       filter_require = filter_require)
@@ -451,7 +468,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     elist <- arrayWeights(elist, elist[["design"]])
   }
 
-  dropped <- setdiff(rowanmes(dat[["y"]]), rownames(elilst))
+  dropped <- setdiff(rownames(dat[["y"]]), rownames(elist))
 
   elist
 }

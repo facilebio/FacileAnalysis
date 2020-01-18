@@ -43,6 +43,8 @@ fdge(x, ..., verbose = FALSE)
   filter = "default",
   with_sample_weights = FALSE,
   treat_lfc = NULL,
+  flip_lfc = FALSE,
+  weights = NULL,
   ...,
   verbose = FALSE
 )
@@ -69,6 +71,13 @@ valid choices are defined by the type of assay \code{assay_name}is. Refer to the
 features (genes) are removed from the dataset for testing, as well as if
 to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}}
 (where appropriate) when testing (default is not to).}
+
+\item{flip_lfc}{Set to \code{TRUE} if it is appropriate to flip the sign of the
+estimated logFC. This would be appropriate when calculating fold changes
+for dCt values, for instance. Default is \code{FALSE}.}
+
+\item{weights}{a \verb{sample_id,feature_id,weight} table of observation weights
+to use when \code{method == "limma"}.}
 }
 \description{
 Use \code{\link[=flm_def]{flm_def()}} to define the design matrix and contrast to test and

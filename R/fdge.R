@@ -71,6 +71,11 @@
 #'   features (genes) are removed from the dataset for testing, as well as if
 #'   to use [limma::arrayWeights()] or [limma::voomWithQualityWeights()]
 #'   (where appropriate) when testing (default is not to).
+#' @param flip_lfc Set to `TRUE` if it is appropriate to flip the sign of the
+#'   estimated logFC. This would be appropriate when calculating fold changes
+#'   for dCt values, for instance. Default is `FALSE`.
+#' @param weights a `sample_id,feature_id,weight` table of observation weights
+#'   to use when `method == "limma"`.
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- FacileData::filter_samples(efds, indication == "BLCA")
@@ -124,7 +129,8 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
-                                             treat_lfc = NULL,
+                                             treat_lfc = NULL, flip_lfc = FALSE,
+                                             weights = NULL,
                                              ..., verbose = FALSE) {
   messages <- character()
   warnings <- character()
@@ -186,10 +192,36 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       message("... running differential expression analysis")
     }
 
-    result <- calculateIndividualLogFC(y, des, contrast = testme,
-                                       treat.lfc = treat_lfc)
+    if (!is.null(weights) && method != "voom") {
+      assert_multi_class(weights, c("data.frame", "tibble"))
+      assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
+                    colnames(weights))
+      if (FALSE) {
+        weights <- lapply(head(letters, 20), function(s) {
+          tibble(dataset = "ds", sample_id = s, feature_id = head(LETTERS, 10))
+        })
+        weights <- bind_rows(weights) %>% mutate(weight = rnorm(nrow(.)))
+      }
 
-    if (assay_type == "qpcrdct") {
+      weights <- mutate(weights, skey = paste(dataset, sample_id, sep = "__"))
+
+      ww <- select(weights, skey, feature_id, weight)
+      ww <- pivot_wider(ww, names_from = skey, values_from = weight)
+      weights <- as.matrix(select(ww, -feature_id))
+      rownames(weights) <- ww[["feature_id"]]
+      weights <- weights[rownames(y), colnames(y)]
+      na.w <- which(is.na(weights), arr.ind = TRUE)
+      if (nrow(na.w)) {
+        warning("NA values found in weights, setting to 1")
+        weights[na.w] <- 1
+      }
+    }
+
+    result <- calculateIndividualLogFC(y, des, contrast = testme,
+                                       treat.lfc = treat_lfc,
+                                       weights = weights)
+
+    if (isTRUE(flip_lfc)) {
       result[["logFC"]] <- -1 * result[["logFC"]]
     }
 
@@ -239,6 +271,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       method = bb[["dge_method"]],
       model_def = x,
       treat_lfc = if (use.treat) treat_lfc else NULL,
+      flip_lfc = flip_lfc,
       with_sample_weights = with_sample_weights),
     # Standard FacileAnalysisResult things
     fds = .fds,
@@ -277,7 +310,7 @@ features.FacileDgeAnalysisResult <- function(x, ...) {
   stat.table <- tidy(x)
   take <- c("feature_id", "feature_type", "symbol", "assay", "assay_type")
   take <- intersect(take, colnames(stat.table))
-  select(stat.table, !!take, everything())
+  select(stat.table, {{take}}, everything())
 }
 
 #' @noRd
@@ -586,22 +619,22 @@ fdge_methods <- function(assay_type = NULL,
   # This is a table of assay_type : dge_method possibilites. The first row
   # for each assay_type is the default analysis method
   assay_methods <- tribble(
-    ~assay_type,   ~dge_method,         ~bioc_class,
-    "rnaseq",      "voom",              "EList",
-    "rnaseq",      "edgeR-qlf",         "DGEList",
-    "rnaseq",      "limma-trend",       "EList",
-    "umi",         "voom",              "EList",
-    "umi",         "edgeR-qlf",         "DGEList",
-    "umi",         "limma-trend",       "EList",
-    "tpm",         "limma-trend",       "EList",
-    "cpm",         "limma-trend",       "EList",
-    "isoseq",      "voom",              "EList",
-    "isoseq",      "limma-trend",       "EList",
-    "affymrna",    "limma",             "EList",
-    "affymirna",   "limma",             "EList",
-    "lognorm",     "limma",             "EList",
-    "real",        "ranks",             "EList",
-    "qpcrdct",     "limma",             "EList")
+    ~assay_type,   ~dge_method,         ~bioc_class,   ~default_filter,
+    "rnaseq",      "voom",              "EList",       TRUE,
+    "rnaseq",      "edgeR-qlf",         "DGEList",     TRUE,
+    "rnaseq",      "limma-trend",       "EList",       TRUE,
+    "umi",         "voom",              "EList",       TRUE,
+    "umi",         "edgeR-qlf",         "DGEList",     TRUE,
+    "umi",         "limma-trend",       "EList",       TRUE,
+    "tpm",         "limma-trend",       "EList",       TRUE,
+    "cpm",         "limma-trend",       "EList",       TRUE,
+    "isoseq",      "voom",              "EList",       TRUE,
+    "isoseq",      "limma-trend",       "EList",       TRUE,
+    "affymrna",    "limma",             "EList",       TRUE,
+    "affymirna",   "limma",             "EList",       TRUE,
+    "lognorm",     "limma",             "EList",       TRUE,
+    "real",        "ranks",             "EList",       TRUE,
+    "qpcrdct",     "limma",             "EList",       FALSE)
 
   method_params <- tribble(
     ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,

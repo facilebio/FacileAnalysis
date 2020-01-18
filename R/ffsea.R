@@ -304,8 +304,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
                                             ...,
                                             rank_by = "F",
                                             select_by = "significant",
-                                            rank_order = "ranked",
-                                            biased_by = NULL) {
+                                            rank_order = "ranked") {
   if (assert_string(rank_by) != "F") {
     warning("non-default value used for `rank_order`")
   }

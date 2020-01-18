@@ -4,7 +4,16 @@
 \alias{flmDefRun}
 \title{A shiny module that generates a linear model definition via \code{flm_def}.}
 \usage{
-flmDefRun(input, output, session, rfds, ..., debug = FALSE, .reactive = TRUE)
+flmDefRun(
+  input,
+  output,
+  session,
+  rfds,
+  default_covariate = NULL,
+  ...,
+  debug = FALSE,
+  .reactive = TRUE
+)
 }
 \value{
 A \code{ReactiveFacileLinearModelDefinition} object, the output from
