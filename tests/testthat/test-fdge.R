@@ -35,17 +35,20 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom")
   vm_dge <- result(vm_test)
+  expect_set_equal(vm_dge[["feature_id"]], qlf_dge[["feature_id"]])
 
   vm <- limma::voom(y, y$design)
-  vm.facile <- biocbox(vm_test)$biocbox
+  vm.facile <- result(biocbox(vm_test))
+  expect_equal(vm.facile$weights, vm$weights)
+
   vres <- limma::lmFit(vm, vm$design) %>%
     limma::eBayes() %>%
     limma::topTable(coef = 2, Inf, sort.by = "none")
 
   expect_equal(vres$feature_id, vm_dge$feature_id)
+  expect_equal(vm_dge$logFC, vres$logFC)
   expect_equal(vm_dge$pval, vres$P.Value)
   expect_equal(vm_dge$padj, vres$adj.P.Val)
-  expect_equal(vm_dge$logFC, vres$logFC)
 })
 
 test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
