@@ -227,7 +227,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 }
 
 #' @noRd
-.get_DGEList <- function(xsamples, design, assay_name, assay_type,
+.get_DGEList <- function(xsamples, design, assay_name, assay_type, method,
                          filter, filter_universe, filter_require, ...) {
   if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
     filter_require <- filter_require[["feature_id"]]
@@ -244,9 +244,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
   }
 
-  amethod <- fdge_methods(assay_type)
+  amethod <- filter(fdge_methods(assay_type), dge_method == method)
 
-  do.filterByExpr <- test_string(filter) &&
+  do.filterByExpr <- nrow(amethod) == 1L &&
+    test_string(filter) &&
     filter == "default" &&
     isTRUE(amethod[["default_filter"]])
 
@@ -255,6 +256,8 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       filter_universe <- filter[["feature_id"]]
     } else if (test_string(filter) && filter == "default") {
       filter_universe <- NULL
+    } else if (test_character(filter)) {
+      filter_universe <- filter
     }
     if (!is.character(filter_universe) && !is.null(filter_universe)) {
       stop("filter argument is of illegal type: ", class(filter)[1L])
@@ -315,7 +318,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   warnings <- character()
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
-                      assay_type = assay_type,
+                      assay_type = assay_type, method = method,
                       filter = filter,
                       filter_universe = filter_universe,
                       filter_require = filter_require)
@@ -409,7 +412,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   # normalized = FALSE
 
   dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
-                      assay_type = assay_type,
+                      assay_type = assay_type, method = method,
                       filter = filter,
                       filter_universe = filter_universe,
                       filter_require = filter_require)

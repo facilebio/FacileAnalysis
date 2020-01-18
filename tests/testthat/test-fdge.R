@@ -86,6 +86,28 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$F, vres$F)
 })
 
+test_that("weighted linear models work", {
+  # TODO: test weighted linear models!
+  mdef <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    flm_def(covariate = "sample_type",
+                   numer = "tumor",
+                   denom = "normal")
+
+  # This will calculate weights for us
+
+  bbox <- biocbox(mdef, method = "voom")
+  vm <- result(bbox)
+
+  W <- as.data.frame(vm$weights)
+  colnames(W) <- colnames(vm)
+
+  weights <- tibble(feature_id = rownames(vm)) %>%
+    bind_cols(W) %>%
+    tidyr::pivot_longer(-feature_id, names_to = "sample_id") %>%
+    tidyr::separate(sample_id, "__", into = c("dataset", "sample_id"))
+})
+
 # Ranks and Signatures =========================================================
 
 # Let's pre-compute and ANOVA and ttest result so we can break up our

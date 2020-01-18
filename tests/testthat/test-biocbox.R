@@ -21,13 +21,13 @@ test_that("Correct bioc container built from model def and method spec", {
   expect_numeric(y$trended.dispersion, len = nrow(y))
   expect_numeric(y$tagwise.dispersion, len = nrow(y))
 
-
   # EList with $weights matrix for voom
   bbox <- biocbox(mdef, "rnaseq", method = "voom")
   vm <- result(bbox)
   expect_class(vm, "EList")
   expect_matrix(vm$weights, nrows = nrow(vm), ncols = ncol(vm))
   expect_equal(y$design, vm$design)
+  expect_set_equal(rownames(vm), rownames(y))
 
   # EList without weights for limma-trend analysis
   bbox <- biocbox(mdef, "rnaseq", method = "limma-trend")
@@ -35,6 +35,7 @@ test_that("Correct bioc container built from model def and method spec", {
   expect_class(e, "EList")
   expect_null(e$weights)
   expect_matrix(e$E, nrows = nrow(e), ncols = ncol(e))
+  expect_set_equal(rownames(e), rownames(y))
 
   # the expression matrices returned from voom and limma-trended are the same
   cors <- cor(e$E, vm$E, method = "spearman")

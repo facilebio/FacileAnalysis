@@ -196,12 +196,6 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       assert_multi_class(weights, c("data.frame", "tibble"))
       assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
                     colnames(weights))
-      if (FALSE) {
-        weights <- lapply(head(letters, 20), function(s) {
-          tibble(dataset = "ds", sample_id = s, feature_id = head(LETTERS, 10))
-        })
-        weights <- bind_rows(weights) %>% mutate(weight = rnorm(nrow(.)))
-      }
 
       weights <- mutate(weights, skey = paste(dataset, sample_id, sep = "__"))
 
@@ -210,10 +204,14 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       weights <- as.matrix(select(ww, -feature_id))
       rownames(weights) <- ww[["feature_id"]]
       weights <- weights[rownames(y), colnames(y)]
-      na.w <- which(is.na(weights), arr.ind = TRUE)
-      if (nrow(na.w)) {
-        warning("NA values found in weights, setting to 1")
-        weights[na.w] <- 1
+
+      na.w <- is.na(weights)
+      if (any(na.w)) {
+        mean.w <- mean(weights[!na.w])
+        msg <- sprintf("%0.2f NA values in weights, replacing with mean %0.2f",
+                       sum(na.w) / length(na.w), mean.w)
+        warning(msg)
+        weights[na.w] <- mean.w
       }
     }
 
@@ -620,15 +618,15 @@ fdge_methods <- function(assay_type = NULL,
   # for each assay_type is the default analysis method
   assay_methods <- tribble(
     ~assay_type,   ~dge_method,         ~bioc_class,   ~default_filter,
-    "rnaseq",      "voom",              "EList",       TRUE,
+    "rnaseq",      "voom",              "DGEList",     TRUE,
     "rnaseq",      "edgeR-qlf",         "DGEList",     TRUE,
-    "rnaseq",      "limma-trend",       "EList",       TRUE,
-    "umi",         "voom",              "EList",       TRUE,
+    "rnaseq",      "limma-trend",       "DGEList",     TRUE,
+    "umi",         "voom",              "DGEList",     TRUE,
     "umi",         "edgeR-qlf",         "DGEList",     TRUE,
-    "umi",         "limma-trend",       "EList",       TRUE,
+    "umi",         "limma-trend",       "DGEList",     TRUE,
     "tpm",         "limma-trend",       "EList",       TRUE,
     "cpm",         "limma-trend",       "EList",       TRUE,
-    "isoseq",      "voom",              "EList",       TRUE,
+    "isoseq",      "voom",              "DGEList",     TRUE,
     "isoseq",      "limma-trend",       "EList",       TRUE,
     "affymrna",    "limma",             "EList",       TRUE,
     "affymirna",   "limma",             "EList",       TRUE,
