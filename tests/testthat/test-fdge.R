@@ -89,26 +89,55 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(vm_dge$F, vres$F)
 })
 
-test_that("weighted linear models work", {
+test_that("custom observational weights used in fdge(..., weights = W)", {
   # TODO: test weighted linear models!
-  mdef <- FDS %>%
+  vm.fdge <- FDS %>%
     filter_samples(indication == "BLCA") %>%
     flm_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal")
+            numer = "tumor",
+            denom = "normal") %>%
+    fdge(method = "voom") # This will calculate weights for us
 
-  # This will calculate weights for us
+  vm <- result(biocbox(vm.fdge))
 
-  bbox <- biocbox(mdef, method = "voom")
-  vm <- result(bbox)
-
-  W <- as.data.frame(vm$weights)
+  # randomize weights and send back through
+  W <- matrix(sample(vm$weights), nrow = nrow(vm))
+  rownames(W) <- rownames(vm)
   colnames(W) <- colnames(vm)
 
-  weights <- tibble(feature_id = rownames(vm)) %>%
-    bind_cols(W) %>%
-    tidyr::pivot_longer(-feature_id, names_to = "sample_id") %>%
-    tidyr::separate(sample_id, "__", into = c("dataset", "sample_id"))
+  wdf <- cbind(tibble(feature_id = rownames(vm)), as.data.frame(W))
+
+  weights <- pivot_longer(wdf, -feature_id, names_to = "sample_id",
+                          values_to = "weight") %>%
+    separate(sample_id, "__", into = c("dataset", "sample_id"))
+
+  cm <- limma::makeContrasts(tumor = tumor - normal, levels = vm$design)
+  ex.res <- limma::lmFit(vm$E, vm$design, weights = W) %>%
+    limma::contrasts.fit(cm) %>%
+    limma::eBayes() %>%
+    limma::topTable("tumor", n = Inf, sort.by = "none") %>%
+    mutate(feature_id = rownames(.))
+
+  f.res <- expect_warning(
+    fdge(model(vm.fdge), filter = features(vm.fdge),
+         method = "voom", weights = weights),
+    ".*weights.*overriding.*voom")
+  fstats <- tidy(f.res)
+
+  expect_setequal(tidy(vm.fdge)[["feature_id"]], ex.res[["feature_id"]])
+  expect_setequal(fstats[["feature_id"]], ex.res[["feature_id"]])
+
+  cmp <- tidy(vm.fdge) %>%
+    select(feature_id, symbol, pval, padj) %>%
+    left_join(select(ex.res, feature_id, logFC.limma = logFC, pval.limma = P.Value),
+              by = "feature_id") %>%
+    left_join(select(fstats, feature_id, logFC.f2 = logFC, pval.f2 = pval),
+              by = "feature_id")
+
+  expect_true(all(complete.cases(cmp))) # "full" join worked
+  expect_false(isTRUE(all.equal(cmp[["logFC"]], cmp[["logFC.limma"]])))
+  expect_equal(cmp[["logFC.f2"]], cmp[["logFC.limma"]])
+  expect_equal(cmp[["pval.f2"]], cmp[["pval.limma"]])
 })
 
 # Ranks and Signatures =========================================================

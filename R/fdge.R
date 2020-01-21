@@ -192,7 +192,10 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       message("... running differential expression analysis")
     }
 
-    if (!is.null(weights) && method != "voom") {
+    if (!is.null(weights)) {
+      if (method == "voom") {
+        warning("Custom weights are overriding voom-calculated ones ...")
+      }
       assert_multi_class(weights, c("data.frame", "tibble"))
       assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
                     colnames(weights))
@@ -545,11 +548,25 @@ samples.FacileDgeAnalysisResult <- function(x, ...) {
 #'
 #' @export
 #' @rdname biocbox
-biocbox.FacileDgeAnalysisResult <- function(x, ...) {
-  res <- biocbox(model(x),
-                 x[["params"]][["assay_name"]],
-                 x[["params"]][["method"]],
-                 filter = result(x)[["feature_id"]], ...)
+biocbox.FacileDgeAnalysisResult <- function(x,
+                                            assay_name = param(x, "assay_name"),
+                                            method = param(x, "method"),
+                                            filter = features(x), ...) {
+  # I originally had this method signature as (x, ...) and then explicitly
+  # passed down assay_name = param(x, "assay_name"), but if we don't catch
+  # this arguments in the function and the user calls the function with them,
+  # we get an error of duplicate parameters in the function call when we
+  # delegate down to biocbox.FacileLinearModelDefinition
+  assert_string(assay_name)
+  if (assay_name != param(x, "assay_name")) {
+    warning("Biocbox created on different assay than what was tested in fdge")
+  }
+  assert_string(method)
+  if (method != param(x, "method")) {
+    warning("Generating a biocbox for different method than was used in fdge")
+  }
+  res <- biocbox(model(x), assay_name = assay_name, method = method,
+                 features = features, ...)
   res
 }
 

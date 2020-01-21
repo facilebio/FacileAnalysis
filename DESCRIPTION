@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.12
+Version: 0.2.13
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -28,7 +28,7 @@ Imports:
     limma,
     matrixStats,
     miniUI,
-    multiGSEA (>= 0.12.13),
+    multiGSEA (>= 0.13.8),
     multiGSEA.shiny (>= 0.1.12),
     plotly (>= 4.9.0),
     readxl,
