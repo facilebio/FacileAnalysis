@@ -24,7 +24,15 @@
   ...
 )
 
-fdge(x, ..., verbose = FALSE)
+fdge(
+  x,
+  assay_name = NULL,
+  method = NULL,
+  filter = "default",
+  with_sample_weights = FALSE,
+  ...,
+  verbose = FALSE
+)
 
 \method{fdge}{FacileAnovaModelDefinition}(
   x,

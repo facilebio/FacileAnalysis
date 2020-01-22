@@ -97,7 +97,8 @@
 #'   flm_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
-fdge <- function(x, ..., verbose = FALSE) {
+fdge <- function(x, assay_name = NULL, method = NULL, filter = "default",
+                 with_sample_weights = FALSE, ..., verbose = FALSE) {
   UseMethod("fdge", x)
 }
 

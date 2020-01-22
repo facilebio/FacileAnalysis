@@ -19,7 +19,13 @@ biocbox(x, ...)
   ...
 )
 
-\method{biocbox}{FacileDgeAnalysisResult}(x, ...)
+\method{biocbox}{FacileDgeAnalysisResult}(
+  x,
+  assay_name = param(x, "assay_name"),
+  method = param(x, "method"),
+  filter = features(x),
+  ...
+)
 }
 \arguments{
 \item{x}{The FacileAnalysisResult}
