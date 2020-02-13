@@ -21,16 +21,17 @@
 #' and the order by which to do that using the `rank_by` and `rank_order`
 #' arguments, respectively.
 #'
-#' If running an erichment-style test (`method = "enrichtest"`), the user must
-#' specifcy the name of a logical column that indicates (when `TRUE`) that a
-#' feature should be included for enrichment testing. The user can optionally
-#' specify a `group_by` column, like `"direction"`, that will be used to split
-#' the selected features into groups to perform more specific enrichmen tests.
-#' This allows you enrichment tests to be run separately for `"up"` and `"down"`
-#' regulated genes separately, for example. Lastly, the user can provide the
-#' name of another numeric column in `x` with `biased_by` which can be used to
-#' account for bias in the enrichment tests, such as gene length, GC content,
-#' etc.
+#' If running an overrepresentation analysis-style test (`method = "ora"`),
+#' the user must specifcy the name of a logical column that indicates
+#' (when `TRUE`) that a feature should be included for enrichment testing. The
+#' user can optionally specify a `group_by` column, like `"direction"`, that
+#' will be used to split the selected features into groups to perform more
+#' specific enrichmen tests. This allows you enrichment tests to be run
+#' separately for `"up"` and `"down"` regulated genes separately, for example.
+#'
+#' Lastly, the user can provide the name of another numeric column in `x` with
+#' `biased_by` which can be used to account for bias in the enrichment tests,
+#' such as gene length, GC content, etc.
 #'
 #' Gene sets must be supplied as a [multiGSEA::GeneSetDb()] object.
 #'
@@ -41,7 +42,7 @@
 #'   gene set test based on feature ranks imposed downstream of an analysis
 #' * `"fgsea"`: Delegates to [fgsea::fgsea()] to perform another version of
 #'   a competitive gene set test based on ranks.
-#' * `"enrichtest"`: Performs a gene-ontology type of enrichment test. The user
+#' * `"ora"`: Performs an overrepresentation analysis test. The user
 #'   must specify the name of `logical` column (`select_by`) from the input
 #'   which is used to indicate the features that are selected for enrichment
 #'   analysis. The user can optionally provide the name of a `numeric` column
@@ -58,7 +59,7 @@
 #' The geneset level statistics can be extracted from the
 #' `FacileFseaAnalysisResult` on a per-method basis usig the `tidy()` function.
 #' For instance, if `ffsea()` was called with
-#' `fres <- ffsea(..., methods = c("cameraPR", "enrichtest")`, the `"cameraPR"`
+#' `fres <- ffsea(..., methods = c("cameraPR", "ora")`, the `"cameraPR"`
 #' results can be extracted via `tidy(fres, "cameraPR")`
 #'
 #' @section Development Notes:
@@ -92,14 +93,14 @@
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = "sex") %>%
 #'   fdge(method = "voom")
-#' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
+#' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
 #'                     biased_by = "effective_length")
 #' if (interactive()) {
 #'   shine(ttest.gsea)
 #' }
 #'
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")
-#' enrich.stats <- tidy(ttest.gsea, "enrichtest")
+#' ora.stats <- tidy(ttest.gsea, "ora")
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
 #' stage.anova <- efds %>%
@@ -229,7 +230,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
 #' @export
 #' @importFrom multiGSEA multiGSEA
 ffsea.FacileTtestAnalysisResult <- function(x, gdb,
-                                            methods = c("cameraPR", "enrichtest"),
+                                            methods = c("cameraPR", "ora"),
                                             min_logFC = param(x, "treat_lfc"),
                                             max_padj = 0.10,
                                             rank_by = "logFC",
@@ -298,7 +299,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
 
 #' @noRd
 #' @export
-ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
+ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
                                             max_padj = 0.10, biased_by = NULL,
                                             ...,
                                             rank_by = "F",

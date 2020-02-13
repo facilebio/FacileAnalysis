@@ -4,7 +4,7 @@
 \alias{fpcaGadget}
 \title{Perform a PCA analysis on a (subset) of a FacileDataStore}
 \usage{
-fpcaGadget(x, title = "Principal Components Analysis", ...)
+fpcaGadget(x, title = "Principal Components Analysis", viewer = "browser", ...)
 }
 \description{
 Interactively runs PCA on a FacileDataStore. If you want to run PCA on a

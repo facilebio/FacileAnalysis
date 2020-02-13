@@ -69,14 +69,14 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
     select(mgres.cameraPR, name, pval) %>% as.data.frame())
 })
 
-test_that("enrichtest works with ttest result", {
+test_that("overrepresentation analysis (ora) works with ttest result", {
   input <- ranks(ttest.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.10)
-  mgres <- multiGSEA::enrichtest(gdb, input, selected = "significant",
-                                 feature.bias = "effective_length")
+  mgres <- multiGSEA::ora(gdb, input, selected = "significant",
+                          feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
-  facile.gsea <- ffsea(ttest.res, gdb, method = "enrichtest",
+  facile.gsea <- ffsea(ttest.res, gdb, method = "ora",
                        biased_by = "effective_length",
                        max_padj = 0.10, min_logFC = 0)
   fres <- tidy(facile.gsea)
@@ -88,8 +88,8 @@ test_that("ffsea(anova_result) runs enrichment test", {
   astats <- ranks(anova.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.2)
-  mgres <- multiGSEA::enrichtest(gdb, astats, selected = "significant",
-                                 feature.bias = "effective_length")
+  mgres <- multiGSEA::ora(gdb, astats, selected = "significant",
+                          feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
 
   facile.gsea <- ffsea(anova.res, gdb, max_padj = 0.2,

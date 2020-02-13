@@ -11,7 +11,7 @@
     ~type,        ~method,
     "preranked",  "cameraPR",
     "preranked",  "fgsea",
-    "enrichment", "enrichtest")
+    "ora",        "ora")
   if (!is.null(type)) {
     type. <- assert_choice(type, opts[["type"]])
     opts <- filter(opts, type == type.)
@@ -49,16 +49,16 @@ ffsea_methods.FacileAnalysisResult <- function(x, ...) {
 
 #' Returns the types of GSEA methods available over a FacileAnalysisResult
 #'
-#' Methods are either based on "preranked" or "enrichment", ie. a rank-based
-#' method takes a vector of ordered/ranked features, and an enrichment-based
-#' method takes the top N features from a list of features.
+#' Methods are either based on "preranked" or "ora", ie. a rank-based
+#' method takes a vector of ordered/ranked features, and an overrepresentation
+#' analysis method takes the top N features from a list of features.
 #'
 #' Examples of "preranked" based GSEA methods include `cameraPR` and `fgsea`,
-#' while "enrichment" methods include `goseq` and hypergeometic test.
+#' while "ora" methods include `goseq` and hypergeometic test.
 #'
 #' @noRd
 #' @param x a FacileAnalysisResult
-#' @return a character vector that is a subset of `c("preranked", "enrichment")`
+#' @return a character vector that is a subset of `c("preranked", "ora")`
 ffsea_method_types <- function(x, ...) {
   UseMethod("ffsea_method_types", x)
 }
@@ -72,13 +72,13 @@ ffsea_method_types.default <- function(x, ...) {
 #' @noRd
 #' @export
 ffsea_method_types.FacileTtestAnalysisResult <- function(x, ...) {
-  c("preranked", "enrichment")
+  c("preranked", "ora")
 }
 
 #' @noRd
 #' @export
 ffsea_method_types.FacileAnovaAnalysisResult <- function(x, ...) {
-  c("enrichment")
+  c("ora")
 }
 
 #' @noRd

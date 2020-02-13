@@ -666,7 +666,7 @@ the geneset collection to use for GSEA, as well as the GSEA methods we want to
 perform.
 
 ```{r, message=FALSE, warn=FALSE, eval=FALSE}
-dge.gsea <- ffsea(dex.vm, gdb, methods = c("enrichtest", "cameraPR"))
+dge.gsea <- ffsea(dex.vm, gdb, methods = c("ora", "cameraPR"))
 ```
 
 Calling `shine(dge.gsea)` on this GSEA result will pull up a shiny gadget that
@@ -906,7 +906,7 @@ The second call in the code below launches a shiny gadget to perform a GSEA. It
 will return a result that is identical to the first.
 
 ```{r, eval = FALSE}
-dex.gsea2 <- ffsea(dex.vm2, gdb, method = c("enrichtest", "cameraPR"))
+dex.gsea2 <- ffsea(dex.vm2, gdb, method = c("ora", "cameraPR"))
 dex.gsea3 <- ffseaGadget(dex.vm2, gdb)
 ```
 

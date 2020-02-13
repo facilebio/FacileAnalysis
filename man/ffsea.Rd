@@ -49,16 +49,17 @@ name of a numeric column in \code{x} must be specified to rank the features by,
 and the order by which to do that using the \code{rank_by} and \code{rank_order}
 arguments, respectively.
 
-If running an erichment-style test (\code{method = "enrichtest"}), the user must
-specifcy the name of a logical column that indicates (when \code{TRUE}) that a
-feature should be included for enrichment testing. The user can optionally
-specify a \code{group_by} column, like \code{"direction"}, that will be used to split
-the selected features into groups to perform more specific enrichmen tests.
-This allows you enrichment tests to be run separately for \code{"up"} and \code{"down"}
-regulated genes separately, for example. Lastly, the user can provide the
-name of another numeric column in \code{x} with \code{biased_by} which can be used to
-account for bias in the enrichment tests, such as gene length, GC content,
-etc.
+If running an overrepresentation analysis-style test (\code{method = "ora"}),
+the user must specifcy the name of a logical column that indicates
+(when \code{TRUE}) that a feature should be included for enrichment testing. The
+user can optionally specify a \code{group_by} column, like \code{"direction"}, that
+will be used to split the selected features into groups to perform more
+specific enrichmen tests. This allows you enrichment tests to be run
+separately for \code{"up"} and \code{"down"} regulated genes separately, for example.
+
+Lastly, the user can provide the name of another numeric column in \code{x} with
+\code{biased_by} which can be used to account for bias in the enrichment tests,
+such as gene length, GC content, etc.
 
 Gene sets must be supplied as a \code{\link[multiGSEA:GeneSetDb]{multiGSEA::GeneSetDb()}} object.
 }
@@ -70,7 +71,7 @@ Currently, only the following GSEA methods are supported:
 gene set test based on feature ranks imposed downstream of an analysis
 \item \code{"fgsea"}: Delegates to \code{\link[fgsea:fgsea]{fgsea::fgsea()}} to perform another version of
 a competitive gene set test based on ranks.
-\item \code{"enrichtest"}: Performs a gene-ontology type of enrichment test. The user
+\item \code{"ora"}: Performs an overrepresentation analysis test. The user
 must specify the name of \code{logical} column (\code{select_by}) from the input
 which is used to indicate the features that are selected for enrichment
 analysis. The user can optionally provide the name of a \code{numeric} column
@@ -90,7 +91,7 @@ are \code{"up"}, and \code{"down"}.
 The geneset level statistics can be extracted from the
 \code{FacileFseaAnalysisResult} on a per-method basis usig the \code{tidy()} function.
 For instance, if \code{ffsea()} was called with
-\verb{fres <- ffsea(..., methods = c("cameraPR", "enrichtest")}, the \code{"cameraPR"}
+\verb{fres <- ffsea(..., methods = c("cameraPR", "ora")}, the \code{"cameraPR"}
 results can be extracted via \code{tidy(fres, "cameraPR")}
 }
 
@@ -127,14 +128,14 @@ ttest.res <- efds \%>\%
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
           batch = "sex") \%>\%
   fdge(method = "voom")
-ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "enrichtest"),
+ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
                     biased_by = "effective_length")
 if (interactive()) {
   shine(ttest.gsea)
 }
 
 camera.stats <- tidy(ttest.gsea, "cameraPR")
-enrich.stats <- tidy(ttest.gsea, "enrichtest")
+ora.stats <- tidy(ttest.gsea, "ora")
 
 # GSEA from ANOVA result ----------------------------------------------------
 stage.anova <- efds \%>\%
