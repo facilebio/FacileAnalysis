@@ -14,8 +14,11 @@
 #' report(pca.crc)
 #' shine(pca.crc)
 #' }
-fpcaGadget <- function(x, title = "Principal Components Analysis", ...) {
-  frunGadget(fpcaAnalysis, fpcaAnalysisUI, x, title = title, ...)
+fpcaGadget <- function(x, title = "Principal Components Analysis",
+                       viewer = "browser", ...) {
+  assert_multi_class(x, c("FacileDataStore", "facile_frame"))
+  frunGadget(fpcaAnalysis, fpcaAnalysisUI, x, title = title, viewer = viewer,
+             ...)
 }
 
 # Embeddable Analysis Module ===================================================
@@ -26,22 +29,30 @@ fpcaAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   pca <- callModule(fpcaRun, "pca", rfds, ..., debug = debug)
   view <- callModule(fpcaView, "view", rfds, pca, ..., debug = debug)
 
+  # Only show view widgets when there is a pca result
+  observe({
+    res. <- req(faro(pca))
+    show <- is(res., "FacilePcaAnalysisResult")
+    toggleElement("viewbox", condition = show)
+  })
+
   vals <- list(
-    result = pca,
+    main = pca,
     view = view,
     .ns = session$ns)
   class(vals) <- c("ReactiveFacilePcaAnalysisResultContainer",
-                   "FacileAnalysisResultContainer")
+                   "ReactiveFacileAnalysisResultContainer")
   vals
 }
 
 #' @noRd
 #' @export
+#' @importFrom shinyjs hidden
 fpcaAnalysisUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(
-    fpcaRunUI(ns("pca"), debug = debug),
-    fpcaViewUI(ns("view"), debug = debug))
+    tags$div(id = ns("runbox"), fpcaRunUI(ns("pca"), debug = debug)),
+    hidden(tags$div(id = ns("viewbox"), fpcaViewUI(ns("view"), debug = debug))))
 }
 
 # Run PCA ======================================================================
@@ -73,14 +84,15 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE) {
     pcs <- input$pcs
     ntop <- input$ntop
     message("... calculating pca")
-    fpca(active_samples(rfds), pcs = pcs, ntop = ntop, assay_name = assay_name,
+    fpca(active_samples(rfds), dims = pcs, ntop = ntop, assay_name = assay_name,
          custom_key = user(rfds))
   })
 
   vals <- list(
-    result = result,
+    faro = result,
     .ns = session$ns)
   class(vals) <- c("ReactiveFacilePcaAnalysisResult",
+                   "ReactiveFacileAnalysisResult",
                    "FacilePcaAnalysisResult")
   vals
 }
