@@ -28,7 +28,7 @@ Imports:
     limma,
     matrixStats,
     miniUI,
-    multiGSEA (>= 0.13.8),
+    multiGSEA (>= 0.13.9),
     multiGSEA.shiny (>= 0.1.12),
     plotly (>= 4.9.0),
     readxl,
