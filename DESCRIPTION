@@ -29,7 +29,7 @@ Imports:
     matrixStats,
     miniUI,
     multiGSEA (>= 0.13.9),
-    multiGSEA.shiny (>= 0.1.12),
+    multiGSEA.shiny (>= 0.1.13),
     plotly (>= 4.9.0),
     readxl,
     rlang,
