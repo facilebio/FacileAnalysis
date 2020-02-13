@@ -115,7 +115,7 @@
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-ffsea <- function(x, ...) {
+ffsea <- function(x, gdb, methods = "cameraPR", ...) {
   UseMethod("ffsea", x)
 }
 
@@ -124,8 +124,7 @@ ffsea <- function(x, ...) {
 #' of genes.
 #'
 #' @noRd
-ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
-                                                methods = c("camera", "roast"),
+ffsea.FacileTtestDGEModelDefinition <- function(x, gdb, methods = "cameraPR",
                                                 ...) {
   stop("Run fdge(x) %>% ffsea() for now")
 }
@@ -141,14 +140,14 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, gdb,
 #' @param rank_by the name of a numeric column in `x` to use to arrange the
 #'   features by ranks
 #' @param select_by a logical column in `x` used to select features for
-#'   enrichmen tests. Rows where x[[select_by]] is `TRUE` are included for
-#'   enrichment analysis
+#'   over represenatation tests. Rows where x[[select_by]] is `TRUE` are
+#'   included for enrichment analysis
 #' @param rank_order the direction to arrange values in `rank_by`. By default
 #'   (`rank_by = "asc"`), which arranges `x[[rank_by]]` in ascending order.
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
 #'   order. If `"rankded"`, then we assume that the data.frame is already
 #'   ranked as desired.
-ffsea.data.frame <- function(x, gdb, methods,
+ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
                              rank_by = NULL, select_by = NULL,
                              rank_order = "descending", group_by = NULL,
                              biased_by = NULL, ...,
@@ -341,9 +340,8 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "enrichtest",
 #' @noRd
 #' @export
 #' @importFrom multiGSEA multiGSEA
-ffsea.FacilePcaAnalysisResult <- function(x, gdb, dim = 1,
-                                          signed = TRUE, methods = "cameraPR",
-                                          ...) {
+ffsea.FacilePcaAnalysisResult <- function(x, gdb, methods = "cameraPR", dim = 1,
+                                          signed = TRUE, ...) {
   fds. <- assert_facile_data_store(fds(x))
   aname. <- assert_choice(param(x, "assay_name"), assay_names(fds.))
 

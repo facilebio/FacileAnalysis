@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.2.13
+Version: 0.2.14
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -48,9 +48,9 @@ Suggests:
     sva,
     testthat
 Remotes:
-    facileverse/FacileData,
-    facileverse/FacileShine,
-    facileverse/FacileViz,
+    facilebio/FacileData,
+    facilebio/FacileShine,
+    facilebio/FacileViz,
     lianos/multiGSEA@develop,
     lianos/multiGSEA.shiny@develop
 biocViews:

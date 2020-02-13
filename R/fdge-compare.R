@@ -96,18 +96,23 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
   xres <- tidy(x)
   yres <- tidy(y)
 
+  jcols <- intersect(colnames(xres), colnames(yres))
+
   meta.cols <- c("feature_type", "feature_id", "symbol", "meta")
   drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
                  "source")
   stat.cols <- setdiff(colnames(xres),  c(meta.cols, drop.cols))
+
+  meta.cols <- intersect(meta.cols, jcols)
   xystats <- full_join(
-    select(xres, !!c(meta.cols, stat.cols)),
-    select(yres, !!c(meta.cols, stat.cols)),
-    by = meta.cols)
+    select(xres, {{meta.cols}}, {{stat.cols}}),
+    select(yres, feature_type, feature_id, {{stat.cols}}),
+    by = c("feature_type", "feature_id"))
 
   if (!is.null(idge)) {
-    ires <- select(tidy(idge[["result"]]), !!c(meta.cols, stat.cols))
-    xystats <- left_join(xystats, ires, by = meta.cols)
+    ires <- tidy(idge[["result"]]) %>%
+      select(feature_type, feature_id, {{stat.cols}})
+    xystats <- left_join(xystats, ires, by = c("feature_type", "feature_id"))
     # put stats for interaction test up front, followed by *.x, *.y
     # xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
     xystats <- select(xystats, {{meta.cols}}, {{stat.cols}}, everything())

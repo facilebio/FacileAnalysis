@@ -229,7 +229,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
 
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
-    rownames(result) <- result[["featureId"]]
+    rownames(result) <- result[["feature_id"]]
     result <- result[rownames(y),]
 
     axe.cols <- c("featureId", "x.idx")

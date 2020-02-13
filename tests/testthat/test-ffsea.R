@@ -34,8 +34,7 @@ test_that("ffsea.FacileAnalysisResult transfers all feature-level statistics to 
   finfo.mgres <- facile.gsea %>%
     result() %>%
     multiGSEA::logFC() %>%
-    arrange(featureId) %>%
-    rename(feature_id = "featureId")
+    arrange(feature_id)
 
   expect_equal(nrow(finfo.mgres), nrow(finfo.ttest))
   test.cols <- c("feature_id", "t", "logFC", "pval", "padj", "CI.L", "CI.R")
@@ -120,7 +119,7 @@ test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
   # feature_id, logFC, t, and score should all be the same
   # name is multGSEA column, value is ranks column
   check.me <- c(
-    "featureId" = "feature_id", "logFC" = "score",
+    "feature_id" = "feature_id", "logFC" = "score",
     "t" = "score", "score" = "score", "weight" = "weight")
 
   for (mname in names(check.me)) {

@@ -268,6 +268,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   update_libsizes <- FALSE
   update_normfactors <- FALSE
 
+  if (is.character(filter_universe)) {
+    filter_universe <- unique(c(filter_universe, filter_require))
+  }
+
   y <- as.DGEList(xsamples, assay_name = assay_name,
                   covariates = xsamples,
                   feature_ids = filter_universe,
