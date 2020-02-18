@@ -20,8 +20,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle: Experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
-[![Travis build status](https://travis-ci.org/facileverse/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facileverse/FacileAnalysis)
-[![Codecov test coverage](https://codecov.io/gh/facileverse/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facileverse/FacileAnalysis?branch=master)
+[![Travis build status](https://travis-ci.org/facilebio/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facilebio/FacileAnalysis)
+[![Codecov test coverage](https://codecov.io/gh/facilebio/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facilebio/FacileAnalysis?branch=master)
 <!-- badges: end -->
 
 The FacileAnalysis package defines a set of analysis tasks over genomic data
@@ -204,12 +204,12 @@ using the [BiocManager][biocmanager] package for installation.
 
 ```{r, eval = FALSE}
 # install.packages("BiocManager")
-BiocManager::install("facileverse/FacileAnalysis")
+BiocManager::install("facilebio/FacileAnalysis")
 ```
 
 ## Resources
 
-* [facileverse.github.io/FacileAnalysis][facileanalysis]
+* [facilebio.github.io/FacileAnalysis][facileanalysis]
   (online documentation and vignettes)
 * [Open an issue][issues] (GitHub issues for questions, bug reports, and feature
   requests)
@@ -222,16 +222,15 @@ BiocManager::install("facileverse/FacileAnalysis")
 
 [bioc]: https://bioconductor.org
 [biocmanager]: https://cran.r-project.org/package=BiocManager
-[faciledata]: https://facileverse.github.io/FacileData
-[facileanalysis]: https://facileverse.github.io/FacileAnalysis
+[faciledata]: https://facilebio.github.io/FacileData
+[facileanalysis]: https://facilebio.github.io/FacileAnalysis
 [fpcavign]: FacileAnalysis-fpca.html
 [fdgevign]: FacileAnalysis-fdge.html
 [fseavign]: FacileAnalysis-fsea.html
-[ggroup]: https://groups.google.com/forum/#!forum/facileverse
 [htmlwidgets]: https://www.htmlwidgets.org
-[issues]: https://github.com/facileverse/FacileAnalysis/issues
+[issues]: https://github.com/facilebio/FacileAnalysis/issues
 [pkgvign]: FacileAnalysis.html
-[rnafway]: https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html
+[rnafway]: https://facilebio.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html
 [PR]: https://github.com/denalitherapeutics/FacileAnalysis/pulls
 [qlf]: https://f1000research.com/articles/5-1438
 [sgadget]: https://shiny.rstudio.com/articles/gadgets.html

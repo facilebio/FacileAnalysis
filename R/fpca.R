@@ -154,7 +154,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   if (is.null(assay_name)) {
     assay_name <- default_assay(.fds)
   }
-  # (lazily) turning this into a DGEList to leverage the already-implented
+  # (lazily) turning this into a DGEList to leverage the already-implemented
   # feature and sample anntation alignment written up in there. The desired
   # assay data (from assay_matrix) will be stored in the DGEList's $count
   # element

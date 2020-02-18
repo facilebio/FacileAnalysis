@@ -196,6 +196,11 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
 #' If we can't generate an interaction result, this will return NULL.
 #' @noRd
 .interaction_fdge <- function(x, y, treat_lfc = NULL, rerun = FALSE, ...) {
+  # If these results aren't from the same FacileDataStore, get outta here
+  # NOTE: This is not really a robust way to compare if two fds are the same
+  if (!name(fds(x)) != name(fds(x))) {
+    return(NULL)
+  }
   xmod <- model(x)
   ymod <- model(y)
   xres <- tidy(x)

@@ -1,15 +1,3 @@
-#' Materializes the bioc assay container to use to run a dge test.
-#'
-#' Bioconductor assay containers need to be materialized for certain analyses,
-#' like differential gene expression. They also may need to be materialized
-#' from a result of something generated within some FacileAnalysis.
-#'
-#' @export
-#' @param x The FacileAnalysisResult
-biocbox <- function(x, ...) {
-  UseMethod("biocbox", x)
-}
-
 #' @noRd
 #' @export
 result.BiocBox <- function(x, ...) {

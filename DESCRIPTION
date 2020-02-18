@@ -10,6 +10,8 @@ Description: Provides modularized versions of analyses that are commonly
     performed over genomics data. Analysis results can be interactively explored
     by analysts using the "vizualize" or "shine" functions, and embedded into
     Rmarkdown reports using their respective "report" functions.
+URL: https://github.com/facilebio/FacileAnalysis
+BugReports: https://github.com/facilebio/FacileAnalysis/issues
 Depends:
     R (>= 3.6)
 Imports:
