@@ -28,6 +28,7 @@ fdge(
   x,
   assay_name = NULL,
   method = NULL,
+  features = NULL,
   filter = "default",
   with_sample_weights = FALSE,
   ...,
@@ -68,6 +69,10 @@ their features set to \code{union(features(x), features(y))}.}
 
 \item{...}{passed down into inner methods, such as \code{biocbox} to tweak
 filtering criteria, for instance}
+
+\item{features}{Explicitly request the features to test. If this is provided,
+then the \code{filter} criteria (to remove low abundance features, for instance)
+is skipped. By default this is \code{NULL}}
 
 \item{assay_name}{the name of the assay that holds the measurements for test.
 Defaults to \code{default_assay(x)}.}
@@ -140,12 +145,15 @@ mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{wit
 \section{Feature Filtering Strategy}{
 
 You will almost always want to filter out lowly abundant features before
-performing differential expression analysis. For this reason, when the
-\code{filter} parameter is set to \code{"default"}, the filtering strategy is largely
-is largely based on the logic found in \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}}.
+performing differential expression analysis. You can either do this by
+explicitly requesting which features to test via the \code{features} parameter,
+or by setting \verb{filter = "default}.
 
-When \code{fdge} analysis is perfomd on count data, the filtering is precisely
-perfomed by this function, using \code{design(x)} as the design paratmer to
+When \code{filter == "default"}, the filtering strategy is largely based on the
+logic found in \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}}.
+
+When \code{fdge} analysis is performed on count data, the filtering is precisely
+executed using this function, using \code{design(x)} as the design parameter to
 \code{filterByExpr}. You can modify the filtering behavior by passing any
 named parameters found in the \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} function down to it via
 \code{fdge}'s \code{...} parameter (don't pass \code{design}, as this is already defined).
@@ -166,8 +174,6 @@ included in the analysis, irrespective of whether they would have passed
 the perscribed filter criteria or not. The defalut value for this argument
 is \code{NULL}, which means no genes are forcibly included in the analysis when
 they do not pass muster given the filtering criteria.
-\item \code{filter}: If a feature descriptor is provided here, then only the features
-enumerated here (that were assayed) will be included in the analysis.
 }
 }
 
@@ -188,12 +194,12 @@ if (interactive()) {
   shine(dge.comp)
 }
 efds <- FacileData::exampleFacileDataSet()
-samples <- FacileData::filter_samples(efds, indication == "BLCA")
-samples <- samples \%>\%
-  mutate(something = sample(c("a", "b"), nrow(samples), replace = TRUE))
+samples <- efds \%>\%
+  FacileData::filter_samples(indication == "BLCA") \%>\%
+  mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
 mdef <- flm_def(samples, covariate = "sample_type",
-                       numer = "tumor", denom = "normal",
-                       batch = "sex")
+                numer = "tumor", denom = "normal",
+                batch = "sex")
 dge <- fdge(mdef, method = "voom")
 if (interactive()) {
   viz(dge)

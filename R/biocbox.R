@@ -1,49 +1,3 @@
-#' @noRd
-#' @export
-result.BiocBox <- function(x, ...) {
-  x[["biocbox"]]
-}
-
-#' @noRd
-#' @export
-design.BiocBox <- function(x, ...) {
-  box <- result(x)
-  if (is.null(box)) {
-    stop("The bioc assay container is not found in the BiocBox")
-  }
-  if (is(box, "DGEList") || is(box, "EList")) {
-    out <- box[["design"]]
-  } else {
-    stop("design.BiocBox not implemented for '", class(box)[1L], "' containers")
-  }
-
-  if (!is.matrix(out)) {
-    stop("Error extracting design matrix")
-  }
-
-  out
-}
-
-#' @noRd
-#' @export
-features.BiocBox <- function(x, ...)  {
-  y <- result(x)
-  if (is.null(y)) {
-    stop("The bioc assay container is not found in the BiocBox")
-  }
-  if (test_multi_class(y, c("DGEList", "EList"))) {
-    out <- y[["genes"]]
-  } else {
-    stop(class(y)[1L], " not yet handled")
-  }
-
-  if (is.null(out[["name"]]) && !is.null(out[["symbol"]])) {
-    out[["name"]] <- out[["symbol"]]
-  }
-
-  as.tbl(out)
-}
-
 #' Construct a bioconductor classed object from an analysis.
 #'
 #' @section Linear Model Definitions:
@@ -128,7 +82,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     ifacile[["messages"]] <- messages
     ifacile[["warnings"]] <- warnings
     ifacile[["errors"]] <- errors
-    attr(out, "ifacile") <- ifacile
+    attr(out, "facile") <- ifacile
     return(out)
   })
 
@@ -142,7 +96,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   if (isTRUE(filter)) filter <- "default"
-  if (!test_string(filter) || !isFALSE(filter)) {
+  if (!(test_string(filter) || isFALSE(filter))) {
     errors <- c(
       glue("Invalid type for `filter` argument (`{class(filter)}`).",
            "Only a string or logical flag is allowed"))
@@ -160,17 +114,21 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     method <- default_method
   }
 
+  ifacile[["params"]][["method"]] <- method
+
   method.info <- filter(valid_methods, dge_method == method)
   bb.all <- biocbox(si, class = method.info[["bioc_class"]],
                     assay_name = assay_name,
                     features = features, sample_covariates = FALSE)
-  if (!is.null(features)) {
-    bb <- bb.all
-  } else {
+  if (is.null(features)) {
+    # Only execute a filtering strategy if the caller did not explicitly request
+    # features.
     bb <- .filter_features(bb.all, x, ainfo, filter = filter,
                            filter_universe = filter_universe,
                            filter_require = filter_require,
                            ...)
+  } else {
+    bb <- bb.all
   }
 
   des <- design(x)
@@ -184,10 +142,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
   # assert rownames(des) == colnames(bb)
   if (method == "edgeR-qlf") {
-    out <- suppressWarnings(estimateDisp(bb, des, robust = TRUE))
+    out <- suppressWarnings(edgeR::estimateDisp(bb, des, robust = TRUE))
   } else if (method == "voom") {
     if (with_sample_weights) {
-      out <- voomWithQualityWeights(bb, des, ...)
+      out <- limma::voomWithQualityWeights(bb, des, ...)
     } else {
       out <- .voom_dots(bb, des, ...)
     }
@@ -200,16 +158,30 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
     out[["design"]] <- des
     if (with_sample_weights) {
-      out <- arrayWeights(out, out[["design"]])
+      out <- limma::arrayWeights(out, out[["design"]])
     }
   } else {
     stop("How did we get here?")
   }
 
-  if (is(out, "EList") && !is.null(weights)) {
-    if (!is.null(out[["weights"]])) {
+  if (!is.null(weights)) {
+    out <- .add_observation_weights(out, weights, ...)
+  }
+
+  out
+}
+
+.add_observation_weights <- function(x, weights, ...) {
+  if (!is(x, "EList")) {
+    warning("observation weights only supported for ELists. They are being ",
+            "ignored.", immediate. = TRUE)
+    return(x)
+  }
+
+  if (!is.null(weights)) {
+    if (!is.null(x[["weights"]])) {
       warning("weights already calculated, but are being replaced",
-      immediate. = TRUE)
+              immediate. = TRUE)
     }
     assert_multi_class(weights, c("data.frame", "tibble"))
     assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
@@ -221,7 +193,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     ww <- pivot_wider(ww, names_from = skey, values_from = weight)
     weights <- as.matrix(select(ww, -feature_id))
     rownames(weights) <- ww[["feature_id"]]
-    weights <- weights[rownames(out), colnames(out)]
+    weights <- weights[rownames(x), colnames(x)]
 
     na.w <- is.na(weights)
     if (any(na.w)) {
@@ -231,11 +203,13 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       warning(msg)
       weights[na.w] <- mean.w
     }
-    out[["weights"]] <- weights
+    x[["weights"]] <- weights
   }
 
-  out
+  x
 }
+
+# Feature abundance filtering helper functions ---------------------------------
 
 .filter_features <- function(x, model, ainfo, filter, filter_universe,
                              filter_require, update_normfactors = NULL,
@@ -327,7 +301,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   x <- x[keep,,keep.lib.sizes = FALSE]
-  suppressWarnings(calcNormFactors(x)) # partial match of `p` to `probs`
+  suppressWarnings(edgeR::calcNormFactors(x)) # partial match of `p` to `probs`
 }
 
 .filter_abundance_features <- function() {

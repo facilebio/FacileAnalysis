@@ -204,19 +204,6 @@
   out
 }
 
-#' Defines a voom method that can accept dots (and toss them)
-#'
-#' @noRd
-#' @importFrom limma voom
-.voom_dots <- function(counts, design = NULL, lib.size = NULL,
-                       normalize.method = "none",  block = NULL,
-                       correlation = NULL, weights = NULL, span = 0.5,
-                       plot = FALSE, save.plot = TRUE, ...) {
-  voom(counts, design, lib.size = lib.size, normalize.method = normalize.method,
-       block = block, correlation = correlation, weights = weights, span = span,
-       plot = plot, save.plot = save.plot)
-}
-
 #' @noRd
 #' @importFrom stats hat
 #' @importFrom limma arrayWeights

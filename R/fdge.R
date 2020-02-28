@@ -177,7 +177,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     bb <- biocbox(x, assay_name, method, features, filter,
                   with_sample_weights = with_sample_weights,
                   weights = weights, ...)
-    fbits <- attr(bb, "ifacile")
+    fbits <- attr(bb, "facile")
     messages <- c(messages, fbits[["messages"]])
     warnings <- c(warnings, fbits[["warnings"]])
     errors <- c(errors, fbits[["errors"]])
@@ -261,7 +261,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     result = result,
     params = list(
       assay_name = assay_name,
-      method = bb[["dge_method"]],
+      method = method,
       model_def = x,
       treat_lfc = if (use.treat) treat_lfc else NULL,
       flip_lfc = flip_lfc,
@@ -540,26 +540,16 @@ samples.FacileDgeAnalysisResult <- function(x, ...) {
 #'
 #' @export
 #' @rdname biocbox
-biocbox.FacileDgeAnalysisResult <- function(x,
-                                            assay_name = param(x, "assay_name"),
-                                            method = param(x, "method"),
-                                            filter = features(x), ...) {
+biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   # I originally had this method signature as (x, ...) and then explicitly
   # passed down assay_name = param(x, "assay_name"), but if we don't catch
   # this arguments in the function and the user calls the function with them,
   # we get an error of duplicate parameters in the function call when we
   # delegate down to biocbox.FacileLinearModelDefinition
-  assert_string(assay_name)
-  if (assay_name != param(x, "assay_name")) {
-    warning("Biocbox created on different assay than what was tested in fdge")
-  }
-  assert_string(method)
-  if (method != param(x, "method")) {
-    warning("Generating a biocbox for different method than was used in fdge")
-  }
-  res <- biocbox(model(x), assay_name = assay_name, method = method,
-                 features = features, ...)
-  res
+  assay_name <- assert_string(param(x, "assay_name"))
+  method <- assert_string(param(x, "method"))
+  biocbox(model(x), assay_name = assay_name, method = method,
+          features = features(x))
 }
 
 #' @noRd
@@ -604,6 +594,19 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 }
 
 # Helpers ======================================================================
+
+#' Defines a voom method that can accept dots (and toss them)
+#'
+#' @noRd
+#' @importFrom limma voom
+.voom_dots <- function(counts, design = NULL, lib.size = NULL,
+                       normalize.method = "none",  block = NULL,
+                       correlation = NULL, weights = NULL, span = 0.5,
+                       plot = FALSE, save.plot = TRUE, ...) {
+  voom(counts, design, lib.size = lib.size, normalize.method = normalize.method,
+       block = block, correlation = correlation, weights = weights, span = span,
+       plot = plot, save.plot = save.plot)
+}
 
 #' A table of assay_type,dge_method combination parameters
 #'
