@@ -29,12 +29,15 @@
 #'
 #' @section Feature Filtering Strategy:
 #' You will almost always want to filter out lowly abundant features before
-#' performing differential expression analysis. For this reason, when the
-#' `filter` parameter is set to `"default"`, the filtering strategy is largely
-#' is largely based on the logic found in [edgeR::filterByExpr()].
+#' performing differential expression analysis. You can either do this by
+#' explicitly requesting which features to test via the `features` parameter,
+#' or by setting `filter = "default`.
 #'
-#' When `fdge` analysis is perfomd on count data, the filtering is precisely
-#' perfomed by this function, using `design(x)` as the design paratmer to
+#' When `filter == "default"`, the filtering strategy is largely based on the
+#' logic found in [edgeR::filterByExpr()].
+#'
+#' When `fdge` analysis is performed on count data, the filtering is precisely
+#' executed using this function, using `design(x)` as the design parameter to
 #' `filterByExpr`. You can modify the filtering behavior by passing any
 #' named parameters found in the [edgeR::filterByExpr()] function down to it via
 #' `fdge`'s `...` parameter (don't pass `design`, as this is already defined).
@@ -55,8 +58,6 @@
 #'   the perscribed filter criteria or not. The defalut value for this argument
 #'   is `NULL`, which means no genes are forcibly included in the analysis when
 #'   they do not pass muster given the filtering criteria.
-#' * `filter`: If a feature descriptor is provided here, then only the features
-#'   enumerated here (that were assayed) will be included in the analysis.
 #'
 #' @export
 #' @importFrom multiGSEA calculateIndividualLogFC logFC multiGSEA
@@ -67,6 +68,9 @@
 #' @param method The differential testing framework to use over the data. The
 #'   valid choices are defined by the type of assay `assay_name`is. Refer to the
 #'   *Differential Expression Testing Methods* section for more details.
+#' @param features Explicitly request the features to test. If this is provided,
+#'   then the `filter` criteria (to remove low abundance features, for instance)
+#'   is skipped. By default this is `NULL`
 #' @param filter,with_sample_weights Passed into [biocbox()] to determine which
 #'   features (genes) are removed from the dataset for testing, as well as if
 #'   to use [limma::arrayWeights()] or [limma::voomWithQualityWeights()]
@@ -78,12 +82,12 @@
 #'   to use when `method == "limma"`.
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
-#' samples <- FacileData::filter_samples(efds, indication == "BLCA")
-#' samples <- samples %>%
-#'   mutate(something = sample(c("a", "b"), nrow(samples), replace = TRUE))
+#' samples <- efds %>%
+#'   FacileData::filter_samples(indication == "BLCA") %>%
+#'   mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
 #' mdef <- flm_def(samples, covariate = "sample_type",
-#'                        numer = "tumor", denom = "normal",
-#'                        batch = "sex")
+#'                 numer = "tumor", denom = "normal",
+#'                 batch = "sex")
 #' dge <- fdge(mdef, method = "voom")
 #' if (interactive()) {
 #'   viz(dge)
@@ -97,8 +101,9 @@
 #'   flm_def(covariate = "stage", batch = "sex") %>%
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
-fdge <- function(x, assay_name = NULL, method = NULL, filter = "default",
-                 with_sample_weights = FALSE, ..., verbose = FALSE) {
+fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
+                 filter = "default", with_sample_weights = FALSE, ...,
+                 verbose = FALSE) {
   UseMethod("fdge", x)
 }
 
@@ -108,7 +113,7 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                             filter = "default",
                                             with_sample_weights = FALSE, ...,
                                             verbose = FALSE) {
-  res <- NextMethod(coef = x$coef)
+  res <- NextMethod(coef = x[["coef"]])
   res
 }
 
@@ -119,7 +124,7 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
                                                ..., verbose = FALSE) {
-  res <- NextMethod(contrast = x$contrast)
+  res <- NextMethod(contrast = x[["contrast"]])
   res
 }
 
@@ -127,7 +132,8 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
 #' @rdname fdge
 #' @param ... passed down into inner methods, such as `biocbox` to tweak
 #'   filtering criteria, for instance
-fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL,
+fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
+                                             method = NULL, features = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
                                              treat_lfc = NULL, flip_lfc = FALSE,
@@ -167,13 +173,26 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
     if (verbose) {
       message("... retrieving expression data")
     }
-    bb <- biocbox(x, assay_name, method, dge_methods, filter,
-                  with_sample_weights = with_sample_weights, ...)
-    messages <- c(messages, bb[["messages"]])
-    warnings <- c(warnings, bb[["warnings"]])
-    errors <- c(errors, bb[["errors"]])
 
-    method <- bb[["dge_method"]]
+    bb <- biocbox(x, assay_name, method, features, filter,
+                  with_sample_weights = with_sample_weights,
+                  weights = weights, ...)
+    fbits <- attr(bb, "ifacile")
+    messages <- c(messages, fbits[["messages"]])
+    warnings <- c(warnings, fbits[["warnings"]])
+    errors <- c(errors, fbits[["errors"]])
+
+    method <- fbits[["params"]][["method"]]
+
+    des <- design(x)
+    if (!setequal(rownames(des), colnames(bb))) {
+      errors <- c(errors, "rownames of design(x) does not match biocbox")
+      # return(out)
+      stop(errors)
+    }
+    if (!isTRUE(all.equal(rownames(des), colnames(bb)))) {
+      bb <- bb[,rownames(des)]
+    }
 
     if (!is.null(treat_lfc)) {
       if (!test_number(treat_lfc, lower = 0) || !is.ttest(x)) {
@@ -186,40 +205,12 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
       treat_lfc <- 0
     }
     use.treat <- treat_lfc > 0
-    y <- result(bb)
-    des <- design(bb)
 
     if (verbose) {
       message("... running differential expression analysis")
     }
 
-    if (!is.null(weights)) {
-      if (method == "voom") {
-        warning("Custom weights are overriding voom-calculated ones ...")
-      }
-      assert_multi_class(weights, c("data.frame", "tibble"))
-      assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
-                    colnames(weights))
-
-      weights <- mutate(weights, skey = paste(dataset, sample_id, sep = "__"))
-
-      ww <- select(weights, skey, feature_id, weight)
-      ww <- pivot_wider(ww, names_from = skey, values_from = weight)
-      weights <- as.matrix(select(ww, -feature_id))
-      rownames(weights) <- ww[["feature_id"]]
-      weights <- weights[rownames(y), colnames(y)]
-
-      na.w <- is.na(weights)
-      if (any(na.w)) {
-        mean.w <- mean(weights[!na.w])
-        msg <- sprintf("%0.2f NA values in weights, replacing with mean %0.2f",
-                       sum(na.w) / length(na.w), mean.w)
-        warning(msg)
-        weights[na.w] <- mean.w
-      }
-    }
-
-    result <- calculateIndividualLogFC(y, des, contrast = testme,
+    result <- calculateIndividualLogFC(bb, des, contrast = testme,
                                        treat.lfc = treat_lfc,
                                        weights = weights)
 
@@ -230,10 +221,10 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
     rownames(result) <- result[["feature_id"]]
-    result <- result[rownames(y),]
+    result <- result[rownames(bb),]
 
     axe.cols <- c("featureId", "x.idx")
-    if (is(y, "DGEList")) {
+    if (is(bb, "DGEList")) {
       axe.cols <- c(axe.cols, "t")
     }
     for (col in axe.cols) {
@@ -255,9 +246,9 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL, method = NULL
   # We'll stick on the lib.size and norm.factors on these samples so that
   # downstream queries over this result will use the same normalization factors
   # when retrieving data as well.
-  if (is(y, "DGEList") || is(y, "EList")) {
+  if (is(bb, "DGEList") || is(bb, "EList")) {
     samples. <- samples(x)
-    sinfo <- if (is(y, "DGEList")) y[["samples"]] else y[["targets"]]
+    sinfo <- if (is(bb, "DGEList")) bb[["samples"]] else bb[["targets"]]
     for (cname in c("lib.size", "norm.factors")) {
       if (cname %in% colnames(sinfo) && is.numeric(sinfo[[cname]])) {
         samples.[[cname]] <- sinfo[[cname]]
@@ -665,7 +656,7 @@ fdge_methods <- function(assay_type = NULL,
     if (on_missing == "error") {
       assert_choice(assay_type, info[["assay_type"]])
     }
-    info <- info[info[["assay_type"]] == assay_type,]
+    info <- filter(info, .data$assay_type == .env$assay_type)
   }
 
   info
