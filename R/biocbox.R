@@ -129,6 +129,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                            ...)
   } else {
     bb <- bb.all
+    if (is(bb, "DGEList") && all(bb[["samples"]][["norm.factors"]] == 1)) {
+      bb <- edgeR::calcNormFactors(bb)
+    }
   }
 
   des <- design(x)

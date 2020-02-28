@@ -8,29 +8,42 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   mdef <- FDS %>%
     filter_samples(indication == "BLCA") %>%
     flm_def(covariate = "sample_type",
-                   numer = "tumor",
-                   denom = "normal")
+            numer = "tumor",
+            denom = "normal")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
-  qlf_dge <- result(qlf_test)
+  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf",
+                   with_box = TRUE)
+  qlf_dge <- tidy(qlf_test)
+  bb <- qlf_test$biocbox
 
-  bbox <- biocbox(qlf_test)
-  y <- result(bbox)
-  expect_equal(nrow(y), nrow(qlf_dge))
-  expect_equal(rownames(y), qlf_dge$feature_id)
+  y <- biocbox(qlf_test)
+
+  expect_is(y, "DGEList")
+  expect_equal(nrow(y), nrow(bb))
+  expect_equal(rownames(y), rownames(bb))
+  expect_equal(colnames(y), colnames(bb))
+  expect_equal(y$counts, bb$counts, check.attributes = FALSE)
+  expect_equal(y$samples$lib.size, bb$samples$lib.size)
+  expect_equal(y$samples$norm.factors, bb$samples$norm.factors)
 
   design <- model.matrix(~ sample_type, y$samples)
   y <- edgeR::estimateDisp(y, design, robust = TRUE)
+
+  expect_equal(y$trend.method, bb$trend.method)
+  expect_equal(y$common.dispersion, bb$common.dispersion)
+
   qfit <- edgeR::glmQLFit(y, y$design, robust = TRUE)
+
+
   qres <- edgeR::glmQLFTest(qfit, coef = 2)
   qres <- edgeR::topTags(qres, n = Inf, sort.by = "none")
   qres <- edgeR::as.data.frame.TopTags(qres)
 
   expect_equal(qres$feature_id, qlf_dge$feature_id)
-  expect_equal(qlf_dge$pval, qres$PValue)
-  expect_equal(qlf_dge$padj, qres$FDR)
-  expect_equal(qlf_dge$logFC, qres$logFC)
+  expect_equal(qres$PValue, qlf_dge$pval)
+  expect_equal(qres$FDR, qlf_dge$padj)
+  expect_equal(qres$logFC, qlf_dge$logFC)
 
   # Test voom
   vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom")
@@ -38,7 +51,7 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   expect_set_equal(vm_dge[["feature_id"]], qlf_dge[["feature_id"]])
 
   vm <- limma::voom(y, y$design)
-  vm.facile <- result(biocbox(vm_test))
+  vm.facile <- biocbox(vm_test)
   expect_equal(vm.facile$weights, vm$weights)
 
   vres <- limma::lmFit(vm, vm$design) %>%
@@ -58,10 +71,9 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 
   # Test edgeR quasilikelihood
   qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
-  qlf_dge <- result(qlf_test)
+  qlf_dge <- tidy(qlf_test)
 
-  bbox <- biocbox(qlf_test)
-  y <- result(bbox)
+  y <- biocbox(qlf_test)
   design <- model.matrix(~ stage + sex, y$samples)
   coefs <- grep("stage", colnames(design))
 
@@ -76,14 +88,17 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   expect_equal(qlf_dge$F, qres$F)
 
   # Test voom
-  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom")
-  vm_dge <- result(vm_test)
+  vm_test <- fdge(mdef, assay_name = "rnaseq", method = "voom", with_box = TRUE)
+  vm_dge <- tidy(vm_test)
+  vmf <- vm_test$biocbox
 
   vm <- limma::voom(y, y$design)
+  expect_equal(vm$weights, vmf$weights)
+
   vres <- limma::lmFit(vm, vm$design) %>%
     limma::eBayes() %>%
-    limma::topTable(coef = coefs, Inf)
-  vres <- vres[vm_dge$feature_id,]
+    limma::topTable(coef = coefs, Inf, sort.by = "none")
+  expect_equal(vm_dge$feature_id, vres$feature_id)
   expect_equal(vm_dge$pval, vres$P.Value)
   expect_equal(vm_dge$padj, vres$adj.P.Val)
   expect_equal(vm_dge$F, vres$F)
@@ -96,9 +111,9 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal") %>%
-    fdge(method = "voom") # This will calculate weights for us
+    fdge(method = "voom", with_box = TRUE) # This will calculate weights for us
 
-  vm <- result(biocbox(vm.fdge))
+  vm <- biocbox(vm.fdge)
 
   # randomize weights and send back through
   W <- matrix(sample(vm$weights), nrow = nrow(vm))
@@ -119,9 +134,9 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
     mutate(feature_id = rownames(.))
 
   f.res <- expect_warning(
-    fdge(model(vm.fdge), filter = features(vm.fdge),
+    fdge(model(vm.fdge), features = features(vm.fdge),
          method = "voom", weights = weights),
-    ".*weights.*overriding.*voom")
+    ".*weights.*replaced")
   fstats <- tidy(f.res)
 
   expect_setequal(tidy(vm.fdge)[["feature_id"]], ex.res[["feature_id"]])

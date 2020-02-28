@@ -137,7 +137,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
                                              treat_lfc = NULL, flip_lfc = FALSE,
-                                             weights = NULL,
+                                             weights = NULL, with_box = FALSE,
                                              ..., verbose = FALSE) {
   messages <- character()
   warnings <- character()
@@ -211,8 +211,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
 
     result <- calculateIndividualLogFC(bb, des, contrast = testme,
-                                       treat.lfc = treat_lfc,
-                                       weights = weights)
+                                       treat.lfc = treat_lfc)
 
     if (isTRUE(flip_lfc)) {
       result[["logFC"]] <- -1 * result[["logFC"]]
@@ -265,13 +264,17 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       model_def = x,
       treat_lfc = if (use.treat) treat_lfc else NULL,
       flip_lfc = flip_lfc,
-      with_sample_weights = with_sample_weights),
+      with_sample_weights = with_sample_weights,
+      weights = weights),
     # Standard FacileAnalysisResult things
     fds = .fds,
     messages = messages,
     warnings = warnings,
     errors = errors)
 
+  if (with_box) {
+    out[["biocbox"]] <- bb
+  }
   class(out) <- c(clazz, "FacileDgeAnalysisResult", "FacileAnalysisResult")
   out
 }
@@ -548,8 +551,14 @@ biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   # delegate down to biocbox.FacileLinearModelDefinition
   assay_name <- assert_string(param(x, "assay_name"))
   method <- assert_string(param(x, "method"))
-  biocbox(model(x), assay_name = assay_name, method = method,
-          features = features(x))
+  # browser()
+  # meta.cols <- c("lib.size", "norm.factors", "sizeFactor")
+  # meta.cols <- intersect(meta.cols, )
+  out <- biocbox(model(x), assay_name = assay_name, method = method,
+                 features = features(x),
+                 with_sample_weights = param(x, "with_sample_weights"),
+                 weights = param(x, "weights"))
+  out
 }
 
 #' @noRd
