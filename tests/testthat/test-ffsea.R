@@ -52,8 +52,7 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
     arrange(pval)
 
   # GSEA the "traditional" multiGSEA way
-  bbox <- biocbox(ttest.res)
-  vm <- result(bbox)
+  vm <- biocbox(ttest.res)
   mgres <- multiGSEA::multiGSEA(gdb, vm, vm$design, c(-1, 1, 0),
                                 "cameraPR", score.by = "logFC")
 

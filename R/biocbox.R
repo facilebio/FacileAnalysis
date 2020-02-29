@@ -53,7 +53,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                                 filter_require = NULL,
                                                 with_sample_weights = FALSE,
                                                 weights = NULL,
-                                                prior_count = 0, ...) {
+                                                prior_count = 0.1, ...) {
   assert_class(x, "FacileLinearModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
@@ -96,6 +96,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   if (isTRUE(filter)) filter <- "default"
+  if (is.null(filter)) filter <- FALSE # originally NULL was equal to FALSE
   if (!(test_string(filter) || isFALSE(filter))) {
     errors <- c(
       glue("Invalid type for `filter` argument (`{class(filter)}`).",
@@ -123,10 +124,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   if (is.null(features)) {
     # Only execute a filtering strategy if the caller did not explicitly request
     # features.
-    bb <- .filter_features(bb.all, x, ainfo, filter = filter,
-                           filter_universe = filter_universe,
-                           filter_require = filter_require,
-                           ...)
+    bb <- .filter_features(bb.all, x, ainfo, method.info$default_filter,
+                           filter = filter, filter_universe = filter_universe,
+                           filter_require = filter_require, ...)
   } else {
     bb <- bb.all
     if (is(bb, "DGEList") && all(bb[["samples"]][["norm.factors"]] == 1)) {
@@ -154,9 +154,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
   } else if (method %in% c("limma-trend", "limma")) {
     if (is(bb, "DGEList")) {
+      prior_count <- max(0.1, prior_count)
       out <- new(
         "EList",
-        list(E = edgeR::cpm(y, log = TRUE, prior.count = prior_count),
+        list(E = edgeR::cpm(bb, log = TRUE, prior.count = prior_count),
              genes = bb[["genes"]], targets = bb[["samples"]]))
     }
     out[["design"]] <- des
@@ -214,9 +215,13 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
 # Feature abundance filtering helper functions ---------------------------------
 
-.filter_features <- function(x, model, ainfo, filter, filter_universe,
-                             filter_require, update_normfactors = NULL,
+#' @param default.filter the default feature filtering option for the dge method
+#'   and assay_type we are prepping for. (TRUE/FALSE)
+.filter_features <- function(x, model, ainfo, default.filter, filter,
+                             filter_universe, filter_require,
+                             update_normfactors = NULL,
                              ...) {
+  assert_flag(default.filter)
   if (is(x, "DGEList")) {
     if (is.null(update_normfactors)) {
       update_normfactors <- all(x[["samples"]][["norm.factors"]] == 1)
@@ -240,9 +245,6 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       filter_universe <- NULL
     }
   }
-
-  amethod <- filter(fdge_methods(ainfo$assay_type))
-  default.filter <- all(amethod[["default_filter"]])
 
   do.filterByExpr <- !isFALSE(filter) &&
     (isTRUE(filter) || (isTRUE(filter == "default") && isTRUE(default.filter)))

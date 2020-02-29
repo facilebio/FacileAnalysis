@@ -55,6 +55,7 @@ fdge(
   treat_lfc = NULL,
   flip_lfc = FALSE,
   weights = NULL,
+  with_box = FALSE,
   ...,
   verbose = FALSE
 )

@@ -210,6 +210,9 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       message("... running differential expression analysis")
     }
 
+    # TODO: Add more params to send to calculateIndividualLogFC based on
+    # dge method, for instance when for:
+    # * method == "limma-trend", send trend.eBayes = TRUE
     result <- calculateIndividualLogFC(bb, des, contrast = testme,
                                        treat.lfc = treat_lfc)
 

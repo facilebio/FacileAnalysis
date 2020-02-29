@@ -15,17 +15,11 @@
   filter_require = NULL,
   with_sample_weights = FALSE,
   weights = NULL,
-  prior_count = 0,
+  prior_count = 0.1,
   ...
 )
 
-\method{biocbox}{FacileDgeAnalysisResult}(
-  x,
-  assay_name = param(x, "assay_name"),
-  method = param(x, "method"),
-  filter = features(x),
-  ...
-)
+\method{biocbox}{FacileDgeAnalysisResult}(x, ...)
 }
 \arguments{
 \item{assay_name}{the name of the assay to pull data for}
