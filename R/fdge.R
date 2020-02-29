@@ -124,8 +124,6 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
                                                ...,
-                                               trend.eBayes = FALSE,
-                                               robuset.eBayes = FALSE,
                                                verbose = FALSE) {
   res <- NextMethod(contrast = x[["contrast"]])
   res
@@ -141,7 +139,10 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              with_sample_weights = FALSE,
                                              treat_lfc = NULL, flip_lfc = FALSE,
                                              weights = NULL, with_box = FALSE,
-                                             ..., verbose = FALSE) {
+                                             ...,
+                                             trend.eBayes = FALSE,
+                                             robust.eBayes = FALSE,
+                                             verbose = FALSE) {
   messages <- character()
   warnings <- character()
   errors <- character()
