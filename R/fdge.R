@@ -123,7 +123,10 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                filter = "default",
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
-                                               ..., verbose = FALSE) {
+                                               ...,
+                                               trend.eBayes = FALSE,
+                                               robuset.eBayes = FALSE,
+                                               verbose = FALSE) {
   res <- NextMethod(contrast = x[["contrast"]])
   res
 }
@@ -213,8 +216,13 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     # TODO: Add more params to send to calculateIndividualLogFC based on
     # dge method, for instance when for:
     # * method == "limma-trend", send trend.eBayes = TRUE
+    if (method == "limma-trend") {
+      trend.eBayes <- TRUE
+    }
     result <- calculateIndividualLogFC(bb, des, contrast = testme,
-                                       treat.lfc = treat_lfc)
+                                       treat.lfc = treat_lfc,
+                                       trend.eBayes = trend.eBayes,
+                                       robust.eBayes = robust.eBayes)
 
     if (isTRUE(flip_lfc)) {
       result[["logFC"]] <- -1 * result[["logFC"]]
