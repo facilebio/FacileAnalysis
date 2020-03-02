@@ -47,6 +47,11 @@
 #'   container (ie. `default_assay(facile container)`, `"counts"` for a
 #'   `DGEList`, `assayNames(SummarizedExperiment)[1L]`, etc.)
 #' @param dims the number of PC's to calculate (minimum is 3).
+#' @param features A feature descriptor of the features to use for the analysis.
+#'   If `NULL` (default), then the specified `filter` strategy is used.
+#' @param filter A strategy used to identify which features to use for the
+#'   dimensionality reduction. The current (and only choice) is `"default"`,
+#'   which takes the `ntop` features, sorted be decreasing variance.
 #' @param ntop the number of features (genes) to include in the PCA. Genes are
 #'   ranked by decreasing variance across the samples in `x`.
 #' @param row_covariates,col_covariates data.frames that provie meta information
@@ -98,8 +103,9 @@
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
 #' }
-fpca <- function(x, assay_name = NULL, dims = 5, filter = "default",
-                 ntop = 1000, row_covariates = NULL, col_covariates = NULL,
+fpca <- function(x, assay_name = NULL, dims = 5, features = NULL,
+                 filter = "default", ntop = 1000, row_covariates = NULL,
+                 col_covariates = NULL,
                  batch = NULL, main = NULL, ...) {
   UseMethod("fpca", x)
 }
@@ -107,6 +113,7 @@ fpca <- function(x, assay_name = NULL, dims = 5, filter = "default",
 #' @noRd
 #' @export
 fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
+                                 features = NULL,
                                  filter = "default", ntop = 1000,
                                  row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
@@ -116,8 +123,8 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
-  fpca(samples, assay_name, dims, filter, ntop, row_covariates, col_covariates,
-       batch, main, custom_key, ...)
+  fpca(samples, assay_name, dims, features, filter, ntop,
+       row_covariates, col_covariates, batch, main, custom_key, ...)
 }
 
 #' @section FacileDataStore (facile_frame):
@@ -132,7 +139,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #' @export
 fpca.facile_frame <- function(x, assay_name = NULL,
                               dims = min(5, nrow(x) - 1L),
-                              filter = "default", ntop = 1000,
+                              features = NULL, filter = "default", ntop = 1000,
                               row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -152,11 +159,11 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 
   # This should do the batch effect removal
   dat <- biocbox(x, class = "list", assay_name = assay_name,
-                 sample_covariates = col_covariates,
+                 features = features, sample_covariates = col_covariates,
                  feature_covariates = row_covariates,
                  normalized = TRUE, log = TRUE, batch = batch, main = main, ...)
 
-  out <- fpca(dat[["assay_data"]], dims, filter, ntop,
+  out <- fpca(dat[["assay_data"]], dims, features, filter, ntop,
               row_covariates = dat[["features"]],
               col_covariates = dat[["samples"]], ...)
 
@@ -188,7 +195,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 #' @rdname fpca
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
-fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L),
+fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
                         filter = "default", ntop = 1000,
                         row_covariates = NULL, col_covariates = NULL,
                         batch = NULL, main = NULL, use_irlba = dims < 7,
@@ -222,21 +229,24 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L),
     x <- remove_batch_effect(x, col_covariates, batch = batch, ...)
   }
 
-  if (test_string(filter) && filter == "default") {
-    rv <- matrixStats::rowVars(x)
-    take <- head(order(rv, decreasing = TRUE), ntop)
-  } else {
-    if (test_multi_class(filter, c("data.frame", "tbl"))) {
-      filter <- filter[["feature_id"]]
+  if (!is.null(features)) {
+    if (is.data.frame(features)) {
+      features <- features[["feature_id"]]
     }
-    assert_character(filter, min.len = 2)
-    take <- match(filter, rownames(x))
+    if (!is.character(features)) {
+      stop("Invalid argument used for features")
+    }
+    take <- match(features, rownames(x))
     if (any(is.na(take))) {
       stop("The pca filtering strategy only allows you to specify rownames ",
            "(features) to use for PCA, and the ones you specified do not ",
            "exactly match rownames(x), see:\n  ",
-           "https://github.com/facileverse/FacileAnalysis/issues/20")
+           "https://github.com/facilebio/FacileAnalysis/issues/20")
     }
+  } else {
+    assert_choice(filter, "default")
+    rv <- matrixStats::rowVars(x)
+    take <- head(order(rv, decreasing = TRUE), ntop)
     ntop <- length(take)
   }
 
