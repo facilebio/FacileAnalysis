@@ -108,7 +108,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     method <- valid_methods[["dge_method"]][1L]
   }
   if (!method %in% valid_methods[["dge_method"]]) {
-    default_method <- dge_methods[["dge_method"]][1L]
+    default_method <- valid_methods[["dge_method"]][1L]
     msg <- glue("Requested dge_method `{method}` not found, using ",
                 "`{default_method}` instead")
     warnings <- c(warnings, msg)
@@ -159,7 +159,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
         "EList",
         list(E = edgeR::cpm(bb, log = TRUE, prior.count = prior_count),
              genes = bb[["genes"]], targets = bb[["samples"]]))
+    } else {
+      out <- bb
     }
+    stopifnot(is(out, "EList"))
     out[["design"]] <- des
     if (with_sample_weights) {
       out <- limma::arrayWeights(out, out[["design"]])

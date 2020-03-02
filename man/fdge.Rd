@@ -57,6 +57,8 @@ fdge(
   weights = NULL,
   with_box = FALSE,
   ...,
+  trend.eBayes = FALSE,
+  robust.eBayes = FALSE,
   verbose = FALSE
 )
 }
