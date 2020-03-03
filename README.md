@@ -8,11 +8,11 @@
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
-Experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+Maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Travis build
-status](https://travis-ci.org/facileverse/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facileverse/FacileAnalysis)
+status](https://travis-ci.org/facilebio/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facilebio/FacileAnalysis)
 [![Codecov test
-coverage](https://codecov.io/gh/facileverse/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facileverse/FacileAnalysis?branch=master)
+coverage](https://codecov.io/gh/facilebio/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facilebio/FacileAnalysis?branch=master)
 <!-- badges: end -->
 
 The FacileAnalysis package defines a set of analysis tasks over genomic
@@ -36,7 +36,7 @@ task into smaller constituent steps, the results of which can:
     `compare()` methods.
 
 Please refer to the [RNA-seq Analysis: The Facile
-Way](https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
+Way](https://facilebio.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
 to get an idea of how to use these tools when analyzing RNA-seq data.
 
 <!--
@@ -84,7 +84,7 @@ We have first defined a complete differential expression analysis
 The example below identifies genes differentially expression between
 tumor and normal samples (and controlling for sex) in the “BLCA”
 indication of the example TCGA dataset included in the
-[FacileData](https://facileverse.github.io/FacileData) package.
+[FacileData](https://facilebio.github.io/FacileData) package.
 
 ``` r
 library(FacileData)
@@ -184,8 +184,7 @@ vdge2 <- fdgeGadget(samples)
 
 Or we can perform the whole thing via a GUI which lets us select the
 subset of samples and run the differential expression analysis without
-using any code at
-all:
+using any code at all:
 
 ``` r
 vdge3 <- fdgeGadget(efds)
@@ -200,7 +199,7 @@ programmatically.
 
 **Note**: the screen capture of the `fdgeGadget()` above actually
 corresponds to the analyses in the [RNA-seq the facile
-way](https://facileverse.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
+way](https://facilebio.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html)
 vignette.
 
 ## Installation
@@ -213,16 +212,15 @@ package for installation.
 
 ``` r
 # install.packages("BiocManager")
-BiocManager::install("facileverse/FacileAnalysis")
+BiocManager::install("facilebio/FacileAnalysis")
 ```
 
 ## Resources
 
-  - [facileverse.github.io/FacileAnalysis](https://facileverse.github.io/FacileAnalysis)
+  - [facilebio.github.io/FacileAnalysis](https://facilebio.github.io/FacileAnalysis)
     (online documentation and vignettes)
-  - [Open an
-    issue](https://github.com/facileverse/FacileAnalysis/issues) (GitHub
-    issues for questions, bug reports, and feature requests)
+  - [Open an issue](https://github.com/facilebio/FacileAnalysis/issues)
+    (GitHub issues for questions, bug reports, and feature requests)
 
 ## Acknowledgements
 

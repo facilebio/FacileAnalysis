@@ -73,7 +73,7 @@ for the specific class of the result, ie. ffsea.FacilePcaAnalysisResult." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -117,7 +117,12 @@ for the specific class of the result, ie. ffsea.FacilePcaAnalysisResult." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -132,7 +137,7 @@ for the specific class of the result, ie. ffsea.FacilePcaAnalysisResult." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Full interactive executation of GSEA, soup to nuts.</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/ffsea-shiny.R'><code>R/ffsea-shiny.R</code></a></small>
     <div class="hidden name"><code>interactive-ffsea.Rd</code></div>
     </div>
 
@@ -142,12 +147,18 @@ a <code>FacileAnalysisResult</code>. This requires that we have an ffsea method 
 for the specific class of the result, ie. <code>ffsea.FacilePcaAnalysisResult</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ffseaGadget</span>(<span class='no'>x</span>, <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Feature Set Enrichment Analysis"</span>,
-  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>, <span class='no'>...</span>,
-  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+    <pre class="usage"><span class='fu'>ffseaGadget</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Feature Set Enrichment Analysis"</span>,
+  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
+  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>,
+  <span class='no'>...</span>,
+  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)
 
-<span class='fu'>ffseaRun</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>aresult</span>, <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>,
-  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+<span class='fu'>ffseaRun</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>aresult</span>, <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -158,15 +169,11 @@ for the specific class of the result, ie. <code>ffsea.FacilePcaAnalysisResult</c
     </tr>
     <tr>
       <th>gdb</th>
-      <td><p>A <code>GeneSetDb</code> to use for the FSEA.</p></td>
+      <td><p>A GeneSetDb object to use for testing.</p></td>
     </tr>
     <tr>
       <th>aresult</th>
       <td><p>A <code>FacileAnalysisResult</code> that has a <code>ffsea.*</code> method defined.</p></td>
-    </tr>
-    <tr>
-      <th>gdb</th>
-      <td><p>A GeneSetDb object to use for testing.</p></td>
     </tr>
     </table>
 

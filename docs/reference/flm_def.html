@@ -75,7 +75,7 @@ fdge()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -119,7 +119,12 @@ fdge()." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -134,7 +139,7 @@ fdge()." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Builds (simple) design and contrast matrices for use with <code><a href='fdge.html'>fdge()</a></code></h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/flm_def.R'><code>R/flm_def.R</code></a></small>
     <div class="hidden name"><code>flm_def.Rd</code></div>
     </div>
 
@@ -146,32 +151,77 @@ define the design, coef / contrast to test manually and pass those into
 <code><a href='fdge.html'>fdge()</a></code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>), <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>), <span class='no'>...</span>,
-  <span class='kw'>contrast.</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>.fds</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+<span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>,
+  <span class='kw'>contrast.</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>.fds</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
 
 <span class='co'># S3 method for tbl</span>
-<span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>), <span class='no'>...</span>)
+<span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for facile_frame</span>
-<span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>, <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+<span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>,
+  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
 
 <span class='co'># S3 method for FacileDataStore</span>
-<span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>, <span class='kw'>samples</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+<span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>,
+  <span class='kw'>samples</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
 
 <span class='co'># S3 method for ReactiveFacileDataStore</span>
-<span class='fu'>flm_def</span>(<span class='no'>x</span>, <span class='no'>covariate</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>, <span class='kw'>samples</span> <span class='kw'>=</span> <span class='fu'>active_samples</span>(<span class='no'>x</span>), <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'>user</span>(<span class='no'>x</span>))</pre>
+<span class='fu'>flm_def</span>(
+  <span class='no'>x</span>,
+  <span class='no'>covariate</span>,
+  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='no'>...</span>,
+  <span class='kw'>samples</span> <span class='kw'>=</span> <span class='fu'>active_samples</span>(<span class='no'>x</span>),
+  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'>user</span>(<span class='no'>x</span>)
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">

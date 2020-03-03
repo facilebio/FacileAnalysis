@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -115,7 +115,12 @@
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -130,7 +135,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Gadget to run both DGE and GSEA</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-ffsea-analysis-module.R'><code>R/fdge-ffsea-analysis-module.R</code></a></small>
     <div class="hidden name"><code>fdgeseaGadget.Rd</code></div>
     </div>
 
@@ -138,8 +143,14 @@
     <p>Gadget to run both DGE and GSEA</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fdgeseaGadget</span>(<span class='no'>x</span>, <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"DGE and GSEA"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
-  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>fdgeseaGadget</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>gdb</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"DGE and GSEA"</span>,
+  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
+  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='no'>...</span>
+)</pre>
 
 
 

@@ -72,7 +72,7 @@ differential expression analysis over a predefined set of samples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -116,7 +116,12 @@ differential expression analysis over a predefined set of samples." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -131,7 +136,7 @@ differential expression analysis over a predefined set of samples." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Fully interactive differential expression analysis</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-shiny.R'><code>R/fdge-shiny.R</code></a></small>
     <div class="hidden name"><code>fdge-shiny.Rd</code></div>
     </div>
 
@@ -140,8 +145,14 @@ differential expression analysis over a predefined set of samples." />
 differential expression analysis over a predefined set of samples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fdgeGadget</span>(<span class='no'>x</span>, <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Differential Expression Analysis"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
-  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>fdgeGadget</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Differential Expression Analysis"</span>,
+  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
+  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"browser"</span>,
+  <span class='no'>...</span>
+)
 
 <span class='fu'>fdgeAnalysis</span>(<span class='no'>input</span>, <span class='no'>output</span>, <span class='no'>session</span>, <span class='no'>rfds</span>, <span class='no'>...</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 

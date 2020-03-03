@@ -76,7 +76,7 @@ section of the vignette for more information." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -120,7 +120,12 @@ section of the vignette for more information." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -135,7 +140,7 @@ section of the vignette for more information." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Performs Feature (Gene) Set Enrichment Analyses</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/ffsea.R'><code>R/ffsea.R</code></a></small>
     <div class="hidden name"><code>ffsea.Rd</code></div>
     </div>
 
@@ -148,7 +153,7 @@ feature-level statistics.</p>
 section of the vignette for more information.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ffsea</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>ffsea</span>(<span class='no'>x</span>, <span class='no'>gdb</span>, <span class='kw'>methods</span> <span class='kw'>=</span> <span class='st'>"cameraPR"</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for FacileFseaAnalysisResult</span>
 <span class='fu'>result</span>(<span class='no'>x</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"object"</span>, <span class='no'>...</span>)</pre>
@@ -189,16 +194,16 @@ If running a "pre-ranked" test, (<code>method %in% c("cameraPR", "fgsea")</code>
 name of a numeric column in <code>x</code> must be specified to rank the features by,
 and the order by which to do that using the <code>rank_by</code> and <code>rank_order</code>
 arguments, respectively.</p>
-<p>If running an erichment-style test (<code>method = "enrichtest"</code>), the user must
-specifcy the name of a logical column that indicates (when <code>TRUE</code>) that a
-feature should be included for enrichment testing. The user can optionally
-specify a <code>group_by</code> column, like <code>"direction"</code>, that will be used to split
-the selected features into groups to perform more specific enrichmen tests.
-This allows you enrichment tests to be run separately for <code>"up"</code> and <code>"down"</code>
-regulated genes separately, for example. Lastly, the user can provide the
-name of another numeric column in <code>x</code> with <code>biased_by</code> which can be used to
-account for bias in the enrichment tests, such as gene length, GC content,
-etc.</p>
+<p>If running an overrepresentation analysis-style test (<code>method = "ora"</code>),
+the user must specifcy the name of a logical column that indicates
+(when <code>TRUE</code>) that a feature should be included for enrichment testing. The
+user can optionally specify a <code>group_by</code> column, like <code>"direction"</code>, that
+will be used to split the selected features into groups to perform more
+specific enrichmen tests. This allows you enrichment tests to be run
+separately for <code>"up"</code> and <code>"down"</code> regulated genes separately, for example.</p>
+<p>Lastly, the user can provide the name of another numeric column in <code>x</code> with
+<code>biased_by</code> which can be used to account for bias in the enrichment tests,
+such as gene length, GC content, etc.</p>
 <p>Gene sets must be supplied as a <code><a href='https://rdrr.io/pkg/multiGSEA/man/GeneSetDb-class.html'>multiGSEA::GeneSetDb()</a></code> object.</p>
     <h2 class="hasAnchor" id="gsea-methods"><a class="anchor" href="#gsea-methods"></a>GSEA Methods</h2>
 
@@ -209,7 +214,7 @@ etc.</p>
 gene set test based on feature ranks imposed downstream of an analysis</p></li>
 <li><p><code>"fgsea"</code>: Delegates to <code><a href='https://rdrr.io/pkg/fgsea/man/fgsea.html'>fgsea::fgsea()</a></code> to perform another version of
 a competitive gene set test based on ranks.</p></li>
-<li><p><code>"enrichtest"</code>: Performs a gene-ontology type of enrichment test. The user
+<li><p><code>"ora"</code>: Performs an overrepresentation analysis test. The user
 must specify the name of <code>logical</code> column (<code>select_by</code>) from the input
 which is used to indicate the features that are selected for enrichment
 analysis. The user can optionally provide the name of a <code>numeric</code> column
@@ -230,7 +235,7 @@ are <code>"up"</code>, and <code>"down"</code>.</p></li>
 <p>The geneset level statistics can be extracted from the
 <code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> function.
 For instance, if <code>ffsea()</code> was called with
-<code>fres &lt;- ffsea(..., methods = c("cameraPR", "enrichtest")</code>, the <code>"cameraPR"</code>
+<code>fres &lt;- ffsea(..., methods = c("cameraPR", "ora")</code>, the <code>"cameraPR"</code>
 results can be extracted via <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(fres, "cameraPR")</a></code></p>
     <h2 class="hasAnchor" id="development-notes"><a class="anchor" href="#development-notes"></a>Development Notes</h2>
 
@@ -269,14 +274,14 @@ camera.stats &lt;- tidy(ffsea.res, name = "cameraPR")
   <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
           <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='fdge.html'>fdge</a></span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"voom"</span>)
-<span class='no'>ttest.gsea</span> <span class='kw'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='no'>ttest.res</span>, <span class='no'>gdb</span>, <span class='kw'>methods</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"cameraPR"</span>, <span class='st'>"enrichtest"</span>),
+<span class='no'>ttest.gsea</span> <span class='kw'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='no'>ttest.res</span>, <span class='no'>gdb</span>, <span class='kw'>methods</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"cameraPR"</span>, <span class='st'>"ora"</span>),
                     <span class='kw'>biased_by</span> <span class='kw'>=</span> <span class='st'>"effective_length"</span>)
 <span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>ttest.gsea</span>)
 }
 
 <span class='no'>camera.stats</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='no'>ttest.gsea</span>, <span class='st'>"cameraPR"</span>)
-<span class='no'>enrich.stats</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='no'>ttest.gsea</span>, <span class='st'>"enrichtest"</span>)
+<span class='no'>ora.stats</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='no'>ttest.gsea</span>, <span class='st'>"ora"</span>)
 
 <span class='co'># GSEA from ANOVA result ----------------------------------------------------</span>
 <span class='no'>stage.anova</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
@@ -290,8 +295,7 @@ camera.stats &lt;- tidy(ffsea.res, name = "cameraPR")
 <span class='co'># GSEA over loadings on a Principal Component -------------------------------</span>
 <span class='no'>pca.crc</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
   <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'><a href='fpca.html'>fpca</a></span>()
-<span class='no'>pca1.gsea</span> <span class='kw'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='no'>pca.crc</span>, <span class='no'>gdb</span>, <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: Fraction of gene set IDs that match rownames in the expression object are low: 2.69% </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Deactivating 14 gene sets because conformation of GeneSetDb to the target creates gene sets smaller than 2 or greater than Inf</span></div></pre>
+  <span class='fu'><a href='fpca.html'>fpca</a></span>()</div><div class='output co'>#&gt; <span class='message'>Loading required namespace: testthat</span></div><div class='input'><span class='no'>pca1.gsea</span> <span class='kw'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='no'>pca.crc</span>, <span class='no'>gdb</span>, <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: Fraction of gene set IDs that match rownames in the expression object are low: 4.04% </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Deactivating 4 gene sets because conformation of GeneSetDb to the target creates gene sets smaller than 2 or greater than Inf</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

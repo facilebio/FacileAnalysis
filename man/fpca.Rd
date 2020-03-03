@@ -13,6 +13,7 @@ fpca(
   x,
   assay_name = NULL,
   dims = 5,
+  features = NULL,
   filter = "default",
   ntop = 1000,
   row_covariates = NULL,
@@ -25,7 +26,8 @@ fpca(
 \method{fpca}{facile_frame}(
   x,
   assay_name = NULL,
-  dims = min(5, nrow(x) - 1L),
+  dims = min(5, nrow(collect(x, n = Inf)) - 1L),
+  features = NULL,
   filter = "default",
   ntop = 1000,
   row_covariates = NULL,
@@ -39,6 +41,7 @@ fpca(
 \method{fpca}{matrix}(
   x,
   dims = min(5, ncol(x) - 1L),
+  features = NULL,
   filter = "default",
   ntop = 1000,
   row_covariates = NULL,
@@ -64,6 +67,13 @@ container (ie. \verb{default_assay(facile container)}, \code{"counts"} for a
 \code{DGEList}, \code{assayNames(SummarizedExperiment)[1L]}, etc.)}
 
 \item{dims}{the number of PC's to calculate (minimum is 3).}
+
+\item{features}{A feature descriptor of the features to use for the analysis.
+If \code{NULL} (default), then the specified \code{filter} strategy is used.}
+
+\item{filter}{A strategy used to identify which features to use for the
+dimensionality reduction. The current (and only choice) is \code{"default"},
+which takes the \code{ntop} features, sorted be decreasing variance.}
 
 \item{ntop}{the number of features (genes) to include in the PCA. Genes are
 ranked by decreasing variance across the samples in \code{x}.}
@@ -103,7 +113,6 @@ loadings of the features along each PC from fpca result \code{x} and \code{y}.
 
 Follow progress on implementation of \code{shine()} and \code{report()} below:
 \enumerate{
-\item \href{https://github.com/facileverse/FacileAnalysis/issues/11}{Implement \code{shine()}}
 \item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement \code{report()}}
 }
 

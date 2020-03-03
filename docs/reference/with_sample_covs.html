@@ -74,7 +74,7 @@ precedence." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -118,7 +118,12 @@ precedence." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -133,7 +138,7 @@ precedence." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Retrieves sample covariates with option to use custom covariates by user.</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/facile_api++.R'><code>R/facile_api++.R</code></a></small>
     <div class="hidden name"><code>with_sample_covs.Rd</code></div>
     </div>
 
@@ -144,8 +149,14 @@ extra data.frame or the original sample descriptor are given higher
 precedence.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>with_sample_covs</span>(<span class='no'>x</span>, <span class='kw'>covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>custom_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>), <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>with_sample_covs</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>custom_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
+  <span class='no'>...</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -166,7 +177,7 @@ of extra covariates the user wants to add to the sampel descriptor <code>x</code
     </tr>
     <tr>
       <th>custom_key</th>
-      <td><p>for <code><a href='https://rdrr.io/pkg/FacileData/man/with_sample_covariates.html'>FacileData::with_sample_covariates()</a></code></p></td>
+      <td><p>for <code><a href='https://rdrr.io/pkg/FacileData/man/sample-covariates.html'>FacileData::with_sample_covariates()</a></code></p></td>
     </tr>
     </table>
 

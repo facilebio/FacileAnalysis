@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Materializes the bioc assay container to use to run a dge test. — biocbox • FacileAnalysis</title>
+<title>Construct a bioconductor classed object from an analysis. — biocbox.FacileLinearModelDefinition • FacileAnalysis</title>
 
 
 <!-- jquery -->
@@ -37,10 +37,8 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="Materializes the bioc assay container to use to run a dge test. — biocbox" />
-<meta property="og:description" content="Bioconductor assay containers need to be materialized for certain analyses,
-like differential gene expression. They also may need to be materialized
-from a result of something generated within some FacileAnalysis." />
+<meta property="og:title" content="Construct a bioconductor classed object from an analysis. — biocbox.FacileLinearModelDefinition" />
+<meta property="og:description" content="Construct a bioconductor classed object from an analysis." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -73,7 +71,7 @@ from a result of something generated within some FacileAnalysis." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -117,7 +115,12 @@ from a result of something generated within some FacileAnalysis." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -131,23 +134,29 @@ from a result of something generated within some FacileAnalysis." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Materializes the bioc assay container to use to run a dge test.</h1>
-    
+    <h1>Construct a bioconductor classed object from an analysis.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/biocbox.R'><code>R/biocbox.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge.R'><code>R/fdge.R</code></a></small>
     <div class="hidden name"><code>biocbox.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Bioconductor assay containers need to be materialized for certain analyses,
-like differential gene expression. They also may need to be materialized
-from a result of something generated within some FacileAnalysis.</p>
+    <p>Construct a bioconductor classed object from an analysis.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>biocbox</span>(<span class='no'>x</span>, <span class='no'>...</span>)
-
-<span class='co'># S3 method for FacileLinearModelDefinition</span>
-<span class='fu'>biocbox</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dge_methods</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
-  <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>prior_count</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='co'># S3 method for FacileLinearModelDefinition</span>
+<span class='fu'>biocbox</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>filter_universe</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filter_require</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>prior_count</span> <span class='kw'>=</span> <span class='fl'>0.1</span>,
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for FacileDgeAnalysisResult</span>
 <span class='fu'>biocbox</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
@@ -155,14 +164,6 @@ from a result of something generated within some FacileAnalysis.</p>
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>x</th>
-      <td><p>The FacileAnalysisResult</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>passed down to internal modeling and filtering functions.</p></td>
-    </tr>
     <tr>
       <th>assay_name</th>
       <td><p>the name of the assay to pull data for</p></td>
@@ -194,6 +195,10 @@ sample weighting function to sue. Defaults to <code>FALSE</code>.</p></td>
       <th>prior_count</th>
       <td><p>The pseudo-count to add to count data. Used primarily
 when running the <code>limma-trend</code> method on count (RNA-seq) data.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>passed down to internal modeling and filtering functions.</p></td>
     </tr>
     <tr>
       <th>sample_info</th>

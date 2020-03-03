@@ -72,7 +72,7 @@ gadget around a facile object x. There are two" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -116,7 +116,12 @@ gadget around a facile object x. There are two" />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -131,7 +136,7 @@ gadget around a facile object x. There are two" />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Support harness to initialize and launch a shiny gadget over a facile object.</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/frunGadget.R'><code>R/frunGadget.R</code></a></small>
     <div class="hidden name"><code>frunGadget.Rd</code></div>
     </div>
 
@@ -140,10 +145,20 @@ gadget around a facile object x. There are two" />
 gadget around a facile object <code>x</code>. There are two</p>
     </div>
 
-    <pre class="usage"><span class='fu'>frunGadget</span>(<span class='no'>analysisModule</span>, <span class='no'>analysisUI</span>, <span class='no'>x</span>, <span class='kw'>user</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
-  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Facile Analysis Gadget"</span>, <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>, <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
-  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"dialog"</span>, <span class='no'>...</span>, <span class='kw'>with_sample_filter</span> <span class='kw'>=</span> <span class='fu'>is</span>(<span class='no'>x</span>,
-  <span class='st'>"FacileDataStore"</span>), <span class='kw'>retval</span> <span class='kw'>=</span> <span class='st'>"x"</span>, <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>frunGadget</span>(
+  <span class='no'>analysisModule</span>,
+  <span class='no'>analysisUI</span>,
+  <span class='no'>x</span>,
+  <span class='kw'>user</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
+  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"Facile Analysis Gadget"</span>,
+  <span class='kw'>height</span> <span class='kw'>=</span> <span class='fl'>800</span>,
+  <span class='kw'>width</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>viewer</span> <span class='kw'>=</span> <span class='st'>"dialog"</span>,
+  <span class='no'>...</span>,
+  <span class='kw'>with_sample_filter</span> <span class='kw'>=</span> <span class='fu'>is</span>(<span class='no'>x</span>, <span class='st'>"FacileDataStore"</span>),
+  <span class='kw'>retval</span> <span class='kw'>=</span> <span class='st'>"x"</span>,
+  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">

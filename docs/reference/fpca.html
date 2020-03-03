@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Runs a principal components analysis, the facile way. — fpca • FacileAnalysis</title>
+<title>Runs a principal components analysis, the facile way. — compare.FacilePcaAnalysisResult • FacileAnalysis</title>
 
 
 <!-- jquery -->
@@ -37,7 +37,7 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="Runs a principal components analysis, the facile way. — fpca" />
+<meta property="og:title" content="Runs a principal components analysis, the facile way. — compare.FacilePcaAnalysisResult" />
 <meta property="og:description" content="Performs a principal components analysis over a specified assay from the
 (subset of) samples in a FacileDataStore." />
 <meta name="twitter:card" content="summary" />
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -116,7 +116,12 @@
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/facilebio/FacileAnalysis">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -131,7 +136,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Runs a principal components analysis, the facile way.</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fpca-compare.R'><code>R/fpca-compare.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fpca.R'><code>R/fpca.R</code></a></small>
     <div class="hidden name"><code>fpca.Rd</code></div>
     </div>
 
@@ -140,19 +145,55 @@
 (subset of) samples in a FacileDataStore.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>,
-  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='co'># S3 method for FacilePcaAnalysisResult</span>
+<span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>run_all</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>rerun</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)
+
+<span class='fu'>fpca</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>,
+  <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for facile_frame</span>
-<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-  <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>), <span class='no'>...</span>)
+<span class='fu'>fpca</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='fu'>collect</span>(<span class='no'>x</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>Inf</span>)) - <span class='fl'>1L</span>),
+  <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for matrix</span>
-<span class='fu'>fpca</span>(<span class='no'>x</span>, <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>500</span>, <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>dims</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>, <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>scale.</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>fpca</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='no'>x</span>) - <span class='fl'>1L</span>),
+  <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
+  <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>main</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>use_irlba</span> <span class='kw'>=</span> <span class='no'>dims</span> <span class='kw'>&lt;</span> <span class='fl'>7</span>,
+  <span class='kw'>center</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>scale.</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -161,6 +202,11 @@
       <th>x</th>
       <td><p>a facile data container (FacileDataSet), or a <code>facile_frame</code>
 (refer to the FacileDataStore (facile_frame) section.</p></td>
+    </tr>
+    <tr>
+      <th>rerun</th>
+      <td><p>when <code>rerun = TRUE</code> (default), the <code>fpca(x)</code> and <code>fpca(y)</code> will
+be rerun over the union of the features in <code>x</code> and <code>y</code>.</p></td>
     </tr>
     <tr>
       <th>assay_name</th>
@@ -172,6 +218,17 @@ container (ie. <code>default_assay(facile container)</code>, <code>"counts"</cod
     <tr>
       <th>dims</th>
       <td><p>the number of PC's to calculate (minimum is 3).</p></td>
+    </tr>
+    <tr>
+      <th>features</th>
+      <td><p>A feature descriptor of the features to use for the analysis.
+If <code>NULL</code> (default), then the specified <code>filter</code> strategy is used.</p></td>
+    </tr>
+    <tr>
+      <th>filter</th>
+      <td><p>A strategy used to identify which features to use for the
+dimensionality reduction. The current (and only choice) is <code>"default"</code>,
+which takes the <code>ntop</code> features, sorted be decreasing variance.</p></td>
     </tr>
     <tr>
       <th>ntop</th>
@@ -204,13 +261,18 @@ has not been worked on yet.</p>
 <p>Importantly / interestingly, you can shoot this result into <code><a href='ffsea.html'>ffsea()</a></code> to
 perform gene set enrichment analysis over a specified dimension to identify
 functional categories loaded onto differend PCs.</p>
+    <h2 class="hasAnchor" id="comparing-pca-results"><a class="anchor" href="#comparing-pca-results"></a>Comparing PCA Results</h2>
+
+    
+
+<p>We can compare two PCA results. Currently this just means we compare the
+loadings of the features along each PC from fpca result <code>x</code> and <code>y</code>.</p>
     <h2 class="hasAnchor" id="development-notes"><a class="anchor" href="#development-notes"></a>Development Notes</h2>
 
     
 
 <p>Follow progress on implementation of <code><a href='FacileAnalysisResultViz.html'>shine()</a></code> and <code><a href='FacileAnalysisResultViz.html'>report()</a></code> below:</p><ol>
-<li><p><a href='https://github.com/facileverse/FacileAnalysis/issues/11'>Implement shine()</a></p></li>
-<li><p><a href='https://github.com/facileverse/FacileAnalysis/issues/12'>Implement report()</a></p></li>
+<li><p><a href='https://github.com/facileverse/FacileAnalysis/issues/12'>Implement <code><a href='FacileAnalysisResultViz.html'>report()</a></code></a></p></li>
 </ol>
 
 <p>Note that there are methods defined for other assay containers, like an
@@ -249,6 +311,13 @@ covariates, then the manually provided ones will supersede the internals.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
+<span class='no'>p1</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
+  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"CRC"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'>fpca</span>()
+<span class='no'>p2</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
+  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'>fpca</span>()
+<span class='no'>pcmp</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>p1</span>, <span class='no'>p2</span>)</div><div class='output co'>#&gt; <span class='error'>Error in fpca.matrix(dat[["assay_data"]], dims, features, filter, ntop,     row_covariates = dat[["features"]], col_covariates = dat[["samples"]],     ...): Assertion on 'filter' failed: Must be element of set {'default'}, but is not atomic scalar.</span></div><div class='input'><span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
 
 <span class='co'># A subset of samples ------------------------------------------------------</span>
 <span class='no'>pca.crc</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
@@ -294,6 +363,7 @@ covariates, then the manually provided ones will supersede the internals.</p>
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
       <li><a href="#details">Details</a></li>
+      <li><a href="#comparing-pca-results">Comparing PCA Results</a></li>
       <li><a href="#development-notes">Development Notes</a></li>
       <li><a href="#random-things-to-elaborate-on">Random Things to elaborate on</a></li>
       <li><a href="#teaching-and-tutorials">Teaching and Tutorials</a></li>
