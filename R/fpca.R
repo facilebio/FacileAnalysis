@@ -14,8 +14,7 @@
 #' @section Development Notes:
 #' Follow progress on implementation of `shine()` and `report()` below:
 #'
-#' 1. [Implement `shine()`](https://github.com/facileverse/FacileAnalysis/issues/11)
-#' 2. [Implement `report()`](https://github.com/facileverse/FacileAnalysis/issues/12)
+#' 1. [Implement `report()`](https://github.com/facileverse/FacileAnalysis/issues/12)
 #'
 #' Note that there are methods defined for other assay containers, like an
 #' `edgeR::DGEList`, `limma::EList`, and `SummarizedExperiment`. If these are
