@@ -236,6 +236,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     if (!is.character(features)) {
       stop("Invalid argument used for features")
     }
+    features <- unique(features)
     take <- match(features, rownames(x))
     if (any(is.na(take))) {
       stop("The pca filtering strategy only allows you to specify rownames ",
