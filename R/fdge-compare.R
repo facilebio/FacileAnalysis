@@ -198,7 +198,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
 .interaction_fdge <- function(x, y, treat_lfc = NULL, rerun = FALSE, ...) {
   # If these results aren't from the same FacileDataStore, get outta here
   # NOTE: This is not really a robust way to compare if two fds are the same
-  if (!name(fds(x)) != name(fds(x))) {
+  if (name(fds(x)) != name(fds(y))) {
     return(NULL)
   }
   xmod <- model(x)
@@ -296,7 +296,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                     contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 
-  ires <- fdge(imodel, filter = genes.,
+  ires <- fdge(imodel, features = genes.,
                method = param(x, "method"),
                assay_name = param(x, "assay_name"),
                with_sample_weights = param(x, "with_sample_weights"),
@@ -304,10 +304,10 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
 
   rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
   if (rerun) {
-    x <- fdge(xmod, filter = genes., method = param(x, "method"),
+    x <- fdge(xmod, features = genes., method = param(x, "method"),
               assay_name = param(x, "assay_name"),
               with_sample_weights = param(x, "with_sample_weights"))
-    y <- fdge(ymod, filter = genes., method = param(y, "method"),
+    y <- fdge(ymod, features = genes., method = param(y, "method"),
               assay_name = param(y, "assay_name"),
               with_sample_weights = param(y, "with_sample_weights"))
   }
@@ -327,3 +327,43 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   paste(out, collapse = " ")
 }
 
+#' @noRd
+#' @export
+print.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  cat(format(x, ...), "\n")
+}
+
+format.FacileTtestComparisonAnalysisResult <- function(x, ...) {
+  has.istats <- !is.null(result(x))
+  status <- if (has.istats) "with interaction" else "no interaction"
+
+  out <- paste(
+    "===========================================================\n",
+    sprintf("FacileTtestComparisonAnalysisResult (%s)\n", status),
+    "-----------------------------------------------------------\n",
+    sep = "")
+
+  if (has.istats) {
+    mdef <- model(x)
+    des <- design(mdef)
+    formula <- mdef[["design_formula"]]
+    test <- mdef[["contrast_string"]]
+    res <- tidy(x)
+    ntested <- nrow(res)
+    nsig <- sum(!is.na(res[["padj"]]) & res[["padj"]] < 0.10)
+    out <- paste(
+      out,
+      glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})"), "\n",
+      "Formula: ", formula, "\n",
+      "Tested: ", test, "\n",
+      sep = "")
+  } else {
+    xform <- model(param(x, "x"))[["contrast_string"]]
+    yform <- model(param(x, "y"))[["contrast_string"]]
+    out <- paste(out, sprintf("(%s) - (%s)\n", xform, yform), sep = "")
+  }
+
+  paste(out,
+        "===========================================================\n",
+        sep = "")
+}

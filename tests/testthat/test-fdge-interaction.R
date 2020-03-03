@@ -20,10 +20,10 @@ test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
               group = paste(dataset, sample_type, sep = "_"))
 
   y.all <- as.DGEList(all.samples, feature_ids = features(tvn.cmp))
-  y.all <- suppressWarnings(calcNormFactors(y.all)) # partial match of `p` to `probs`
+  y.all <- suppressWarnings(edgeR::calcNormFactors(y.all))
   des <- model.matrix(~ 0 + group + sex, y.all$samples)
   colnames(des) <- sub("group", "", colnames(des))
-  ctr <- makeContrasts(
+  ctr <- limma::makeContrasts(
     testme = (BLCA_tumor - BLCA_normal) - (COAD_tumor - COAD_normal),
     levels = des)
   vm <- limma::voom(y.all, des)

@@ -1,49 +1,5 @@
-#' @noRd
-#' @export
-result.BiocBox <- function(x, ...) {
-  x[["biocbox"]]
-}
-
-#' @noRd
-#' @export
-design.BiocBox <- function(x, ...) {
-  box <- result(x)
-  if (is.null(box)) {
-    stop("The bioc assay container is not found in the BiocBox")
-  }
-  if (is(box, "DGEList") || is(box, "EList")) {
-    out <- box[["design"]]
-  } else {
-    stop("design.BiocBox not implemented for '", class(box)[1L], "' containers")
-  }
-
-  if (!is.matrix(out)) {
-    stop("Error extracting design matrix")
-  }
-
-  out
-}
-
-#' @noRd
-#' @export
-features.BiocBox <- function(x, ...)  {
-  y <- result(x)
-  if (is.null(y)) {
-    stop("The bioc assay container is not found in the BiocBox")
-  }
-  if (test_multi_class(y, c("DGEList", "EList"))) {
-    out <- y[["genes"]]
-  } else {
-    stop(class(y)[1L], " not yet handled")
-  }
-
-  if (is.null(out[["name"]]) && !is.null(out[["symbol"]])) {
-    out[["name"]] <- out[["symbol"]]
-  }
-
-  as.tbl(out)
-}
-
+#' Construct a bioconductor classed object from an analysis.
+#'
 #' @section Linear Model Definitions:
 #' This function accepts a model defined using using [flm_def()] and
 #' creates the appropriate Bioconductor assay container to test the model
@@ -91,34 +47,42 @@ features.BiocBox <- function(x, ...)  {
 #'   the covariates in the `$samples` or `$targerts` data.frame that are requied
 #'   to test the model in `mdef`.
 biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
-                                                method = NULL,
-                                                dge_methods = NULL,
+                                                method = NULL, features = NULL,
                                                 filter = "default",
+                                                filter_universe = NULL,
+                                                filter_require = NULL,
                                                 with_sample_weights = FALSE,
-                                                prior_count = NULL, ...) {
+                                                weights = NULL,
+                                                prior_count = 0.1, ...) {
   assert_class(x, "FacileLinearModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
   .fds <- assert_class(fds(x), "FacileDataStore")
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
 
-  out <- list(
-    biocbox = NULL,
+  # Because this returns a Bioconductor object, we will store the expected
+  # (internal) facile bits in the `ifacile` attribute
+  ifacile <-  list(
     params = list(
       assay_name = assay_name,
       method = method,
+      features = features,
       filter = filter,
       with_sample_weights = with_sample_weights,
       prior_count = prior_count))
-  class(out) <- "BiocBox"
 
   messages <- character()
   warnings <- character()
   errors <- character()
 
+  out <- try({
+    stop('biocbox did not materialize, see `attr(this, "ifacile")$errors`')
+  }, silent = TRUE)
+
   on.exit({
-    out[["messages"]] <- messages
-    out[["warnings"]] <- warnings
-    out[["errors"]] <- errors
+    ifacile[["messages"]] <- messages
+    ifacile[["warnings"]] <- warnings
+    ifacile[["errors"]] <- errors
+    attr(out, "facile") <- ifacile
     return(out)
   })
 
@@ -131,92 +95,145 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     return(out)
   }
 
-  if (is.factor(filter)) {
-    filter <- as.character(filter)
-  }
-  if (!is.null(filter)) {
-    if (test_multi_class(filter, c("data.frame", "tbl"))) {
-      filter <- filter[["feature_id"]]
-    }
-    filter.kosher <- test_character(filter, min.len = 2) ||
-      (test_string(filter) && filter == "default")
-    if (!filter.kosher) {
-      errors <- c(
-        glue("Invalid `filter` value (`{filter}`). The only valid string value ",
-             "the `filter` argument is 'default'"))
-      return(out)
-    }
+  if (isTRUE(filter)) filter <- "default"
+  if (is.null(filter)) filter <- FALSE # originally NULL was equal to FALSE
+  if (!(test_string(filter) || isFALSE(filter))) {
+    errors <- c(
+      glue("Invalid type for `filter` argument (`{class(filter)}`).",
+           "Only a string or logical flag is allowed"))
+    return(out)
   }
 
-  if (is.null(dge_methods)) {
-    dge_methods <- fdge_methods(ainfo[["assay_type"]])
-  }
   if (is.null(method)) {
-    method <- dge_methods[["dge_method"]][1L]
+    method <- valid_methods[["dge_method"]][1L]
   }
-
-  if (!method %in% dge_methods[["dge_method"]]) {
-    default_method <- dge_methods[["dge_method"]][1L]
+  if (!method %in% valid_methods[["dge_method"]]) {
+    default_method <- valid_methods[["dge_method"]][1L]
     msg <- glue("Requested dge_method `{method}` not found, using ",
                 "`{default_method}` instead")
     warnings <- c(warnings, msg)
     method <- default_method
   }
 
-  out[["biocbox"]] <- .biocbox_create(si, assay_name = assay_name,
-                                      assay_type = assay_type,
-                                      design = x, filter = filter,
-                                      method = method,
-                                      with_sample_weights = with_sample_weights,
-                                      prior_count = prior_count, ...)
-  out[["dge_method"]] <- method
+  ifacile[["params"]][["method"]] <- method
+
+  method.info <- filter(valid_methods, dge_method == method)
+  bb.all <- biocbox(si, class = method.info[["bioc_class"]],
+                    assay_name = assay_name,
+                    features = features, sample_covariates = FALSE)
+  if (is.null(features)) {
+    # Only execute a filtering strategy if the caller did not explicitly request
+    # features.
+    bb <- .filter_features(bb.all, x, ainfo, method.info$default_filter,
+                           filter = filter, filter_universe = filter_universe,
+                           filter_require = filter_require, ...)
+  } else {
+    bb <- bb.all
+    if (is(bb, "DGEList") && all(bb[["samples"]][["norm.factors"]] == 1)) {
+      bb <- edgeR::calcNormFactors(bb)
+    }
+  }
+
+  des <- design(x)
+  if (!setequal(rownames(des), colnames(bb))) {
+    errors <- c(errors, "rownames of design(x) does not match biocbox")
+    return(out)
+  }
+  if (!isTRUE(all.equal(rownames(des), colnames(bb)))) {
+    bb <- bb[,rownames(des)]
+  }
+
+  # assert rownames(des) == colnames(bb)
+  if (method == "edgeR-qlf") {
+    out <- suppressWarnings(edgeR::estimateDisp(bb, des, robust = TRUE))
+  } else if (method == "voom") {
+    if (with_sample_weights) {
+      out <- limma::voomWithQualityWeights(bb, des, ...)
+    } else {
+      out <- .voom_dots(bb, des, ...)
+    }
+  } else if (method %in% c("limma-trend", "limma")) {
+    if (is(bb, "DGEList")) {
+      prior_count <- max(0.1, prior_count)
+      out <- new(
+        "EList",
+        list(E = edgeR::cpm(bb, log = TRUE, prior.count = prior_count),
+             genes = bb[["genes"]], targets = bb[["samples"]]))
+    } else {
+      out <- bb
+    }
+    stopifnot(is(out, "EList"))
+    out[["design"]] <- des
+    if (with_sample_weights) {
+      out <- limma::arrayWeights(out, out[["design"]])
+    }
+  } else {
+    stop("How did we get here?")
+  }
+
+  if (!is.null(weights)) {
+    out <- .add_observation_weights(out, weights, ...)
+  }
+
   out
 }
 
-#' Something like a factor function for a "biocbox"
-#'
-#' All the argument checking and whatever else has been done upstream, these
-#' helper functions are just executing under the assumption that everything
-#' is kosher.
-#'
-#' We'll come back to make this pretty later (#!refactor)
-#'
-#' @noRd
-.biocbox_create <- function(xsamples, assay_name, assay_type,
-                            design, filter, method, with_sample_weights,
-                            prior_count, ...) {
-  assert_class(design, "FacileLinearModelDefinition")
-
-  amethods <- fdge_methods(assay_type)
-  if (nrow(amethods) == 0) {
-    stop(paste("DGE analysis not implemented for this assay_type: ",
-               assay_type))
-  }
-  xmethod <- filter(amethods, dge_method == method)
-  if (nrow(xmethod) != 1L) {
-    stop("Unexpected state, method parameter not legal: ", method)
-  }
-  bioc.class <- xmethod[["bioc_class"]]
-  if (bioc.class == "DGEList") {
-    create <- .biocbox_create_DGEList
-  } else if (bioc.class == "EList") {
-    create <- .biocbox_create_EList
-  } else {
-    stop("Unexpxected state, ildefined bioc.class for method: ", bioc.class)
+.add_observation_weights <- function(x, weights, ...) {
+  if (!is(x, "EList")) {
+    warning("observation weights only supported for ELists. They are being ",
+            "ignored.", immediate. = TRUE)
+    return(x)
   }
 
-  bbox <- create(xsamples, assay_name = assay_name,
-                 assay_type = assay_type,
-                 design = design, filter = filter,
-                 method = method,
-                 with_sample_weights = with_sample_weights,
-                 prior_count = prior_count, ...)
-  bbox
+  if (!is.null(weights)) {
+    if (!is.null(x[["weights"]])) {
+      warning("weights already calculated, but are being replaced",
+              immediate. = TRUE)
+    }
+    assert_multi_class(weights, c("data.frame", "tibble"))
+    assert_subset(c("dataset", "sample_id",  "feature_id", "weight"),
+                  colnames(weights))
+
+    weights <- mutate(weights, skey = paste(dataset, sample_id, sep = "__"))
+
+    ww <- select(weights, skey, feature_id, weight)
+    ww <- pivot_wider(ww, names_from = skey, values_from = weight)
+    weights <- as.matrix(select(ww, -feature_id))
+    rownames(weights) <- ww[["feature_id"]]
+    weights <- weights[rownames(x), colnames(x)]
+
+    na.w <- is.na(weights)
+    if (any(na.w)) {
+      mean.w <- mean(weights[!na.w])
+      msg <- sprintf("%0.2f NA values in weights, replacing with mean %0.2f",
+                     sum(na.w) / length(na.w), mean.w)
+      warning(msg)
+      weights[na.w] <- mean.w
+    }
+    x[["weights"]] <- weights
+  }
+
+  x
 }
 
-#' @noRd
-.get_DGEList <- function(xsamples, design, assay_name, assay_type, method,
-                         filter, filter_universe, filter_require, ...) {
+# Feature abundance filtering helper functions ---------------------------------
+
+#' @param default.filter the default feature filtering option for the dge method
+#'   and assay_type we are prepping for. (TRUE/FALSE)
+.filter_features <- function(x, model, ainfo, default.filter, filter,
+                             filter_universe, filter_require,
+                             update_normfactors = NULL,
+                             ...) {
+  assert_flag(default.filter)
+  if (is(x, "DGEList")) {
+    if (is.null(update_normfactors)) {
+      update_normfactors <- all(x[["samples"]][["norm.factors"]] == 1)
+    }
+    if (isTRUE(update_normfactors)) {
+      x <- edgeR::calcNormFactors(x)
+    }
+  }
+
   if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
     filter_require <- filter_require[["feature_id"]]
   }
@@ -232,238 +249,70 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
   }
 
-  amethod <- filter(fdge_methods(assay_type), dge_method == method)
-
-  do.filterByExpr <- nrow(amethod) == 1L &&
-    test_string(filter) &&
-    filter == "default" &&
-    isTRUE(amethod[["default_filter"]])
-
-  if (!do.filterByExpr) {
-    if (test_multi_class(filter, c("data.frame", "tbl"))) {
-      filter_universe <- filter[["feature_id"]]
-    } else if (test_string(filter) && filter == "default") {
-      filter_universe <- NULL
-    } else if (test_character(filter)) {
-      filter_universe <- filter
-    }
-    if (!is.character(filter_universe) && !is.null(filter_universe)) {
-      stop("filter argument is of illegal type: ", class(filter)[1L])
-    }
-    filter.cols <- NULL
-  }
-
-  update_libsizes <- FALSE
-  update_normfactors <- FALSE
-
-  if (is.character(filter_universe)) {
-    filter_universe <- unique(c(filter_universe, filter_require))
-  }
-
-  y <- as.DGEList(xsamples, assay_name = assay_name,
-                  covariates = xsamples,
-                  feature_ids = filter_universe,
-                  update_libsizes = update_libsizes,
-                  update_normfactors = update_normfactors)
+  do.filterByExpr <- !isFALSE(filter) &&
+    (isTRUE(filter) || (isTRUE(filter == "default") && isTRUE(default.filter)))
 
   if (do.filterByExpr) {
-    des.matrix <- design(design)[colnames(y),,drop=FALSE]
+    if (!ainfo[["assay_type"]] %in% c("rnaseq", "umi")) {
+      warning("Automatic filtering only implemented for `rnaseq` and `umi` ",
+              "assay types for now.\nFiltering step skipped",
+              immediate. = TRUE)
+      return(x)
+    }
+    des.matrix <- design(model)[colnames(x),,drop=FALSE]
     # keep only the columns in the design matrix used for filtering that
     # correspond to the main groups. If this is a ttest, its
     # des.matrix[, design$text_covs]. If anova, then we also include the
     # intercept column
-    filter.cols <- design$test_covs
-    if (is.anova(design)) {
+    filter.cols <- model$test_covs
+    if (is.anova(model)) {
       filter.cols <- c(
         grep("(Intercept)", colnames(des.matrix), ignore.case = TRUE),
         filter.cols)
     }
+    x <- .filter_count_assay(x, des.matrix, filter.cols,
+                             filter_universe, filter_require, ...)
   }
-
-  list(
-    y = y,
-    filter_run = do.filterByExpr,
-    filter_require = filter_require,
-    filter_design_columns = filter.cols)
+  x
 }
 
-#' The behavior of the `filter*` parameters are currently described in the
-#' [fdge()] help page.
-#'
-#' @noRd
-#' @importFrom edgeR filterByExpr calcNormFactors estimateDisp
-#' @importFrom limma arrayWeights voom voomWithQualityWeights
-.biocbox_create_DGEList <- function(xsamples, assay_name, assay_type,
-                                    design, filter, method, with_sample_weights,
-                                    prior_count = 2,
-                                    # default params for edgeR::filterByExpr
-                                    filter_min_count = 10,
-                                    filter_min_total_count = 15,
-                                    # Additional filter params,
-                                    filter_universe = NULL,
-                                    filter_require = NULL,
-                                    # minimum gene count to reset lib.size and
-                                    # norm factors
-                                    min_feature_count_tmm = 500, ...) {
-  assert_class(design, "FacileLinearModelDefinition")
-  if (is.null(prior_count)) prior_count <- 2
-  warnings <- character()
+.filter_count_assay <- function(x, des.matrix, filter_design_columns,
+                                filter_universe, filter_require,
+                                # default params for edgeR::filterByExpr
+                                filter_min_count = 10,
+                                filter_min_total_count = 15,
+                                ...) {
+  if (!is(x, "DGEList")) {
+    warning("Automatic filtering only implemented for DGELists for now",
+            immediate. = TRUE)
+    return(x)
+  }
+  dmatrix <- des.matrix[, filter_design_columns, drop = FALSE]
+  dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
+  if (is.character(filter_universe)) {
+    x <- x[rownames(x) %in% filter_universe,]
+  }
+  keep <- edgeR::filterByExpr(x[, rownames(dmatrix)], dmatrix,
+                              min.count = filter_min_count,
+                              min.total.count = filter_min_total_count, ...)
+  if (is.character(filter_require)) {
+    keep <- keep | rownames(x) %in% filter_require
+  }
+  keep_fraction <- mean(keep)
+  keep_n <- sum(keep)
 
-  dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
-                      assay_type = assay_type, method = method,
-                      filter = filter,
-                      filter_universe = filter_universe,
-                      filter_require = filter_require)
-  y <- dat[["y"]]
-  des.matrix <- design(design)[colnames(y),,drop=FALSE]
-
-  if (dat[["filter_run"]]) {
-    dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
-    dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
-    keep <- filterByExpr(y[, rownames(dmatrix)], dmatrix,
-                         min.count = filter_min_count,
-                         min.total.count = filter_min_total_count, ...)
-    if (is.character(dat[["filter_require"]])) {
-      keep <- keep | rownames(y) %in% dat[["filter_require"]]
-    }
-    keep_fraction <- mean(keep)
-    keep_n <- sum(keep)
-
-    if (keep_fraction < 0.50 * nrow(y)) {
-      msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
-                  "({keep_n}) of features are retained after filtering.")
-      warnings <- c(warnings, msg)
-    }
-
-    y <- y[keep,,keep.lib.sizes = FALSE]
-    y <- suppressWarnings(calcNormFactors(y)) # partial match of `p` to `probs`
-  } else {
-    # update lib.size and normfactors if enough genes here
-    if (nrow(y) > min_feature_count_tmm) {
-      y <- y[rep(TRUE, nrow(y)),,keep.lib.sizes = FALSE]
-      y <- suppressWarnings(calcNormFactors(y)) # partial match of `p` to `probs`
-    }
+  if (keep_fraction < 0.50) {
+    msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
+                "({keep_n}) of features are retained after filtering.")
+    # warnings <- c(warnings, msg)
+    warning(msg, immediate. = TRUE)
   }
 
-  y$design <- des.matrix
-
-  if (method == "edgeR-qlf") {
-    out <- suppressWarnings(estimateDisp(y, y[["design"]], robust = TRUE))
-  } else if (method == "voom") {
-    if (with_sample_weights) {
-      out <- voomWithQualityWeights(y, y[["design"]], ...)
-    } else {
-      out <- .voom_dots(y, y$design, ...)
-    }
-  } else if (method %in% c("limma-trend", "limma")) {
-    elist <- list()
-    elist[["E"]] <- edgeR::cpm(y, log = TRUE, prior.count = prior_count)
-    elist[["genes"]] <- y[["genes"]]
-    elist[["targets"]] <- y[["samples"]]
-    elist <- new("EList", elist)
-    elist[["design"]] <- y[["design"]]
-    if (with_sample_weights) {
-      elist <- arrayWeights(elist, elist[["design"]])
-    }
-    out <- elist
-  } else {
-    stop("How did we get here?")
-  }
-
-  dropped <- setdiff(rownames(dat[["y"]]), rownames(out))
-  attr(out, "warnings") <- warnings
-  out
+  x <- x[keep,,keep.lib.sizes = FALSE]
+  suppressWarnings(edgeR::calcNormFactors(x)) # partial match of `p` to `probs`
 }
 
-#' Defines a voom method that can accept dots (and toss them)
-#'
-#' @noRd
-#' @importFrom limma voom
-.voom_dots <- function(counts, design = NULL, lib.size = NULL,
-                       normalize.method = "none",  block = NULL,
-                       correlation = NULL, weights = NULL, span = 0.5,
-                       plot = FALSE, save.plot = TRUE, ...) {
-  voom(counts, design, lib.size = lib.size, normalize.method = normalize.method,
-       block = block, correlation = correlation, weights = weights, span = span,
-       plot = plot, save.plot = save.plot)
+.filter_abundance_features <- function() {
+
 }
 
-#' @noRd
-#' @importFrom stats hat
-#' @importFrom limma arrayWeights
-.biocbox_create_EList <- function(xsamples, assay_name, assay_type,
-                                  design, filter, method, with_sample_weights,
-                                  prior_count = 0.2,
-                                  filter_min_expr = 1,
-                                  filter_universe = NULL,
-                                  filter_require = character(), ...) {
-  if (is.null(prior_count)) prior_count <- 0.25
-
-  # assay_type is one of c("normcounts","lognorm")
-  # Note that as.DGEList always assembles the assay matrix with
-  # normalized = FALSE
-
-  dat <- .get_DGEList(xsamples, design, assay_name = assay_name,
-                      assay_type = assay_type, method = method,
-                      filter = filter,
-                      filter_universe = filter_universe,
-                      filter_require = filter_require)
-  y <- dat[["y"]]
-  des.matrix <- design(design)[colnames(y),,drop=FALSE]
-
-  e <- y[["counts"]]
-  if (assay_type %in% c("normcounts")) {
-    e <- log2(e + prior_count)
-  }
-
-  # Remove genes according to `filter` specificaiton
-  if (dat[["filter_run"]]) {
-    # if (assay_type == "lognorm") {
-    #   min.expr <- log2(2)
-    # } else {
-    #   min.expr <- 1
-    # }
-    min.expr <- filter_min_expr
-    dmatrix <- des.matrix[, dat[["filter_design_columns"]], drop = FALSE]
-    dmatrix <- dmatrix[rowSums(dmatrix) > 0,,drop = FALSE]
-
-    # Code below taken from edgeR:::filterByExpr.default function
-    h <- hat(dmatrix)
-    min.samples <- 1 / max(h)
-    if (min.samples > 10) {
-      min.samples <- 10 + (min.samples - 10) * 0.7
-    }
-    tol <- 1e-14
-    keep <- rowSums(e[, rownames(dmatrix),drop = FALSE] >= min.expr) >= (min.samples - tol)
-    # end filterByExpr block
-
-    if (is.character(dat[["filter_require"]])) {
-      keep <- keep | rownames(y) %in% dat[["filter_require"]]
-    }
-    keep_fraction <- mean(keep)
-    keep_n <- sum(keep)
-
-    if (keep_fraction < 0.50 * nrow(y)) {
-      msg <- glue("Only {format(keep_fraction * 100, digits = 4)}% ",
-                  "({keep_n}) of features are retained after filtering.")
-      warnings <- c(warnings, msg)
-    }
-  } else {
-    keep <- rep(TRUE, nrow(e))
-  }
-
-  elist <- list()
-  elist[["E"]] <- e[keep,,drop = FALSE]
-  elist[["genes"]] <- y[["genes"]][keep,,drop = FALSE]
-  elist[["targets"]] <- y[["samples"]]
-  elist <- new("EList", elist)
-  elist[["design"]] <- des.matrix
-
-  if (with_sample_weights) {
-    elist <- arrayWeights(elist, elist[["design"]])
-  }
-
-  dropped <- setdiff(rownames(dat[["y"]]), rownames(elist))
-
-  elist
-}
