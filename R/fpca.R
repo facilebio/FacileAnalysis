@@ -137,7 +137,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #' @rdname fpca
 #' @export
 fpca.facile_frame <- function(x, assay_name = NULL,
-                              dims = min(5, nrow(x) - 1L),
+                              dims = min(5, nrow(collect(x, n = Inf)) - 1L),
                               features = NULL, filter = "default", ntop = 1000,
                               row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
@@ -232,6 +232,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     if (is.data.frame(features)) {
       features <- features[["feature_id"]]
     }
+    if (is.factor(features)) features <- as.character(features)
     if (!is.character(features)) {
       stop("Invalid argument used for features")
     }

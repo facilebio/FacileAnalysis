@@ -210,6 +210,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   if (is.factor(highlight)) highlight <- as.character(highlight)
   if (!is.character(highlight)) highlight <- NULL
 
+  if (is.factor(feature_id)) feature_id <- as.character(feature_id)
   if (!is.character(feature_id)) {
     feature_id <- topn.fids
   }

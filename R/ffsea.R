@@ -155,6 +155,9 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
                              feature.bias = "thebuckstopshere",
                              xmeta. = "thebuckstopshere",
                              groups = "thebuckstopshere") {
+  if (is.factor(x[["feature_id"]])) {
+    x[["feature_id"]] <- as.character(x[["feature_id"]])
+  }
   assert_character(x[["feature_id"]])
   assert_class(gdb, "GeneSetDb")
 
