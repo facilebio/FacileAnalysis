@@ -87,16 +87,16 @@ The following call should be all you need to get going with the facile
 ecosystem:
 
 ```r
-BiocManager::install("facileverse/FacileAnalysis")
+BiocManager::install("facilebio/FacileAnalysis")
 ```
 
 This should install all of the necessary Bioconductor and CRAN pacakges, along
 with the following ones form github:
 
-* [facileverse/FacileData](https://github.com/facileverse/FacileData)
-* [facileverse/FacileViz](https://github.com/facileverse/FacileViz)
-* [facileverse/FacileShine](https://github.com/facileverse/FacileShine)
-* [facileverse/FacileAnalysis](https://github.com/facileverse/FacileAnalysis)
+* [facilebio/FacileData](https://github.com/facilebio/FacileData)
+* [facilebio/FacileViz](https://github.com/facilebio/FacileViz)
+* [facilebio/FacileShine](https://github.com/facilebio/FacileShine)
+* [facilebio/FacileAnalysis](https://github.com/facilebio/FacileAnalysis)
 * [lianos/multiGSEA@develop](https://github.com/lianos/multiGSEA)
 * [lianos/multiGSEA.shine@develop](https://github.com/lianos/multiGSEA.shiny)
 
@@ -140,7 +140,7 @@ a FacileDataSet that contains the airway data, that we will use to analyze here.
 :::
 
 <!--
-A note if we move this to a "single" page in the facileverse blogdown site:
+A note if we move this to a "single" page in the facilebio blogdown site:
 To add images to posts:
 1. Add them to the `/static/img` folder
 2. Reference the image using a relative path: ![my-image](/img/my-image.png)
@@ -240,7 +240,7 @@ PCA result further?
 In the facile paradigm, we will first run the PCA over the airway samples, then
 interact with the result of the analysis itself. Now, instead of just plotting the
 data in the reduced dimensions, we can also identify which genes (and pathways)
-highly loaded on the principal components.
+are highly loaded on the principal components.
 
 Unfortunately, we do not have access to the variance stabilized data within
 the FacileDataSet. We will try to approximate this, however, by adding a higher
@@ -252,9 +252,10 @@ pca <- fpca(asamples, prior.count = 5)
 
 ### Interrogating a PCA Result
 
-The benefit of having the `fpca()` result (`pca`) itself, and not just the plot
-is that you can perform further action on it. `FacileAnalysisResult` objects,
-like `pca` in this case, provide a number of functions that enable their interrogation at different levels of interactivity.
+The benefit of having a tangible result from the  `fpca()` function is that you
+can perform further action on it. `FacileAnalysisResult` objects, like `pca` in 
+this case, provide a number of functions that enable their interrogation at
+different levels of interactivity.
 
 #### Just show me the numbers with tidy()
 
@@ -391,9 +392,10 @@ viz(pca.gsea, name = "HALLMARK_ADIPOGENESIS")
 :::note
 The GSEA functionality is performed by the [multiGSEA][multiGSEA] package.
 Please read that vignette to learn more about its functionality. Also note
-that performing GSEA on anything but logFC's or t-statistics is new (like
-gene loadings on a principal component). The "units" plotted need to be
-updated (ie. logFC is shown here, but that's not correct).
+that performing GSEA on anything but logFC's or t-statistics (like
+gene loadings on a principal component) is a newer feature of multiGSEA, and
+the visualization needs tweaking (for example, "units" plotted need to be
+updated (ie. logFC is shown here, but these are not logFC's).
 :::
 
 ## Differential Expression Analysis
@@ -517,8 +519,8 @@ with and without batch corrected values.
 viz(dex.vm, feature_id = head(vm.res, 1))
 ```
 
-In the same way that you can disable plotting individual expression values
-in the shiny gadget, you can also turn it off here, as well:
+In the same way that you can disable plotting the batch-corrected expression
+values per sample in the shiny gadget, you can also turn it off here, as well:
 
 ```{r}
 viz(dex.vm, feature_id = head(vm.res, 1), batch_correct = FALSE)
@@ -953,13 +955,13 @@ Please [file bug reports][bugs] when you do!
 [//]: # Markdown References ----------------------------------------------------
 
 [airway]: http://bioconductor.org/packages/release/data/experiment/vignettes/airway/inst/doc/airway.html
-[bugs]: https://github.com/facileverse/FacileAnalysis/issues
+[bugs]: https://github.com/facilebio/FacileAnalysis/issues
 [crosstalk]: https://rstudio.github.io/crosstalk/
 [deseq2]: http://bioconductor.org/packages/DESeq2
-[fdgetests]: https://github.com/facileverse/FacileAnalysis/blob/master/tests/testthat/test-fdge.R
+[fdgetests]: https://github.com/facilebio/FacileAnalysis/blob/master/tests/testthat/test-fdge.R
 [edgerqlf]: https://f1000research.com/articles/5-1438/v2
-[FacileBioc]: https://github.com/facileverse/FacileBioc
-[fdsassembly]: https://facileverse.github.io/FacileData/articles/FacileDataSet-assembly.html
+[FacileBioc]: https://github.com/facilebio/FacileBioc
+[fdsassembly]: https://facilebio.github.io/FacileData/articles/FacileDataSet-assembly.html
 [kallisto]: https://pachterlab.github.io/kallisto/
 [multiGSEA]: https://github.com/lianos/multiGSEA
 [parathyroid]: http://bioconductor.org/packages/parathyroidSE
