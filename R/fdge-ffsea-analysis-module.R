@@ -100,7 +100,7 @@ fDgeSeaAnalysisUI <- function(id, ..., debug = FALSE) {
       fluidRow(
         box.(title = "Differential Expression Parameters", width = 6,
              fdgeRunUI(ns("dge"), debug = debug)),
-        box.(title = "Feature Set Enrichment Parameters", width = 6,
+        box.(title = "Set Enrichment Parameters", width = 6,
              ffseaRunUI(ns("fsea"), debug = debug)))),
     # Result Container
     hidden(
@@ -109,7 +109,7 @@ fDgeSeaAnalysisUI <- function(id, ..., debug = FALSE) {
         tabBox(
           title = "Analysis Results", width = 12,
           tabPanel("Differential Expression", fdgeViewUI(ns("dge_view"))),
-          tabPanel("Feature Set Enrichment", ffseaViewUI(ns("fsea_view")))))
+          tabPanel("Set Enrichment", ffseaViewUI(ns("fsea_view")))))
     )
   )
 }

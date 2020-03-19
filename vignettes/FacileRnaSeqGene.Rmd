@@ -1,0 +1,918 @@
+---
+title: "A facile interpretation of the DESeq2 rnaseqGene workflow"
+author: "Steve Lianoglou"
+date: "5/17/2019"
+output:
+  rmarkdown::html_document:
+    css: "custom.css"
+    highlight: pygments
+    toc: true
+    toc_float: true
+    fig_width: 6
+    df_print: tibble
+bibliography: library.bib
+vignette: >
+  %\VignetteIndexEntry{RNA-seq Analysis: The Facile Way}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+
+# Get inspired by this blogplost for a slick way to create note/callout boxes
+# using pandoc-style custom divs:
+# http://desiree.rbind.io/post/2019/making-tip-boxes-with-bookdown-and-rmarkdown/
+```
+
+## Overview
+
+This is another take on the DESeq2 [rnaseqGene][] workflow which leverages the
+`FacileBiocData::facilitate()` functionality. This reduces the dataset creation
+burden, and allows us to create PCA plots using the vst transformed data.
+
+## Setup
+
+Before we get started, you'll need to ensure that the facile packages are
+installed and up to date. You should also be running the latest versions of R
+(3.6.1) and Bioconductor (release 3.9).
+
+The following call should be all you need to get going with the facile
+ecosystem:
+
+```r
+BiocManager::install("facilebio/FacileAnalysis")
+BiocManager::install("facilebio/FacileBiocData")
+```
+
+This should install all of the necessary Bioconductor and CRAN pacakges, along
+with the following ones form github:
+
+* [facilebio/FacileData](https://github.com/facilebio/FacileData)
+* [facilebio/FacileViz](https://github.com/facilebio/FacileViz)
+* [facilebio/FacileShine](https://github.com/facilebio/FacileShine)
+* [facilebio/FacileAnalysis](https://github.com/facilebio/FacileAnalysis)
+* [facilebio/FacileBiocData](https://github.com/facilebio/FacileBiocData)
+* [lianos/multiGSEA@develop](https://github.com/lianos/multiGSEA)
+* [lianos/multiGSEA.shine@develop](https://github.com/lianos/multiGSEA.shiny)
+
+We also use data from the [airway][airway] and [parathyroidSE][parathyroid]
+bioconductor packages, so make sure those are installed as well.
+
+```r
+BiocManager::install(c("airway", "parathyroidSE"))
+```
+
+```{r se-load, message=FALSE, warning=FALSE}
+library(dplyr)
+library(DESeq2)
+library(SummarizedExperiment)
+library(FacileData)
+library(FacileAnalysis)
+library(FacileBiocData)
+# devtools::load_all("~/workspace/facilebio/public/packages/FacileBiocData")
+library(plotly)
+theme_set(theme_bw())
+
+data("airway", package = "airway")
+```
+
+## Data Preparation
+
+<!--
+A note if we move this to a "single" page in the facilebio blogdown site:
+To add images to posts:
+1. Add them to the `/static/img` folder
+2. Reference the image using a relative path: ![my-image](/img/my-image.png)
+-->
+
+### Prepare the DESeqDataSet
+
+The [rnaseqGene][] workflow shows you how to create a DESeqDataSet from several
+different data sources. Here we'll just start with the count matrices already in
+the `airway` *SummarizedExperiment* object, then:
+
+1. Add some metadata for the genes (symbol, biotype) just to make things more
+   interpretable. We have a csv file with gene info in the FacileData package
+   just for this purpose; and
+   
+2. remove the genes that we don't have metadata for in (1), or have no reads
+   across the entire experiment.
+
+```{r dds, message=FALSE, warning=FALSE}
+dds <- DESeqDataSet(airway, design = ~ cell + dex)
+
+# 1. Retrieve and match gene metadata.
+mcols(dds) <- local({
+  fn <- system.file("extdata", "ensembl-v75-gene-info.csv.gz",
+                    package = "FacileData")
+  out <- read.csv(gzfile(fn, "rt"), stringsAsFactors = FALSE,
+                  strip.white = TRUE,
+                  col.names = c("feature_id", "symbol", "meta"))
+  out <- DataFrame(out)
+  rownames(out) <- out[["feature_id"]]
+  out[rownames(dds),]
+})
+
+# 2. Remove uninformative genes
+keep <- rowSums(counts(dds)) > 1 & 
+  !is.na(mcols(dds)[["feature_id"]]) &
+  # nchar(mcols(dds)[["symbol"]]) > 0
+  TRUE
+dds <- dds[keep,]
+
+dds <- DESeq(dds)
+vsd <- vst(dds, blind = FALSE)
+```
+
+Let's create a `dds` object so we can perform the `DESeq2` maneuvers on these
+data, and compare them with the facile version of the analyses. The workflow
+suggests you perform some exploratory analyses using variance stablised
+data, so we'll calculate that here, as well.
+
+### Prepare the dataset for use with facile.bio
+
+In order to use the `dds` *DESeqDataSet* object within the facile.bio ecosystem,
+we only have to call `facilitate(dds)`. This will return a special (subclassed)
+version of the *DESeqDataSet* object which can be used by the standard
+*DESeq2* worfklow, as well the facile.bio workflow.
+
+Because we will want to use the variance stabilized data (`vst`) within the
+facile.bio workflow as well, we will add it as an assay to the `dds` object
+prior to calling `facilitate()`
+
+```{r}
+assay(dds, "vst") <- assay(vsd)
+fdds <- facilitate(dds)
+```
+
+:::note
+If there was no `"vst"` assay matrix in the `dds` object prior to calling
+`facilitate()`, it will be generated by default unless you also call
+`facilitate(dds, run_vst = TRUE)`. When `facilitate()` is called on a
+DESeqDataSet object, it can also take the extra parameters found in the
+`DESeq2::vst()` function in order to further customize how it is run.
+:::
+
+We can now use `fdds` using the `data.frame`-centric facile.bio worfklow.
+
+```{r}
+samples(fdds) %>% 
+  with_sample_covariates(c("cell", "dex")) %>% 
+  with_assay_data("ENSG00000101347", assay_name = "vst") %>% 
+  head()
+```
+
+## Principal Components Analysis
+
+Let's jump to the [PCA plot](https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#pca-plot) section of the [rnaseqGene][]
+workflow.
+
+The `DESeq2::plotPCA()` function can be configured to return the sample
+coordinates over the principal components by setting `returnData = TRUE`. We'll
+do that so we can customize the PCA plot ourselves, as is done in the
+[rnaseqGene][] vignette.
+
+```{r ddspcas}
+set.seed(123)
+pcaData <- plotPCA(vsd, intgroup = c( "dex", "cell"), returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(x = PC1, y = PC2, color = dex, shape = cell)) +
+  geom_point(size =3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  coord_fixed() +
+  ggtitle("PCA with VST data")
+```
+
+This is great already, but sometimes we want to work with the PCA result a
+bit more. In the facile paradigm, we will first run the PCA, then interact with
+the result of the analysis itself. One part of the interaction is certainly
+visualizing it, but we will also run GSEA over gene loadings on PC1 to see
+if that can help us make sense of the separation we see along this dimension.
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(123)
+pca <- fpca(fdds, assay_name = "vst", ntop = 500)
+```
+
+### Interrogating a PCA Result
+
+The benefit of having a tangible result from the  `fpca()` function is that you
+can perform further action on it. `FacileAnalysisResult` objects, like `pca` in 
+this case, provide a number of functions that enable their interrogation at
+different levels of interactivity.
+
+#### Just show me the numbers with tidy()
+
+For the most basic interpretation of analysis results, every
+`FacileAnalysisResult` object provides its results in tabular form via a
+`tidy()` function. For instance, `tidy(pca)` will provide the coordinates of the
+`asamples` used as its input in the lower dimensional space over the principal
+components:
+
+```{r}
+tidy(pca)
+```
+
+The `ranks(fpca())` function produces a table of features that are highly loaded
+along the PCs calculated. `signature(fpca())` produces a summary of the ranks,
+by taking the `ntop` features positively and negatively loaded on each PC.
+
+```{r}
+signature(pca, ntop = 10) %>% 
+  tidy() %>% 
+  select(name, symbol, feature_id, score)
+```
+
+#### Deep Interaction via shine()
+
+Using shiny to provide interactive modules that have access to all of the data
+in the `FacileDataSet` provides the richest and most interactive way to explore
+the results of an analysis.
+
+For a `FacilePcaAnalysisResult`, the `shine()` method presents the user with a
+shiny gadget that providesa an interactive scatter plot of the samples over the
+PC's of choice. The scatterplot can be modified by mapping the various
+sample-level covariates to the aesthetics of the plot. Furthermore, the user is
+presented with the features (genes) that are loaded most highly along each
+principal component.
+
+```{r shine-pca, eval = FALSE, warning=FALSE, message=FALSE}
+shine(pca)
+```
+
+<img src="images/animated/vignette-shine-fpca.gif" width="75%" />
+
+:::tip
+Users can also perform a gene set enrichment analysis (GSEA) over dimensions of
+an `fpca()` result using the `ffsea()` function,
+[as shown below](#further-interrogation-of-pca-via-gsea), to better interpret
+what biological processes the PC's might be associated with.
+:::
+
+#### Embeddable interactive graphics with viz()
+
+We can embed a javascript-powered interactive scatter plot of the `pca` result
+using the `viz` function. We use the `color_aes` and `shape_aes`, we can map the
+same sample-level covariates to aeshtetics in the plot produced.
+
+```{r}
+viz(pca, color_aes = "dex", shape_aes = "cell", height = 350, width = 500)
+```
+
+### Removing Batch Effects
+
+When we perform the differential expression analysis, we want to analyze
+the treatment effects (`"treatment"`) while controling for the celltype 
+`"cell_line"`. The data retrieval functions in the core `FacileData` package 
+allow for batch correction of normalized data using a simplified wrapper to 
+the `limma::removeBatchEffect()` function
+(see `?FacileData::remove_batch_effect`).
+
+This functionality is triggered when a covariate(s) is provided in a `batch`
+argument, as shown in the code below. Note that we set `ntop` to 5000, which
+uses the top 5000 most variable genes for analysis (instead of the default
+500). We do this to better perform GSEA on the PCA result afterwards.
+
+```{r, message=FALSE, warning=FALSE}
+cpca <- fpca(fdds, assay_name = "vst", batch = "cell", ntop = 5000)
+viz(cpca, dims = 1:2, color_aes = "dex", shape_aes = "cell",
+     height = 350, width = 500)
+```
+
+#### Further interrogation of PCA via GSEA
+
+We can even perform GSEA over any dimension of the PCA result via the `ffsea()`
+function (Facile Feature Set Enrichment). This will rank genes by their loadings
+on the specified PC of interest, then perform a pre-ranked gene set enrichment
+analysis.
+
+The core of our GSEA functionality is provided by the [multiGSEA][multiGSEA]
+package. This includes easy accessor functions for geneset collection retrieval
+(as a `multiGSEA::GeneSetDb` object), as well as delegation of GSEA methods for
+analysis.
+
+:::note
+By default, `limma::cameraPR` is used for all of our gene set enrichment
+analysis methods, but this can be customized via the `methods` argument in
+the `ffsea()` function.
+:::
+
+```{r pcagsea, message=FALSE, warning=FALSE}
+gdb <- multiGSEA::getMSigGeneSetDb("reactome", species = "human",
+                                   id.type = "ensembl")
+pca.gsea <- ffsea(cpca, gdb, dim = 1)
+```
+
+```{r shinepcagsea, eval = FALSE}
+shine(pca.gsea)
+```
+
+<img src="images/animated/vignette-shine-pca-gsea.gif" width="75%" />
+
+And you can visualize the loadings of the genes from a given geneset on the
+principal component. We can see that one the top hits is the 
+"smooth muscle contractoin" reactome geneset, which makes sense in the context
+of a cellular response from steroid (dexamethasone) treatment.
+
+```{r}
+viz(pca.gsea, name = "SMOOTH_MUSCLE_CONTRACTION")
+```
+
+:::note
+The GSEA functionality is performed by the [multiGSEA][multiGSEA] package.
+Please read that vignette to learn more about its functionality. Also note
+that performing GSEA on anything but logFC's or t-statistics (like
+gene loadings on a principal component) is a newer feature of multiGSEA, and
+the visualization needs tweaking (for example, "units" plotted need to be
+updated (ie. logFC is shown here, but these are not logFC's).
+:::
+
+## Differential Expression Analysis
+
+The rnaseqGene workflow tests the differential expression of the `dex` treatment
+while controling for the `cell` identity. The design formula used there was 
+`~ cell + dex`, and was set during the call to `DESeqDataSet()`. We'll just
+materialize these results into a data.frame:
+
+```{r rundeseq}
+dex.dds <- results(dds, contrast=c("dex", "trt", "untrt")) %>% 
+  as.data.frame() %>% 
+  subset(!is.na(pvalue)) %>% 
+  transform(feature_id = rownames(.)) %>% 
+  select(feature_id, pvalue, log2FoldChange, padj, everything()) %>% 
+  arrange(pvalue)
+```
+
+On the facile side, we break down the differential expression workflow into two
+explicit steps. First we define the linear model we will use for testing via the
+`flm_def()` function.
+
+To define which samples will be tested against each other, we first specify the
+`covariate` used for the sample grouping. The levels of the `covariate` that
+specify the samples that belong in the "numerator" of the fold change
+calculation are specified by the `numer` parameter. The `denom` parameter
+specifies denominator. The `batch` covarite can be used if there is a covariate
+we want to control for, like `"cell_line"` in this case.
+
+```{r flm-def}
+xlm <- flm_def(fdds,
+               covariate = "dex", 
+               numer = "trt", denom = "untrt",
+               batch = "cell")
+xlm
+```
+
+Now that we have the linear model defined, we can perform a differential
+expression analysis over it via the `fdge()` function. Using this funciton,
+we need to specify:
+
+1. `assay_name`: The assay container that holds the assay data we want to 
+   perform the test against. The `xfds` dataset only has one assay 
+   (`"gene_counts"`) of type `"rnaseq"`(`assay_info(xfds)`), so no need to
+   specify this.
+2. The method to use to perform the analysis. The methods we can use are
+   defined by the type of assay data the assay matrix has. Our `"gene_counts"`
+   assay is of type `"rnaseq"`. So far, we support the use of the `"edgeR-qlf"`,
+   `"voom"`, and `"limma-trend"` pipelines for rnaseq analysis
+   (see the output from `fdge_methosd("rnaseq")`).
+
+There are optional parameters we can specify to tweak the analysis, for
+instance:
+
+i. `treat_lfc` accepts a log2 value which will be used to perform a test
+   against a minimal thershold, using limma's (or edgeR's) *treat* framework.
+ii. `filter` can be used to customize the policy used to remove lowly
+   expressed genes. By default, we wrap the `edgeR::filterByExpr()` function
+   to produce some sensibly-filtered dataset. Refer to the "Feature Filtering
+   Strategy" section of the `?fdge` help page.
+iii. `use_sample_weights` can be set to `TRUE` if you want to leverage limma's
+   `arrayWeights` or `voomWithQualityWeights` (depending on the `method`
+   specified).
+
+You can see more details in the `?fdge` manual page.
+
+To make our results as comparable to the DESeq results as possible, we will
+pass the gene identifiers used in the DESeq analysis into the `filter` paramater
+so we get statistics on those same genes. We'll use the the voom framework for 
+our initial analysis:
+
+```{r fdge-dex}
+dex.vm <- fdge(xlm, method = "voom", features = dex.dds$feature_id)
+```
+
+```{r}
+# We can show that the after dge, the genes are up in the treatment,
+# as they should be given the interpretation of their loadings on the PCA
+gs.genes <- result(pca.gsea) %>% 
+  multiGSEA::geneSet(name = "SMOOTH_MUSCLE_CONTRACTION")
+gs.dge <- tidy(dex.vm) %>% 
+  filter(feature_id %in% gs.genes$feature_id)
+```
+
+### Interpreting the DGE Result
+
+As mentioned previously in the PCA section, every `FacileAnalysisResult` will
+provide a `tidy()` function, which will provide the results of its analysis
+in tabluar form. In this case, `tidy(fdge())` returns a table of the gene-level
+differential expression statistics, such as the log-fold-change (`"logFC"`),
+*p*-value (`"pval"`), and the false discovery rate (`"FDR"`).
+
+```{r}
+vm.res <- tidy(dex.vm) %>% 
+  arrange(pval) %>% 
+  select(feature_id, symbol, logFC, pval, padj)
+head(vm.res, 20)
+```
+
+#### Deep Interaction via shine()
+
+The `shine()` function over an `fdge()` result presents the user with the
+table of gene-level differential expression statistics, which is linked to
+a view over the expression of the gene of interest over the given contrast.
+
+Since `"cell_line"` was used as a batch term in the linear model, the sample-level expression values plotted (by default) are batch-corrected. You can
+toggle batch correction off to see the effect it has on the data.
+
+```{r fdge-shine, eval=FALSE, message=FALSE, warning=FALSE}
+shine(dex.vm)
+```
+
+<img src="images/animated/vignette-shine-dge-short.gif" width="75%" />
+
+You can visualize and interact with a volcano plot as well. Drawing the volcano
+plot is initially disabled, however, since it currently creates an interactive
+scatter plot view over all of the (potentially thousands) genes analyzed. This
+can overwhelm CPUs with lower end GPUs.
+
+#### Embeddable interactive graphics via viz()
+
+The `viz()` function on an `fdge()` result can be used to make a volcano plot,
+MA plot, or to show the expression profiles of a set of genes across the groups
+that were tested.
+
+We can view what the differential expression of the top result looks like,
+with and without batch corrected values.
+
+```{r}
+viz(dex.vm, features = head(vm.res, 1))
+```
+
+In the same way that you can disable plotting the batch-corrected expression
+values per sample in the shiny gadget, you can also turn it off here, as well:
+
+```{r}
+viz(dex.vm, features = head(vm.res, 1), batch_correct = FALSE)
+```
+
+:::note
+This is how you can query the `FacileDataSet` directly to retrieve these
+expressoin values and plot them manually.
+
+```{r}
+dat.bc <- asamples %>% 
+  fetch_assay_data(features = head(vm.res, 1),
+                   normalized = TRUE,
+                   batch = "cell_line") %>% 
+  with_sample_covariates("treatment") %>% 
+  mutate(type = "batch_corrected")
+dat.o <- asamples %>% 
+  fetch_assay_data(features = head(vm.res, 1), normalized = TRUE) %>% 
+  with_sample_covariates("treatment") %>% 
+  mutate(type = "original")
+
+dat <- bind_rows(dat.bc, dat.o)
+ggplot(dat, aes(x = treatment, y = value)) +
+  geom_boxplot(outliser.shape = NA) +
+  geom_jitter(aes(color = treatment), width = 0.2) +
+  facet_wrap(~ type)
+```
+:::
+
+We can also visualize the differential expresion result as a volcano plot, and
+highlight which of the genes were also in DESeq2's top 50 results. By default,
+these plots use webgl, but we still restrict it to only show the top 1500 genes 
+in the volcano. You can set this to `Inf` to show all of them.
+
+```{r}
+viz(dex.vm, type = "volcano", ntop = 1500,
+    highlight = head(dex.dds$feature_id, 50))
+```
+
+... or an MA plot ...
+
+```{r}
+# Instead of taking the top 1500, which leaves a solid empty space in the
+# 'low-signicance zone', like the volcano above, we can pick a random set of
+# 15000 genes, then highlight the top ones from the DESeq2 result.
+# You an try the same trick with the volcano plot above.
+viz(dex.vm, type = "ma", 
+    # ntop = 1500,
+    feature_id = features(dex.vm) %>% sample_n(1500),
+    highlight = head(dex.dds$feature_id, 50))
+```
+
+#### Embeddable interactive summaries via report()
+
+`FacileAnalysisResult` objects also provide `report()` functions. Their goal
+is to weave together a number of views and statistics from an analysis that
+are most presented together when we attempt to share analytic results with
+collaborators within an Rmarkdown document.
+
+For instance, when reporting a differential expression analysis result, it is
+often convenient to supply a table of signficant results combined with something
+like a volcano plot.
+
+The `report()` function over a `FacileTtestAnalysisResult` will plot the
+volcano of the `ntop` genes, and uses the [crosstalk][crosstalk] package to
+link this to a linked table of gene-level statistics. The individual genes
+provide link-outs to their information page on the ensembl website.
+
+```{r}
+report(
+  dex.vm, ntop = 500,
+  caption = paste(
+    "Top 500 results from a differential expression analysis of the airway",
+    "dataset treated and control samples, adjusting for the `cell_line`",
+    "effect"))
+```
+
+### Using the edgeR quasi-likelihood framework
+
+We have tested our contrast of interest using the limma/voom statistical
+framework (`fdge(xlm, method = "voom")`), but you might want to use a different
+framework.
+
+Currently the following options are supported to test rnaseq-like data:
+
+```{r}
+fdge_methods("rnaseq")
+```
+
+You can swap out `"voom"` for any of the methods listed there. Let's use the
+[edgeR quasi-likelihood framework][edgerqlf], instead:
+
+```{r}
+dex.qlf <- fdge(xlm, method = "edgeR-qlf", features = dex.dds$feature_id)
+```
+
+### Did the fdge() analysis work?
+
+Now that we've looked at some ways to interact with our results, and tweak
+the way in which they were run, it would be nice to know if the simplified
+interface presented in the facile ecosystem runs analyses that produces accurate
+and comparable results.
+
+We can check to see how concordant the statistics generated by the `"voom"` and
+`"edgeR-qlf"` methods produced via `fdge()` are when compared to the DESeq2
+result. We'll join the results of all three analysis together to see.
+
+```{r}
+cmp <- tidy(dex.vm) %>% 
+  select(feature_id, symbol, logFC.vm = logFC, pval.vm = pval) %>% 
+  inner_join(dex.dds, by = "feature_id") %>% 
+  inner_join(
+    select(tidy(dex.qlf), feature_id, logFC.qlf = logFC, pval.qlf = pval),
+    by = "feature_id") %>% 
+  mutate(qlf.pval = -log10(pval.qlf), 
+         vm.pval = -log10(pval.vm),
+         d2.pval = -log10(pvalue))
+```
+
+```{r pairs-pval, message = FALSE, warning = FALSE, fig.asp = 1, fig.width = 6}
+cmp %>% 
+  select(qlf.pval, vm.pval, d2.pval) %>% 
+  pairs(main = "-log10(pvalue) comparison", pch = 16, col = "#3f3f3f33")
+```
+
+```{r pairs-logFC, message = FALSE, warning = FALSE, fig.asp = 1, fig.width = 6}
+cmp %>% 
+  select(qlf.logFC = logFC.qlf,
+         vm.logFC = logFC.vm,
+         d2.logFC = log2FoldChange) %>% 
+  pairs(main = "logFC comparison", pch = 16, col = "#3f3f3f33")
+```
+
+:::tip
+The [`test-fdge.R`][fdgetests] unit tests ensures that the results produced via
+the facile `flm_def() %>% fdge()` pipeline are the same as the ones produced
+using their corresponding standard bioconductor maneuvers over the same data.
+:::
+
+## Gene Set Enrichment Analysis
+
+As is the case in the PCA -> GSEA analysis performed above, GSEA here is
+performed downstream of the differential expression result. We need to specify
+the geneset collection to use for GSEA, as well as the GSEA methods we want to
+perform.
+
+```{r, message=FALSE, warn=FALSE, eval=FALSE}
+dge.gsea <- ffsea(dex.vm, gdb, methods = c("ora", "cameraPR"))
+```
+
+Calling `shine(dge.gsea)` on this GSEA result will pull up a shiny gadget that
+allows you to interactively explore the signifcant GSEA results from from this
+differential expression analysis.
+
+```{r eval=FALSE}
+shine(dge.gsea)
+```
+
+:::note
+The shiny gadget will look similar to the one produced by running `ffsea()` on
+the `fpca()` result, [depicted above](#further-interrogation-of-pca-via-gsea).
+The screen capture is not included in this vignette to save (HD) space.
+:::
+
+## Side Loading Data (for svaseq)
+
+The rnaseqGene workflow then outlines how one could use `sva::svaseq` to adjust
+for unknown batch effects.
+
+```{r deseqsva, message=FALSE, warning=FALSE}
+library(sva)
+dat  <- counts(dds, normalized = TRUE)
+idx  <- rowMeans(dat) > 1
+dat  <- dat[idx, ]
+mod  <- model.matrix(~ dex, colData(dds))
+mod0 <- model.matrix(~ 1, colData(dds))
+deseq.sva <- svaseq(dat, mod, mod0, n.sv = 2)
+```
+
+Although `svaseq` isn't directly supported in the facile workflow, we can
+still do this by first extracting the data we need into objects that `svaseq`
+can use, then marrying the surrogate variables that were estimated over our
+samples back with the FacileDataSet for use within the differential expression
+analysis workflow.
+
+To extract the data from the FacileDataSet to initially run `svaseq`, we will:
+
+1. Extract normalized counts from the genes we've already analyzed over the
+   samples we are already playing with.
+2. Create a data.frame that can be used with the `model.matrix` calls above.
+
+We can get all of the normalized count data from the samples defined in the
+`asamples` sample data.frame (`facile_frame`) with the following call:
+
+```r
+norm.dat <- fetch_assay_data(asamples, as.matrix = TRUE, normalized = TRUE)
+```
+
+This will use the stored library size and normalization factors within the 
+FacileDataSet to retrieve all of the the log2(cpm) data from these samples.
+
+We can do a bit better, though, in the sense that we can use the data normalized
+in the same way as it was for the differential expression analysis. We can ask a
+`FacileAnalysisResult`, like  `dex.qlf`, what samples it was run on using the 
+`samples()` function:
+
+```{r}
+samples(dex.qlf) %>% head()
+```
+
+You'll see what get a few other useful things, too:
+
+1. The `cell_line` and `treatment` covariates are added to the samples, because
+   they were used within the `flm_def() -> fdge()` pipeline we ran.
+2. The `lib.size` and `norm.factors` columns were added from the DGEList that
+   was ultimately materialized and used within the call to `fdge()`. These were
+   recalculated "fresh" after we filtered down to the genes that were specified
+   via the `fdge(..., filter)` parameter.
+   
+:::note
+We could have retrieved (1) (the `cell_line` and `treatment` covariates) over
+our `asamples` facile_frame via the following call, but retrieving the exact
+`lib.size` and `norm.factors` would have been a bigger pain.
+
+```r
+with_sample_covariates(asamples, c("cell_line", "treatment"))
+```
+:::
+
+Let's get our normalized expression data now:
+
+```{r}
+norm.dat <- samples(dex.qlf) %>% 
+  fetch_assay_data(features = rownames(dat), normalized = TRUE, log = FALSE,
+                   as.matrix = TRUE)
+```
+
+These data will be returned in the same (column) order as is specified in the
+`samples(dex.qlf)` data.frame:
+
+```{r}
+all.equal(
+  colnames(norm.dat),
+  with(samples(dex.qlf), paste(dataset, sample_id, sep = "__")))
+```
+
+Now we have the pieces we need to run `svaseq` over our facile data:
+
+```{r, message=FALSE, warning=FALSE}
+fmod  <- model.matrix(~ treatment, samples(dex.qlf))
+fmod0 <- model.matrix(~ 1, samples(dex.qlf))
+facile.sva <- svaseq(norm.dat, fmod, fmod0, n.sv = 2)
+```
+
+The surrogate variables seem "close enough".
+
+```{r}
+par(mfrow=c(1,2))
+plot(deseq.sva$sv[, 1], facile.sva$sv[, 1], pch = 16,
+     main = "SV1", xlab = "Original", ylab = "Facile")
+abline(0, 1, col = "red")
+plot(deseq.sva$sv[, 2], facile.sva$sv[, 2], pch = 16,
+     main = "SV2", xlab = "Original", ylab = "Facile")
+abline(0, 1, col = "red")
+```
+
+Now we add these to our samples facile_frame and redo the linear model and
+perform differential expression analysis using only the surrogate variables
+to contorl for batch (as is done in the rnaseqGene workflow).
+
+```{r}
+sva.qlf <- samples(dex.qlf) %>% 
+  mutate(SV1 = facile.sva$sv[, 1], SV2 = facile.sva$sv[, 2]) %>% 
+  flm_def(covariate = "treatment", 
+          numer = "dex", denom = "control",
+          batch = c("SV1", "SV2")) %>% 
+  fdge(method = "edgeR-qlf", features = features(dex.qlf))
+```
+
+How do these compare with the original quasilikelihood analysis?
+
+```{r}
+cmp.qlf <- tidy(dex.qlf) %>% 
+  select(feature_id, symbol, logFC, pval) %>% 
+  inner_join(
+    select(tidy(sva.qlf), feature_id, logFC, pval),
+    by = "feature_id")
+```
+
+```{r}
+ggplot(cmp.qlf, aes(x = logFC.x, y = logFC.y)) +
+  geom_point(alpha = 0.8) +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  xlab("logFC original") +
+  ylab("logFC with sva") +
+  ggtitle("logFC comparison with cell_line batch vs svaseq batch")
+```
+
+```{r}
+ggplot(cmp.qlf, aes(x = -log10(pval.x), y = -log10(pval.y))) +
+  geom_point(alpha = 0.8) +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  xlab("-log10(pvalue) original") +
+  ylab("-log10(pvalue) with sva") +
+  ggtitle("pvalue comparison with and without svaseq")
+```
+
+### Visualizing effects of batch correction
+
+We've tested two different methods of batch correction in this analysis
+workflow. The first was to explicitly select `"cell_line"` as a batch effect.
+The second was to use *svaseq* to identify unknown sources of variance we can
+correct for.
+
+Let's see how these effect the expression levels of a gene of interest.
+
+```{r}
+batches <- list(
+  none = NULL,
+  cell_line = "cell_line",
+  SV1 = "SV1",
+  SVboth = c("SV1", "SV2"))
+dat <- lapply(names(batches), function(bname) {
+  samples(sva.qlf) %>% 
+    with_assay_data("ENSG00000101347", batch = batches[[bname]]) %>% 
+    mutate(group = bname)
+})
+dat <- bind_rows(dat)
+
+ggplot(dat, aes(x = treatment, y = SAMHD1)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(aes(color = cell_line), width = 0.25) +
+  facet_wrap(~ group)
+```
+
+:::warning
+`facile_frame` objects override dplyr-verbs, so most dplyr-based data
+manipulations ensure that the `facile_frame` that is returned maintains its
+connection to its FacileDataStore. Unfotunately, we don't provide a
+facile-version of the `bind_rows` function, since it `dplyr::bind_rows()` isn't
+an S3 generic because its first argument is `...`. We'll provide a workaround to
+this in due time.
+:::
+
+## GUI Driven Analysis
+
+The analyses defined in this package should be equally available to coders, as
+well as those who aren't proficient in code (yet) but want to query and explore
+these data.
+
+Gadget-ized versions of these analyses are available within this package that
+can be invoked from within an R workspace. The same modules used in the gadgets
+can also be weaved together in a standalone shiny app, that can be completely
+driven interactively.
+
+### FacileAnalysis Gadgets
+
+The same differential expression analysis we performed in code, like so:
+
+```{r, eval = FALSE, message=FALSE, warning=FALSE}
+dex.qlf <- asamples %>% 
+  flm_def(covariate = "treatment", 
+          numer = "dex", denom = "control",
+          batch = "cell_line") %>% 
+  fdge(method = "edgeR-qlf")
+```
+
+can also be done using the `fdgeGadget()`. Shiny modules for the `flm_def`
+and `fdge` functions are chained together so that they can be configured as
+above, and the results of the interactive, gadget-driven analysis below will be
+the same as the one produced above.
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+dex.qlf2 <- fdgeGadget(asamples)
+```
+
+<img src="images/animated/vignette-fdgeGadget-trim.gif" width="75%" />
+
+Once the user closes the gadget (hits "OK"), the result will be captured
+in `dex.qlf2`. You can then `tidy()` it to get the differential expression
+statistics as before, or use this as input to `ffsea()` for feature set
+enrichment analysis, either via code, or via a gadget.
+
+The second call in the code below launches a shiny gadget to perform a GSEA. It
+will return a result that is identical to the first.
+
+```{r, eval = FALSE}
+dex.gsea2 <- ffsea(dex.vm2, gdb, method = c("ora", "cameraPR"))
+dex.gsea3 <- ffseaGadget(dex.vm2, gdb)
+```
+
+Try it!
+
+## Closing Thoughts
+
+We've covered a bit of ground. Here are some things to keep in mind.
+
+1. Extracting a `facile_frame` from a `FacileDataSet` should be the starting
+   point for most analyses. Tidy-like functions are defined over a `facile_frame`
+   that allow the user to decorated it with more data whenever desired. The
+   `(fetch|with)_assay_data()` and `(fetch|with)_sample_covariates()` functions
+   are your gateway to all of  your data.
+
+2. `FacileAnalysisResult` objects provide a number of methods that enable the
+   analyst to interrogate it in order to understand it better.
+   
+   * `shine()` provides a rich, shiny-powered view over the result.
+   * `viz()` provides will provide a variety of JS-powered views over the data.
+   * `report()` will wrap up a number of useful views over a result and dump
+     them into an Rmarkdown report, with some level of JS-based interactivety.
+   * We briefly mentioned `signature()` and `ranks()`, but don't talk about
+     why they are here. Briefly, analyses usually induce some ranking over
+     the features that they were performed over. Like a differential expression
+     result produces a ranking over its features (genes). We think that these
+     are useful general concepts that analysts would want to perform over
+     analyses of all types, and defining them will help to make analyses more
+     fluid / pipeable from one result into the next. **More on that later**.
+
+3. Analyses within this package can (should) be able to be conducted equally
+   using code, a GUI, or a hybrid of the two.
+
+This is still a work in progress. Not every analysis type is developed to the
+same level of maturity. For instance:
+
+* `report()` isn't implented for `ffsea()` and `fpca()` objects
+* `shine(fpca())` is functional, but still needs some more work.
+
+... and you'll find some other wires to trip over.
+Please [file bug reports][bugs] when you do!
+
+
+[//]: # Markdown References ----------------------------------------------------
+
+[airway]: http://bioconductor.org/packages/release/data/experiment/vignettes/airway/inst/doc/airway.html
+[bugs]: https://github.com/facilebio/FacileAnalysis/issues
+[crosstalk]: https://rstudio.github.io/crosstalk/
+[deseq2]: http://bioconductor.org/packages/DESeq2
+[fdgetests]: https://github.com/facilebio/FacileAnalysis/blob/master/tests/testthat/test-fdge.R
+[edgerqlf]: https://f1000research.com/articles/5-1438/v2
+[FacileBioc]: https://github.com/facilebio/FacileBioc
+[fdsassembly]: https://facilebio.github.io/FacileData/articles/FacileDataSet-assembly.html
+[kallisto]: https://pachterlab.github.io/kallisto/
+[multiGSEA]: https://github.com/lianos/multiGSEA
+[parathyroid]: http://bioconductor.org/packages/parathyroidSE
+[rnaseqGene]: https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
+[salmon]: https://combine-lab.github.io/salmon/
+[SE]: http://bioconductor.org/packages/SummarizedExperiment
+[tximport]: http://bioconductor.org/packages/tximport

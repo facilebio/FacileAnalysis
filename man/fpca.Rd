@@ -141,6 +141,9 @@ You should look at factominer:
 This looks like a useful tutorial to use when explaining the utility of
 PCA analysis:
 http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
+
+High-Dimensional Data Analysis course by Rafa Irizarry and Michael Love
+https://online-learning.harvard.edu/course/data-analysis-life-sciences-4-high-dimensional-data-analysis?category[]=84&sort_by=date_added&cost[]=free
 }
 
 \section{FacileDataStore (facile_frame)}{

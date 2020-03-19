@@ -133,6 +133,15 @@ status.default <- function(x, type = "message", ...) {
   "undefined"
 }
 
+#' Are two facile objects comparable?
+#'
+#' Can we compare two analyses? Datastore? etc.
+#'
+#' @export
+comparable <- function(x, y, ...) {
+  UseMethod("comparable", x)
+}
+
 #' Compares two (or more(?)) FacileAnalysisResults against each other.
 #'
 #' This was initially motivated by the desire to compare the results of two
@@ -147,10 +156,6 @@ status.default <- function(x, type = "message", ...) {
 compare <- function(x, y, ...) {
   UseMethod("compare", x)
 }
-
-# compare.FacileAnalysisResult <- function(x, y, ...) {
-#   msg <- glue("No `compare` method defined for `{class(x)[1L]}` result type.")
-# }
 
 #' Default/core function to compare FacileAnalysisResults by combining the
 #' feature-level statistics returned by the ranks induced over each analysis

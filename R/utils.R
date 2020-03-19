@@ -1,5 +1,23 @@
 # A place for random utility functions
 
+#' Extract a feature_id characger vector from a feature descriptor, or NULL
+#'
+#' All of the functions that take in a `features` parameter can call this
+#' function to do the id extraction ... I wrote this code a lot and all
+#' over the place.
+#'
+#' @noRd
+#' @param x NULL, character string, or tibble with feature_id column
+extract_feature_id <- function(x, ...) {
+  if (is.null(x)) return(NULL)
+  if (is.data.frame(x)) x <- x[["feature_id"]]
+  if (is.factor(x)) x <- as.character(x)
+  if (!is.character(x)) {
+    stop("Could not extract feature_id from feature descriptor", call. = FALSE)
+  }
+  x
+}
+
 #' @noRd
 #' @export
 is.categorical <- function(x, ...) {

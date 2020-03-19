@@ -27,21 +27,21 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
 #'
 #' @noRd
 #' @export
-viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
+viz.FacileTtestAnalysisResult <- function(x, features = NULL, type = NULL,
                                           highlight = NULL,
                                           round_digits = 3, event_source = "A",
                                           webgl = type %in% c("volcano", "ma"),
                                           ...) {
   try.tidy.class <- c("FacileFeatureSignature", "FacileFeatureRanks")
-  if (test_multi_class(feature_id, try.tidy.class)) {
-    feature_id <- tidy(feature_id)
-  }
-  if (is.data.frame(feature_id)) {
-    feature_id <- feature_id[["feature_id"]]
+  if (test_multi_class(features, try.tidy.class)) {
+    features <- tidy(features)
   }
 
+  features <- extract_feature_id(features)
+  highlight <- extract_feature_id(highlight)
+
   if (is.null(type)) {
-    if (is.null(feature_id) || length(feature_id) > 10L) {
+    if (is.null(features) || length(features) > 10L) {
       type <- "volcano"
     } else {
       type <- "feature"
@@ -51,12 +51,13 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
   type <- match.arg(tolower(type), c("feature", "volcano", "ma"))
 
   if (type == "feature") {
-    out <- .viz_dge_feature(x, feature_id, round_digits = round_digits,
+    out <- .viz_dge_feature(x, feature_id = features,
+                            round_digits = round_digits,
                             event_source = event_source, ...)
   } else {
     force(webgl)
-    out <- .viz_ttest_scatter(x, type, feature_id = feature_id,
-                             highlight = highlight,
+    out <- .viz_ttest_scatter(x, type, feature_id = features,
+                             highlight_id = highlight,
                              round_digits = round_digits,
                              event_source = event_source, webgl = webgl, ...)
   }
@@ -66,13 +67,13 @@ viz.FacileTtestAnalysisResult <- function(x, feature_id = NULL, type = NULL,
 
 #' @export
 #' @noRd
-viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
+viz.FacileAnovaAnalysisResult <- function(x, features = NULL, round_digits = 3,
                                           event_source = "A", ...) {
-  if (is.data.frame(feature_id)) {
-    feature_id <- feature_id[["feature_id"]]
+  if (is.null(features)) {
+    features <- slice(tidy(ranks(x)), 1L)
   }
-  assert_string(feature_id)
-  .viz_dge_feature(x, feature_id, round_digits = round_digits,
+  features <- extract_feature_id(features)
+  .viz_dge_feature(x, features, round_digits = round_digits,
                    event_source = event_source, ...)
 }
 
@@ -91,7 +92,8 @@ viz.FacileAnovaAnalysisResult <- function(x, feature_id, round_digits = 3,
 report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                                              ntop = 200, max_padj = 0.10,
                                              min_logFC = 1,
-                                             features = NULL, round_digits = 3,
+                                             features = NULL, highlight = NULL,
+                                             round_digits = 3,
                                              event_source = "A", webgl = TRUE,
                                              caption = NULL, ...) {
   type <- match.arg(type)
@@ -101,11 +103,14 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     min_logFC <- treat_lfc
   }
 
+  features <- extract_feature_id(features)
+  highlight <- extract_feature_id(highlight)
+
   fn <- if (type == "dge") .viz.dge_ttest else .viz.dge_features
   viz. <- fn(x, ntop = ntop, max_padj = max_padj, min_logFC = min_logFC,
-             features = features, round_digits = round_digits,
-             event_source = event_source, treat_lfc = treat_lfc,
-             webgl = webgl, ...)
+             features = features, highlight = highlight,
+             round_digits = round_digits, event_source = event_source,
+             treat_lfc = treat_lfc, webgl = webgl, ...)
 
   sdat <- viz.[["datatable"]][["data"]]
   mdef <- model(x)
@@ -141,19 +146,24 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
 #' Visualize the "global" scatter plot downstream of a DGE analysis, ie. the
 #' volcano or MA plot.
-.viz_ttest_scatter <- function(x, type = c("volcano", "ma"), feature_id = NULL,
-                               ntop = 200,
+#'
+#' @noRd
+#' @param feature_id we assume the parent exported functions already handled
+#'   a features data.frame and passed in a character feature_id
+.viz_ttest_scatter <- function(x, type = c("volcano", "ma"),
+                               feature_id = NULL, ntop = 200,
+                               highlight_id = NULL,
                                round_digits = 3, event_source = "A",
                                width = NULL, height = NULL,
                                webgl = TRUE, dat = NULL,
                                color_aes = NULL,
-                               hover = c("logFC", "pval", "padj", "symbol"),
-                               highlight = NULL, ...) {
+                               hover = c("logFC", "pval", "padj", "symbol")
+                               , ...) {
   type <- match.arg(type)
   if (is.null(dat)) {
     dat <- .data_ttest_scatter(x, feature_id = feature_id, ntop = ntop,
-                               color_aes = NULL,
-                               highlight = highlight, ...)
+                               highlight_id = highlight_id, color_aes = NULL,
+                               ...)
     color_aes <- attr(dat, "color_aes")
   }
   assert_subset(
@@ -187,40 +197,33 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 #' MA plots.
 #'
 #' @noRd
+#' @param feature_id,highlight we assume the parent exported functions already
+#'   handled a features data.frame and passed in a character feature_id
 .data_ttest_scatter <- function(x, feature_id = NULL, ntop = 200,
-                                  color_aes = NULL, highlight = NULL,
-                                  ...) {
+                                highlight_id = NULL, color_aes = NULL, ...) {
   assert_class(x, "FacileTtestAnalysisResult")
   dat.all <- tidy(ranks(x))
   take.cols <- c("feature_id", "symbol", "name", "AveExpr",
                  "logFC", "pval", "padj", "t")
   dat <- dat.all[, intersect(take.cols, colnames(dat.all))]
 
-  topn.fids <- c(
-    head(dat.all[["feature_id"]], ntop / 2),
-    tail(dat.all[["feature_id"]], ntop / 2))
+  if (is.null(feature_id)) {
+    feature_id <- c(
+      head(dat.all[["feature_id"]], ntop / 2),
+      tail(dat.all[["feature_id"]], ntop / 2))
+  } else {
+    assert_character(feature_id, min.len = 1)
+  }
 
-  try.tidy.class <- c("FacileFeatureSignature", "FacileFeatureRanks")
-  if (test_multi_class(highlight, try.tidy.class)) {
-    highlight <- tidy(highlight)
-  }
-  if (is.data.frame(highlight)) {
-    highlight <- highlight[["feature_id"]]
-  }
-  if (is.factor(highlight)) highlight <- as.character(highlight)
-  if (!is.character(highlight)) highlight <- NULL
+  highlight_id <- extract_feature_id(highlight_id)
 
-  if (is.factor(feature_id)) feature_id <- as.character(feature_id)
-  if (!is.character(feature_id)) {
-    feature_id <- topn.fids
-  }
-  fids <- unique(c(feature_id, highlight))
+  fids <- unique(c(feature_id, highlight_id))
 
   dat <- filter(dat, feature_id %in% fids)
   dat <- mutate(dat, .key = seq(nrow(dat)))
 
-  if (is.character(highlight)) {
-    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
+  if (is.character(highlight_id)) {
+    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight_id,
                                   "highlight", "background")
     color_aes <- "highlight."
   }
@@ -242,10 +245,8 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                              batch_correct = TRUE, prior.count = 0.1,
                              legendside = "bottom", width = NULL,
                              height = NULL, ...) {
-  if (is.data.frame(feature_id)) {
-    feature_id <- feature_id[["feature_id"]]
-  }
-  fid <- assert_character(feature_id, min.len = 1) # , max.len = 1)
+  fid <- extract_feature_id(feature_id)
+  stopifnot(length(fid) > 0L)
 
   mod <- model(x)
   assay_name <- param(x, "assay_name")
@@ -307,10 +308,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   fplot
 }
 
-#' Extracts expresson data for a feature across the samples use for the test.
+#' Extracts expression data for a feature across the samples use for the test.
 .data_dge_feature <- function(x, feature_id, batch_correct = TRUE,
                               prior.count = 0.1, ...) {
-  # fid <- assert_string(feature_id)
   fid <- assert_character(feature_id, min.len = 1)
 
   mod <- model(x)
@@ -339,7 +339,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     xfer.cols <- c("F", "pval", "padj")
   }
 
-  feature <- filter(features(x), feature_id == fid)
+  feature <- filter(features(x), feature_id %in% fid)
   if (nrow(feature) == 0) {
     feature <- tibble()
   }
@@ -361,7 +361,6 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
 
 #' @noRd
-#' @export
 #' @importFrom DT datatable formatRound
 .viz.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                                            ntop = 200, max_padj = 0.10,
@@ -377,6 +376,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   }
   if (type == "features") {
     stopifnot(!is.null(features))
+    features <- extract_feature_id(features)
     .viz.dge_features(x, features = features, ...)
   }
 
@@ -474,7 +474,6 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     config(displaylogo = FALSE)
 
   if (webgl) p <- toWebGL(p)
-
 
   dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
   dtable <- sdat %>%

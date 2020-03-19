@@ -17,6 +17,7 @@
   max_padj = 0.1,
   min_logFC = 1,
   features = NULL,
+  highlight = NULL,
   round_digits = 3,
   event_source = "A",
   webgl = TRUE,

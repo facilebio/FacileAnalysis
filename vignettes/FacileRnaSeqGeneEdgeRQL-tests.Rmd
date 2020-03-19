@@ -1,0 +1,279 @@
+---
+title: "FacileAnalysis: genes to pathways using the edgeR quasi-likelihood pipeline"
+author: "Steve Lianoglou"
+date: "March 4, 2020"
+output:
+  rmarkdown::html_document:
+    css: "custom.css"
+    highlight: pygments
+    toc: true
+    toc_float: true
+    fig_width: 6
+    df_print: paged
+bibliography: library.bib
+vignette: >
+  %\VignetteIndexEntry{FacileAnalysis: genes to pathways using the edgeR quasi-likelihood pipeline}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  # code or die
+  echo = TRUE,
+  # minimize verbosity
+  warning = FALSE, message = FALSE,
+  # dpi = 150, # for hires images
+  comment = "#>")
+set.seed(0xFEED)
+options(digits = 3)
+```
+
+## Overview
+
+This vignette provides 1:1 comparisons of the results generated using this
+toolkit vs the standard edgeR quasi likelihood maneuvers to show that they
+are equivalent.
+
+It's only meant to show equivalence of results, not as a tutorial of the
+FacileAnalysis package: [reference the sister vignette][facileqlf] for that.
+
+[facileqlf]: FacileRnaSeqGeneEdgeRQL.Rmd
+
+```{r init, warning=FALSE, message=FALSE}
+library(dplyr)
+library(FacileData)
+library(FacileBiocData)
+library(FacileAnalysis)
+library(edgeR)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+## Assemble the DGEList
+
+```{r}
+source(system.file("scripts", "edgeRQLF-workflow.R", package = "FacileAnalysis"))
+y <- assemble_edgeRQLF_DGEList()
+y <- calcNormFactors(y)
+
+# Do gene filtering
+
+```
+
+
+## Reduced Dim
+
+```{r}
+pch <- c(0,1,2,15,16,17)
+colors <- rep(c("darkgreen", "red", "blue"), 2)
+plotMDS(y, col = colors[y$samples$group], pch=pch[y$samples$group])
+legend("topleft", legend = levels(y$samples$group), pch = pch, 
+       col = colors, ncol = 2)
+```
+
+Curently, the only dimmensionality reduction we support is PCA, so we'll plot
+that with a slightly different aesthetic mapping scheme.
+
+```{r}
+pca <- fpca(f, ntop = 500)
+status.color <- c(lactating = "darkgreen", pregnant = "red", virgin = "blue")
+viz(pca, color_aes = "Status", shape_aes = "CellType",
+    color_map = status.color, shape_map = colors$group, width = 600)
+```
+
+## Differential Expression Analysis
+
+```{r}
+y <- estimateDisp(y, design, robust=TRUE)
+```
+
+```{r}
+plotBCV(y)
+```
+
+
+```{r}
+fit <- glmQLFit(y, design, robust=TRUE)
+```
+
+```{r}
+B.LvsP <- makeContrasts(B.lactating-B.pregnant, levels=design)
+res <- glmQLFTest(fit, contrast=B.LvsP)
+```
+
+```{r}
+qlf.tt <- as.data.frame(topTags(res, n = Inf))
+```
+
+```{r}
+facile.res <- y %>% 
+  flm_def("group", numer = "B.lactating", denom = "B.pregnant") %>% 
+  fdge(method = "edgeR-qlf", filter = FALSE)
+facile.tt <- tidy(facile.res)
+```
+
+```{r}
+cmp <- full_join(
+  dplyr::select(qlf.tt, feature_id, symbol, logFC:FDR),
+  dplyr::select(facile.tt, feature_id, logFC:padj),
+  by = "feature_id", suffix = c(".edger", ".facile"))
+```
+
+```{r}
+ggplot(cmp, aes(x = -log10(PValue), y = -log10(pval))) +
+  geom_point() +
+  geom_abline(slope = 1, yintercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "p-value comparison between edgeR and facile::fdge('edgeR-qlf')",
+    x = "-log10(edgeR pvalue)",
+    y = "-log10(facile QLF pvalue)")
+```
+
+```{r}
+is.de <- decideTestsDGE(res)
+plotMD(res, status=is.de, values=c(1,-1), col=c("red","blue"),
+       legend="topright")
+```
+
+The MA plots in facile are interactive, so we don't want to overload the
+web-browser. Here we'll chose to show a sample of both significant and
+"background" genes.
+
+```{r}
+bg.genes <- filter(facile.tt, padj > 0.1) %>% sample_n(200)
+fg.genes <- filter(facile.tt, padj < 0.1) %>% sample_n(1000)
+viz(facile.res, type = "MA", features = bg.genes, highlight = fg.genes)
+```
+
+```{r}
+viz(facile.res, type = "volcano", features = bg.genes, 
+    highlight = head(fg.genes, 100))
+```
+
+### Differential expression above a fold-change threshold
+
+```{r}
+tr <- glmTreat(fit, contrast=B.LvsP, lfc=log2(1.5))
+tr.tt <- as.data.frame(topTags(tr, n = Inf))
+```
+
+We'll re-use the model from the original analsis and tweak the fdge parameters.
+
+```{r}
+facile.thresh <- facile.res %>% 
+  model() %>% 
+  fdge(method = "edgeR-qlf", treat_lfc = log2(1.5), filter = FALSE)
+facile.tt.thresh <- tidy(facile.thresh)
+```
+
+```{r}
+cmp.thresh <- full_join(
+  dplyr::select(tr.tt, feature_id, symbol, logFC:FDR),
+  dplyr::select(facile.tt.thresh, feature_id, logFC:padj),
+  by = "feature_id", suffix = c(".edger", ".facile"))
+```
+
+```{r}
+ggplot(cmp.thresh, aes(x = -log10(PValue), y = -log10(pval))) +
+  geom_point() +
+  geom_abline(slope = 1, yintercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "p-value comparison against threshold",
+    x = "-log10(edgeR pvalue)",
+    y = "-log10(facile QLF pvalue)")
+```
+
+:::note
+The workflow goes into a heatmap section, but we will save that for later.
+There are more interesting differential expression examples in the workflow
+that we will continue here.
+:::
+
+### Analysis of Deviance
+
+### Complicated Contrasts
+
+Suppose we want to compare the three groups in the luminal population, i.e., virgin, pregnant and lactating. An appropriate contrast matrix can be created as shown below, to make pairwise comparisons between all three groups:
+
+```{r edgeR-aova}
+con <- makeContrasts(
+  L.PvsL = L.pregnant - L.lactating,
+  L.VvsL = L.virgin - L.lactating,
+  L.VvsP = L.virgin - L.pregnant, levels = design)
+
+anova.res <- glmQLFTest(fit, contrast = con) %>% 
+  topTags(n = Inf) %>% 
+  as.data.frame()
+```
+
+
+```{r}
+
+a2 <- glmQLFTest(fit, coef = )
+```
+
+The analgous facile analysis would subset down to the `L` samples and run
+an ANOVA across the `"Status"` covariate. This won't be exactly the same since 
+the number of samples used for the Bayes-like step in the analysis isn't the
+same, but should be close.
+
+```{r}
+anova.facile <- y %>% 
+  filter_samples(CellType == "L") %>% 
+  flm_def("Status") %>% 
+  fdge(method = "edgeR-qlf", filter = FALSE)
+```
+
+```{r}
+cmp.anova <- anova.res %>% 
+  full_join(select(tidy(anova.facile), feature_id, F, pval, padj),
+            by = "feature_id", suffix = c(".edger", ".facile"))
+```
+
+```{r}
+ggplot(cmp.anova, aes(x = -log10(PValue), y = -log10(pval))) +
+  geom_point() +
+  geom_abline(slope = 1, yintercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "p-value comparison for ANOVA",
+    x = "-log10(edgeR pvalue)",
+    y = "-log10(facile QLF pvalue)")
+```
+
+## Complicated Contrasts
+
+Basically testing an interaction term
+
+```{r}
+con <- makeContrasts(
+  (L.lactating-L.pregnant)-(B.lactating-B.pregnant), 
+  levels=design)
+interaction.res <- glmQLFTest(fit, contrast=con) %>% 
+  topTags(n = Inf) %>% 
+  as.data.frame()
+```
+
+The facile way is to perform the two individual and simpler test separately
+and then compare them.
+
+We already have the `B.lactating - B.pregnant` results stored in `facile.res`.
+We'll make another one for `L.lactating - L.pregnant`, and compare them.
+
+```{r}
+facile.L <- y %>% 
+  flm_def("group", numer = "L.lactating", denom = "L.pregnant") %>% 
+  fdge(method = "edgeR-qlf", filter = FALSE)
+```
+
+```{r}
+i.facile <- compare(facile.L, facile.res)
+```
+
+## Heatmaps
+
+Facile heatmaps are not supported yet, but we can show how to use iheatmapr
+produce the same heatmap.
+
+## Gene Set 
+
