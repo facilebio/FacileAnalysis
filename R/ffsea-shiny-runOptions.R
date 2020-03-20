@@ -138,15 +138,19 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
   # of features that pass these filtering criteria, and what have you.
 
   ui <- tagList(
-    tags$h4("Enrichment Options"),
-    numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
-                 min = 0, max = 10, step = 0.5),
-    numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
-                 min = 0, max = 1, step = 0.05),
-    tags$h4("Preranked Options"),
-    selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
-                selected = rank.opts[1]),
-    checkboxInput(ns("signed"), "Signed Ranks", value = args$signed))
+    tags$div(
+      id = ns("rankoptsbox"),
+      tags$h4("Rank Encirhment Options"),
+      selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
+                  selected = rank.opts[1]),
+      checkboxInput(ns("signed"), "Signed Ranks", value = args$signed)),
+    tags$div(
+      id = ns("oraoptsbox"),
+      tags$h4("Over Representation Options"),
+      numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
+                   min = 0, max = 10, step = 0.5),
+      numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
+                   min = 0, max = 1, step = 0.05)))
 
   list(args = args, ui = ui)
 }

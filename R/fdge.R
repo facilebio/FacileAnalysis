@@ -620,13 +620,31 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 #'
 #' @noRd
 #' @importFrom limma voom
-.voom_dots <- function(counts, design = NULL, lib.size = NULL,
-                       normalize.method = "none",  block = NULL,
-                       correlation = NULL, weights = NULL, span = 0.5,
-                       plot = FALSE, save.plot = TRUE, ...) {
-  voom(counts, design, lib.size = lib.size, normalize.method = normalize.method,
-       block = block, correlation = correlation, weights = weights, span = span,
-       plot = plot, save.plot = save.plot)
+.voom <- function(counts, design = NULL, ...) {
+  args <- list(...)
+  vm.args <- formals(limma::voom)
+  take.args <- intersect(names(vm.args), names(args))
+
+  call.args <- list(counts = counts, design = design)
+  if (length(take.args)) call.args <- c(call.args, args[take.args])
+
+  do.call(limma::voom, call.args)
+}
+
+#' This is necessary because limma::voomWithQualityWeights calls voom with
+#' voom(...), but it doesn't accept ...
+#' @noRd
+.voomWithQualityWeights <- function(counts, design = NULL, ...) {
+  args <- list(...)
+  vm.args <- formals(limma::voom)
+  vmw.args <- formals(limma::voomWithQualityWeights)
+  all.formals <- c(names(vm.args), names(vmw.args))
+  take.args <- intersect(names(args), names(all.formals))
+
+  call.args <- list(counts = counts, design = design)
+  if (length(take.args)) call.args <- c(call.args, args[take.args])
+
+  do.call(limma::voomWithQualityWeights, call.args)
 }
 
 #' A table of assay_type,dge_method combination parameters

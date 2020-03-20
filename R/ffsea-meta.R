@@ -9,9 +9,10 @@
 .ffsea_methods <- function(type = NULL) {
   opts <- tibble::tribble(
     ~type,        ~method,
-    "preranked",  "cameraPR",
-    "preranked",  "fgsea",
-    "ora",        "ora")
+    "ranks",  "cameraPR",
+    "ranks",  "fgsea",
+    "ora",    "ora")
+  opts[["type"]] <- factor(opts[["type"]], c("ranks", "ora"))
   if (!is.null(type)) {
     type. <- assert_choice(type, opts[["type"]])
     opts <- filter(opts, type == type.)
@@ -49,11 +50,12 @@ ffsea_methods.FacileAnalysisResult <- function(x, ...) {
 
 #' Returns the types of GSEA methods available over a FacileAnalysisResult
 #'
-#' Methods are either based on "preranked" or "ora", ie. a rank-based
-#' method takes a vector of ordered/ranked features, and an overrepresentation
-#' analysis method takes the top N features from a list of features.
+#' Methods are either based on "ranks" or "ora" (over representation), ie
+#' a rank-based method takes a vector of ordered/ranked features, and an
+#' overrepresentation analysis method takes the top N features from a list of
+#' features.
 #'
-#' Examples of "preranked" based GSEA methods include `cameraPR` and `fgsea`,
+#' Examples of "ranks" based GSEA methods include `cameraPR` and `fgsea`,
 #' while "ora" methods include `goseq` and hypergeometic test.
 #'
 #' @noRd
@@ -72,7 +74,7 @@ ffsea_method_types.default <- function(x, ...) {
 #' @noRd
 #' @export
 ffsea_method_types.FacileTtestAnalysisResult <- function(x, ...) {
-  c("preranked", "ora")
+  c("ranks", "ora")
 }
 
 #' @noRd
@@ -84,7 +86,7 @@ ffsea_method_types.FacileAnovaAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 ffsea_method_types.FacilePcaAnalysisResult <- function(x, ...) {
-  c("preranked")
+  c("ranks")
 }
 
 #' Returns default arguments used to run ffsea over a FacileAnalysisResult

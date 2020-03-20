@@ -116,10 +116,19 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   observeEvent(available_methods(), {
     methods <- req(available_methods())
     choices <- split(methods[["method"]], methods[["type"]])
+    # Sub groups of length 1 break out of the grouping structure, one way
+    # to fix that if they exist is outlined here:
+    # https://github.com/rstudio/shiny/issues/1938#issuecomment-363942532
+    choices <- lapply(choices, function(xc) {
+      if (length(xc) == 1L) list(xc) else xc
+    })
+    # only pre-select first rank-based method, if not ranks based method is
+    # applicable (unlikely), this should will evaluate to NULL anyway
+    selected <- choices[["ranks"]][1L]
 
-    selected <- unname(sapply(choices, "[", 1L))
-    # disable encirhmentest testing by default
-    selected <- unname(sapply(choices[names(choices) != "enrichment"], "[", 1L))
+    # rename 'ora' group to "Over Represented"
+    ora.idx <- which(names(choices) == "ora")
+    if (length(ora.idx)) names(choices)[ora.idx] <- "over representation"
     opts <- NULL
     updatePickerInput(session, "ffsea_methods", selected = selected,
                       choices = choices, choicesOpt = opts)

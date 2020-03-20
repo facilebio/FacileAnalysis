@@ -172,7 +172,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
 
   xx <- x
 
-  if ("preranked" %in% types) {
+  if ("ranks" %in% types) {
     assert_choice(rank_by, colnames(x))
     assert_numeric(x[[rank_by]])
     if (missing(rank_order)) {
@@ -207,7 +207,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
     }
   }
 
-  if ("preranked" %in% types) {
+  if ("ranks" %in% types) {
     input <- xx[[rank_by]]
   } else {
     input <- as.integer(xx[[select_by]])

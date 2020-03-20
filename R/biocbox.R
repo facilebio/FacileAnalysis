@@ -148,9 +148,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     out <- suppressWarnings(edgeR::estimateDisp(bb, des, robust = TRUE))
   } else if (method == "voom") {
     if (with_sample_weights) {
-      out <- limma::voomWithQualityWeights(bb, des, ...)
+      out <- .voomWithQualityWeights(bb, des, ...)
     } else {
-      out <- .voom_dots(bb, des, ...)
+      out <- .voom(bb, des, ...)
     }
   } else if (method %in% c("limma-trend", "limma")) {
     if (is(bb, "DGEList")) {
