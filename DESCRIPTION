@@ -23,7 +23,7 @@ Imports:
     edgeR,
     FacileData (>= 0.11.0),
     FacileShine (>= 0.2.0),
-    FacileViz,
+    FacileViz (>= 0.1.10),
     glue,
     htmltools,
     irlba,

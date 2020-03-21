@@ -18,12 +18,6 @@ extract_feature_id <- function(x, ...) {
   x
 }
 
-#' @noRd
-#' @export
-is.categorical <- function(x, ...) {
-  is(x, "character") || is(x, "factor")
-}
-
 #' A wrapper to bscols that suppresswarnings.
 #'
 #' I am using bscols to create multiple rows, and in this case it always

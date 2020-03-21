@@ -160,6 +160,9 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   }
 
   # This should do the batch effect removal
+  if (unselected(batch)) batch <- NULL
+  if (unselected(main)) main <- NULL
+
   dat <- biocbox(x, class = "list", assay_name = assay_name,
                  features = features, sample_covariates = col_covariates,
                  feature_covariates = row_covariates,
@@ -208,7 +211,13 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
 
   if (min(dim(x)) < 2L) stop("Can't run PCA on a one-dimensional matrix")
   # When using irlba, n has to be strictly less than min(dim(xx))
-  assert_int(dims, lower = 1L, upper = min(dim(x)) - 1L)
+  max.dim <- min(dim(x)) - 1L
+  if (dims > max.dim) {
+    warning("Number of dimensions requested is more than can be calculated, ",
+            "setting value to: ", max.dim)
+    dims <- max.dim
+  }
+  assert_int(dims, lower = 1L, upper = max.dim)
   assert_flag(use_irlba)
 
   if (is.null(rownames(x))) rownames(x) <- as.character(seq(nrow(x)))
@@ -227,8 +236,11 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     assert_true(all(colnames(x) == rownames(col_covariates)))
   }
 
+  if (unselected(batch)) batch <- NULL
+  if (unselected(main)) main <- NULL
+
   if (!is.null(batch)) {
-    x <- remove_batch_effect(x, col_covariates, batch = batch, ...)
+    x <- remove_batch_effect(x, col_covariates, batch = batch, main = main, ...)
   }
 
   if (!is.null(features)) {

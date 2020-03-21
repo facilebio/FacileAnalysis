@@ -6,10 +6,10 @@
 #' @export
 #' @examples
 #' if (interactive()) {
-#' efds <- exampleFacileDataSet()
+#' efds <- FacileData::exampleFacileDataSet()
 #' # run tumor vs normal comparisons vs each, then run compare9) on the results
 #' pca.crc <- efds %>%
-#'   filter_samples(indication == "CRC") %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpcaGadget()
 #' report(pca.crc)
 #' shine(pca.crc)
@@ -69,23 +69,63 @@ fpcaAnalysisUI <- function(id, ..., debug = FALSE) {
 #'   callModule
 #'   eventReactive
 #'   req
-fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE) {
+#'   updateNumericInput
+#'   withProgress
+#' @importFrom shinyjs toggleState
+fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
+                    .reactive = TRUE) {
+
   # Provide user with inputs to control:
   # 1. Assay to run PCA on
   # 2. Number of PCs to calculate
   # 3. Number of top varying features to keep
   assert_class(rfds, "ReactiveFacileDataStore")
 
+  isolate. <- if (.reactive) base::identity else shiny::isolate
+
+  active.samples <- reactive({
+    req(initialized(rfds))
+    # isolate.(active_samples(rfds))
+    ftrace("Updating active samples")
+    active_samples(rfds)
+  })
+
+  # the "batch" covariate is what I'm calling the extra/batch-level
+  # covariates. the entry selected in the testcov is removed from the
+  # available elemetns to select from here
+  batchcov <- callModule(categoricalSampleCovariateSelect, "batchcov",
+                         rfds, include1 = FALSE, ..., .with_none = FALSE,
+                         .exclude = NULL, reactive = .reactive,
+                         ignoreNULL = FALSE)
+
+  batchmain <- callModule(categoricalSampleCovariateSelect, "batchmain",
+                          rfds, include1 = FALSE, ..., .with_none = TRUE,
+                          .exclude = batchcov$covariate, reactive = .reactive)
+
+  # Set the maximum number of PCs such that they do not exceed number of samples
+  # Running PCA is also disabled if there are less than three samples.
+  observeEvent(active.samples(), {
+    asamples. <- req(active.samples())
+    nsamples <- nrow(asamples.)
+    value <- if (input$pcs > nsamples) nsamples else NULL
+    updateNumericInput(session, "pcs", value = value, max = nsamples)
+    toggleState("run", condition = nsamples >= 3L)
+  })
+
   assay <- callModule(assaySelect, "assay", rfds)
 
   result <- eventReactive(input$run, {
     req(initialized(rfds))
+    samples. <- active.samples()
     assay_name <- assay$assay_info()$assay
     pcs <- input$pcs
     ntop <- input$ntop
-    message("... calculating pca")
-    fpca(active_samples(rfds), dims = pcs, ntop = ntop, assay_name = assay_name,
-         custom_key = user(rfds))
+    batch. <- name(batchcov)
+    main. <- name(batchmain)
+    withProgress({
+      fpca(samples., dims = pcs, ntop = ntop, assay_name = assay_name,
+           batch = batch., main = main., custom_key = user(rfds))
+    }, message = "Performing PCA")
   })
 
   vals <- list(
@@ -108,7 +148,8 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE) {
 #'   NS
 #'   numericInput
 #'   tagList
-fpcaRunUI <- function(id, ..., debug = FALSE) {
+#' @importFrom shinyWidgets dropdownButton
+fpcaRunUI <- function(id, width_opts = "200px", ..., debug = FALSE) {
   ns <- NS(id)
   # 1. Assay to run PCA on
   # 2. Number of PCs to calculate
@@ -116,12 +157,34 @@ fpcaRunUI <- function(id, ..., debug = FALSE) {
   out <- tagList(
     fluidRow(
       column(3, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
-      column(3, numericInput(ns("pcs"), label = "Number of PCs",
-                             value = 10, min = 3, max = 50, step = 1)),
-      column(2, numericInput(ns("ntop"), label = "Number of genes",
-                             value = 500, min = 50, max = 2000)),
-      column(1, actionButton(ns("run"), "Run")))
-  )
+      column(
+        2,
+        categoricalSampleCovariateSelectUI(
+          ns("batchcov"),
+          label = "Batch Correct",
+          multiple = TRUE)),
+      column(
+        2,
+        categoricalSampleCovariateSelectUI(
+          ns("batchmain"),
+          label = "Batch Preserve",
+          multiple = FALSE)),
+      column(
+        1,
+        tags$div(
+          style = "padding-top: 1.7em",
+          dropdownButton(
+            inputId = ns("opts"),
+            icon = icon("sliders"),
+            status = "primary", circle = FALSE,
+            width = width_opts,
+
+            numericInput(ns("pcs"), label = "Number of PCs",
+                         value = 10, min = 2, max = 30, step = 1),
+            numericInput(ns("ntop"), label = "Number of genes",
+                         value = 500, min = 50, max = 5000, step = 500)))),
+      column(1, actionButton(ns("run"), "Run"), style = "margin-top: 1.7em")
+    ))
 }
 
 # Visualize PCA ================================================================
@@ -145,6 +208,9 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
 
   state <- reactiveValues(
     # store brushed samples from scatterplot
+    color_aes = NULL,
+    shape_aes = NULL,
+    hover = NULL,
     scatter_select = tibble(assay_name = character(), feature_id = character()))
 
   pca <- reactive({
@@ -163,10 +229,19 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     pca. <- req(pca())
     pcs <- req(pcs_calculated())
     pcs <- setNames(seq(pcs), pcs)
+    pcs <- setNames(seq(pcs),
+                    sprintf("PC%d (%0.1f%% variance)", as.integer(pcs),
+                            pca.$percent_var * 100))
 
     updateSelectInput(session, "xaxis", choices = pcs, selected = pcs[1])
     updateSelectInput(session, "yaxis", choices = pcs, selected = pcs[2])
-    updateSelectInput(session, "zaxis", choices = pcs, selected = "")
+    updateSelectInput(session, "zaxis", choices = c("---", pcs), selected = "")
+
+    pc.choices <- setNames(
+      names(pca.$percent_var),
+      sprintf("%s (%0.1f%%)", names(pca.$percent_var), pca.$percent_var * 100))
+
+    updateSelectInput(session, "loadingsPC", choices = pcs, selected = pcs[1L])
   }, priority = 5) # upping priority so some withProgress things hide quick
 
   assay_name. <- reactive(param(req(pca()), "assay_name"))
@@ -181,6 +256,37 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
                     color = TRUE, shape = TRUE, group = FALSE, facet = FALSE,
                     hover = TRUE, ..., debug = debug)
 
+  # Color Mapping ..............................................................
+  # This will be painful. Let's enable the PCA plot to be colored by a
+  # categorical covariate, or one of the features picked from the loadings on
+  # the feature table
+
+  # Color covariate was selected from the categoricalAestheticMap module
+  observeEvent(aes$map(), {
+    aes.map <- aes$map()
+    acolor <- aes.map$color
+    ashape <- aes.map$shape
+    ahover <- aes.map$hover
+    if (!identical(state$color_aes, acolor)) state$color_aes <- acolor
+    if (!identical(state$shape_aes, ashape)) state$color_aes <- ashape
+    if (!identical(state$hover, ahover)) state$hover <- ahover
+  })
+
+  # A gene was selected from the PC loadings table
+  observeEvent(input$loadings_rows_selected, {
+    selected <- input$loadings_rows_selected
+    if (!is.null(selected)) {
+      dat <- pc.loadings()
+      feature <- paste0("feature:", dat[["feature_id"]][selected])
+      if (!identical(state$color_aes, feature)) {
+        state$color_aes <- feature
+        # TODO: update selected color selection in categoricalAestheticMap
+        # `aes` module
+      }
+    }
+  })
+
+  # Render PCA Plot ..............................................................
   pcaviz <- reactive({
     pca. <- req(pca())
     pc.calcd <- pcs_calculated()
@@ -189,8 +295,20 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     req(length(axes) >= 2)
 
     aes.map <- aes$map()
-    viz(pca., axes, color_aes = aes.map$color, shape_aes = aes.map$shape,
-        hover = aes.map$hover, width = NULL, height = NULL)
+    acolor <- state$color_aes
+    ashape <- state$shape_aes
+    ahover <- state$hover
+
+    if (identical(substr(acolor, 1L, 8L), "feature:")) {
+      feature_id <- sub("feature:", "", state$color_aes)
+      current.cols <- colnames(pca.$result)
+      pca.$result <- with_assay_data(pca.$result, features = feature_id)
+      added <- setdiff(colnames(pca.$result), current.cols)
+      acolor <- added
+    }
+
+    viz(pca., axes, color_aes = acolor, shape_aes = ashape, hover = ahover,
+        width = NULL, height = 550)
   })
 
   output$pcaplot <- renderPlotly({
@@ -203,20 +321,27 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
       tidy()
   })
 
+  pc.loadings <- reactive({
+    pc <- paste0("PC", input$loadingsPC)
+    req(feature.ranks()) %>%
+      filter(dimension == pc) %>%
+      select(symbol, feature_id, score)
+  })
+
+  # Loadings Table .............................................................
   output$loadings <- DT::renderDT({
-    dat <- req(feature.ranks()) %>%
-      select(dimension, symbol, feature_id, score) %>%
-      mutate(dimension = factor(dimension))
-    dtopts <- list(deferRender = TRUE, scrollY = 300,
+    dtopts <- list(deferRender = TRUE, scrollY = 450,
                    # scroller = TRUE,
                    pageLength = 15,
                    lengthMenu = c(15, 30, 50))
-    num.cols <- colnames(dat)[sapply(dat, is.numeric)]
 
-    dt <- datatable(dat, filter = "top",
+    pc.dat <- pc.loadings()
+    num.cols <- colnames(pc.dat)[sapply(pc.dat, is.numeric)]
+
+    dt <- datatable(pc.dat, filter = "top",
                     style = "bootstrap",
                     class = "display", width = "100%", rownames = FALSE,
-                    selection = "none",
+                    selection = "single",
                     options = dtopts)
     formatRound(dt, num.cols, 3)
   }, server = TRUE)
@@ -231,22 +356,29 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
 fpcaViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
   tagList(
-    fluidRow(
-      column(4, selectInput(ns("xaxis"), "X axis", choices = NULL)),
-      column(4, selectInput(ns("yaxis"), "Y axis", choices = NULL)),
-      column(4, selectInput(ns("zaxis"), "Z axis", choices = NULL))),
+    tags$h4(
+      tags$span("PCA Result", style = "background: #fff; padding: 0 10px 0 0"),
+      style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
     fluidRow(
       column(
-        12,
-        wellPanel(
-          categoricalAestheticMapUI(
-            ns("aes"),
-            color = TRUE, shape = TRUE, hover = TRUE,
-            group = FALSE)))),
-    fluidRow(
-      column(7, plotlyOutput(ns("pcaplot"))),
+        7,
+        fluidRow(
+          column(4, selectInput(ns("xaxis"), "X axis", choices = NULL)),
+          column(4, selectInput(ns("yaxis"), "Y axis", choices = NULL)),
+          column(4, selectInput(ns("zaxis"), "Z axis", choices = NULL))),
+        fluidRow(
+          column(
+            12,
+            wellPanel(
+              categoricalAestheticMapUI(
+                ns("aes"),
+                color = TRUE, shape = TRUE, hover = TRUE,
+                group = FALSE)))),
+        plotlyOutput(ns("pcaplot"))),
       column(
         5,
         tags$h4("Feature Loadings"),
-        withSpinner(DT::DTOutput(ns("loadings"))))))
+        tags$div(selectInput(ns("loadingsPC"), "Principal Component",
+                             choices = NULL)),
+        withSpinner(DT::DTOutput(ns("loadings"), height = "650px")))))
 }

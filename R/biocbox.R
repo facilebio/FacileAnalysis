@@ -218,6 +218,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
 # Feature abundance filtering helper functions ---------------------------------
 
+#' @noRd
 #' @param default.filter the default feature filtering option for the dge method
 #'   and assay_type we are prepping for. (TRUE/FALSE)
 .filter_features <- function(x, model, ainfo, default.filter, filter,

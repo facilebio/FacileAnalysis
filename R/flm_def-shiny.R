@@ -41,13 +41,13 @@ flmDefRun <- function(input, output, session, rfds, default_covariate = NULL,
   batchcov <- callModule(categoricalSampleCovariateSelect, "batchcov",
                          rfds, include1 = FALSE, ..., .with_none = FALSE,
                          .exclude = testcov$covariate,
-                         reactive = .reactive)
+                         reactive = .reactive, ignoreNULL = FALSE)
 
   numer <- callModule(categoricalSampleCovariateLevels, "numer",
-                      rfds, testcov, .reactive = .reactive)
+                      rfds, testcov, .reactive = .reactive, ignoreNULL = FALSE)
 
   denom <- callModule(categoricalSampleCovariateLevels, "denom",
-                      rfds, testcov, .reactive = .reactive)
+                      rfds, testcov, .reactive = .reactive, ignoreNULL = FALSE)
 
   # Make the levels available in the numer and denom covariates
   # mutually exclusive

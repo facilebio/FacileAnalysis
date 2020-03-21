@@ -12,7 +12,7 @@ shine.FacilePcaAnalysisResult <- function(x, dims = 2, user = Sys.getenv("USER")
 
 #' @noRd
 #' @export
-viz.FacilePcaAnalysisResult <- function(x, dims = 2, ...,
+viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
                                         height = 400,
                                         width = 700,
                                         xlabel = "default",
@@ -54,9 +54,15 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, ...,
     zlabel <- sprintf("%s (%.2f%%)", pc.cols[3L], pcv[pc.cols[3L]])
   }
 
+  # Want to color by something? Could be a sample covariate, or it could be
+  # a feature.
+  if (!is.null(color_aes)) {
+
+  }
   p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
                     zlabel = zlabel, event_source = event_source,
-                    webgl = webgl, height = height, width = width, ...)
+                    webgl = webgl, height = height, width = width,
+                    color_aes = color_aes, ...)
   p
 }
 
