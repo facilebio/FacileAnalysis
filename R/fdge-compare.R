@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 #' @rdname fdge
 #' @export
 #'
@@ -16,7 +19,7 @@
 #' # Comparing two T-test results ----------------------------------------------
 #' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 #'
-#' efds <- exampleFacileDataSet()
+#' efds <- FacileData::exampleFacileDataSet()
 #' dge.crc <- filter_samples(efds, indication == "CRC") %>%
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()

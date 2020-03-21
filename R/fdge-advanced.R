@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 # The code in here will provide wrapper functions that enable custom dge results
 # to be wrapped with the "facile accoutrements" such that they can be easily
 # interacted with and visualized.

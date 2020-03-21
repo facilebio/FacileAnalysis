@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 # Interactivity and Vizualization over FacileDGEResults ========================
 
 #' For some reason, default views in a dialog or pane freeze up like y0!

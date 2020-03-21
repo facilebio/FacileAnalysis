@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 #' Fully interactive differential expression analysis
 #'
 #' Assembles a shiny UI to define all of the bits required to perform a

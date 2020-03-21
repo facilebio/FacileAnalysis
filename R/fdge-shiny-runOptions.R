@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 # shiny modules to tweak the options required to run an fdge analysis
 
 # Method options ===============================================================

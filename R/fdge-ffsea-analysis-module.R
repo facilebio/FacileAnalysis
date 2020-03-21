@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 #' Gadget to run both DGE and GSEA
 #'
 #' @export

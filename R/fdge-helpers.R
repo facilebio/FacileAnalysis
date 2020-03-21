@@ -1,3 +1,6 @@
+#' @include fdge.R
+NULL
+
 #' @noRd
 is.ttest <- function(x, ...) {
   if (is(x, "ReactiveFacileAnalysisResult")) {
