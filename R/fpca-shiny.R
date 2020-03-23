@@ -268,7 +268,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     ashape <- aes.map$shape
     ahover <- aes.map$hover
     if (!identical(state$color_aes, acolor)) state$color_aes <- acolor
-    if (!identical(state$shape_aes, ashape)) state$color_aes <- ashape
+    if (!identical(state$shape_aes, ashape)) state$shape_aes <- ashape
     if (!identical(state$hover, ahover)) state$hover <- ahover
   })
 

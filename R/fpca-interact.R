@@ -54,8 +54,11 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
     zlabel <- sprintf("%s (%.2f%%)", pc.cols[3L], pcv[pc.cols[3L]])
   }
 
-  # Want to color by something? Could be a sample covariate, or it could be
-  # a feature.
+  # TODO: Handle color by feature expresion. Currently this is handled in the
+  # fpcaView shiny module, but we want to push that down here so that users
+  # using this function in an R session or for Rmd output can color by
+  # expression as well.
+  # https://github.com/facilebio/FacileAnalysis/issues/28
   if (!is.null(color_aes)) {
 
   }
