@@ -84,7 +84,7 @@ flm_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @method flm_def data.frame
 #' @importFrom stats model.matrix
 #' @importFrom limma makeContrasts nonEstimable
-#' @importFrom FacileShine unselected
+#' @importFrom FacileViz unselected
 #' @importFrom stringr str_detect
 #'
 #' @section data.frame:
@@ -305,7 +305,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
 #' @export
 #' @rdname flm_def
-#' @importFrom FacileShine unselected
+#' @importFrom FacileViz unselected
 flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
                         batch = NULL, on_missing = c("warning", "error"),
                         ...) {
@@ -331,7 +331,7 @@ flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #' an error.
 #'
 #' @export
-#' @importFrom FacileShine unselected
+#' @importFrom FacileViz unselected
 #' @rdname flm_def
 flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
                                  batch = NULL,
@@ -365,7 +365,7 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
 
 #' @export
 #' @rdname flm_def
-#' @importFrom FacileShine unselected
+#' @importFrom FacileViz unselected
 flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
                                     batch = NULL,
                                     on_missing = c("warning", "error"),
@@ -384,7 +384,8 @@ flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
 
 #' @export
 #' @rdname flm_def
-#' @importFrom FacileShine active_samples unselected
+#' @importFrom FacileShine active_samples
+#' @importFrom FacileViz unselected
 flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
                                             denom = NULL, batch = NULL,
                                             on_missing = c("warning", "error"),

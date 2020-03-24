@@ -137,7 +137,7 @@ fdgeAnalysisUI <- function(id, ..., debug = FALSE,
 #' @importFrom shinyjs toggleState
 #' @importFrom FacileShine
 #'   assaySelect
-#'   unselected
+#' @importFrom FacileViz unselected
 #' @param model A linear model definition. Can be either an "innert"
 #'   `FacileLinearModelDefinition` that is returned from a call to
 #'   [flm_def()], or the `ReactiveDGEModelDefinition` object returned
