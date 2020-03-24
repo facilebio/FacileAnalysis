@@ -217,7 +217,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   }
 
   warning("Properly running the interaction model here is still ALPHA\n  ",
-          "https://github.com/facileverse/FacileAnalysis/issues/19",
+          "https://github.com/facilebio/FacileAnalysis/issues/19",
           immediate. = TRUE)
 
   xsamples <- samples(xmod)

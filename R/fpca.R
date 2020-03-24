@@ -14,13 +14,13 @@
 #' @section Development Notes:
 #' Follow progress on implementation of `shine()` and `report()` below:
 #'
-#' 1. [Implement `report()`](https://github.com/facileverse/FacileAnalysis/issues/12)
+#' 1. [Implement `report()`](https://github.com/facilebio/FacileAnalysis/issues/12)
 #'
 #' Note that there are methods defined for other assay containers, like an
 #' `edgeR::DGEList`, `limma::EList`, and `SummarizedExperiment`. If these are
 #' called directly, their downstream use within the facile ecosystem isn't
 #' yet fully supported. Development of the
-#' [FacileBioc package](https://github.com/facileverse/FacileBioc)
+#' [FacileBioc package](https://github.com/facilebio/FacileBioc)
 #' will address this.
 #'
 #' @section Random Things to elaborate on:

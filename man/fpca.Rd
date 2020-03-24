@@ -113,14 +113,14 @@ loadings of the features along each PC from fpca result \code{x} and \code{y}.
 
 Follow progress on implementation of \code{shine()} and \code{report()} below:
 \enumerate{
-\item \href{https://github.com/facileverse/FacileAnalysis/issues/12}{Implement \code{report()}}
+\item \href{https://github.com/facilebio/FacileAnalysis/issues/12}{Implement \code{report()}}
 }
 
 Note that there are methods defined for other assay containers, like an
 \code{edgeR::DGEList}, \code{limma::EList}, and \code{SummarizedExperiment}. If these are
 called directly, their downstream use within the facile ecosystem isn't
 yet fully supported. Development of the
-\href{https://github.com/facileverse/FacileBioc}{FacileBioc package}
+\href{https://github.com/facilebio/FacileBioc}{FacileBioc package}
 will address this.
 }
 

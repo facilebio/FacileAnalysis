@@ -214,7 +214,7 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
 #'   MultiGSEAResultContainer
 #'   summaryHTMLTable.multiGSEA
 #'   updateActiveGeneSetInContrastView
-#' @importFrom shiny validate
+#' @importFrom shiny observeEvent reactiveValues validate
 #' @param rfds the reactive facile data store
 #' @param ares The `FacileFseaAnalysisResult`
 ffseaView <- function(input, output, session, rfds, aresult, ...,
@@ -302,7 +302,7 @@ ffseaViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
   tagList(
-    wellPanel(mgResultFilterUI(ns("mg_result_filter"))),
+    # wellPanel(mgResultFilterUI(ns("mg_result_filter"))),
 
     tags$div(
       style="margin-bottom: 10px; padding: 5px; background-color: white",
@@ -311,7 +311,8 @@ ffseaViewUI <- function(id, ..., debug = FALSE) {
 
     fluidRow(
       column(
-        5, style="padding: 0",
+        5, style = "padding: 0",
+        mgResultFilterUI(ns("mg_result_filter")),
         wellPanel(geneSetContrastViewUI(ns("geneset_viewer")))),
       column(
         7, mgTableBrowserUI(ns("mg_table_browser")))),
