@@ -224,11 +224,18 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   if (is.null(row_covariates)) {
     row_covariates <- data.frame(feature_id = rownames(x),
                                  stringsAsFactors = FALSE)
+    rownames(row_covariates) <- rownames(x)
   }
-  assert_data_frame(row_covariates)
-  assert_true(nrow(x) == nrow(row_covariates))
+  assert_data_frame(row_covariates, nrows = nrow(x))
   assert_character(rownames(row_covariates))
   assert_true(all(rownames(x) == rownames(row_covariates)))
+  if (is.null(row_covariates[["feature_id"]])) {
+    row_covariates[["feature_id"]] <- rownames(x)
+  }
+  if (is.factor(row_covariates[["feature_id"]])) {
+    row_covariates[["feature_id"]] <-
+      as.character(row_covariates[["feature_id"]])
+  }
 
   if (is(col_covariates, "data.frame")) {
     assert_true(ncol(x) == nrow(col_covariates))
@@ -299,7 +306,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     dims = seq(dims),
     rotation = pca$rotation,
     percent_var = percentVar,
-    row_covariates = row_covariates,
+    row_covariates = as_tibble(row_covariates),
     taken = take,
     samples = samples.,
     # Standard FacileAnalysisResult things
@@ -333,7 +340,9 @@ initialized.FacilePcaAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 features.FacilePcaAnalysisResult <- function(x, ...) {
-  out <- assert_class(x[["feature_stats"]], "data.frame")
+  # out <- assert_class(x[["feature_stats"]], "data.frame")
+  # out
+  out <- assert_class(x[["row_covariates"]], "data.frame")
   out
 }
 
@@ -553,7 +562,7 @@ print.FacilePcaAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 format.FacilePcaAnalysisResult <- function(x, ...) {
-  n.features <- param(x, "ntop")
+  n.features <- nrow(features(x))
   pcv <- x$percent_var * 100
   pcvs <- paste(names(pcv), sprintf("%.2f%%", pcv), sep = ": ")
   pcvu <- paste(head(pcvs, 5), collapse = "\n  ")
