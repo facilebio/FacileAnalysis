@@ -185,7 +185,7 @@ side-by-side volcano and datatable for differential expression results.
 efds <- FacileData::exampleFacileDataSet()
 samples <- efds \%>\%
   FacileData::filter_samples(indication == "BLCA") \%>\%
-  mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
+  dplyr::mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
 mdef <- flm_def(samples, covariate = "sample_type",
                 numer = "tumor", denom = "normal",
                 batch = "sex")

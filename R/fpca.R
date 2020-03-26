@@ -78,7 +78,7 @@
 #' }
 #'
 #' # Same PCA as above, but regress "sex" out of samples first.
-#' pca.crcs <- samples(pca.crc) %>%
+#' pca.crcs <- FacileData::samples(pca.crc) %>%
 #'   fpca(batch = "sex")
 #' if (interactive()) {
 #'   viz(pca.crcs, color_aes = "sex")
@@ -99,8 +99,8 @@
 #'
 #' # This works on "normal" DGELists, too. -----------------------------------
 #' pca.dgelist <- efds %>%
-#'   filter_samples(indication == "CRC") %>%
-#'   as.DGEList() %>%
+#'   FacileData::filter_samples(indication == "CRC") %>%
+#'   FacileData::as.DGEList() %>%
 #'   fpca()
 #' if (interactive()) {
 #'   report(pca.dgelist, color_aes = "sample_type")
