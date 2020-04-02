@@ -91,7 +91,6 @@ ffseaAnalysisUI <- function(id, ...) {
 #' @export
 #' @importFrom shiny eventReactive withProgress
 #' @importFrom shinyWidgets updatePickerInput
-#'
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
 #' @param gdb A `reactive(GeneSetDb)` object
 ffseaRun <- function(input, output, session, rfds, aresult, gdb, ...,

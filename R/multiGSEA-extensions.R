@@ -19,6 +19,13 @@ GeneSetDb.FacileFeatureSignature <- function(x, ...) {
   multiGSEA::GeneSetDb(x)
 }
 
+#' @noRd
+#' @export
+#' @importFrom FacileShine initialized
+initialized.ReactiveGeneSetDb <- function(x, ...) {
+  is(x$gdb(), "GeneSetDb") && nrow(x$geneSets()) > 0
+}
+
 #' Returns the filtered unreactive GeneSetDb from the reactiveGeneSetDb module.
 #'
 #' The user can choose to include subsets of collections, as well as

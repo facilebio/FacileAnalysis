@@ -4,6 +4,7 @@
 #'
 #' @noRd
 #' @export
+#' @importFrom multiGSEA.shiny reactiveGeneSetDb
 #' @importFrom shiny outputOptions renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
 #' @param gdb A `reactive(GeneSetDb)` object
@@ -78,6 +79,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
 #'
 #' @noRd
 #' @export
+#' @importFrom multiGSEA.shiny reactiveGeneSetDbFilterUI
 #' @importFrom shiny NS tags uiOutput
 #' @importFrom shinyWidgets dropdown dropdownButton
 #' @return a list with `$ui` for the tagList of interface components and
@@ -85,7 +87,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
 #'   of the ffsea.* function implementation.
 ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
   ns <- NS(id)
-  # dropdownButton(
+
   dropdown(
     inputId = ns("opts"),
     icon = icon("sliders"),
@@ -143,13 +145,19 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
   ui <- tagList(
     tags$div(
       id = ns("rankoptsbox"),
-      tags$h4("Rank Encirhment Options"),
+      tags$h4(
+        tags$span("Rank Encirhment Options",
+                  style = "background: #fff; padding: 0 10px 0 0"),
+        style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
       selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
                   selected = rank.opts[1]),
       checkboxInput(ns("signed"), "Signed Ranks", value = args$signed)),
     tags$div(
       id = ns("oraoptsbox"),
-      tags$h4("Over Representation Options"),
+      tags$h4(
+        tags$span("Over Representation Options",
+                  style = "background: #fff; padding: 0 10px 0 0"),
+        style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
       numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
                    min = 0, max = 10, step = 0.5),
       numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
