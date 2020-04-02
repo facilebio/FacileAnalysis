@@ -7,6 +7,8 @@
 #' @rdname interactive-ffsea
 #'
 #' @export
+#' @importFrom shiny reactive
+#'
 #' @param x A FacileAnalysisResult that has an implemented `ffsea.*` method
 #' @param gdb A `GeneSetDb` to use for the FSEA.
 #' @examples
@@ -17,17 +19,15 @@
 #'           batch = "sex") %>%
 #'   fdge(method = "voom")
 #' if (interactive()) {
-#'   ffseaGadget(dge.crc, gdb)
+#'   fres <- ffseaGadget(dge.crc, gdb)
 #' }
-ffseaGadget <- function(x, gdb = NULL,
-                        title = "Feature Set Enrichment Analysis",
+ffseaGadget <- function(x, gdb, title = "Feature Set Enrichment Analysis",
                         height = 800, width = 1000, viewer = "browser", ...,
                         debug = FALSE) {
   assert_class(x, "FacileAnalysisResult")
-  if (!is.null(gdb)) {
-    assert_class(gdb, "GeneSetDb")
-  }
-  frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, aresult = x, gdb = gdb,
+  assert_class(gdb, "GeneSetDb")
+  rgdb <- reactive(gdb)
+  frunGadget(ffseaAnalysis, ffseaAnalysisUI, x, aresult = x, gdb = rgdb,
              title = title, height = height, width = width, viewer = viewer,
              ..., retval = "faro", debug = debug)
 }
@@ -37,8 +37,8 @@ ffseaGadget <- function(x, gdb = NULL,
 #'
 #' @noRd
 #' @export
-ffseaAnalysis <- function(input, output, session, rfds, aresult, gdb = NULL,
-                          ..., debug = FALSE) {
+ffseaAnalysis <- function(input, output, session, rfds, aresult, gdb, ...,
+                          debug = FALSE) {
   res <- callModule(ffseaRun, "run", rfds, aresult, gdb, ..., debug = debug)
   view <- callModule(ffseaView, "view", rfds, res, ..., debug = FALSE)
 
@@ -93,8 +93,8 @@ ffseaAnalysisUI <- function(id, ...) {
 #' @importFrom shinyWidgets updatePickerInput
 #'
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
-#' @param gdb A GeneSetDb object to use for testing.
-ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
+#' @param gdb A `reactive(GeneSetDb)` object
+ffseaRun <- function(input, output, session, rfds, aresult, gdb, ...,
                      debug = FALSE) {
   ares <- reactive({
     req(initialized(aresult))
@@ -102,7 +102,11 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   })
 
   # When the AnalysisResult changes, update the runopts UI based on the specific
-  # subclass of the AnalysisResult we have at play
+  # subclass of the AnalysisResult we have at play.
+  #
+  # Because the GeneSetDb knobs to subset collection and specify geneset size
+  # are buried in the run options menu, we pass this down to the runOpts
+  # module.
   runopts <- callModule(ffseaRunOpts, "runopts", rfds, aresult = aresult,
                         gdb = gdb, ..., debug = debug)
 
@@ -152,11 +156,25 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
 
   fsea_res <- eventReactive(input$runbtn, {
     req(runnable())
-    args. <- runopts$args()
-    gdb. <- runopts$gdb$gdb()
-    args <- c(
-      list(x = ares(), gdb = gdb., methods = input$ffsea_methods),
-      args.)
+
+    gdb.args <- list(
+      x = ares(),
+      gdb = GeneSetDb(runopts$gdb),
+      # min.gs.size = runopts$gdb$min.gs.size(),
+      # max.gs.size = runopts$gdb$max.gs.size(),
+      #
+      # Note that we don't set min/max sizes anymore because they were
+      # pre-specified in the universe, and depending on what features exist
+      # in the object under test, further filtering might happen which may
+      # be surprising
+      min.gs.size = 2,
+      max.gs.size = Inf)
+
+    methods <- list(methods = input$ffsea_methods)
+    method.args <- runopts$args()
+
+    args <- c(gdb.args, methods, method.args)
+
     withProgress({
       do.call(ffsea, args)
     }, message = "Running Enrichment Analysis")

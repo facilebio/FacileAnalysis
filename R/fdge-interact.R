@@ -314,6 +314,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     if (!test_string(legendtitle)) {
       legendtitle <- paste(param(model(x), "covariate"), collapse = ",")
     }
+
     fplot$plot <- layout(
       fplot$plot,
       legend = list(
@@ -323,11 +324,19 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
           font = list(size = 16))))
   }
 
+  if (legendside == "bottom") {
+    legend.y <- if (showticklabels) -0.1 else 0.05
+  } else {
+    legend.y <- 0.66
+  }
+
   fplot$plot <- layout(
     fplot$plot,
     xaxis = list(showticklabels = showticklabels),
-    legend = list(font = list(size = 16))
-  )
+    legend = list(
+      font = list(size = 16),
+      y = legend.y))
+
   fplot
 }
 

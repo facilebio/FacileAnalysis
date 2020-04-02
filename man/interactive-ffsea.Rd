@@ -7,7 +7,7 @@
 \usage{
 ffseaGadget(
   x,
-  gdb = NULL,
+  gdb,
   title = "Feature Set Enrichment Analysis",
   height = 800,
   width = 1000,
@@ -16,12 +16,12 @@ ffseaGadget(
   debug = FALSE
 )
 
-ffseaRun(input, output, session, rfds, aresult, gdb = NULL, ..., debug = FALSE)
+ffseaRun(input, output, session, rfds, aresult, gdb, ..., debug = FALSE)
 }
 \arguments{
 \item{x}{A FacileAnalysisResult that has an implemented \verb{ffsea.*} method}
 
-\item{gdb}{A GeneSetDb object to use for testing.}
+\item{gdb}{A \code{reactive(GeneSetDb)} object}
 
 \item{aresult}{A \code{FacileAnalysisResult} that has a \verb{ffsea.*} method defined.}
 }
@@ -50,6 +50,6 @@ dge.crc <- FacileData::exampleFacileDataSet() \%>\%
           batch = "sex") \%>\%
   fdge(method = "voom")
 if (interactive()) {
-  ffseaGadget(dge.crc, gdb)
+  fres <- ffseaGadget(dge.crc, gdb)
 }
 }

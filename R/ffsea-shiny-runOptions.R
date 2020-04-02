@@ -6,10 +6,11 @@
 #' @export
 #' @importFrom shiny outputOptions renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
+#' @param gdb A `reactive(GeneSetDb)` object
 #' @return An `FfseaRunOptions` list, where `$args()` is a reactive list, with
 #'   name=value pairs set to the arguments to run the appropriate `ffsea.*`
 #'   method for `aresult`.
-ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
+ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
                          debug = FALSE) {
   ns <- session$ns
   state <- reactiveValues(
@@ -22,8 +23,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   })
 
   # Enable user to configure the GeneSetDb used for testing
-  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, aresult = aresult,
-                     gdb = gdb, ..., debug = debug)
+  rgdb <- callModule(reactiveGeneSetDb, "gdb", gdb, ..., debug = debug)
 
   observeEvent(ares(), {
     ares. <- req(ares())
@@ -63,7 +63,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   vals <- list(
     args = args,
     aclass = reactive(state$aclass),
-    gdb = gdb.,
+    gdb = rgdb,
     .state = state,
     .ns = session$ns)
   class(vals) <- "FfseaRunOptions"
@@ -79,24 +79,27 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
 #' @noRd
 #' @export
 #' @importFrom shiny NS tags uiOutput
-#' @importFrom shinyWidgets dropdownButton
+#' @importFrom shinyWidgets dropdown dropdownButton
 #' @return a list with `$ui` for the tagList of interface components and
 #'   `$args`, which is a list of name/value pairs for the default arguments
 #'   of the ffsea.* function implementation.
 ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
   ns <- NS(id)
-  dropdownButton(
+  # dropdownButton(
+  dropdown(
     inputId = ns("opts"),
     icon = icon("sliders"),
-    status = "primary", circle = FALSE,
+    status = "primary",
+    # circle = FALSE,
     width = width,
+    tags$div(
+      id = ns("genesetdbconfig"),
+      tags$h4("Gene Set Selection"),
+      reactiveGeneSetDbFilterUI(ns("gdb"))),
     tags$div(
       id = ns("ffseaRunOptsContainer"),
       # style = "height: 400px",
-      uiOutput(ns("ui"))),
-    tags$div(
-      id = ns("gdb-container"),
-      shiny::wellPanel(geneSetDbConfigUI(ns("gdb")))))
+      uiOutput(ns("ui"))))
 }
 
 # Helper Functions =============================================================

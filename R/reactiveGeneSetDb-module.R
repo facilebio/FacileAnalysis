@@ -1,3 +1,7 @@
+# Need to axe existing geneSetDbConfig module and replace it with this!
+# The geneSetDbConfig module,however, accepts a FacileAnalysisResult and
+# works around that.
+
 #' A ReactiveGeneSetDb for use in the shiiny world.
 #'
 #' This can be instantiated from a "static" or "reactive" GeneSetDb object.
@@ -12,7 +16,7 @@
 #' @export
 #' @importFrom multiGSEA geneSets
 #' @importFrom shinyWidgets updatePickerInput
-#' @importFrom shiny updateSliderInput
+#' @importFrom shiny updateSliderInput renderUI
 #'
 #' @param gdb A static or reactive GeneSetDb object
 #' @param min.gs.size,max.gs.size the default minimum and maximum geneset size
@@ -20,29 +24,31 @@
 reactiveGeneSetDb <- function(input, output, session, gdb,
                               min.gs.size = 2L, max.gs.size = Inf,
                               default_collections = NULL, ...) {
-  assert_character(default_collections, min.len = 1L, null.ok = TRUE)
-  assert_int(min.gs.size, lower = 1L, null.ok = TRUE)
-  assert_int(max.gs.size, lower = 2L, null.ok = TRUE)
+  assert_character(default_collections, null.ok = TRUE)
+  min.gs.size <- assert_number(round(min.gs.size), lower = 2L, null.ok = FALSE)
+  max.gs.size <- assert_number(round(max.gs.size), lower = 2L, null.ok = TRUE)
 
   state <- reactiveValues(
     gdb = NULL,
-    collections = NULL,
     min.gs.size = min.gs.size,
     max.gs.size = max.gs.size)
 
-  if (is(gdb, "reactive")) {
-    observe({
-      gdb. <- gdb()
-      req(is(gdb., "GeneSetDb"))
-      state$gdb <- gdb.
-    })
-  } else {
-    state$gdb <- gdb
-  }
+  rgdb <- reactive({
+    gdb. <- if (is(gdb, "reactive")) gdb() else gdb
+    assert_class(gdb., "GeneSetDb")
+    gdb.
+  })
 
-  rgdb <- reactive(state$gdb)
+  observe({
+    gs.range <- input$size
+    if (state$min.gs.size != gs.range[1L]) state$min.gs.size <- gs.range[1L]
+    if (state$min.gs.size != gs.range[2L]) state$max.gs.size <- gs.range[2L]
+  })
 
-  obsereve({
+  rmin.gs.size <- reactive(state$min.gs.size)
+  rmax.gs.size <- reactive(state$max.gs.size)
+
+  observeEvent(rgdb(), {
     gdb. <- req(rgdb())
     req(is(gdb., "GeneSetDb"))
 
@@ -51,14 +57,20 @@ reactiveGeneSetDb <- function(input, output, session, gdb,
     min.n <- min(gsets$N)
     max.n <- max(gsets$N)
     colls.all <- unique(gsets$collection)
-    colls.selected <- intersect(colls.all, NULL)
+    colls.selected <- intersect(colls.all, default_collections)
 
     if (length(colls.selected) == 0L) {
       colls.selected <- colls.all
     }
-    state$collections <- colls.selected
-    updatePickerInput(session, "collections", choices = new.cols,
-                      selected = colls.selected)
+
+    gs.count <- table(gsets$collection)
+    names(colls.all) <- sprintf("%s [%d total gene sets]", colls.all,
+                                gs.count[colls.all])
+    updatePickerInput(
+      session,
+      "collections",
+      choices = colls.all,
+      selected = colls.selected)
 
     # .............................................................. size slider
     if (!is.null(min.gs.size)) {
@@ -78,26 +90,24 @@ reactiveGeneSetDb <- function(input, output, session, gdb,
   })
 
   genesets <- reactive({
+    selected.colls <- input$collections
     gdb. <- req(rgdb())
     req(is(gdb., "GeneSetDb"))
-    gsets <- geneSets(gdb.)
-    if (is.character(state$collections)) {
-      gsets <- filter(gsets, collection %in% stats$collections)
-    }
-    filter(gsets, N >= state$min.gs.size, N <= state$max.gs.size)
+    gsets <- geneSets(gdb.) %>%
+      filter(collection %in% selected.colls,
+             N >= rmin.gs.size(), N <= rmax.gs.size())
+    gsets
   })
 
-  collections <- reactive({
-    gs <- req(genesets())
-    unique(gs$collection)
+  output$gscount <- renderUI({
+    tags$span(nrow(genesets()))
   })
 
   vals <- list(
     gdb = rgdb,
     geneSets = genesets,
-    collections = collections,
-    min.gs.size = reactive(state$min.gs.size),
-    max.gs.size = reactive(state$max.gs.size),
+    min.gs.size = rmin.gs.size,
+    max.gs.size = rmax.gs.size,
     .state = state,
     .ns = session$ns)
   class(vals) <- c("ReactiveGeneSetDb")
@@ -105,15 +115,35 @@ reactiveGeneSetDb <- function(input, output, session, gdb,
 }
 
 #' @noRd
-#' @importFrom shiny NS tagList sliderInput
+
+#' @noRd
+#' @export
+#' @importFrom FacileShine initialized
+initialized.ReactiveGeneSetDb <- function(x, ...) {
+  is(x$gdb(), "GeneSetDb") && nrow(x$geneSets()) > 0
+}
+
+#' @noRd
+#' @importFrom shiny NS tagList sliderInput uiOutput
 #' @importFrom shinyWidgets pickerInput
 reactiveGeneSetDbFilterUI <- function(id, min = 2, max = 100L, ...) {
   ns <- NS(id)
 
   tagList(
-    pickerInput(ns("collections"), "Collections", choices = NULL,
-                multiple = TRUE),
+    pickerInput(
+      ns("collections"),
+      "Collections",
+      choices = NULL,
+      multiple = TRUE,
+      options = list(
+        `selected-text-format`= "count",
+        `count-selected-text` = "{0} collections chosen"
+      )),
     sliderInput(ns("size"), "Set Size", min = 2, max = 100,
                 value = c(min, max)),
+    tags$p(
+      tags$span("Gene Sets Selected:", style = "font-weight: bold"),
+      uiOutput(ns("gscount"), inline = TRUE)
+    )
   )
 }
