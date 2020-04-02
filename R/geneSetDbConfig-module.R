@@ -83,9 +83,9 @@ geneSetDbConfig <- function(input, output, session, rfds, aresult, gdb = NULL,
       }
     }
 
-    if (!is.null(out)) {
-      out <- conform(out, finfo[["feature_id"]])
-    }
+    # if (!is.null(out)) {
+    #   out <- conform(out, finfo[["feature_id"]])
+    # }
     out
   })
 

@@ -110,6 +110,8 @@
 #' anova.gsea <- ffsea(stage.anova, gdb)
 #' if (interactive()) {
 #'  shine(anova.gsea)
+#'  # We can generate the same GSEA result like so
+#'  anova.gsea2 <- ffseaGadget(stage.anova, gdb = gdb)
 #' }
 #' # GSEA over loadings on a Principal Component -------------------------------
 #' pca.crc <- efds %>%
