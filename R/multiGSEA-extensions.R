@@ -1,6 +1,6 @@
 
 #' @noRd
-#' @importFrom FacileShine GeneSetDb
+#' @importFrom multiGSEA GeneSetDb
 #' @export
 GeneSetDb.FacileFeatureSignature <- function(x, ...) {
   multiGSEA::GeneSetDb(x)

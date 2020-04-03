@@ -383,7 +383,7 @@ ranks <- function(x, ...) {
   UseMethod("ranks", x)
 }
 
-#'
+
 #' Converts an analysis result into a "signature" type of thing.
 #'
 #' This is mainly for feature rankings, but could be something else? Returns
