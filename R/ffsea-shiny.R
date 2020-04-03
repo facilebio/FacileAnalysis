@@ -89,6 +89,7 @@ ffseaAnalysisUI <- function(id, ...) {
 #'
 #' @rdname interactive-ffsea
 #' @export
+#' @importFrom FacileShine GeneSetDb
 #' @importFrom shiny eventReactive withProgress
 #' @importFrom shinyWidgets updatePickerInput
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
