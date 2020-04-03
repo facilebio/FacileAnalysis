@@ -69,7 +69,6 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 Collate: 
-    'GeneSetDb.R'
     'api.R'
     'biocbox.R'
     'classify_as_gadget.R'
@@ -98,8 +97,8 @@ Collate:
     'fpca.R'
     'freduce_dims.R'
     'frunGadget.R'
-    'geneSetDbConfig-module.R'
     'logging.R'
+    'multiGSEA-extensions.R'
     'package.R'
     'test-helpers.R'
     'unreact.R'

@@ -247,7 +247,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                              ylabel = NULL, title = NULL,
                              batch_correct = TRUE, prior.count = 0.1,
                              legendside = "bottom", width = NULL,
-                             height = NULL, ...) {
+                             height = NULL,
+                             legendtitle = NULL,
+                             showticklabels = FALSE, ...) {
   fid <- extract_feature_id(feature_id)
   stopifnot(length(fid) > 0L)
 
@@ -308,6 +310,33 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   #   * [["pval"]]
   #   * [["padj"]]
   #   * [["logFC]] & ([["t"]])? OR [["F]]
+  if (!isFALSE(legendtitle)) {
+    if (!test_string(legendtitle)) {
+      legendtitle <- paste(param(model(x), "covariate"), collapse = ",")
+    }
+
+    fplot$plot <- layout(
+      fplot$plot,
+      legend = list(
+        y = if (showticklabels) -0.1 else 0.05,
+        title = list(
+          text = sprintf("<b>%s</b>", legendtitle),
+          font = list(size = 16))))
+  }
+
+  if (legendside == "bottom") {
+    legend.y <- if (showticklabels) -0.1 else 0.05
+  } else {
+    legend.y <- 0.66
+  }
+
+  fplot$plot <- layout(
+    fplot$plot,
+    xaxis = list(showticklabels = showticklabels),
+    legend = list(
+      font = list(size = 16),
+      y = legend.y))
+
   fplot
 }
 

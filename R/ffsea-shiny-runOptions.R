@@ -4,12 +4,14 @@
 #'
 #' @noRd
 #' @export
+#' @importFrom multiGSEA.shiny reactiveGeneSetDb
 #' @importFrom shiny outputOptions renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
+#' @param gdb A `reactive(GeneSetDb)` object
 #' @return An `FfseaRunOptions` list, where `$args()` is a reactive list, with
 #'   name=value pairs set to the arguments to run the appropriate `ffsea.*`
 #'   method for `aresult`.
-ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
+ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
                          debug = FALSE) {
   ns <- session$ns
   state <- reactiveValues(
@@ -22,8 +24,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   })
 
   # Enable user to configure the GeneSetDb used for testing
-  gdb. <- callModule(geneSetDbConfig, "gdb", rfds, aresult = aresult,
-                     gdb = gdb, ..., debug = debug)
+  rgdb <- callModule(reactiveGeneSetDb, "gdb", gdb, ..., debug = debug)
 
   observeEvent(ares(), {
     ares. <- req(ares())
@@ -63,7 +64,7 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
   vals <- list(
     args = args,
     aclass = reactive(state$aclass),
-    gdb = gdb.,
+    gdb = rgdb,
     .state = state,
     .ns = session$ns)
   class(vals) <- "FfseaRunOptions"
@@ -78,25 +79,29 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
 #'
 #' @noRd
 #' @export
+#' @importFrom multiGSEA.shiny reactiveGeneSetDbFilterUI
 #' @importFrom shiny NS tags uiOutput
-#' @importFrom shinyWidgets dropdownButton
+#' @importFrom shinyWidgets dropdown dropdownButton
 #' @return a list with `$ui` for the tagList of interface components and
 #'   `$args`, which is a list of name/value pairs for the default arguments
 #'   of the ffsea.* function implementation.
 ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
   ns <- NS(id)
-  dropdownButton(
+
+  dropdown(
     inputId = ns("opts"),
     icon = icon("sliders"),
-    status = "primary", circle = FALSE,
+    status = "primary",
+    # circle = FALSE,
     width = width,
+    tags$div(
+      id = ns("genesetdbconfig"),
+      tags$h4("Gene Set Selection"),
+      reactiveGeneSetDbFilterUI(ns("gdb"))),
     tags$div(
       id = ns("ffseaRunOptsContainer"),
       # style = "height: 400px",
-      uiOutput(ns("ui"))),
-    tags$div(
-      id = ns("gdb-container"),
-      shiny::wellPanel(geneSetDbConfigUI(ns("gdb")))))
+      uiOutput(ns("ui"))))
 }
 
 # Helper Functions =============================================================
@@ -140,13 +145,19 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
   ui <- tagList(
     tags$div(
       id = ns("rankoptsbox"),
-      tags$h4("Rank Encirhment Options"),
+      tags$h4(
+        tags$span("Rank Encirhment Options",
+                  style = "background: #fff; padding: 0 10px 0 0"),
+        style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
       selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
                   selected = rank.opts[1]),
       checkboxInput(ns("signed"), "Signed Ranks", value = args$signed)),
     tags$div(
       id = ns("oraoptsbox"),
-      tags$h4("Over Representation Options"),
+      tags$h4(
+        tags$span("Over Representation Options",
+                  style = "background: #fff; padding: 0 10px 0 0"),
+        style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
       numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
                    min = 0, max = 10, step = 0.5),
       numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
