@@ -476,11 +476,14 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     filename = function() {
       res <- req(isolate(dge()))
       test_type <- if (is.ttest(res)) "ttest" else "anova"
-      sprintf("DGE-%s_%s_%s.csv", param(res, "method"), test_type, name(res))
+      is.selected <- if (nrow(state$volcano_select)) "subset" else "all"
+      sprintf("DGE-%s_%s_%s_%s.csv", param(res, "method"), test_type, name(res),
+              is.selected)
     },
     content = function(file) {
       .fdge <- req(isolate(dge()))
-      .result <- ranks(.fdge) %>% result()
+      # .result <- ranks(.fdge) %>% result()
+      .result <- req(dge.stats())
       if ("padj" %in% colnames(.result)) {
         .result <- rename(.result, FDR = "padj")
       }
