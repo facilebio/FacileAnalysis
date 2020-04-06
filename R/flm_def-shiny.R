@@ -136,6 +136,7 @@ flmDefRun <- function(input, output, session, rfds, default_covariate = NULL,
 }
 
 #' @noRd
+#' @export
 #' @importFrom FacileShine
 #'   categoricalSampleCovariateSelectUI
 #'   categoricalSampleCovariateLevelsUI
