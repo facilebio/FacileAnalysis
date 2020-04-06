@@ -32,9 +32,9 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   # associated
   observe({
     ainfo <- req(assay$assay_info())
-    assay_type. <- ainfo$assay_type
-    req(!unselected(assay_type.))
-    method. <- input$dge_method
+    assay_type. <- req(ainfo$assay_type, !unselected(ainfo$assay_type))
+    method. <- req(input$dge_method, !unselected(input$dge_method))
+
     methods. <- fdge_methods(assay_type., on_missing = "warning")$dge_method
     selected. <- if (method. %in% methods.) method. else methods.[1L]
     if (is.na(selected.)) {
