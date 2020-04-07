@@ -96,7 +96,10 @@ ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
     width = width,
     tags$div(
       id = ns("genesetdbconfig"),
-      tags$h4("Gene Set Selection"),
+      tags$h4(
+        tags$span("Gene Set Selection",
+                  style = "background: #fff; padding: 0 10px 0 0"),
+        style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
       reactiveGeneSetDbFilterUI(ns("gdb"))),
     tags$div(
       id = ns("ffseaRunOptsContainer"),
@@ -149,6 +152,7 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
         tags$span("Rank Encirhment Options",
                   style = "background: #fff; padding: 0 10px 0 0"),
         style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
+      tags$p("Configure how genes are ranked"),
       selectInput(ns("rank_by"), "Rank By", choices = rank.opts,
                   selected = rank.opts[1]),
       checkboxInput(ns("signed"), "Signed Ranks", value = args$signed)),
@@ -158,7 +162,8 @@ renderFfseaRunOptsUI.FacileTtestAnalysisResult <- function(x, ns, ...) {
         tags$span("Over Representation Options",
                   style = "background: #fff; padding: 0 10px 0 0"),
         style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
-      numericInput(ns("min_logFC"), "Min logFC", value = args$min_logFC,
+      tags$p("Coriteria for selecting genes of interest"),
+      numericInput(ns("min_logFC"), "Min absolute logFC", value = args$min_logFC,
                    min = 0, max = 10, step = 0.5),
       numericInput(ns("max_padj"), "Max FDR", value = args$max_padj,
                    min = 0, max = 1, step = 0.05)))
