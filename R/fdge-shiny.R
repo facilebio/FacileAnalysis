@@ -169,11 +169,12 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
       fdge(model, assay_name = assay_name.,
            method = runopts$dge_method(),
            with_sample_weights = runopts$sample_weights(),
-           treat_lfc = runopts$treat_lfc(),
-           filter = runopts$feature_filter$method(),
-           filter_min_count = runopts$feature_filter$min_count(),
-           filter_min_total_count = runopts$feature_filter$min_total_count(),
-           filter_min_expr = runopts$feature_filter$min_expr())
+           treat_lfc = runopts$treat_lfc()
+           #, filter = runopts$feature_filter$method(),
+           # filter_min_count = runopts$feature_filter$min_count(),
+           # filter_min_total_count = runopts$feature_filter$min_total_count(),
+           # filter_min_expr = runopts$feature_filter$min_expr()
+      )
     }, message = "Performing differential expression")
   })
 
