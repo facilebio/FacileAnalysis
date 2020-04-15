@@ -54,7 +54,7 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
     zlabel <- sprintf("%s (%.2f%%)", pc.cols[3L], pcv[pc.cols[3L]])
   }
 
-  # TODO: Handle color by feature expresion. Currently this is handled in the
+  # TODO: Handle color by feature expression. Currently this is handled in the
   # fpcaView shiny module, but we want to push that down here so that users
   # using this function in an R session or for Rmd output can color by
   # expression as well.

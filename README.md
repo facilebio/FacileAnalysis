@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R build
+status](https://github.com/facilebio/FacileAnalysis/workflows/R-CMD-check/badge.svg)](https://github.com/facilebio/FacileAnalysis/actions)
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
