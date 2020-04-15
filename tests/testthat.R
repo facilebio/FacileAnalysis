@@ -7,5 +7,5 @@ library("FacileAnalysis")
 
 FDS <- FacileData::exampleFacileDataSet()
 
-test_package("FacileAnalysis")
+test_check("FacileAnalysis")
 
