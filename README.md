@@ -11,8 +11,6 @@ status](https://github.com/facilebio/FacileAnalysis/workflows/R-CMD-check/badge.
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
 Maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-[![Travis build
-status](https://travis-ci.org/facilebio/FacileAnalysis.svg?branch=master)](https://travis-ci.org/facilebio/FacileAnalysis)
 [![Codecov test
 coverage](https://codecov.io/gh/facilebio/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facilebio/FacileAnalysis?branch=master)
 <!-- badges: end -->
