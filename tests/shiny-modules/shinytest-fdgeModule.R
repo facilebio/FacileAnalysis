@@ -1,7 +1,3 @@
-# library(FacileDenaliDataSets)
-# dfds <- FacileDenaliDataSet("mouse", "internal")
-# fds <- dfds
-
 library(FacileShine)
 
 efds <- FacileData::exampleFacileDataSet()
