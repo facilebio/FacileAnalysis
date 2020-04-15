@@ -95,16 +95,6 @@
 #'   viz(pca.all, color_aes = "indication", shape_aes = "sample_type")
 #'   # report(pca.all, color_aes = "indication", shape_aes = "sample_type")
 #' }
-#'
-#'
-#' # This works on "normal" DGELists, too. -----------------------------------
-#' pca.dgelist <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
-#'   FacileData::as.DGEList() %>%
-#'   fpca()
-#' if (interactive()) {
-#'   report(pca.dgelist, color_aes = "sample_type")
-#' }
 fpca <- function(x, assay_name = NULL, dims = 5, features = NULL,
                  filter = "default", ntop = 1000, row_covariates = NULL,
                  col_covariates = NULL,
