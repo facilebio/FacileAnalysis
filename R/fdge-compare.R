@@ -20,10 +20,10 @@ NULL
 #' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 #'
 #' efds <- FacileData::exampleFacileDataSet()
-#' dge.crc <- filter_samples(efds, indication == "CRC") %>%
+#' dge.crc <- FacileData::filter_samples(efds, indication == "CRC") %>%
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
-#' dge.blca <- filter_samples(efds, indication == "BLCA") %>%
+#' dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") %>%
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)

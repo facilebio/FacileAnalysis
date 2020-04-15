@@ -128,9 +128,11 @@ ttest.res <- efds \%>\%
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
           batch = "sex") \%>\%
   fdge(method = "voom")
+
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
                     biased_by = "effective_length")
 if (interactive()) {
+  ttest.gsea <- ffseaGadget(ttest.res, gdb)
   shine(ttest.gsea)
 }
 

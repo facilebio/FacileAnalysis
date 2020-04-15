@@ -2,7 +2,7 @@
 #'
 #' ```
 #' model_info <- fds %>%
-#'   filter_samples(indication == "BLCA") %>%
+#'   FacileData::filter_samples(indication == "BLCA") %>%
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = "sex")
 #' ```
