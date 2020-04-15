@@ -57,16 +57,26 @@ compare.FacilePcaAnalysisResult <- function(x, y, run_all = TRUE, rerun = TRUE,
     all.samples <- bind_rows(samples(x), samples(y))
     all.samples <- as_facile_frame(all.samples, fds.)
     all.samples <- distinct(all.samples, dataset, sample_id, .keep_all = TRUE)
-    ures <- fpca(all.samples, assay_name = aname, dims = ndims, filter = fids)
+    ures <- fpca(all.samples, assay_name = aname, dims = ndims,
+                 features = fids)
     add.params <- setdiff(names(ures[["params"]]), names(out[["params"]]))
 
     out[["params"]] <- c(out[["params"]], ures[["params"]][add.params])
     out[["result"]] <- ures
+    out[["dims"]] <- seq(ndims)
+    out[["rotation"]] <- ures[["rotation"]]
+    out[["percent_var"]] <- ures[["percent_var"]]
+    out[["row_covariates"]] <- ures[["row_covariates"]]
+    out[["takne"]] <- ures[["taken"]]
+    out[["samples"]] <- ures[["samples"]]
+    messages <- c(messages, ures[["messages"]])
+    warnings <- c(warnings, ures[["warnings"]])
+    errors <- c(errors, ures[["errors"]])
   }
 
   if (rerun == TRUE) {
-    x <- fpca(samples(x), assay_name = aname, dims = ndims, filter = fids)
-    y <- fpca(samples(y), assay_name = aname, dims = ndims, filter = fids)
+    x <- fpca(samples(x), assay_name = aname, dims = ndims, features = fids)
+    y <- fpca(samples(y), assay_name = aname, dims = ndims, features = fids)
   }
 
   on.exit({

@@ -124,7 +124,7 @@ from count data, or where there is a "trend" of the variance with the
 mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}.
 \item \code{"limma"}: Straightup limma, this expects log2-normal like data, with
 (largely) no trend of the variance to the mean worth modeling. Uses
-\code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}
+\code{\link[limma:arrayWeights]{limma::arrayWeights()}} when \code{with_sample_weights = TRUE}
 }
 }
 

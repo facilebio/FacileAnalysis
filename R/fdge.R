@@ -25,7 +25,7 @@
 #'    mean, uses  [lima::arrayWeights()] when `with_sample_weights = TRUE`.
 #' * `"limma"`: Straightup limma, this expects log2-normal like data, with
 #'    (largely) no trend of the variance to the mean worth modeling. Uses
-#'    [lima::arrayWeights()] when `with_sample_weights = TRUE`
+#'    [limma::arrayWeights()] when `with_sample_weights = TRUE`
 #'
 #' @section Feature Filtering Strategy:
 #' You will almost always want to filter out lowly abundant features before
