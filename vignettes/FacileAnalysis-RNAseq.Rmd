@@ -516,14 +516,14 @@ We can view what the differential expression of the top result looks like,
 with and without batch corrected values.
 
 ```{r}
-viz(dex.vm, feature_id = head(vm.res, 1))
+viz(dex.vm, features = head(vm.res, 1))
 ```
 
 In the same way that you can disable plotting the batch-corrected expression
 values per sample in the shiny gadget, you can also turn it off here, as well:
 
 ```{r}
-viz(dex.vm, feature_id = head(vm.res, 1), batch_correct = FALSE)
+viz(dex.vm, features = head(vm.res, 1), batch_correct = FALSE)
 ```
 
 :::note
@@ -569,7 +569,7 @@ viz(dex.vm, type = "volcano", ntop = 1500,
 # You an try the same trick with the volcano plot above.
 viz(dex.vm, type = "ma", 
     # ntop = 1500,
-    feature_id = features(dex.vm) %>% sample_n(1500),
+    features = features(dex.vm) %>% sample_n(1500),
     highlight = head(dex.dds$feature_id, 50))
 ```
 
