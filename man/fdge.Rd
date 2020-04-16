@@ -121,7 +121,7 @@ The available methods are:
 \item \code{"edgeR-qlf"}: The edgeR quasi-likelihood method, for count data.
 \item \code{"limma-trend"}: Usable for log-transformed data that "looks like" it came
 from count data, or where there is a "trend" of the variance with the
-mean, uses  \code{\link[lima:arrayWeights]{lima::arrayWeights()}} when \code{with_sample_weights = TRUE}.
+mean, uses  \code{\link[limma:arrayWeights]{limma::arrayWeights()}} when \code{with_sample_weights = TRUE}.
 \item \code{"limma"}: Straightup limma, this expects log2-normal like data, with
 (largely) no trend of the variance to the mean worth modeling. Uses
 \code{\link[limma:arrayWeights]{limma::arrayWeights()}} when \code{with_sample_weights = TRUE}

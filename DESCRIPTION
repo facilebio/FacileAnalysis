@@ -47,6 +47,7 @@ Suggests:
     curl,
     DESeq2,
     knitr,
+    magrittr,
     org.Mm.eg.db,
     RnaSeqGeneEdgeRQL,
     SummarizedExperiment,

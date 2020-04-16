@@ -22,7 +22,7 @@
 #' * `"edgeR-qlf"`: The edgeR quasi-likelihood method, for count data.
 #' * `"limma-trend"`: Usable for log-transformed data that "looks like" it came
 #'    from count data, or where there is a "trend" of the variance with the
-#'    mean, uses  [lima::arrayWeights()] when `with_sample_weights = TRUE`.
+#'    mean, uses  [limma::arrayWeights()] when `with_sample_weights = TRUE`.
 #' * `"limma"`: Straightup limma, this expects log2-normal like data, with
 #'    (largely) no trend of the variance to the mean worth modeling. Uses
 #'    [limma::arrayWeights()] when `with_sample_weights = TRUE`
