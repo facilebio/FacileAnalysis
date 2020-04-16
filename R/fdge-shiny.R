@@ -21,7 +21,6 @@ NULL
 #' 3. Results display. The interactive display of the results is provided
 #'    by the [fdgeView()] module.
 #'
-#' Th
 #' @rdname fdge-shiny
 #' @export
 #'

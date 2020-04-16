@@ -36,6 +36,7 @@ expect_daes_map <- function(map, values, expected = NULL,
   }
 }
 
+#' @noRd
 example_aes_data_table <- function(n = 20, n.cats = 3, seed = 123) {
   if (is.numeric(seed)) set.seed(seed[1L])
   x <- tibble(

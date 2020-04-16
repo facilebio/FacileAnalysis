@@ -341,6 +341,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 }
 
 #' Extracts expression data for a feature across the samples use for the test.
+#' @noRd
 .data_dge_feature <- function(x, feature_id, batch_correct = TRUE,
                               prior.count = 0.1, ...) {
   fid <- assert_character(feature_id, min.len = 1)

@@ -37,6 +37,8 @@ print.FacileFeatureRankings <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
+#' @noRd
+#' @export
 format.FacileFeatureRankings <- function(x, ...) {
   out <- paste(
     "===========================================================\n",

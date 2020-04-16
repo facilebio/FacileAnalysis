@@ -3,6 +3,7 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
+\alias{result}
 \alias{tidy}
 \alias{\%>\%}
 \alias{callModule}
@@ -13,9 +14,11 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
+
   \item{broom}{\code{\link[broom]{tidy}}}
 
-  \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
+  \item{multiGSEA}{\code{\link[multiGSEA]{result}}}
 
   \item{shiny}{\code{\link[shiny]{callModule}}}
 }}

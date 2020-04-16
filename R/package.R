@@ -16,9 +16,10 @@ NULL
 
 #' @importFrom multiGSEA result
 #' @export result
+multiGSEA::result
+
 #' @importFrom glue glue
 #' @importFrom FacileViz plot
-#' @importFrom broom tidy
 NULL
 
 # Externally defined generics to re-export on package load ---------------------
@@ -34,14 +35,3 @@ FacileData::`%>%`
 #' @importFrom shiny callModule
 #' @export
 shiny::callModule
-
-# dplyr API
-
-# @export distinct
-# @export mutate
-# @export select
-# @export filter
-# @export summarise
-# @export summarize
-# @export arrange
-# NULL

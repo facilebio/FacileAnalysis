@@ -178,6 +178,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   out
 }
 
+#' @noRd
 .add_observation_weights <- function(x, weights, ...) {
   if (!is(x, "EList")) {
     warning("observation weights only supported for ELists. They are being ",
@@ -277,6 +278,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   x
 }
 
+#' @noRd
 .filter_count_assay <- function(x, des.matrix, filter_design_columns,
                                 filter_universe, filter_require,
                                 # default params for edgeR::filterByExpr
@@ -311,9 +313,5 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
   x <- x[keep,,keep.lib.sizes = FALSE]
   suppressWarnings(edgeR::calcNormFactors(x)) # partial match of `p` to `probs`
-}
-
-.filter_abundance_features <- function() {
-
 }
 

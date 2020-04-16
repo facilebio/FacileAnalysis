@@ -118,6 +118,7 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
 }
 
 #' @export
+#' @rdname fdge
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                method = NULL,
                                                filter = "default",
@@ -579,6 +580,7 @@ print.FacileDgeAnalysisResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
+#' @noRd
 format.FacileDgeAnalysisResult <- function(x, ...) {
   test_type <- if (is.ttest(x)) "ttest" else "ANOVA"
   mdef <- model(x)

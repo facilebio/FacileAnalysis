@@ -42,8 +42,6 @@ defined by the \code{\link[=fdge]{fdge()}} function, and the shiny interface by 
 \item Results display. The interactive display of the results is provided
 by the \code{\link[=fdgeView]{fdgeView()}} module.
 }
-
-Th
 }
 \section{Interactive Gadget}{
 

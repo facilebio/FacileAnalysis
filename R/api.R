@@ -174,16 +174,6 @@ compare.FacileAnalysisResult <- function(x, y, ...) {
   ry <- ranks(y, ...)
 }
 
-# Retrieves the main (or alternative) result from a FacileAnalysis
-#
-# This should always return a tidy data frame of one sort or another.
-#
-# FacileAnalysisResults should should all aslo have a top-level result
-# accessible via obj[["result"]]
-#
-#' @importFrom multiGSEA result
-#' @export result
-NULL
 
 # This is defined in multiGSEA@develop
 # result <- function(x, name = "result", ...) {

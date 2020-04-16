@@ -1,11 +1,12 @@
-# Keep track of metadata regarding different aspects of running ffsea on
-# different FacileAnalysisResult types.
-#
-# These are implemented as S3 generics so that FacileAnalysisXXX packages can
-# be defloped that generate FacileAnalysisResultXXX result types, and can define
-# how ffsea is run on those, as well as the metadata associated with that.
-#
-# These metadata are mostly helpful for the shiny widgets to know what to do.
+#' Keep track of metadata regarding different aspects of running ffsea on
+#' different FacileAnalysisResult types.
+#'
+#' These are implemented as S3 generics so that FacileAnalysisXXX packages can
+#' be defloped that generate FacileAnalysisResultXXX result types, and can define
+#' how ffsea is run on those, as well as the metadata associated with that.
+#'
+#' These metadata are mostly helpful for the shiny widgets to know what to do.
+#' @noRd
 .ffsea_methods <- function(type = NULL) {
   opts <- tibble::tribble(
     ~type,        ~method,

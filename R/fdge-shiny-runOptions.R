@@ -112,6 +112,7 @@ initialized.FdgeRunOptions <- function(x, ...) {
 }
 
 # Filtering Options ============================================================
+
 #' @noRd
 #' @param assay_mod [FacileShine::assaySelect()] module, ie. an
 #'   `AssaySelectInput` object.

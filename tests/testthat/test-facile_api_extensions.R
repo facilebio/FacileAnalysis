@@ -12,8 +12,7 @@ test_that("with_sample_covs gives precedence to local covariates", {
   expect_equal(select(test1, !!colnames(xs)), xs)
 
   extra <- xs %>%
-    mutate(stage = rnorm(nrow(xs)),
-           stuff = sample(letters, nrow(xs)))
+    mutate(stage = rnorm(nrow(xs)), stuff = sample(letters, nrow(xs)))
 
   test2 <- with_sample_covs(xs, custom_covariates = extra)
   expect_equal(select(test2, !!colnames(extra)), extra)

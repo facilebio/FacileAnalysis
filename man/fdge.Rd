@@ -3,6 +3,7 @@
 \name{fdge}
 \alias{fdge}
 \alias{fdge.FacileAnovaModelDefinition}
+\alias{fdge.FacileTtestDGEModelDefinition}
 \alias{fdge.FacileLinearModelDefinition}
 \alias{compare.FacileTtestAnalysisResult}
 \alias{report.FacileTtestAnalysisResult}
@@ -25,6 +26,17 @@ fdge(
   method = NULL,
   filter = "default",
   with_sample_weights = FALSE,
+  ...,
+  verbose = FALSE
+)
+
+\method{fdge}{FacileTtestDGEModelDefinition}(
+  x,
+  assay_name = NULL,
+  method = NULL,
+  filter = "default",
+  with_sample_weights = FALSE,
+  treat_lfc = NULL,
   ...,
   verbose = FALSE
 )
