@@ -3,6 +3,8 @@ on:
     branches:
       - master
       - develop # This will eventually require a different container
+    paths:
+      - 'R/**'
   pull_request:
   schedule:
     # Rerun checks daily, after facilebio/facilebio_base_extra is rebuilt.
@@ -22,7 +24,6 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       NOT_CRAN: true
       CI: true
-      TZ: America/Los_Angeles
 
     steps:
       - uses: actions/checkout@v2

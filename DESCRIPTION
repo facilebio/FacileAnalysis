@@ -46,6 +46,7 @@ Imports:
 Suggests:
     curl,
     DESeq2,
+    FacileBiocData,
     knitr,
     magrittr,
     org.Mm.eg.db,
@@ -54,6 +55,7 @@ Suggests:
     sva,
     testthat
 Remotes:
+    facilebio/FacileBiocData,
     facilebio/FacileData,
     facilebio/FacileShine,
     facilebio/FacileViz,
