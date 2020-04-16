@@ -14,9 +14,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      # The container already has the R version we want to test against, as well
-      # as the plethora of packages required for the test.
-      # - uses: r-lib/actions/setup-r@master
+      # The container already has the R version we want, so this will be a
+      # no-op, but we like the colorizing/problemMatchrers.r-lib
+      #   see r-lib/actions/setup-r/installer.ts acquireR, where
+      #   if (returnCode != 0) { ... }
+      - uses: r-lib/actions/setup-r@master
 
       - name: Install dependencies
         run: remotes::install_deps(dependencies = TRUE)
@@ -27,5 +29,5 @@ jobs:
         shell: Rscript {0}
 
       - name: Test coverage
-        run: covr::codecov()
+        run: covr::codecov(quiet = FALSE)
         shell: Rscript {0}
