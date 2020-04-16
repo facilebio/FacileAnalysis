@@ -13,6 +13,10 @@ jobs:
       NOT_CRAN: true
       CI: true
       TZ: America/Los_Angeles
+      GIT_AUTHOR_NAME: Steve Lianoglou
+      GIT_AUTHOR_EMAIL: slianoglou@gmail.com
+      GIT_COMMITTER_NAME: Steve Lianoglou
+      GIT_COMMITTER_EMAIL: slianoglou@gmail.com
 
     steps:
       - uses: actions/checkout@v2
