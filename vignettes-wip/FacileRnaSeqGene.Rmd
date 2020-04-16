@@ -478,15 +478,15 @@ This is how you can query the `FacileDataSet` directly to retrieve these
 expressoin values and plot them manually.
 
 ```{r}
-dat.bc <- asamples %>% 
+dat.bc <- fdds %>% 
   fetch_assay_data(features = head(vm.res, 1),
                    normalized = TRUE,
-                   batch = "cell_line") %>% 
+                   batch = "cell") %>% 
   with_sample_covariates("treatment") %>% 
   mutate(type = "batch_corrected")
-dat.o <- asamples %>% 
+dat.o <- fdds %>% 
   fetch_assay_data(features = head(vm.res, 1), normalized = TRUE) %>% 
-  with_sample_covariates("treatment") %>% 
+  with_sample_covariates("dex") %>% 
   mutate(type = "original")
 
 dat <- bind_rows(dat.bc, dat.o)
@@ -516,7 +516,7 @@ viz(dex.vm, type = "volcano", ntop = 1500,
 # You an try the same trick with the volcano plot above.
 viz(dex.vm, type = "ma", 
     # ntop = 1500,
-    feature_id = features(dex.vm) %>% sample_n(1500),
+    features = features(dex.vm) %>% sample_n(1500),
     highlight = head(dex.dds$feature_id, 50))
 ```
 

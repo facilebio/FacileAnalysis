@@ -477,6 +477,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   # We assume ensembl ids for now
   is.ensid <- all(substr(dat[["feature_id"]], 1, 3) == "ENS")
   link_feature <- link_feature && is.ensid
+
   if (link_feature) {
     org <- gsub(" ", "_", organism(fds(x)))
     url <- sprintf("http://uswest.ensembl.org/%s/Gene/Summary?g=%s",
