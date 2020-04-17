@@ -187,7 +187,7 @@ code at all:
 vdge3 <- fdgeGadget(efds)
 ```
 
-<img src="docs/articles/images/animated/vignette-fdgeGadget-trim.gif" width="75%" />
+<img src="man/figures/vignette-fdgeGadget-trim.gif" width="75%" />
 
 Assuming the same filtering and testing strategies were selected in the GUI
 using the `fdgeGadget` calls above, the objects they return will all be
