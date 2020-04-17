@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "man/figures/"
 )
-pkgdownsite <- nchar(Sys.getenv("PKGDOWN_BUILD")) != 0
+pkgdownsite <- !is.null(getOption("PKGDOWN_BUILD"))
 ```
 
 # FacileAnalysis

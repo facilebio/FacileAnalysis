@@ -22,7 +22,6 @@ jobs:
       GIT_AUTHOR_EMAIL: slianoglou@gmail.com
       GIT_COMMITTER_NAME: Steve Lianoglou
       GIT_COMMITTER_EMAIL: slianoglou@gmail.com
-      PKGDOWN_BUILD: true
 
     steps:
       - uses: actions/checkout@v2
@@ -36,5 +35,7 @@ jobs:
         run: R CMD INSTALL .
 
       - name: Build pkgdown site and deploy
-        run: pkgdown::deploy_to_branch(new_process = FALSE)
+        run: |
+          options(PKGDOWN_BUILD = TRUE)
+          pkgdown::deploy_to_branch(new_process = FALSE)
         shell: Rscript {0}
