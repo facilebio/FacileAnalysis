@@ -1,6 +1,10 @@
 on:
   push:
     branches: master
+    paths:
+      - 'vignettes/**'
+      - 'man/**'
+      - 'README.**'
   schedule:
   # Rerun pkgdown after the (expected) time package is rebuilt on the daily.
   # Let's give it 30 mins

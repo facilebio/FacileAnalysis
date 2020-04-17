@@ -5,6 +5,10 @@ on:
       - develop # This will eventually require a different container
     paths:
       - 'R/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'src/**'
+      - 'tests/**'
   pull_request:
   schedule:
     # Rerun checks daily, after facilebio/facilebio_base_extra is rebuilt.
