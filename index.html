@@ -138,6 +138,14 @@ You can find a more in-depth overview and philosophy of this package in the
 <p>The example below identifies genes differentially expression between tumor and normal samples (and controlling for sex) in the “BLCA” indication of the example TCGA dataset included in the <a href="https://facilebio.github.io/FacileData">FacileData</a> package.</p>
 <div class="sourceCode" id="cb1"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">FacileData</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">FacileAnalysis</span>)
+<span class="co">#&gt; Warning: replacing previous import 'data.table::last' by 'dplyr::last' when</span>
+<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
+<span class="co">#&gt; Warning: replacing previous import 'data.table::first' by 'dplyr::first' when</span>
+<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
+<span class="co">#&gt; Warning: replacing previous import 'data.table::between' by 'dplyr::between'</span>
+<span class="co">#&gt; when loading 'multiGSEA.shiny'</span>
+<span class="co">#&gt; Warning: replacing previous import 'dplyr::combine' by 'multiGSEA::combine' when</span>
+<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
 <span class="no">efds</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html">exampleFacileDataSet</a></span>()
 
 <span class="co"># Step 1: define the samples implicated in our test</span>
@@ -178,10 +186,10 @@ You can find a more in-depth overview and philosophy of this package in the
 <h3 class="hasAnchor">
 <a href="#reporting-results-via-report" class="anchor"></a>Reporting Results via report()</h3>
 <p>While the output of the <code><a href="reference/FacileAnalysisResultViz.html">viz()</a></code> functions can be used directly in Rmarkdown reports, <code><a href="reference/FacileAnalysisResultViz.html">report(aresult, ...)</a></code> is meant to create a “more complete” (perhaps multi-htmlwidget) view over the result that can be more suitable for inclusion into an Rmarkdown report.</p>
-<div class="sourceCode" id="cb5"><pre class="r">cap &lt;- paste(
-  "Differential expression of tumor vs normal samples, in the TCGA bladder"
-  "cancer indication (BLCA)")
-report(vdge, caption = cap)</pre></div>
+<div class="sourceCode" id="cb5"><pre class="r"><span class="no">cap</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(
+  <span class="st">"Differential expression of tumor vs normal samples, in the TCGA bladder"</span>,
+  <span class="st">"cancer indication (BLCA)"</span>)
+<span class="fu"><a href="reference/FacileAnalysisResultViz.html">report</a></span>(<span class="no">vdge</span>, <span class="kw">caption</span> <span class="kw">=</span> <span class="no">cap</span>)</pre></div>
 <!--
 <img src="man/figures/fdge-report.gif" width = "75%" />
 -->
