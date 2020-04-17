@@ -89,6 +89,14 @@ indication of the example TCGA dataset included in the
 ``` r
 library(FacileData)
 library(FacileAnalysis)
+#> Warning: replacing previous import 'data.table::last' by 'dplyr::last' when
+#> loading 'multiGSEA.shiny'
+#> Warning: replacing previous import 'data.table::first' by 'dplyr::first' when
+#> loading 'multiGSEA.shiny'
+#> Warning: replacing previous import 'data.table::between' by 'dplyr::between'
+#> when loading 'multiGSEA.shiny'
+#> Warning: replacing previous import 'dplyr::combine' by 'multiGSEA::combine' when
+#> loading 'multiGSEA.shiny'
 efds <- exampleFacileDataSet()
 
 # Step 1: define the samples implicated in our test
@@ -159,7 +167,7 @@ more suitable for inclusion into an Rmarkdown report.
 
 ``` r
 cap <- paste(
-  "Differential expression of tumor vs normal samples, in the TCGA bladder"
+  "Differential expression of tumor vs normal samples, in the TCGA bladder",
   "cancer indication (BLCA)")
 report(vdge, caption = cap)
 ```

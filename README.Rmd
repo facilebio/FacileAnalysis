@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "man/figures/"
 )
+pkgdownsite <- nchar(Sys.getenv("PKGDOWN_BUILD")) != 0
 ```
 
 # FacileAnalysis
@@ -89,7 +90,7 @@ The example below identifies genes differentially expression between tumor and
 normal samples (and controlling for sex) in the "BLCA" indication of the example
 TCGA dataset included in the [FacileData][faciledata] package.
 
-```{r voom-analysis, eval = FALSE, message=FALSE}
+```{r voom-analysis, message=FALSE}
 library(FacileData)
 library(FacileAnalysis)
 efds <- exampleFacileDataSet()
@@ -144,7 +145,7 @@ The `viz(aresult, ...)` methods leverage [htmlwidgets][htmlwidgets] to create a
 JavaScript-powered interactive view of the analysis result, which is detached
 from a running R-process.
 
-```{r viz, eval=FALSE}
+```{r viz, eval=FALSE, eval=pkgdownsite}
 viz(vdge)
 ```
 
@@ -155,9 +156,9 @@ reports, `report(aresult, ...)` is meant to create a "more complete"
 (perhaps multi-htmlwidget) view over the result that can be more suitable
 for inclusion into an Rmarkdown report.
 
-```{r report, eval=FALSE}
+```{r report, message=FALSE, warning=FALSE, eval=pkgdownsite}
 cap <- paste(
-  "Differential expression of tumor vs normal samples, in the TCGA bladder"
+  "Differential expression of tumor vs normal samples, in the TCGA bladder",
   "cancer indication (BLCA)")
 report(vdge, caption = cap)
 ```
