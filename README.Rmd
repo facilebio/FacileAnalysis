@@ -20,6 +20,7 @@ pkgdownsite <- !is.null(getOption("PKGDOWN_BUILD"))
 
 <!-- badges: start -->
 [![R build status](https://github.com/facilebio/FacileAnalysis/workflows/R-CMD-check/badge.svg)](https://github.com/facilebio/FacileAnalysis/actions)
+![pkgdown](https://github.com/facilebio/FacileAnalysis/workflows/pkgdown/badge.svg)
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle: Maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Codecov test coverage](https://codecov.io/gh/facilebio/FacileAnalysis/branch/master/graph/badge.svg)](https://codecov.io/gh/facilebio/FacileAnalysis?branch=master)
@@ -90,7 +91,7 @@ The example below identifies genes differentially expression between tumor and
 normal samples (and controlling for sex) in the "BLCA" indication of the example
 TCGA dataset included in the [FacileData][faciledata] package.
 
-```{r voom-analysis, message=FALSE}
+```{r voom-analysis, message=FALSE, warning=FALSE}
 library(FacileData)
 library(FacileAnalysis)
 efds <- exampleFacileDataSet()

@@ -7,6 +7,7 @@
 
 [![R build
 status](https://github.com/facilebio/FacileAnalysis/workflows/R-CMD-check/badge.svg)](https://github.com/facilebio/FacileAnalysis/actions)
+![pkgdown](https://github.com/facilebio/FacileAnalysis/workflows/pkgdown/badge.svg)
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
@@ -89,14 +90,6 @@ indication of the example TCGA dataset included in the
 ``` r
 library(FacileData)
 library(FacileAnalysis)
-#> Warning: replacing previous import 'data.table::last' by 'dplyr::last' when
-#> loading 'multiGSEA.shiny'
-#> Warning: replacing previous import 'data.table::first' by 'dplyr::first' when
-#> loading 'multiGSEA.shiny'
-#> Warning: replacing previous import 'data.table::between' by 'dplyr::between'
-#> when loading 'multiGSEA.shiny'
-#> Warning: replacing previous import 'dplyr::combine' by 'multiGSEA::combine' when
-#> loading 'multiGSEA.shiny'
 efds <- exampleFacileDataSet()
 
 # Step 1: define the samples implicated in our test
