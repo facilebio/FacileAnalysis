@@ -138,14 +138,6 @@ You can find a more in-depth overview and philosophy of this package in the
 <p>The example below identifies genes differentially expression between tumor and normal samples (and controlling for sex) in the “BLCA” indication of the example TCGA dataset included in the <a href="https://facilebio.github.io/FacileData">FacileData</a> package.</p>
 <div class="sourceCode" id="cb1"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">FacileData</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">FacileAnalysis</span>)
-<span class="co">#&gt; Warning: replacing previous import 'data.table::last' by 'dplyr::last' when</span>
-<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
-<span class="co">#&gt; Warning: replacing previous import 'data.table::first' by 'dplyr::first' when</span>
-<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
-<span class="co">#&gt; Warning: replacing previous import 'data.table::between' by 'dplyr::between'</span>
-<span class="co">#&gt; when loading 'multiGSEA.shiny'</span>
-<span class="co">#&gt; Warning: replacing previous import 'dplyr::combine' by 'multiGSEA::combine' when</span>
-<span class="co">#&gt; loading 'multiGSEA.shiny'</span>
 <span class="no">efds</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html">exampleFacileDataSet</a></span>()
 
 <span class="co"># Step 1: define the samples implicated in our test</span>
