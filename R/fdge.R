@@ -110,7 +110,7 @@ fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
 #' @export
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
-                                            filter = "default",
+                                            features = NULL, filter = "default",
                                             with_sample_weights = FALSE, ...,
                                             verbose = FALSE) {
   res <- NextMethod(coef = x[["coef"]])

@@ -22,7 +22,7 @@ expect_daes_map <- function(map, values, expected = NULL,
     if (is.character(expected)) {
       if (is.brewer.map.name(expected)) {
         # percolates a warning if n.cats > maximum color of brewer palette
-        expected <- RColorBrewer::brewer.pal(n.cats, expected)
+        expected <- suppressWarnings(RColorBrewer::brewer.pal(n.cats, expected))
         names(expected) <- head(uvals, length(expected))
       }
     }

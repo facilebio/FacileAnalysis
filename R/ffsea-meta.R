@@ -8,7 +8,7 @@
 #' These metadata are mostly helpful for the shiny widgets to know what to do.
 #' @noRd
 .ffsea_methods <- function(type = NULL) {
-  opts <- tibble::tribble(
+  opts <- dplyr::tribble(
     ~type,        ~method,
     "ranks",  "cameraPR",
     "ranks",  "fgsea",

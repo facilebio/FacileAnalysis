@@ -24,6 +24,7 @@ fdge(
   x,
   assay_name = NULL,
   method = NULL,
+  features = NULL,
   filter = "default",
   with_sample_weights = FALSE,
   ...,
