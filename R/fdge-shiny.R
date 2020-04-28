@@ -63,7 +63,6 @@ fdgeGadget <- function(x, title = "Differential Expression Analysis",
 #' @export
 #' @importFrom shiny callModule
 #' @importFrom shinyjs toggleElement
-#' @param model_def the module returned from [fdgeModelDefModule()]
 #' @return a `ReactiveFacileDgeAnalysisResult`, the output from [fdge()]
 fdgeAnalysis <- function(input, output, session, rfds, ..., debug = FALSE) {
   model <- callModule(flmDefRun, "model", rfds, ..., debug = debug)

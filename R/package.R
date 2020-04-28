@@ -22,6 +22,10 @@ multiGSEA::result
 #' @importFrom FacileViz plot
 NULL
 
+#' @importFrom FacileViz plot_data
+#' @export
+FacileViz::plot_data
+
 # Externally defined generics to re-export on package load ---------------------
 
 #' @importFrom broom tidy

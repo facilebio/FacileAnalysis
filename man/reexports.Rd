@@ -4,6 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{result}
+\alias{plot_data}
 \alias{tidy}
 \alias{\%>\%}
 \alias{callModule}
@@ -15,6 +16,8 @@ below to see their documentation.
 
 \describe{
   \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
+
+  \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
 
   \item{broom}{\code{\link[broom]{tidy}}}
 

@@ -16,9 +16,6 @@ fdgeGadget(
 
 fdgeAnalysis(input, output, session, rfds, ..., debug = FALSE)
 }
-\arguments{
-\item{model_def}{the module returned from \code{\link[=fdgeModelDefModule]{fdgeModelDefModule()}}}
-}
 \value{
 a \code{ReactiveFacileDgeAnalysisResult}, the output from \code{\link[=fdge]{fdge()}}
 }
