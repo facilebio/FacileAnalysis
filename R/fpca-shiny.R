@@ -286,7 +286,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     }
   })
 
-  # Render PCA Plot ..............................................................
+  # Render PCA Plot ............................................................
   pcaviz <- reactive({
     pca. <- req(pca())
     pc.calcd <- pcs_calculated()
@@ -302,7 +302,10 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     if (identical(substr(acolor, 1L, 8L), "feature:")) {
       feature_id <- sub("feature:", "", state$color_aes)
       current.cols <- colnames(pca.$result)
-      pca.$result <- with_assay_data(pca.$result, features = feature_id)
+      pca.$result <- with_assay_data(pca.$result, features = feature_id,
+                                     normalized = TRUE,
+                                     batch = param(pca., "batch"),
+                                     main = param(pca., "main"))
       added <- setdiff(colnames(pca.$result), current.cols)
       acolor <- added
     }
