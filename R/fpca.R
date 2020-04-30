@@ -163,8 +163,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
               col_covariates = dat[["samples"]], ...)
 
   out[["params"]][["assay_name"]] <- assay_name
-  out[["params"]][["batch"]] <- batch
-  out[["params"]][["main"]] <- main
+  if (!is.null(batch)) out[["params"]][["batch"]] <- batch
+  if (!is.null(main)) out[["params"]][["main"]] <- main
 
   if ("dataset" %in% colnames(col_covariates)) {
     out[["samples"]][["dataset"]] <- col_covariates[["dataset"]]
