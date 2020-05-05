@@ -177,6 +177,7 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
   <span class='no'>x</span>,
   <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
   <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>treat_lfc</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -193,7 +194,6 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
   <span class='kw'>with_sample_weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>treat_lfc</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>flip_lfc</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>with_box</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='no'>...</span>,
@@ -256,12 +256,6 @@ to use <code><a href='https://rdrr.io/pkg/limma/man/arrayWeights.html'>limma::ar
       <th>...</th>
       <td><p>passed down into inner methods, such as <code>biocbox</code> to tweak
 filtering criteria, for instance</p></td>
-    </tr>
-    <tr>
-      <th>flip_lfc</th>
-      <td><p>Set to <code>TRUE</code> if it is appropriate to flip the sign of the
-estimated logFC. This would be appropriate when calculating fold changes
-for dCt values, for instance. Default is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>weights</th>
