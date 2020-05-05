@@ -77,7 +77,7 @@ parameter) over the data. flm_def accepts a" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.6</span>
       </span>
     </div>
 
@@ -382,6 +382,8 @@ side-by-side volcano and datatable for differential expression results.</p>
   <span class='fu'>fdge</span>()
 <span class='no'>dge.comp</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>dge.crc</span>, <span class='no'>dge.blca</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: Properly running the interaction model here is still ALPHA</span>
 #&gt; <span class='warning'>  https://github.com/facilebio/FacileAnalysis/issues/19</span></div><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
+  <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>dge.comp</span>, <span class='kw'>xlabel</span> <span class='kw'>=</span> <span class='st'>"logFC(CRC)"</span>, <span class='kw'>ylabel</span> <span class='kw'>=</span> <span class='st'>"logFC(BLCA)"</span>,
+      <span class='kw'>highlight</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>dge.comp</span>)), <span class='fl'>5</span>))
   <span class='fu'><a href='FacileAnalysisResultViz.html'>report</a></span>(<span class='no'>dge.comp</span>)
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>dge.comp</span>)
 }</div></pre>
