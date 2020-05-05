@@ -28,6 +28,8 @@ NULL
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
 #' if (interactive()) {
+#'   viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
+#'       highlight = head(tidy(signature(dge.comp)), 5))
 #'   report(dge.comp)
 #'   shine(dge.comp)
 #' }
@@ -163,7 +165,8 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
-                                                    feature_id = NULL, ...) {
+                                                    features = NULL,
+                                                    highlight = NULL, ...) {
   hover <- c(
     # feature metadata
     "symbol", "feature_id", "meta",
@@ -173,22 +176,30 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
     "logFC", "padj")
   d <- tidy(x)
 
-  if (!is.null(feature_id)) {
-    assert_multi_class(feature_id, c("character", "data.frame"))
-    if (is.data.frame(feature_id)) {
-      .feature_id <- feature_id[["feature_id"]]
-    } else {
-      .feature_id <- feature_id
-    }
-    d <- filter(d, feature_id %in% .feature_id)
-  } else if (!is.null(x[["dge"]])) {
-    d <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
+  features <- extract_feature_id(features)
+  highlight <- extract_feature_id(highlight)
+  ids <- NULL
+
+  if (!is.null(x[["dge"]])) {
+    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
+    ids <- ids[["feature_id"]]
   } else {
-    d <- filter(d, padj.x <= max_padj | padj.y <= max_padj)
+    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj)[["feature_id"]]
   }
 
-  hover <- intersect(hover, colnames(d))
-  fscatterplot(d, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE, ...)
+  dat <- filter(d, .data$feature_id %in% c(ids, features, highlight))
+
+  if (length(highlight)) {
+    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
+                                  "fg", "bg")
+    color_aes <- "highlight."
+  } else {
+    color_aes <- NULL
+  }
+
+  hover <- setdiff(intersect(hover, colnames(d)), "highlight.")
+  fscatterplot(dat, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE,
+               color_aes = color_aes, showlegend = FALSE, ...)
 }
 
 #' Helper function to run an interaction model to generate statistics when

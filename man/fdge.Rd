@@ -227,6 +227,8 @@ dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") \%>\%
   fdge()
 dge.comp <- compare(dge.crc, dge.blca)
 if (interactive()) {
+  viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
+      highlight = head(tidy(signature(dge.comp)), 5))
   report(dge.comp)
   shine(dge.comp)
 }

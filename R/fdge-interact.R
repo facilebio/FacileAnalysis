@@ -444,7 +444,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 #' @importFrom DT datatable formatRound
 #' @importFrom htmltools tags
 #' @importFrom plotly config layout plot_ly toWebGL
-.viz.dge_ttest <- function(x, ntop = 200, max_padj = 0.10,
+#' @param highlight result of extract_feautre_id from parent call
+.viz.dge_ttest <- function(x, ntop = 200, highlight = NULL,
+                           max_padj = 0.10,
                            min_logFC = 1, round_digits = 3,
                            event_source = "A", treat_lfc = NULL,
                            webgl = TRUE, link_feature = TRUE,
@@ -460,7 +462,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     select(symbol, feature_id, logFC, padj, pval)
 
   dat.sig <- dat.all %>%
-    filter(abs(logFC) >= min_logFC & padj <= max_padj)
+    filter(
+      (abs(logFC) >= min_logFC & padj <= max_padj) |
+        feature_id %in% highlight)
 
   dat.up <- dat.sig %>%
     arrange(desc(logFC)) %>%
@@ -487,33 +491,51 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     dat <- mutate(dat, symbol = html, feature_id = NULL)
   }
 
+  if (is.character(highlight)) {
+    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
+                                  "fg", "bg")
+  }
+
   sdat <- SharedData$new(dat)
 
   # Generate volcano given the filtered data
   yaxis <- list(range = c(0, max(-log10(dat$pval))))
+  xaxis <- list(range = (max(abs(dat$logFC)) + 0.2) * c(-1, 1))
   p <- sdat %>%
     plot_ly(x = ~logFC, y = ~-log10(pval),
             type = "scatter", mode = "markers",
             hoverinfo = "text",
             # hoverlabel = list(bgcolor = "#3f3f3f"),
+            color = if (is.character(highlight)) {
+              ~highlight.
+            }else {
+              I("darkgrey")
+            },
+            colors = FacileViz::create_color_map(c("bg", "fg")),
             hoverlabel = list(bgcolor = "#B3B2B3"),
             source = event_source,
-            marker = list(color = "#838588"),
+            # marker = list(color = "#838588"),
             text = ~paste0(
               "Symbol: ", symbol, "<br>",
               sprintf(paste0("logFC: %.", round_digits, "f<br>"), logFC),
               sprintf(paste0("FDR: %.", round_digits, "f<br>"), FDR),
               sprintf(paste0("pvalue: %.", round_digits, "f<br>"), pval))) %>%
-    layout(yaxis = yaxis, dragmode = "select") %>%
+    layout(yaxis = yaxis, xaxis = xaxis, dragmode = "select",
+           showlegend = FALSE) %>%
     config(displaylogo = FALSE)
 
   if (webgl) p <- toWebGL(p)
 
   dtopts <- list(deferRender = TRUE, scrollY = 300, scroller = TRUE)
+  noshow <- c("highlight")
+  if (isTRUE(all.equal(dat$symbol, dat$feature_id))) {
+    noshow <- c(noshow, "symbol")
+  }
   dtable <- sdat %>%
     datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
               class = "compact", width = "100%", rownames = FALSE,
-              options = dtopts, escape = !link_feature) %>%
+              options = dtopts, escape = !link_feature,
+              colnames = setdiff(colnames(dat), noshow)) %>%
     formatRound(c("logFC", "FDR", "pval"), round_digits)
 
   # Title
