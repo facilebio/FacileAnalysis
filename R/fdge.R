@@ -75,9 +75,6 @@
 #'   features (genes) are removed from the dataset for testing, as well as if
 #'   to use [limma::arrayWeights()] or [limma::voomWithQualityWeights()]
 #'   (where appropriate) when testing (default is not to).
-#' @param flip_lfc Set to `TRUE` if it is appropriate to flip the sign of the
-#'   estimated logFC. This would be appropriate when calculating fold changes
-#'   for dCt values, for instance. Default is `FALSE`.
 #' @param weights a `sample_id,feature_id,weight` table of observation weights
 #'   to use when `method == "limma"`.
 #' @examples
@@ -120,7 +117,7 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
 #' @export
 #' @rdname fdge
 fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
-                                               method = NULL,
+                                               method = NULL, features = NULL,
                                                filter = "default",
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
@@ -138,7 +135,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              method = NULL, features = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE,
-                                             treat_lfc = NULL, flip_lfc = FALSE,
+                                             treat_lfc = NULL,
                                              weights = NULL, with_box = FALSE,
                                              ...,
                                              trend.eBayes = FALSE,
@@ -226,10 +223,6 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                        trend.eBayes = trend.eBayes,
                                        robust.eBayes = robust.eBayes)
 
-    if (isTRUE(flip_lfc)) {
-      result[["logFC"]] <- -1 * result[["logFC"]]
-    }
-
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
     rownames(result) <- result[["feature_id"]]
@@ -276,7 +269,6 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       method = method,
       model_def = x,
       treat_lfc = if (use.treat) treat_lfc else NULL,
-      flip_lfc = flip_lfc,
       with_sample_weights = with_sample_weights,
       weights = weights),
     # Standard FacileAnalysisResult things
