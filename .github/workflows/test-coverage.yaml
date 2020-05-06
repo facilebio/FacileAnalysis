@@ -1,29 +1,15 @@
 on:
-  push:
-    branches:
-      - master
-      - develop # This will eventually require a different container
-    paths:
-      - 'R/**'
-      - 'DESCRIPTION'
-      - 'NAMESPACE'
-      - 'src/**'
-      - 'tests/**'
-  pull_request:
   schedule:
-    # Rerun checks daily, after facilebio/facilebio_base_extra is rebuilt.
-    # This will catch failures due to changes in functionality of packages
-    # we depend on.
-    # facilebio_base_extra builds every day 4AM pacific time (11 AM UTC), so
-    # we will build this an hour after that (the same time facilebio/facilebio)
-    - cron: '0 12 * * *'
+    # Only push the test coverage up on a schedule. We can use the full
+    # facilebio image for this for expediency
+    - cron: '30 12 * * *'
 
 name: test-coverage
 
 jobs:
   test-coverage:
     runs-on: ubuntu-latest
-    container: facilebio/facilebio_base_extra
+    container: facilebio/facilebio
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       NOT_CRAN: true
@@ -31,15 +17,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      # The container already has the R version we want, so this will be a
-      # no-op, but we like the colorizing/problemMatchrers.r-lib
-      #   see r-lib/actions/setup-r/installer.js acquireR, where
-      #   if (returnCode != 0) { ... }
       - uses: r-lib/actions/setup-r@master
-
-      - name: Install dependencies
-        run: remotes::install_deps(dependencies = TRUE, upgrade = FALSE)
-        shell: Rscript {0}
 
       - name: Test coverage
         run: covr::codecov(quiet = FALSE)
