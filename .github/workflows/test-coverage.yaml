@@ -21,7 +21,7 @@ on:
 name: test-coverage
 
 jobs:
-  R-CMD-check:
+  test-coverage:
     runs-on: ubuntu-latest
     container: facilebio/facilebio_base_extra
     env:
