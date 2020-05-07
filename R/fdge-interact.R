@@ -475,7 +475,8 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
   dat <- dat.up %>%
     bind_rows(dat.down) %>%
-    rename(FDR = padj)
+    rename(FDR = padj) %>%
+    distinct(feature_id, .keep_all = TRUE)
 
   # Add link for gene and axe feature_id
   # We assume ensembl ids for now
