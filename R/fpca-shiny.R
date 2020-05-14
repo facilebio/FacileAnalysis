@@ -63,6 +63,7 @@ fpcaAnalysisUI <- function(id, ..., debug = FALSE) {
 #' @importFrom FacileShine
 #'   active_samples
 #'   assaySelect
+#'   batchCorrectConfig
 #'   initialized
 #'   user
 #' @importFrom shiny
@@ -90,17 +91,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
     active_samples(rfds)
   })
 
-  # the "batch" covariate is what I'm calling the extra/batch-level
-  # covariates. the entry selected in the testcov is removed from the
-  # available elemetns to select from here
-  batchcov <- callModule(categoricalSampleCovariateSelect, "batchcov",
-                         rfds, include1 = FALSE, ..., .with_none = FALSE,
-                         .exclude = NULL, reactive = .reactive,
-                         ignoreNULL = FALSE)
-
-  batchmain <- callModule(categoricalSampleCovariateSelect, "batchmain",
-                          rfds, include1 = FALSE, ..., .with_none = TRUE,
-                          .exclude = batchcov$covariate, reactive = .reactive)
+  batch <- callModule(batchCorrectConfig, "batch", rfds)
 
   # Set the maximum number of PCs such that they do not exceed number of samples
   # Running PCA is also disabled if there are less than three samples.
@@ -120,8 +111,8 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
     assay_name <- assay$assay_info()$assay
     pcs <- input$pcs
     ntop <- input$ntop
-    batch. <- name(batchcov)
-    main. <- name(batchmain)
+    batch. <- name(batch$batch)
+    main. <- name(batch$main)
     withProgress({
       fpca(samples., dims = pcs, ntop = ntop, assay_name = assay_name,
            batch = batch., main = main., custom_key = user(rfds))
@@ -141,6 +132,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
 #' @export
 #' @importFrom FacileShine
 #'   assaySelectUI
+#'   batchCorrectConfigUI
 #' @importFrom shiny
 #'   actionButton
 #'   column
@@ -157,18 +149,7 @@ fpcaRunUI <- function(id, width_opts = "200px", ..., debug = FALSE) {
   out <- tagList(
     fluidRow(
       column(3, assaySelectUI(ns("assay"), label = "Assay", choices = NULL)),
-      column(
-        2,
-        categoricalSampleCovariateSelectUI(
-          ns("batchcov"),
-          label = "Batch Correct",
-          multiple = TRUE)),
-      column(
-        2,
-        categoricalSampleCovariateSelectUI(
-          ns("batchmain"),
-          label = "Batch Preserve",
-          multiple = FALSE)),
+      column(4, batchCorrectConfigUI(ns("batch"), direction = "horizontal")),
       column(
         1,
         tags$div(
