@@ -101,7 +101,15 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                                              caption = NULL, ...) {
   type <- match.arg(type)
   treat_lfc <- x[["treat_lfc"]]
-  if (!missing(min_logFC) && test_number(treat_lfc) && treat_lfc != min_logFC) {
+
+  features.all <- features(x)
+
+  if (nrow(features.all) <= ntop) {
+    if (missing(max_padj)) max_padj <- 1
+    if (missing(min_logFC)) min_logFC <- 0
+  } else if (!missing(min_logFC) &&
+             test_number(treat_lfc) &&
+             treat_lfc != min_logFC) {
     warning("DGE was run using TREAT. Minimum logFC is set to that threshold")
     min_logFC <- treat_lfc
   }
@@ -179,12 +187,12 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
   if (type == "volcano") {
     dat <- mutate(dat, xval = logFC, yval = -log10(pval))
-    xlabel <- "logFC"
+    xlabel <- "log2FC"
     ylabel <- "-log10(pval)"
   } else {
     dat <- mutate(dat, xval = AveExpr, yval = logFC)
     xlabel <- "Average Expression"
-    ylabel <- "logFC"
+    ylabel <- "log2FC"
   }
 
   fp <- fscatterplot(
@@ -500,7 +508,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   sdat <- SharedData$new(dat)
 
   # Generate volcano given the filtered data
-  yaxis <- list(range = c(0, max(-log10(dat$pval))))
+  yaxis <- list(range = c(0, max(-log10(dat$pval)) + 0.1))
   xaxis <- list(range = (max(abs(dat$logFC)) + 0.2) * c(-1, 1))
   p <- sdat %>%
     plot_ly(x = ~logFC, y = ~-log10(pval),
