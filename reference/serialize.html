@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A shiny module that generates a linear model definition via <code>flm_def</code>. — flmDefRun • FacileAnalysis</title>
+<title>Save and load FacileAnalysisResult objects to/from disk. — fsave • FacileAnalysis</title>
 
 
 <!-- jquery -->
@@ -41,13 +41,16 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="A shiny module that generates a linear model definition via <code>flm_def</code>. — flmDefRun" />
+<meta property="og:title" content="Save and load FacileAnalysisResult objects to/from disk. — fsave" />
 <meta property="og:description" content="
-model_info &amp;amp;lt;- fds %&amp;amp;gt;%
-  FacileData::filter_samples(indication == &quot;BLCA&quot;) %&amp;amp;gt;%
-  flm_def(covariate = &quot;sample_type&quot;, numer = &quot;tumor&quot;, denom = &quot;normal&quot;,
-          batch = &quot;sex&quot;)
-" />
+Saving and loading FacileAnalysisResults can be tricky because they rely
+on a chain of parent objects that created them, all of which have a reference
+to the FacileDataStore that they came from.
+Currenly, the FacileDataStore is removed from every internal object when
+before it is serialized via fsave(). The FacileDataStore is then restored
+to &quot;just where it needs to be&quot; (using strong assumptions of where it needs
+to be, instead of logging where it was removed from in fsave()) when
+brought back to life via fload()." />
 
 
 
@@ -139,36 +142,71 @@ model_info &amp;amp;lt;- fds %&amp;amp;gt;%
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A shiny module that generates a linear model definition via <code>flm_def</code>.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/flm_def-shiny.R'><code>R/flm_def-shiny.R</code></a></small>
-    <div class="hidden name"><code>flmDefRun.Rd</code></div>
+    <h1>Save and load FacileAnalysisResult objects to/from disk.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/serialization.R'><code>R/serialization.R</code></a></small>
+    <div class="hidden name"><code>serialize.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    
-<pre><span class='no'>model_info</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='no'>fds</span> <span class='kw'>%&amp;gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&amp;gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)</pre>
-
+    <p><a href='https://www.tidyverse.org/lifecycle/#experimental'><img src='figures/lifecycle-experimental.svg' alt='Experimental lifecycle'></a></p>
+<p>Saving and loading FacileAnalysisResults can be tricky because they rely
+on a chain of parent objects that created them, all of which have a reference
+to the FacileDataStore that they came from.</p>
+<p>Currenly, the FacileDataStore is removed from every internal object when
+before it is serialized via <code>fsave()</code>. The FacileDataStore is then restored
+to "just where it needs to be" (using strong assumptions of where it needs
+to be, instead of logging where it was removed from in <code>fsave()</code>) when
+brought back to life via <code>fload()</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>flmDefRun</span>(
-  <span class='no'>input</span>,
-  <span class='no'>output</span>,
-  <span class='no'>session</span>,
-  <span class='no'>rfds</span>,
-  <span class='kw'>default_covariate</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>...</span>,
-  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>.reactive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
-)</pre>
+    <pre class="usage"><span class='fu'>fsave</span>(<span class='no'>x</span>, <span class='no'>file</span>, <span class='kw'>with_fds</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)
 
+<span class='fu'>fload</span>(<span class='no'>file</span>, <span class='kw'>fds</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>with_fds</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>file</th>
+      <td><p>A path to a file (should support <code><a href='https://rdrr.io/r/base/connections.html'>base::connections</a></code> in the
+future.</p></td>
+    </tr>
+    <tr>
+      <th>with_fds</th>
+      <td><p>Serialize the FacileDataStore with the object? Default is
+<code>FALSE</code> and you should have a good reason to change this behavior.</p></td>
+    </tr>
+    <tr>
+      <th>fds</th>
+      <td><p>The <code>FacileDataStore</code> the object was run on.</p></td>
+    </tr>
+    <tr>
+      <th>A</th>
+      <td><p><code>FacileAnalysisResult</code> object.</p></td>
+    </tr>
+    </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>ReactiveFacileLinearModelDefinition</code> object, the output from
-<code><a href='flm_def.html'>flm_def()</a></code>.</p>
+    <p><code>NULL</code> for <code>fsave</code>, the (correctly sublcassed) <code>FacileAnalysisResult</code>
+for <code>fload</code>, along with <code>FacileDataStore</code> (<code>fds</code>) attached</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>An <code>fsave_info</code> attribute will be attached to the serialized object before
+saving which will be a list that holds information required to materialize
+the analysis result successfully. Minimally this will include info about how
+to reconstitute and attach the FacileDataStore that the object was generated
+from.</p>
+<p>Elements of <code>fsave_info</code> list so far include:</p><ul>
+<li><p><code>fds_class</code>: A string indicating the class of the FacileDataStore that the
+result <code>x</code> was generated from.</p></li>
+<li><p><code>fds_path</code>: The path on the filesystem that teh FacileDataStore can be
+found. Currently we expect this to be a FacileDataSet</p></li>
+<li><p><code>fds_anno_dir</code>: The annotation directory for the FacileDataSet</p></li>
+<li><p><code>fds_add</code>: A descriptor that indicate which elements in the serialized
+object should have the fds attached to them, besides itself.</p></li>
+</ul>
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

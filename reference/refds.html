@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A shiny module that generates a linear model definition via <code>flm_def</code>. — flmDefRun • FacileAnalysis</title>
+<title>Reconstitute FacileDataStore links from unfds'd objects — refds • FacileAnalysis</title>
 
 
 <!-- jquery -->
@@ -41,13 +41,8 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="A shiny module that generates a linear model definition via <code>flm_def</code>. — flmDefRun" />
-<meta property="og:description" content="
-model_info &amp;amp;lt;- fds %&amp;amp;gt;%
-  FacileData::filter_samples(indication == &quot;BLCA&quot;) %&amp;amp;gt;%
-  flm_def(covariate = &quot;sample_type&quot;, numer = &quot;tumor&quot;, denom = &quot;normal&quot;,
-          batch = &quot;sex&quot;)
-" />
+<meta property="og:title" content="Reconstitute FacileDataStore links from unfds'd objects — refds" />
+<meta property="og:description" content="Not exported on purpose" />
 
 
 
@@ -139,36 +134,30 @@ model_info &amp;amp;lt;- fds %&amp;amp;gt;%
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A shiny module that generates a linear model definition via <code>flm_def</code>.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/flm_def-shiny.R'><code>R/flm_def-shiny.R</code></a></small>
-    <div class="hidden name"><code>flmDefRun.Rd</code></div>
+    <h1>Reconstitute FacileDataStore links from unfds'd objects</h1>
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/unfds.R'><code>R/unfds.R</code></a></small>
+    <div class="hidden name"><code>refds.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    
-<pre><span class='no'>model_info</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='no'>fds</span> <span class='kw'>%&amp;gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&amp;gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)</pre>
-
+    <p>Not exported on purpose</p>
     </div>
 
-    <pre class="usage"><span class='fu'>flmDefRun</span>(
-  <span class='no'>input</span>,
-  <span class='no'>output</span>,
-  <span class='no'>session</span>,
-  <span class='no'>rfds</span>,
-  <span class='kw'>default_covariate</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>...</span>,
-  <span class='kw'>debug</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>.reactive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
-)</pre>
+    <pre class="usage"><span class='fu'>refds</span>(<span class='no'>x</span>, <span class='no'>fds</span>, <span class='no'>...</span>)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>fds</th>
+      <td><p>a FacileDataStore</p></td>
+    </tr>
+    <tr>
+      <th>an</th>
+      <td><p>object to reconstitute fds links to</p></td>
+    </tr>
+    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>A <code>ReactiveFacileLinearModelDefinition</code> object, the output from
-<code><a href='flm_def.html'>flm_def()</a></code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
