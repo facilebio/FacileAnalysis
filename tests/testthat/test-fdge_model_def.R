@@ -69,7 +69,13 @@ test_that("flm_def removes samples with NA in covariates", {
   expect_true(any(in.warnings))
 
   # FacileDGEModel spec is the same after NA samples are removed
-  expect_equal(mod.all$covariates, mod.tumor$covariates)
+  covs.all <- mod.all$covariates
+  covs.tumor <- mod.tumor$covariates
+  expect_setequal(colnames(covs.all), colnames(covs.tumor))
+  expect_equal(
+    covs.all,
+    select(covs.tumor, colnames(covs.all)),
+    check.attributes = FALSE)
   expect_equal(mod.all$design, mod.tumor$design)
   expect_is(mod.all, "FacileTtestModelDefinition")
   expect_is(mod.tumor, "FacileTtestModelDefinition")

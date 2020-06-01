@@ -142,7 +142,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 
   if (!is.null(row_covariates)) {
     warning("Custom row_covariates not yet supported for facile_frame ",
-            "(it's not hard, I'm just lazy right now", immediate. = TRUE)
+            "(it's not hard, I'm just lazy right now)", immediate. = TRUE)
   }
 
   if (is.null(assay_name)) {
@@ -174,11 +174,11 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   }
 
   out[["result"]] <- out[["result"]] %>%
-    as.tbl() %>%
+    as_tibble() %>%
     select(dataset, sample_id, everything()) %>%
     as_facile_frame(.fds)
   out[["feature_stats"]] <- out[["feature_stats"]] %>%
-    as.tbl() %>%
+    as_tibble() %>%
     as_facile_frame(.fds)
 
   out[["samples"]] <- x
@@ -540,7 +540,7 @@ samples.FacilePcaAnalysisResult <- function(x, ...) {
     ungroup()
 
   stats <- inner_join(meta, rlong, by = "feature_id")
-  as.tbl(stats)
+  as_tibble(stats)
 }
 
 # Printing =====================================================================

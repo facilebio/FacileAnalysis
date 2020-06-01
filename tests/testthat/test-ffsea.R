@@ -59,7 +59,7 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
   mgres.cameraPR <- mgres %>%
     multiGSEA::result("cameraPR") %>%
     arrange(pval) %>%
-    as.tbl()
+    as_tibble()
 
   # expect_equal on tbls does not fly:
   # https://github.com/tidyverse/dplyr/issues/2751

@@ -235,7 +235,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     for (col in axe.cols) {
       if (col %in% names(result)) result[[col]] <- NULL
     }
-    result <- as.tbl(result)
+    result <- as_tibble(result)
   } else {
     result <- NULL
   }

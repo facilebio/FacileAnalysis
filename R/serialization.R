@@ -99,6 +99,11 @@ fload <- function(file, fds = NULL, with_fds = TRUE, ...) {
     if (!is(fds, "FacileDataStore")) {
       stop("We expected a FacileDataStore by now")
     }
+    common.class <- intersect(fds.info[["fds_class"]], class(fds))
+    if (length(common.class) == 0L) {
+      stop("It doesn't look like the FacileDataStore you are trying to ",
+           "associate with this result is the one that was used")
+    }
     res <- refds(res, fds)
   }
 

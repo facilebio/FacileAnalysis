@@ -439,7 +439,7 @@ result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
   }
 
   name. <- assert_choice(name, param(x, "methods"))
-  out <- as.tbl(result(mgres, name.))
+  out <- as_tibble(result(mgres, name.))
   out
 }
 
@@ -463,7 +463,7 @@ tidy.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
   mgres <- x[["result"]]
   # name. <- assert_choice(name, param(x, "methods"))
   name. <- assert_choice(name, multiGSEA::resultNames(mgres))
-  out <- as.tbl(result(mgres, name.))
+  out <- as_tibble(result(mgres, name.))
   select(out, collection, name, pval, padj, padj.by.collection, everything())
 }
 

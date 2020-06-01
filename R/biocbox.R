@@ -165,7 +165,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     stopifnot(is(out, "EList"))
     out[["design"]] <- des
     if (with_sample_weights) {
-      out <- limma::arrayWeights(out, out[["design"]])
+      out[["weights"]] <- limma::arrayWeights(out, out[["design"]])
     }
   } else {
     stop("How did we get here?")
@@ -236,19 +236,10 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
   }
 
-  if (test_multi_class(filter_require, c("data.frame", "tbl"))) {
-    filter_require <- filter_require[["feature_id"]]
-  }
+  filter_require <- extract_feature_id(filter_require)
+  filter_universe <- extract_feature_id(filter_universe)
   if (!is.null(filter_universe)) {
-    if (test_multi_class(filter_universe, c("data.frame", "tbl"))) {
-      filter_universe <- filter_universe[["feature_id"]]
-      if (is.character(filter_require)) {
-        filter_universe <- unique(c(filter_universe, filter_require))
-      }
-    } else {
-      warning("Unknown parameter type for filter_universe, ignoring ...")
-      filter_universe <- NULL
-    }
+    filter_universe <- unique(c(filter_universe, filter_require))
   }
 
   do.filterByExpr <- !isFALSE(filter) &&

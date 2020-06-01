@@ -111,11 +111,13 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
     assay_name <- assay$assay_info()$assay
     pcs <- input$pcs
     ntop <- input$ntop
+    pcount <- input$priorcount
     batch. <- name(batch$batch)
     main. <- name(batch$main)
     withProgress({
       fpca(samples., dims = pcs, ntop = ntop, assay_name = assay_name,
-           batch = batch., main = main., custom_key = user(rfds))
+           batch = batch., main = main., prior.count = pcount,
+           custom_key = user(rfds))
     }, message = "Performing PCA")
   })
 
@@ -163,7 +165,9 @@ fpcaRunUI <- function(id, width_opts = "200px", ..., debug = FALSE) {
             numericInput(ns("pcs"), label = "Number of PCs",
                          value = 10, min = 2, max = 30, step = 1),
             numericInput(ns("ntop"), label = "Number of genes",
-                         value = 500, min = 50, max = 5000, step = 500)))),
+                         value = 500, min = 50, max = 5000, step = 500),
+            numericInput(ns("priorcount"), label = "Prior Count",
+                         value = 5, min = 1, max = 10, step = 1)))),
       column(1, actionButton(ns("run"), "Run"), style = "margin-top: 1.7em")
     ))
 }
