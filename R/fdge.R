@@ -628,8 +628,8 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 #' This can't work in the current framework because these methods need to
 #' return an EList (biocbox), not a fit object
 #'
+#' importFrom edgeR voomLmFit
 #' @noRd
-#' @importFrom edgeR voomLmFit
 .voomLmFit <- function(counts, design = NULL, block = NULL,
                        prior.weights = NULL, sample.weights = FALSE, ...) {
   args <- list(...)

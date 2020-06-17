@@ -257,7 +257,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     (isTRUE(filter) || (isTRUE(filter == "default") && isTRUE(default.filter)))
 
   if (do.filterByExpr) {
-    if (!ainfo[["assay_type"]] %in% c("rnaseq", "umi")) {
+    if (!ainfo[["assay_type"]] %in% c("rnaseq", "umi", "pseudobulk")) {
       warning("Automatic filtering only implemented for `rnaseq` and `umi` ",
               "assay types for now.\nFiltering step skipped",
               immediate. = TRUE)
