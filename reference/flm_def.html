@@ -78,7 +78,7 @@ fdge()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.12</span>
       </span>
     </div>
 
@@ -157,6 +157,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>
 )
@@ -168,6 +169,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>,
   <span class='kw'>contrast.</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -181,6 +183,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>
 )
@@ -192,6 +195,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>,
   <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
@@ -204,6 +208,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>,
   <span class='kw'>samples</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -217,6 +222,7 @@ define the design, coef / contrast to test manually and pass those into
   <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
   <span class='no'>...</span>,
   <span class='kw'>samples</span> <span class='kw'>=</span> <span class='fu'>active_samples</span>(<span class='no'>x</span>),
@@ -249,6 +255,11 @@ make up the denominator</p></td>
       <th>batch</th>
       <td><p>character vector defining the covariate/groups to
 use as batch effects</p></td>
+    </tr>
+    <tr>
+      <th>block</th>
+      <td><p>a string that names the covariate to use for the blocking
+factor in a random effects model.</p></td>
     </tr>
     <tr>
       <th>on_missing</th>
