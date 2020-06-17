@@ -30,6 +30,8 @@
 #'   make up the denominator
 #' @param batch character vector defining the covariate/groups to
 #'   use as batch effects
+#' @param block a string that names the covariate to use for the blocking
+#'   factor in a random effects model.
 #' @param on_missing when a covariate level is missing (NA) for a sample, the
 #'   setting of this parameter (default `"warn"`) will dictate the behavior
 #'   of this funciton. When `"warning"`, a warning will be raised, and the
@@ -74,8 +76,8 @@
 #'   FacileData::filter_samples(indication == "BLCA") %>%
 #'   flm_def(covariate = "stage", batch = "sex")
 flm_def <- function(x, covariate, numer = NULL, denom = NULL,
-                    batch = NULL, on_missing = c("warning", "error"),
-                    ...) {
+                    batch = NULL, block = NULL,
+                    on_missing = c("warning", "error"), ...) {
   UseMethod("flm_def", x)
 }
 
@@ -96,7 +98,7 @@ flm_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @param contrast. A custom contrast vector can be passed in for extra tricky
 #'   comparisons that we haven't figured out how to put a GUI in front of.
 flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
-                               batch = NULL,
+                               batch = NULL, block = NULL,
                                on_missing = c("warning", "error"), ...,
                                contrast. = NULL,
                                .fds = NULL) {
@@ -109,6 +111,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
+  if (unselected(block)) block <- NULL
 
   assert_subset(batch, setdiff(colnames(x), c("sample_id")))
   if (!is.null(.fds)) {
@@ -153,7 +156,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   x <- distinct(x, dataset, sample_id, .keep_all = TRUE)
   # Build the design matrix ----------------------------------------------------
-  req.cols <- c("dataset",  "sample_id", covariate, batch)
+  req.cols <- c("dataset",  "sample_id", covariate, batch, block)
   incomplete <- !complete.cases(select(x, !!req.cols))
   if (any(incomplete)) {
     msg <- paste(sum(incomplete), "samples with NA's in required covariates")
@@ -228,7 +231,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     if (length(dup.terms)) {
       warnings <- c(
         warnings,
-        glue("Warning: the same term(s) apper in both numerator and ",
+        glue("Warning: the same term(s) appear in both numerator and ",
              "denominator (", paste(dup.terms, collapse = ","), ")")
       )
     }
@@ -289,6 +292,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     numer = numer,
     denom = denom,
     batch = batch,
+    block = block,
     contrast. = contrast.)
   # out[["test_type"]] <- test_type
   out[["covariates"]] <- x
@@ -307,15 +311,15 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname flm_def
 #' @importFrom FacileViz unselected
 flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
-                        batch = NULL, on_missing = c("warning", "error"),
-                        ...) {
+                        batch = NULL, block = NULL,
+                        on_missing = c("warning", "error"), ...) {
   x <- collect(x, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
 
   flm_def.data.frame(x, covariate = covariate, numer = numer,
-                     denom = denom, batch = batch,
+                     denom = denom, batch = batch, block = block,
                      on_missing = on_missing, ...)
 }
 
@@ -334,7 +338,7 @@ flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 #' @importFrom FacileViz unselected
 #' @rdname flm_def
 flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
-                                 batch = NULL,
+                                 batch = NULL, block = NULL,
                                  on_missing = c("warning", "error"), ...,
                                  custom_key = NULL) {
   .fds <- assert_class(fds(x), "FacileDataStore")
@@ -343,10 +347,15 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
+  if (unselected(block)) block <- NULL
+
+  if (!is.null(block)) assert_string(block)
 
   # Retrieve any covariates from the FacileDataStore that are not present
   # in the facile_frame `x`
-  required.covs <- setdiff(c(covariate, batch), c("dataset", "sample_id"))
+  required.covs <- setdiff(
+    c(covariate, batch, block),
+    c("dataset", "sample_id"))
   assert_character(required.covs)
 
   fetch.covs <- setdiff(required.covs, colnames(x))
@@ -358,7 +367,7 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
   x <- collect(x, n = Inf)
 
   out <- flm_def.data.frame(x, covariate = covariate, numer = numer,
-                            denom = denom, batch = batch,
+                            denom = denom, batch = batch, block = block,
                             on_missing = on_missing, .fds = .fds, ...)
   out
 }
@@ -367,7 +376,7 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname flm_def
 #' @importFrom FacileViz unselected
 flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
-                                    batch = NULL,
+                                    batch = NULL, block = NULL,
                                     on_missing = c("warning", "error"),
                                     ..., samples = NULL, custom_key = NULL) {
   if (is.null(samples)) samples <- samples(x)
@@ -376,9 +385,10 @@ flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
+  if (unselected(block)) block <- NULL
 
   flm_def(samples, covariate = covariate, numer = numer, denom = denom,
-          batch = batch, on_missing = on_missing,
+          batch = batch, block = block, on_missing = on_missing,
           custom_key = custom_key, ...)
 }
 
@@ -388,6 +398,7 @@ flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
 #' @importFrom FacileViz unselected
 flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
                                             denom = NULL, batch = NULL,
+                                            block = NULL,
                                             on_missing = c("warning", "error"),
                                             ..., samples = active_samples(x),
                                             custom_key = user(x)) {
@@ -395,9 +406,10 @@ flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
   if (unselected(batch)) batch <- NULL
+  if (unselected(block)) block <- NULL
 
   flm_def(samples, covariate = covariate, numer = numer, denom = denom,
-          batch = batch, on_missing = on_missing,
+          batch = batch, block = block, on_missing = on_missing,
           custom_key = custom_key, ...)
 }
 

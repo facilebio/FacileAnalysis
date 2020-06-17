@@ -218,10 +218,22 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     if (method == "limma-trend") {
       trend.eBayes <- TRUE
     }
+
+    block <- param(x, "block")
+    dup.corr <- NULL
+    if (!is.null(block)) {
+      # this needs to be a EList for now
+      assert_class(bb, "EList")
+      block <- bb[["targets"]][[block]]
+      assert_categorical(block, len = ncol(bb), any.missing = FALSE)
+      dup.corr <- bb$block.corr
+    }
+
     result <- calculateIndividualLogFC(bb, des, contrast = testme,
                                        treat.lfc = treat_lfc,
                                        trend.eBayes = trend.eBayes,
-                                       robust.eBayes = robust.eBayes)
+                                       robust.eBayes = robust.eBayes,
+                                       block = block, correlation = dup.corr)
 
     # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
@@ -610,11 +622,34 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 
 # Helpers ======================================================================
 
+
+#' Defines a voomLmFit method that can accept dots (and toss them)
+#'
+#' This can't work in the current framework because these methods need to
+#' return an EList (biocbox), not a fit object
+#'
+#' @noRd
+#' @importFrom edgeR voomLmFit
+.voomLmFit <- function(counts, design = NULL, block = NULL,
+                       prior.weights = NULL, sample.weights = FALSE, ...) {
+  args <- list(...)
+  vm.args <- formals(edgeR::voomLmFit)
+  take.args <- intersect(names(vm.args), names(args))
+
+  call.args <- list(counts = counts, design = design, block = block,
+                    prior.weights = prior.weights,
+                    sample.weights = sample.weights)
+  if (length(take.args)) call.args <- c(call.args, args[take.args])
+
+  do.call(edgeR::voomLmFit, call.args)
+}
+
+
 #' Defines a voom method that can accept dots (and toss them)
 #'
 #' @noRd
-#' @importFrom limma voom
-.voom <- function(counts, design = NULL, ...) {
+#' @importFrom limma voom duplicateCorrelation
+.voom <- function(counts, design = NULL, block = NULL, ...) {
   args <- list(...)
   vm.args <- formals(limma::voom)
   take.args <- intersect(names(vm.args), names(args))
@@ -622,13 +657,29 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
   call.args <- list(counts = counts, design = design)
   if (length(take.args)) call.args <- c(call.args, args[take.args])
 
-  do.call(limma::voom, call.args)
+  vm <- do.call(limma::voom, call.args)
+
+  # Follow the two-step dupcor approach outlined in Section 18.1.9 of the
+  # limmaUserGuide
+  if (!is.null(block)) {
+    dcor <- duplicateCorrelation(vm, vm$design, block = vm$targets[[block]])
+
+    call.args[["correlation"]] <- dcor$consensus.correlation
+    call.args[["block"]] <- vm$targets[[block]]
+
+    vm <- do.call(limma::voom, call.args)
+    dcor <- duplicateCorrelation(vm, vm$design, block = vm$targets[[block]])
+    vm$block.corr <- dcor$consensus.correlation
+  }
+
+  vm
 }
 
 #' This is necessary because limma::voomWithQualityWeights calls voom with
 #' voom(...), but it doesn't accept ...
 #' @noRd
-.voomWithQualityWeights <- function(counts, design = NULL, ...) {
+#' @importFrom limma voomWithQualityWeights duplicateCorrelation
+.voomWithQualityWeights <- function(counts, design = NULL, block = block, ...) {
   args <- list(...)
   vm.args <- formals(limma::voom)
   vmw.args <- formals(limma::voomWithQualityWeights)
@@ -638,7 +689,22 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
   call.args <- list(counts = counts, design = design)
   if (length(take.args)) call.args <- c(call.args, args[take.args])
 
-  do.call(limma::voomWithQualityWeights, call.args)
+  vm <- do.call(limma::voomWithQualityWeights, call.args)
+
+  # Follow the two-step dupcor approach outlined in Section 18.1.9 of the
+  # limmaUserGuide
+  if (!is.null(block)) {
+    dcor <- duplicateCorrelation(vm, vm$design, block = vm$targets[[block]])
+
+    call.args[["correlation"]] <- dcor$consensus
+    call.args[["block"]] <- vm$targets[[block]]
+
+    vm <- do.call(limma::voom, call.args)
+    dcor <- duplicateCorrelation(vm, vm$design, block = vm$targets[[block]])
+    vm$block.corr <- dcor$consensus
+  }
+
+  vm
 }
 
 #' A table of assay_type,dge_method combination parameters
@@ -666,6 +732,7 @@ fdge_methods <- function(assay_type = NULL,
     "rnaseq",      "voom",              "DGEList",     TRUE,
     "rnaseq",      "edgeR-qlf",         "DGEList",     TRUE,
     "rnaseq",      "limma-trend",       "DGEList",     TRUE,
+    "pseudobulk",  "edgeR-qlf",         "DGEList",     TRUE,
     "umi",         "voom",              "DGEList",     TRUE,
     "umi",         "edgeR-qlf",         "DGEList",     TRUE,
     "umi",         "limma-trend",       "DGEList",     TRUE,

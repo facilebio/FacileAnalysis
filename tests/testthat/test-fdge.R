@@ -112,6 +112,7 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
             numer = "tumor",
             denom = "normal") %>%
     fdge(method = "voom", with_box = TRUE) # This will calculate weights for us
+  res.orig <- tidy(vm.fdge)
 
   vm <- biocbox(vm.fdge)
 
@@ -133,26 +134,85 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
     limma::topTable("tumor", n = Inf, sort.by = "none") %>%
     mutate(feature_id = rownames(.))
 
+  # Let's make sure user knows they can't provide custom weights for voom
   f.res <- expect_warning(
     fdge(model(vm.fdge), features = features(vm.fdge),
          method = "voom", weights = weights),
-    ".*weights.*replaced")
+    ".*weights.*provided.*set to NULL")
   fstats <- tidy(f.res)
+  expect_equal(fstats$t, res.orig$t)
 
-  expect_setequal(tidy(vm.fdge)[["feature_id"]], ex.res[["feature_id"]])
-  expect_setequal(fstats[["feature_id"]], ex.res[["feature_id"]])
+  # Now let's use the custom weights from normal "limma" method. We use
+  # FacileBiocData here so we can test the vm$E matrix directly, otherwise
+  # we would have to save the vm$E matrix as an assay into fds(vm.fdge) so we
+  # can pull it out "in flight" during the analysis ... ugh.
+  el <- vm
+  el$weights <- NULL
+  fvm <- FacileBiocData:::facilitate.EList(el, assay_type = "lognorm",
+                                           organism = "Homo sapiens")
+  w.res <- samples(fvm) %>%
+    flm_def("sample_type", "tumor", "normal") %>%
+    fdge(method = "limma",
+         features = features(vm.fdge),
+         weights = weights)
 
-  cmp <- tidy(vm.fdge) %>%
-    select(feature_id, symbol, pval, padj) %>%
-    left_join(select(ex.res, feature_id, logFC.limma = logFC, pval.limma = P.Value),
+  expect_setequal(tidy(w.res)[["feature_id"]], ex.res[["feature_id"]])
+
+  cmp <- tidy(w.res) %>%
+    select(feature_id, symbol, logFC, t, pval, padj) %>%
+    left_join(select(ex.res, feature_id, logFC.ex = logFC, pval.ex = P.Value,
+                     t.ex = t),
               by = "feature_id") %>%
-    left_join(select(fstats, feature_id, logFC.f2 = logFC, pval.f2 = pval),
+    left_join(select(fstats, feature_id, logFC.vm = logFC, pval.vm = pval,
+                     t.vm = t),
               by = "feature_id")
 
   expect_true(all(complete.cases(cmp))) # "full" join worked
-  expect_false(isTRUE(all.equal(cmp[["logFC"]], cmp[["logFC.limma"]])))
-  expect_equal(cmp[["logFC.f2"]], cmp[["logFC.limma"]])
-  expect_equal(cmp[["pval.f2"]], cmp[["pval.limma"]])
+  expect_equal(cmp$logFC, cmp$logFC.ex)
+  expect_equal(cmp$t, cmp$t.ex)
+  expect_false(isTRUE(all.equal(cmp$t, cmp$t.vm)))
+})
+
+test_that("duplicateCorrelation is supported with voom", {
+  flm <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    flm_def(covariate = "sample_type",
+            numer = "tumor",
+            denom = "normal",
+            block = "sex")
+  expect_equal(param(flm, "block"), "sex")
+
+  vm.fdge <- fdge(flm, method = "voom", with_box = TRUE)
+  vm.box <- vm.fdge$biocbox
+  assert_number(vm.box$block.corr)
+  vm.res <- tidy(vm.fdge)
+
+  # Test against two-pass voom/duplicateCorrelation mojo
+  y <- samples(flm) %>%
+    biocbox(class = "DGEList", features = features(vm.fdge)) %>%
+    edgeR::calcNormFactors()
+  expect_equal(nrow(y), nrow(vm.res))
+  des <- model.matrix(~ 0 + sample_type, data = y$samples)
+
+  vm <- limma::voom(y, des)
+  dup <- limma::duplicateCorrelation(vm, des, block = vm$targets$sex)
+  vm <- limma::voom(y, des, block = vm$targets$sex,
+                    correlation = dup$consensus.correlation)
+  expect_equal(vm.box$weights, vm$weights)
+
+  dup <- limma::duplicateCorrelation(vm, des, block = vm$targets$sex)
+  expect_equal(vm.box$block.corr, dup$consensus.correlation)
+
+  ex.fit <- limma::lmFit(vm, des, block = vm$targets$sex,
+                         correlation =  dup$consensus.correlation)
+  ex.fit <- limma::contrasts.fit(ex.fit, c(-1, 1))
+  ex.res <- ex.fit %>%
+    limma::eBayes() %>%
+    limma::topTable(n = Inf, sort.by = "none")
+
+  expect_equal(vm.res$feature_id, rownames(ex.res))
+  expect_equal(vm.res$logFC, ex.res$logFC)
+  expect_equal(vm.res$t, ex.res$t)
 })
 
 # Ranks and Signatures =========================================================

@@ -52,7 +52,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                                 filter_universe = NULL,
                                                 filter_require = NULL,
                                                 with_sample_weights = FALSE,
-                                                weights = NULL,
+                                                weights = NULL, block = NULL,
                                                 prior_count = 0.1, ...) {
   assert_class(x, "FacileLinearModelDefinition")
   si <- assert_class(x$covariates, "facile_frame")
@@ -147,10 +147,21 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   if (method == "edgeR-qlf") {
     out <- suppressWarnings(edgeR::estimateDisp(bb, des, robust = TRUE))
   } else if (method == "voom") {
+    # out <- .voomLmFit(bb, des, block = param(x, "block"),
+    #                   prior.weights = weights,
+    #                   sample.weights = with_sample_weights)
+
     if (with_sample_weights) {
-      out <- .voomWithQualityWeights(bb, des, ...)
+      out <- .voomWithQualityWeights(bb, des, block = param(x, "block"), ...)
     } else {
-      out <- .voom(bb, des, ...)
+      out <- .voom(bb, des, block = param(x, "block"), ...)
+    }
+
+    if (!is.null(weights)) {
+      warning("Can't estimate sample weights and include prior weights. ",
+              "The prior `weights` you provided have been set to NULL",
+              immediate. = TRUE)
+      weights <- NULL
     }
   } else if (method %in% c("limma-trend", "limma")) {
     if (is(bb, "DGEList")) {

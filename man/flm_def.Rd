@@ -15,6 +15,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = NULL,
   on_missing = c("warning", "error"),
   ...
 )
@@ -25,6 +26,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = NULL,
   on_missing = c("warning", "error"),
   ...,
   contrast. = NULL,
@@ -37,6 +39,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = NULL,
   on_missing = c("warning", "error"),
   ...
 )
@@ -47,6 +50,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = NULL,
   on_missing = c("warning", "error"),
   ...,
   custom_key = NULL
@@ -58,6 +62,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = block,
   on_missing = c("warning", "error"),
   ...,
   samples = NULL,
@@ -70,6 +75,7 @@ flm_def(
   numer = NULL,
   denom = NULL,
   batch = NULL,
+  block = block,
   on_missing = c("warning", "error"),
   ...,
   samples = active_samples(x),
@@ -90,6 +96,9 @@ make up the denominator}
 
 \item{batch}{character vector defining the covariate/groups to
 use as batch effects}
+
+\item{block}{a string that names the covariate to use for the blocking
+factor in a random effects model.}
 
 \item{on_missing}{when a covariate level is missing (NA) for a sample, the
 setting of this parameter (default \code{"warn"}) will dictate the behavior

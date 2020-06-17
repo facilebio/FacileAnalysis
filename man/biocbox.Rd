@@ -15,6 +15,7 @@
   filter_require = NULL,
   with_sample_weights = FALSE,
   weights = NULL,
+  block = NULL,
   prior_count = 0.1,
   ...
 )
