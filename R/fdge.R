@@ -104,6 +104,17 @@ fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
   UseMethod("fdge", x)
 }
 
+#' @noRd
+#' @export
+fdge.FacileFailedModelDefinition <- function(x, assay_name = NULL,
+                                             method = NULL, features = NULL,
+                                             filter = "default",
+                                             with_sample_weights = FALSE, ...,
+                                             verbose = FALSE) {
+  stop("There are erros in this model:\n", paste(x$errors, collapse = "\n"))
+}
+
+
 #' @export
 #' @rdname fdge
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
@@ -574,7 +585,7 @@ biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   out <- biocbox(model(x), assay_name = assay_name, method = method,
                  features = features(x),
                  with_sample_weights = param(x, "with_sample_weights"),
-                 weights = param(x, "weights"))
+                 weights = param(x, "weights"), ...)
   out
 }
 
@@ -683,7 +694,7 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
   args <- list(...)
   vm.args <- formals(limma::voom)
   vmw.args <- formals(limma::voomWithQualityWeights)
-  all.formals <- c(names(vm.args), names(vmw.args))
+  all.formals <- c(vm.args, vmw.args)
   take.args <- intersect(names(args), names(all.formals))
 
   call.args <- list(counts = counts, design = design)

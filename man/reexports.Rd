@@ -15,13 +15,13 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{FacileData}{\code{\link[FacileData]{\%>\%}}}
+  \item{FacileData}{\code{\link[FacileData:reexports]{\%>\%}}}
 
   \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
 
-  \item{broom}{\code{\link[broom]{tidy}}}
+  \item{broom}{\code{\link[broom:reexports]{tidy}}}
 
-  \item{multiGSEA}{\code{\link[multiGSEA]{result}}}
+  \item{multiGSEA}{\code{\link[multiGSEA:results]{result}}}
 
   \item{shiny}{\code{\link[shiny]{callModule}}}
 }}

@@ -14,7 +14,7 @@ fpca(
   assay_name = NULL,
   dims = 5,
   features = NULL,
-  filter = "default",
+  filter = "variance",
   ntop = 1000,
   row_covariates = NULL,
   col_covariates = NULL,
@@ -28,7 +28,7 @@ fpca(
   assay_name = NULL,
   dims = min(5, nrow(collect(x, n = Inf)) - 1L),
   features = NULL,
-  filter = "default",
+  filter = "variance",
   ntop = 1000,
   row_covariates = NULL,
   col_covariates = NULL,
@@ -109,6 +109,40 @@ We can compare two PCA results. Currently this just means we compare the
 loadings of the features along each PC from fpca result \code{x} and \code{y}.
 }
 
+\section{Batch Correction}{
+
+Because we assume that PCA is performed on normalized data, we leverage the
+batch correction facilities provided by the \code{batch} and \code{main} parameters
+in the \code{\link[FacileData:fetch_assay_data]{FacileData::fetch_assay_data()}} pipeline. If your samples have a
+\code{"sex"} covariate defined, for example,  you can perform a PCA with
+sex-corrected expression values like so: \code{fpca(samples, batch = "sex")}
+}
+
+\section{Features Used for PCA}{
+
+By default, \code{fpca()} will assess the variance of all the features (genes) to
+perform PCA over, and will keep the top \code{ntop} ones. This behavior is
+determined by the following three parameters:
+\enumerate{
+\item \code{filter} determines the method by which features are selected for
+analysis. Currently you can only choose \code{"variance"} (the default) or
+\code{"none"}.
+\item \code{features} determines the universe of features that are available for the
+analysis. When \code{NULL} (default), all features for the given assay will
+be loaded and filtered using the specification of the \code{filter} parameter.
+If a feature descriptor is provided and \code{filter} is not specified, then
+we assume that these are the exact features to run the analysis on, and
+\code{filter} defaults to \code{"none"}. You may, however, intend for \code{features} to
+define the universe of features to use prior to filtering, perhaps to
+perform a PCA on only a certain set of genes (protein coding), but then
+filter those further by variance. In this case, you will need to pass in
+the feature descriptor for the universe of features you want to consider,
+then \emph{explicity set \code{filter = "variance"}}.
+\item \code{ntop} the default "top" number of features to take when filtering by
+variance.
+}
+}
+
 \section{Development Notes}{
 
 Follow progress on implementation of \code{shine()} and \code{report()} below:
@@ -177,12 +211,17 @@ if (interactive()) {
   viz(pca.crc, color_aes = "sex")
 }
 
-# Same PCA as above, but regress "sex" out of samples first.
+# Regress "sex" out from expression data
 pca.crcs <- FacileData::samples(pca.crc) \%>\%
   fpca(batch = "sex")
 if (interactive()) {
   viz(pca.crcs, color_aes = "sex")
 }
+
+# Perform PCA on only the protein coding genes
+genes.pc <- features(efds) \%>\% filter(meta == "protein_coding")
+pca.crc.pc <- samples(pca.crc) \%>\%
+  fpca(features = genes.pc, filter = "variance")
 
 pca.gdb <- pca.crc \%>\%
   signature(dims = 1:3) \%>\%

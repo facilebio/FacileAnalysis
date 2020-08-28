@@ -11,6 +11,35 @@
 #' perform gene set enrichment analysis over a specified dimension to identify
 #' functional categories loaded onto differend PCs.
 #'
+#' @section Batch Correction:
+#' Because we assume that PCA is performed on normalized data, we leverage the
+#' batch correction facilities provided by the `batch` and `main` parameters
+#' in the [FacileData::fetch_assay_data()] pipeline. If your samples have a
+#' `"sex"` covariate defined, for example,  you can perform a PCA with
+#' sex-corrected expression values like so: `fpca(samples, batch = "sex")`
+#'
+#' @section Features Used for PCA:
+#' By default, `fpca()` will assess the variance of all the features (genes) to
+#' perform PCA over, and will keep the top `ntop` ones. This behavior is
+#' determined by the following three parameters:
+#'
+#' 1. `filter` determines the method by which features are selected for
+#'    analysis. Currently you can only choose `"variance"` (the default) or
+#'    `"none"`.
+#' 2. `features` determines the universe of features that are available for the
+#'    analysis. When `NULL` (default), all features for the given assay will
+#'    be loaded and filtered using the specification of the `filter` parameter.
+#'    If a feature descriptor is provided and `filter` is not specified, then
+#'    we assume that these are the exact features to run the analysis on, and
+#'    `filter` defaults to `"none"`. You may, however, intend for `features` to
+#'    define the universe of features to use prior to filtering, perhaps to
+#'    perform a PCA on only a certain set of genes (protein coding), but then
+#'    filter those further by variance. In this case, you will need to pass in
+#'    the feature descriptor for the universe of features you want to consider,
+#'    then *explicity set `filter = "variance"`*.
+#' 3. `ntop` the default "top" number of features to take when filtering by
+#'    variance.
+#'
 #' @section Development Notes:
 #' Follow progress on implementation of `shine()` and `report()` below:
 #'
@@ -64,6 +93,7 @@
 #' @param batch,main specify the covariates to use for batch effect removal.
 #'   Refer to the [FacileData::remove_batch_effect()] help for more information.
 #' @return an fpca result
+#'
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
 #'
@@ -77,12 +107,17 @@
 #'   viz(pca.crc, color_aes = "sex")
 #' }
 #'
-#' # Same PCA as above, but regress "sex" out of samples first.
+#' # Regress "sex" out from expression data
 #' pca.crcs <- FacileData::samples(pca.crc) %>%
 #'   fpca(batch = "sex")
 #' if (interactive()) {
 #'   viz(pca.crcs, color_aes = "sex")
 #' }
+#'
+#' # Perform PCA on only the protein coding genes
+#' genes.pc <- features(efds) %>% filter(meta == "protein_coding")
+#' pca.crc.pc <- samples(pca.crc) %>%
+#'   fpca(features = genes.pc, filter = "variance")
 #'
 #' pca.gdb <- pca.crc %>%
 #'   signature(dims = 1:3) %>%
@@ -96,7 +131,7 @@
 #'   # report(pca.all, color_aes = "indication", shape_aes = "sample_type")
 #' }
 fpca <- function(x, assay_name = NULL, dims = 5, features = NULL,
-                 filter = "default", ntop = 1000, row_covariates = NULL,
+                 filter = "variance", ntop = 1000, row_covariates = NULL,
                  col_covariates = NULL,
                  batch = NULL, main = NULL, ...) {
   UseMethod("fpca", x)
@@ -106,7 +141,7 @@ fpca <- function(x, assay_name = NULL, dims = 5, features = NULL,
 #' @export
 fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
                                  features = NULL,
-                                 filter = "default", ntop = 1000,
+                                 filter = "variance", ntop = 1000,
                                  row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
                                  main = NULL, custom_key = Sys.getenv("USER"),
@@ -114,7 +149,9 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
   assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
-
+  if (!is.null(features) && missing(filter)) {
+    filter <- "none"
+  }
   fpca(samples, assay_name, dims, features, filter, ntop,
        row_covariates, col_covariates, batch, main, custom_key, ...)
 }
@@ -131,7 +168,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
 #' @export
 fpca.facile_frame <- function(x, assay_name = NULL,
                               dims = min(5, nrow(collect(x, n = Inf)) - 1L),
-                              features = NULL, filter = "default", ntop = 1000,
+                              features = NULL, filter = "variance", ntop = 1000,
                               row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
                               custom_key = Sys.getenv("USER"), ...) {
@@ -157,6 +194,10 @@ fpca.facile_frame <- function(x, assay_name = NULL,
                  features = features, sample_covariates = col_covariates,
                  feature_covariates = row_covariates,
                  normalized = TRUE, log = TRUE, batch = batch, main = main, ...)
+
+  if (!is.null(features) && missing(filter)) {
+    filter <- "none"
+  }
 
   out <- fpca(dat[["assay_data"]], dims, features, filter, ntop,
               row_covariates = dat[["features"]],
@@ -200,6 +241,11 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   messages <- character()
   warnings <- character()
   errors <- character()
+
+  if (!is.null(features) && missing(filter)) {
+    filter <- "none"
+  }
+  assert_choice(filter, c("variance", "none"))
 
   if (min(dim(x)) < 2L) stop("Can't run PCA on a one-dimensional matrix")
   # When using irlba, n has to be strictly less than min(dim(xx))
@@ -258,8 +304,9 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
            "exactly match rownames(x), see:\n  ",
            "https://github.com/facilebio/FacileAnalysis/issues/20")
     }
-  } else {
-    assert_choice(filter, "default")
+  }
+
+  if (filter == "variance") {
     rv <- matrixStats::rowVars(x)
     take <- head(order(rv, decreasing = TRUE), ntop)
     ntop <- length(take)

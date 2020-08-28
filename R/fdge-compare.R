@@ -83,7 +83,8 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
   })
 
   idge <- .interaction_fdge(x, y, treat_lfc = treat_lfc, rerun = rerun)
-  if (is.null(idge)) {
+  if (is.null(idge[["result"]])) {
+    # this happens if idge is null, too
     samples. <- bind_rows(samples(x), samples(y))
     samples. <- set_fds(samples., fds.)
     samples. <- distinct(samples., dataset, sample_id)
@@ -114,16 +115,18 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
     select(yres, feature_type, feature_id, {{stat.cols}}),
     by = c("feature_type", "feature_id"))
 
-  if (!is.null(idge)) {
+  if (!is.null(idge[["result"]])) {
     ires <- tidy(idge[["result"]]) %>%
       select(feature_type, feature_id, {{stat.cols}})
     xystats <- left_join(xystats, ires, by = c("feature_type", "feature_id"))
     # put stats for interaction test up front, followed by *.x, *.y
     # xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
     xystats <- select(xystats, {{meta.cols}}, {{stat.cols}}, everything())
+    out[["result"]] <- idge[["result"]]
+  } else {
+    # out[["result"]] <- NULL
   }
 
-  out[["result"]] <- idge[["result"]]
   out[["xystats"]] <- xystats
   out[["samples"]] <- samples.
 
@@ -143,10 +146,48 @@ result.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   x[["result"]]
 }
 
+#' Decorates statistics table w/ individual/joint significance calls
+#'
 #' @noRd
 #' @export
-tidy.FacileTtestComparisonAnalysisResult <- function(x, ...) {
-  x[["xystats"]]
+tidy.FacileTtestComparisonAnalysisResult <- function(
+    x, max_padj_x = 0.1, min_logFC_x = NULL,
+    max_padj_y = max_padj_x, min_logFC_y = min_logFC_x,
+    labels = NULL, ...) {
+
+  out <- x[["xystats"]]
+  xres <- param(x, "x")
+  yres <- param(x, "y")
+
+  assert_number(max_padj_x, lower = 1e-6, upper = 1)
+  assert_number(max_padj_y, lower = 1e-6, upper = 1)
+
+  if (is.null(min_logFC_x)) {
+    min_logFC_x <- param(xres, "treat_lfc")
+    if (is.null(min_logFC_x)) min_logFC_x <- 1
+  }
+  assert_number(min_logFC_x, lower = 0, upper = Inf)
+  if (is.null(min_logFC_y)) {
+    min_logFC_y <- param(yres, "treat_lfc")
+    if (is.null(min_logFC_y)) min_logFC_y <- 1
+  }
+  assert_number(min_logFC_y, lower = 0, upper = Inf)
+
+  default.labels <- c(x = "x", y = "y", both = "both", none = "none")
+  assert_character(labels, null.ok = TRUE, names = "unique")
+  labels <- c(labels, default.labels)
+  labels <- labels[!duplicated(names(labels))]
+  assert_subset(c("x", "y", "both", "none"), names(labels))
+
+  out <- mutate(
+    out,
+    sigclass = case_when(
+      .data$padj.x <= .env$max_padj_x & .data$padj.y <= .env$max_padj_y ~ labels["both"],
+      .data$padj.x <= .env$max_padj_x & .data$padj.y > .env$max_padj_y ~ labels["x"],
+      .data$padj.y <= .env$max_padj_x & .data$padj.x > .env$max_padj_y ~ labels["y"],
+      TRUE ~ labels["none"]))
+  attr(out, "labels") <- labels
+  out
 }
 
 #' @noRd
@@ -166,7 +207,18 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                                                     features = NULL,
-                                                    highlight = NULL, ...) {
+                                                    highlight = NULL,
+                                                    facet = TRUE,
+                                                    static = FALSE,
+                                                    ...) {
+  if (static) {
+    ret <- sviz.FacileTtestComparisonAnalysisResult(x, max_padj = max_padj,
+                                                    features = features,
+                                                    highlight = highlight,
+                                                    facet = facet, ...)
+    return(ret)
+  }
+
   hover <- c(
     # feature metadata
     "symbol", "feature_id", "meta",
@@ -201,6 +253,116 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   fscatterplot(dat, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE,
                color_aes = color_aes, showlegend = FALSE, ...)
 }
+
+#' @noRd
+#' @export
+#' @importFrom patchwork wrap_plots
+sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
+                                                     features = NULL,
+                                                     highlight = NULL,
+                                                     facet = TRUE,
+                                                     cor.method = "spearman",
+                                                     cor.use = "complete.obs",
+                                                     title = "DGE Comparison",
+                                                     subtitle = NULL,
+                                                     with_cor = TRUE, ...) {
+  xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
+  if (with_cor) {
+    cors.all <- lapply(c("all", unique(xdat[["sigclass"]])), function(wut) {
+      xs <- if (wut == "all") xdat else filter(xdat, .data$sigclass == .env$wut)
+      xs <- filter(xs, !is.na(logFC.x) & !is.na(logFC.y))
+      if (nrow(xs) == 0) return(NULL)
+      ct <- suppressWarnings(
+        cor.test(xs$logFC.x, xs$logFC.y, method = cor.method)
+      )
+      mutate(tidy(ct), sigclass = wut, n = nrow(xs))
+    })
+    cors <- mutate(bind_rows(cors.all),
+                   label = sprintf("cor: %0.2f\nN: %d", estimate, n))
+  }
+
+  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
+  # labels <- factor(labels, labels)
+  xdat[["sigclass"]] <- factor(xdat[["sigclass"]], unname(labels))
+
+  cols.comp <- setNames(
+    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
+    labels)
+
+  lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))
+  lims.square <- c(-1, 1) * (max(abs(lims.square)) + 0.1)
+
+  if (is.null(subtitle) && !(labels["x"] == "xsig" || labels["y"] == "ysig")) {
+    subtitle <- sprintf("%s vs %s", labels["x"], labels["y"])
+  }
+
+  lnone <- labels["none"]
+  lboth <- labels["both"]
+
+  gg.base <- xdat %>%
+    ggplot2::ggplot(ggplot2::aes(x = logFC.x, y = logFC.y)) +
+    ggplot2::geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+    ggplot2::geom_point(ggplot2::aes(color = sigclass),
+                        data = filter(xdat, .data$sigclass == .env$lnone)) +
+    ggplot2::geom_point(ggplot2::aes(color = sigclass),
+                        data = filter(xdat, .data$sigclass == .env$lboth)) +
+    ggplot2::geom_point(ggplot2::aes(color = sigclass),
+                        data = filter(xdat, !.data$sigclass %in% c(lnone, lboth))) +
+    ggplot2::geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dotted") +
+    ggplot2::scale_color_manual(values = cols.comp) +
+    ggplot2::labs(
+      x = sprintf("log2FC %s", labels["x"]),
+      y = sprintf("log2FC %s", labels["y"]),
+      title = title,
+      subtitle = subtitle
+    ) +
+    ggplot2::xlim(lims.square) +
+    ggplot2::ylim(lims.square)
+
+  if (with_cor) {
+    gg.main <- gg.base +
+      ggplot2::geom_text(
+        mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
+        hjust = -0.1, vjust = 1.2,
+        data = filter(cors, sigclass == "all"))
+  } else {
+    gg.main <- gg.base
+  }
+
+  if (facet) {
+    gg.main <- gg.main + ggplot2::theme(legend.position = "bottom")
+
+    gg.facets <- gg.base +
+      ggplot2::facet_wrap(~ sigclass) +
+      ggplot2::ylab(NULL) +
+      ggplot2::labs(title = NULL, subtitle = NULL) +
+      ggplot2::theme(legend.position = "none")
+    if (with_cor) {
+      fcors <- filter(cors, sigclass != "all")
+      fcors[["sigclass"]] <- factor(fcors[["sigclass"]],
+                                    levels(xdat[["sigclass"]]))
+      gg.facets <- gg.facets +
+        ggplot2::geom_text(
+          mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
+          hjust = -0.1, vjust = 1.2,
+          data = filter(fcors))
+    }
+
+    gg.out <- wrap_plots(gg.main, gg.facets, nrow = 1)
+  } else {
+    gg.out <- gg.main
+  }
+
+  out <- list(
+    plot = gg.out,
+    input_data = xdat,
+    params = list())
+
+  class(out) <- c("FacileTtestComparisonViz", "FacileStaticViz", "FacileViz")
+  out
+}
+
 
 #' Helper function to run an interaction model to generate statistics when
 #' comparing two Ttest models.
@@ -310,11 +472,13 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                     contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 
-  ires <- fdge(imodel, features = genes.,
-               method = param(x, "method"),
-               assay_name = param(x, "assay_name"),
-               with_sample_weights = param(x, "with_sample_weights"),
-               treat_lfc = treat_lfc)
+  ires <- tryCatch(
+    fdge(imodel, features = genes.,
+         method = param(x, "method"),
+         assay_name = param(x, "assay_name"),
+         with_sample_weights = param(x, "with_sample_weights"),
+         treat_lfc = treat_lfc),
+    error = function(x) NULL)
 
   rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
   if (rerun) {

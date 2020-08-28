@@ -22,7 +22,7 @@ Defaults to \code{NULL}, which is all of them.}
 \item{custom_covariates}{a wide (sample, dataset, cov1, cov2, ...) data.frame
 of extra covariates the user wants to add to the sampel descriptor \code{x}.}
 
-\item{custom_key}{for \code{\link[FacileData:with_sample_covariates]{FacileData::with_sample_covariates()}}}
+\item{custom_key}{for \code{\link[FacileData:sample-covariates]{FacileData::with_sample_covariates()}}}
 }
 \value{
 a wider version of \code{x} with more covariates attached to it.
