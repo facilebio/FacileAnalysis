@@ -153,7 +153,7 @@
   <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>5</span>,
   <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"variance"</span>,
   <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
   <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -168,7 +168,7 @@
   <span class='kw'>assay_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='fu'>collect</span>(<span class='no'>x</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>Inf</span>)) - <span class='fl'>1L</span>),
   <span class='kw'>features</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"default"</span>,
+  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"variance"</span>,
   <span class='kw'>ntop</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
   <span class='kw'>row_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>col_covariates</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -267,6 +267,40 @@ functional categories loaded onto differend PCs.</p>
 
 <p>We can compare two PCA results. Currently this just means we compare the
 loadings of the features along each PC from fpca result <code>x</code> and <code>y</code>.</p>
+    <h2 class="hasAnchor" id="batch-correction"><a class="anchor" href="#batch-correction"></a>Batch Correction</h2>
+
+    
+
+<p>Because we assume that PCA is performed on normalized data, we leverage the
+batch correction facilities provided by the <code>batch</code> and <code>main</code> parameters
+in the <code><a href='https://rdrr.io/pkg/FacileData/man/fetch_assay_data.html'>FacileData::fetch_assay_data()</a></code> pipeline. If your samples have a
+<code>"sex"</code> covariate defined, for example,  you can perform a PCA with
+sex-corrected expression values like so: <code>fpca(samples, batch = "sex")</code></p>
+    <h2 class="hasAnchor" id="features-used-for-pca"><a class="anchor" href="#features-used-for-pca"></a>Features Used for PCA</h2>
+
+    
+
+<p>By default, <code>fpca()</code> will assess the variance of all the features (genes) to
+perform PCA over, and will keep the top <code>ntop</code> ones. This behavior is
+determined by the following three parameters:</p><ol>
+<li><p><code>filter</code> determines the method by which features are selected for
+analysis. Currently you can only choose <code>"variance"</code> (the default) or
+<code>"none"</code>.</p></li>
+<li><p><code>features</code> determines the universe of features that are available for the
+analysis. When <code>NULL</code> (default), all features for the given assay will
+be loaded and filtered using the specification of the <code>filter</code> parameter.
+If a feature descriptor is provided and <code>filter</code> is not specified, then
+we assume that these are the exact features to run the analysis on, and
+<code>filter</code> defaults to <code>"none"</code>. You may, however, intend for <code>features</code> to
+define the universe of features to use prior to filtering, perhaps to
+perform a PCA on only a certain set of genes (protein coding), but then
+filter those further by variance. In this case, you will need to pass in
+the feature descriptor for the universe of features you want to consider,
+then <em>explicity set <code>filter = "variance"</code></em>.</p></li>
+<li><p><code>ntop</code> the default "top" number of features to take when filtering by
+variance.</p></li>
+</ol>
+
     <h2 class="hasAnchor" id="development-notes"><a class="anchor" href="#development-notes"></a>Development Notes</h2>
 
     
@@ -332,13 +366,16 @@ covariates, then the manually provided ones will supersede the internals.</p>
   <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>pca.crc</span>, <span class='kw'>color_aes</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
 }
 
-<span class='co'># Same PCA as above, but regress "sex" out of samples first.</span>
+<span class='co'># Regress "sex" out from expression data</span>
 <span class='no'>pca.crcs</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>samples</span>(<span class='no'>pca.crc</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fpca</span>(<span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
 <span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
   <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>pca.crcs</span>, <span class='kw'>color_aes</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
 }
 
+<span class='co'># Perform PCA on only the protein coding genes</span>
+<span class='no'>genes.pc</span> <span class='kw'>&lt;-</span> <span class='fu'>features</span>(<span class='no'>efds</span>) <span class='kw'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>meta</span> <span class='kw'>==</span> <span class='st'>"protein_coding"</span>)</div><div class='output co'>#&gt; <span class='error'>Error in features(efds): could not find function "features"</span></div><div class='input'><span class='no'>pca.crc.pc</span> <span class='kw'>&lt;-</span> <span class='fu'>samples</span>(<span class='no'>pca.crc</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'>fpca</span>(<span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>genes.pc</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"variance"</span>)</div><div class='output co'>#&gt; <span class='error'>Error in biocbox.facile_frame(x, class = "list", assay_name = assay_name,     features = features, sample_covariates = col_covariates,     feature_covariates = row_covariates, normalized = TRUE, log = TRUE,     batch = batch, main = main, ...): object 'genes.pc' not found</span></div><div class='input'>
 <span class='no'>pca.gdb</span> <span class='kw'>&lt;-</span> <span class='no'>pca.crc</span> <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='signature.html'>signature</a></span>(<span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>3</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span>() <span class='kw'>%&gt;%</span>
