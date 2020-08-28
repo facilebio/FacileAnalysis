@@ -75,7 +75,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.13</span>
       </span>
     </div>
 
@@ -374,8 +374,10 @@ covariates, then the manually provided ones will supersede the internals.</p>
 }
 
 <span class='co'># Perform PCA on only the protein coding genes</span>
-<span class='no'>genes.pc</span> <span class='kw'>&lt;-</span> <span class='fu'>features</span>(<span class='no'>efds</span>) <span class='kw'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>meta</span> <span class='kw'>==</span> <span class='st'>"protein_coding"</span>)</div><div class='output co'>#&gt; <span class='error'>Error in features(efds): could not find function "features"</span></div><div class='input'><span class='no'>pca.crc.pc</span> <span class='kw'>&lt;-</span> <span class='fu'>samples</span>(<span class='no'>pca.crc</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>fpca</span>(<span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>genes.pc</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"variance"</span>)</div><div class='output co'>#&gt; <span class='error'>Error in biocbox.facile_frame(x, class = "list", assay_name = assay_name,     features = features, sample_covariates = col_covariates,     feature_covariates = row_covariates, normalized = TRUE, log = TRUE,     batch = batch, main = main, ...): object 'genes.pc' not found</span></div><div class='input'>
+<span class='no'>genes.pc</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span>(<span class='no'>efds</span>) <span class='kw'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span>(<span class='no'>meta</span> <span class='kw'>==</span> <span class='st'>"protein_coding"</span>)
+<span class='no'>pca.crc.pc</span> <span class='kw'>&lt;-</span> <span class='fu'>samples</span>(<span class='no'>pca.crc</span>) <span class='kw'>%&gt;%</span>
+  <span class='fu'>fpca</span>(<span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>genes.pc</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='st'>"variance"</span>)
+
 <span class='no'>pca.gdb</span> <span class='kw'>&lt;-</span> <span class='no'>pca.crc</span> <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='signature.html'>signature</a></span>(<span class='kw'>dims</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>3</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span>() <span class='kw'>%&gt;%</span>
