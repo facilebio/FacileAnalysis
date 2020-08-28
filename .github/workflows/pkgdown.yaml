@@ -24,8 +24,17 @@ jobs:
       GIT_COMMITTER_EMAIL: slianoglou@gmail.com
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: r-lib/actions/setup-r@master
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@2fac31217e602dd30286b4c984a0ccf1afb18cbd
+        # uses: r-lib/actions/setup-r@master
+        # with:
+        #   install-r: false
+
+      # pandoc is already installed in the docker container
+      # - uses: r-lib/actions/setup-pandoc@master
 
       - name: Install dependencies
         run: remotes::install_deps(dependencies = TRUE, upgrade = FALSE)
@@ -34,8 +43,6 @@ jobs:
       - name: Install package
         run: R CMD INSTALL .
 
-      - name: Build pkgdown site and deploy
-        run: |
-          options(PKGDOWN_BUILD = TRUE)
-          pkgdown::deploy_to_branch(new_process = FALSE)
+      - name: Deploy package
+        run: pkgdown::deploy_to_branch(new_process = FALSE)
         shell: Rscript {0}
