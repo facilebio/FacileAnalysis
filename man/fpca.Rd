@@ -219,7 +219,7 @@ if (interactive()) {
 }
 
 # Perform PCA on only the protein coding genes
-genes.pc <- features(efds) \%>\% filter(meta == "protein_coding")
+genes.pc <- features(efds) \%>\% subset(meta == "protein_coding")
 pca.crc.pc <- samples(pca.crc) \%>\%
   fpca(features = genes.pc, filter = "variance")
 
