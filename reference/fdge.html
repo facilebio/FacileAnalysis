@@ -77,7 +77,7 @@ parameter) over the data. flm_def accepts a" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.14</span>
       </span>
     </div>
 
@@ -326,11 +326,13 @@ is <code>NULL</code>, which means no genes are forcibly included in the analysis
 they do not pass muster given the filtering criteria.</p></li>
 </ul>
 
-    <h2 class="hasAnchor" id="comapring-dge-results"><a class="anchor" href="#comapring-dge-results"></a>Comapring DGE Results</h2>
+    <h2 class="hasAnchor" id="comparing-dge-results"><a class="anchor" href="#comparing-dge-results"></a>Comparing DGE Results</h2>
 
     
 
-<p>We can compare two Ttest results.</p>
+<p>It is often useful to compare the results of two t-tests, and for many
+experimental designs, this can be a an intuitive way to perform test an
+interaction effect.</p>
 <p>The filtering strategy in the interaction model dictates that the union
 of all features found in <code>x</code> are <code>y</code> are used in the test.</p>
     <h2 class="hasAnchor" id="interacting-with-results"><a class="anchor" href="#interacting-with-results"></a>Interacting with results</h2>
@@ -375,12 +377,24 @@ side-by-side volcano and datatable for differential expression results.</p>
   <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>fdge</span>()
 <span class='no'>dge.comp</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='no'>dge.crc</span>, <span class='no'>dge.blca</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: Properly running the interaction model here is still ALPHA</span>
-#&gt; <span class='warning'>  https://github.com/facilebio/FacileAnalysis/issues/19</span></div><div class='input'><span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
+#&gt; <span class='warning'>  https://github.com/facilebio/FacileAnalysis/issues/19</span></div><div class='input'>
+<span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
   <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>dge.comp</span>, <span class='kw'>xlabel</span> <span class='kw'>=</span> <span class='st'>"logFC(CRC)"</span>, <span class='kw'>ylabel</span> <span class='kw'>=</span> <span class='st'>"logFC(BLCA)"</span>,
       <span class='kw'>highlight</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='fu'><a href='signature.html'>signature</a></span>(<span class='no'>dge.comp</span>)), <span class='fl'>5</span>))
   <span class='fu'><a href='FacileAnalysisResultViz.html'>report</a></span>(<span class='no'>dge.comp</span>)
   <span class='fu'><a href='FacileAnalysisResultViz.html'>shine</a></span>(<span class='no'>dge.comp</span>)
-}</div></pre>
+}
+
+<span class='co'># Static visualization generates the main "4-way" plot, as well as the</span>
+<span class='co'># facets for each category.</span>
+<span class='no'>sviz</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='FacileAnalysisResultViz.html'>viz</a></span>(<span class='no'>dge.comp</span>, <span class='kw'>static</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>labels</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='st'>"CRC"</span>, <span class='kw'>y</span> <span class='kw'>=</span> <span class='st'>"BLCA"</span>),
+            <span class='kw'>subtitle</span> <span class='kw'>=</span> <span class='st'>"Tumor vs normal comparisons across indications"</span>)
+<span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/ns-load.html'>requireNamespace</a></span>(<span class='st'>"patchwork"</span>)) {
+  <span class='kw pkg'>patchwork</span><span class='kw ns'>::</span><span class='fu'><a href='https://patchwork.data-imaginist.com/reference/wrap_plots.html'>wrap_plots</a></span>(
+    <span class='no'>sviz</span>$<span class='no'>plot</span> + <span class='kw pkg'>ggplot2</span><span class='kw ns'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span>(<span class='kw'>legend.position</span> <span class='kw'>=</span> <span class='st'>"bottom"</span>),
+    <span class='no'>sviz</span>$<span class='no'>plot_facets</span> + <span class='kw pkg'>ggplot2</span><span class='kw ns'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span>(<span class='kw'>legend.position</span> <span class='kw'>=</span> <span class='st'>"none"</span>),
+    <span class='kw'>nrow</span> <span class='kw'>=</span> <span class='fl'>1</span>)
+}</div><div class='output co'>#&gt; <span class='message'>Loading required namespace: patchwork</span></div><div class='img'><img src='fdge-1.png' alt='' width='700' height='433' /></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
