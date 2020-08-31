@@ -4,8 +4,10 @@ NULL
 #' @rdname fdge
 #' @export
 #'
-#' @section Comapring DGE Results:
-#' We can compare two Ttest results.
+#' @section Comparing DGE Results:
+#' It is often useful to compare the results of two t-tests, and for many
+#' experimental designs, this can be a an intuitive way to perform test an
+#' interaction effect.
 #'
 #' The filtering strategy in the interaction model dictates that the union
 #' of all features found in `x` are `y` are used in the test.
@@ -27,11 +29,23 @@ NULL
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
+#'
 #' if (interactive()) {
 #'   viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
 #'       highlight = head(tidy(signature(dge.comp)), 5))
 #'   report(dge.comp)
 #'   shine(dge.comp)
+#' }
+#'
+#' # Static visualization generates the main "4-way" plot, as well as the
+#' # facets for each category.
+#' sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
+#'             subtitle = "Tumor vs normal comparisons across indications")
+#' if (requireNamespace("patchwork")) {
+#'   patchwork::wrap_plots(
+#'     sviz$plot + ggplot2::theme(legend.position = "bottom"),
+#'     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
+#'     nrow = 1)
 #' }
 compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
                                               rerun = TRUE, ...) {
@@ -256,11 +270,9 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
 
 #' @noRd
 #' @export
-#' @importFrom patchwork wrap_plots
 sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                                                      features = NULL,
                                                      highlight = NULL,
-                                                     facet = TRUE,
                                                      cor.method = "spearman",
                                                      cor.use = "complete.obs",
                                                      title = "DGE Comparison",
@@ -330,32 +342,25 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
     gg.main <- gg.base
   }
 
-  if (facet) {
-    gg.main <- gg.main + ggplot2::theme(legend.position = "bottom")
+  gg.facets <- gg.base +
+    ggplot2::facet_wrap(~ sigclass) +
+    ggplot2::ylab(NULL) +
+    ggplot2::labs(title = NULL, subtitle = NULL)
 
-    gg.facets <- gg.base +
-      ggplot2::facet_wrap(~ sigclass) +
-      ggplot2::ylab(NULL) +
-      ggplot2::labs(title = NULL, subtitle = NULL) +
-      ggplot2::theme(legend.position = "none")
-    if (with_cor) {
-      fcors <- filter(cors, sigclass != "all")
-      fcors[["sigclass"]] <- factor(fcors[["sigclass"]],
-                                    levels(xdat[["sigclass"]]))
-      gg.facets <- gg.facets +
-        ggplot2::geom_text(
-          mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
-          hjust = -0.1, vjust = 1.2,
-          data = filter(fcors))
-    }
-
-    gg.out <- wrap_plots(gg.main, gg.facets, nrow = 1)
-  } else {
-    gg.out <- gg.main
+  if (with_cor) {
+    fcors <- filter(cors, sigclass != "all")
+    fcors[["sigclass"]] <- factor(fcors[["sigclass"]],
+                                  levels(xdat[["sigclass"]]))
+    gg.facets <- gg.facets +
+      ggplot2::geom_text(
+        mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
+        hjust = -0.1, vjust = 1.2,
+        data = filter(fcors))
   }
 
   out <- list(
-    plot = gg.out,
+    plot = gg.main,
+    plot_facets = gg.facets,
     input_data = xdat,
     params = list())
 

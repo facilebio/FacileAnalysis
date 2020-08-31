@@ -172,9 +172,11 @@ they do not pass muster given the filtering criteria.
 }
 }
 
-\section{Comapring DGE Results}{
+\section{Comparing DGE Results}{
 
-We can compare two Ttest results.
+It is often useful to compare the results of two t-tests, and for many
+experimental designs, this can be a an intuitive way to perform test an
+interaction effect.
 
 The filtering strategy in the interaction model dictates that the union
 of all features found in \code{x} are \code{y} are used in the test.
@@ -222,10 +224,22 @@ dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") \%>\%
   flm_def("sample_type", "tumor", "normal", "sex") \%>\%
   fdge()
 dge.comp <- compare(dge.crc, dge.blca)
+
 if (interactive()) {
   viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
       highlight = head(tidy(signature(dge.comp)), 5))
   report(dge.comp)
   shine(dge.comp)
+}
+
+# Static visualization generates the main "4-way" plot, as well as the
+# facets for each category.
+sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
+            subtitle = "Tumor vs normal comparisons across indications")
+if (requireNamespace("patchwork")) {
+  patchwork::wrap_plots(
+    sviz$plot + ggplot2::theme(legend.position = "bottom"),
+    sviz$plot_facets + ggplot2::theme(legend.position = "none"),
+    nrow = 1)
 }
 }
