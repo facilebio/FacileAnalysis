@@ -96,7 +96,7 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
     return(out)
   })
 
-  idge <- .interaction_fdge(x, y, treat_lfc = treat_lfc, rerun = rerun)
+  idge <- .interaction_fdge(x, y, treat_lfc = treat_lfc, rerun = rerun, ...)
   if (is.null(idge[["result"]])) {
     # this happens if idge is null, too
     samples. <- bind_rows(samples(x), samples(y))
@@ -473,8 +473,9 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   }
   contrast. <- glue("( {xcontrast} ) - ( {ycontrast} )")
 
+  args <- list(...)
   imodel <- flm_def(samples., icovariate, batch = ibatch,
-                    contrast. = contrast.)
+                    block = args[["block"]], contrast. = contrast.)
   genes. <- unique(c(xres[["feature_id"]], yres[["feature_id"]]))
 
   ires <- tryCatch(
