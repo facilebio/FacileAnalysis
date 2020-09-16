@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Builds (simple) design and contrast matrices for use with <code><a href='fdge.html'>fdge()</a></code> — flm_def • FacileAnalysis</title>
+<title>Builds (simple) design and contrast matrices for use with fdge() — flm_def • FacileAnalysis</title>
 
 
 <!-- jquery -->
@@ -41,7 +41,7 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="Builds (simple) design and contrast matrices for use with <code><a href='fdge.html'>fdge()</a></code> — flm_def" />
+<meta property="og:title" content="Builds (simple) design and contrast matrices for use with fdge() — flm_def" />
 <meta property="og:description" content="This simplifies the design and contrast building process by allowing for
 simple model definitions that are, essentially, functions of a single
 covariate. More elaborate models can be analysed, but the user is left to
@@ -152,81 +152,81 @@ define the design, coef / contrast to test manually and pass those into
     </div>
 
     <pre class="usage"><span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>
 )
 
 <span class='co'># S3 method for data.frame</span>
 <span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>,
-  <span class='kw'>contrast.</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.fds</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>,
+  contrast. = <span class='kw'>NULL</span>,
+  .fds = <span class='kw'>NULL</span>
 )
 
 <span class='co'># S3 method for tbl</span>
 <span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>
 )
 
 <span class='co'># S3 method for facile_frame</span>
 <span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>,
-  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>,
+  custom_key = <span class='kw'>NULL</span>
 )
 
 <span class='co'># S3 method for FacileDataStore</span>
 <span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>,
-  <span class='kw'>samples</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>,
+  samples = <span class='kw'>NULL</span>,
+  custom_key = <span class='kw'>NULL</span>
 )
 
 <span class='co'># S3 method for ReactiveFacileDataStore</span>
 <span class='fu'>flm_def</span>(
-  <span class='no'>x</span>,
-  <span class='no'>covariate</span>,
-  <span class='kw'>numer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>denom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>block</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_missing</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
-  <span class='no'>...</span>,
-  <span class='kw'>samples</span> <span class='kw'>=</span> <span class='fu'>active_samples</span>(<span class='no'>x</span>),
-  <span class='kw'>custom_key</span> <span class='kw'>=</span> <span class='fu'>user</span>(<span class='no'>x</span>)
+  <span class='kw'>x</span>,
+  <span class='kw'>covariate</span>,
+  numer = <span class='kw'>NULL</span>,
+  denom = <span class='kw'>NULL</span>,
+  batch = <span class='kw'>NULL</span>,
+  block = <span class='kw'>NULL</span>,
+  on_missing = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"warning"</span>, <span class='st'>"error"</span>),
+  <span class='kw'>...</span>,
+  samples = <span class='fu'>active_samples</span>(<span class='kw'>x</span>),
+  custom_key = <span class='fu'>user</span>(<span class='kw'>x</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -321,36 +321,38 @@ in its (datset, sample_id) columns, as well as any covaraites defined on
 these samples.</p>
 <p>If there are covariates used in the <code>covariate</code> or <code>batch</code> parameters that
 are not found in <code><a href='https://rdrr.io/r/base/colnames.html'>colnames(x)</a></code>, we will attempt to retrieve them from the
-FacileDataStore <code>fds(x)</code>. If they cannot be found, this function will raise
+FacileDataStore <code><a href='https://rdrr.io/pkg/FacileData/man/fds.html'>fds(x)</a></code>. If they cannot be found, this function will raise
 an error.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>efds</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
+    <pre class="examples"><div class='input'><span class='kw'>efds</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
 
 <span class='co'># Look for tumor vs normal differences, controling for stage and sex</span>
-<span class='no'>model_info</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>flm_def</span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
-<span class='no'>m2</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>flm_def</span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"sex"</span>, <span class='st'>"stage"</span>))
+<span class='kw'>model_info</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'>flm_def</span>(covariate = <span class='st'>"sample_type"</span>, numer = <span class='st'>"tumor"</span>, denom = <span class='st'>"normal"</span>,
+          batch = <span class='st'>"sex"</span>)
+<span class='kw'>m2</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'>flm_def</span>(covariate = <span class='st'>"sample_type"</span>, numer = <span class='st'>"tumor"</span>, denom = <span class='st'>"normal"</span>,
+          batch = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"sex"</span>, <span class='st'>"stage"</span>))
 
 <span class='co'># stageIV vs stageII &amp; stageIII</span>
-<span class='no'>m3</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>, <span class='no'>sample_type</span> <span class='kw'>==</span> <span class='st'>"tumor"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>flm_def</span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"stage"</span>, <span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"IV"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"II"</span>, <span class='st'>"III"</span>),
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)
+<span class='kw'>m3</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>, <span class='kw'>sample_type</span> <span class='op'>==</span> <span class='st'>"tumor"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'>flm_def</span>(covariate = <span class='st'>"stage"</span>, numer = <span class='st'>"IV"</span>, denom = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"II"</span>, <span class='st'>"III"</span>),
+          batch = <span class='st'>"sex"</span>)
 
 <span class='co'># Incomplete ttest to help with custom contrast vector</span>
-<span class='no'>mi</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>, <span class='no'>sample_type</span> <span class='kw'>==</span> <span class='st'>"tumor"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>flm_def</span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"stage"</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>, <span class='kw'>contrast.</span> <span class='kw'>=</span> <span class='st'>"help"</span>)</div><div class='output co'>#&gt; <span class='error'>Error in cm[, j] &lt;- eval(ej, envir = levelsenv): number of items to replace is not a multiple of replacement length</span></div><div class='input'>
+<span class='kw'>mi</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>, <span class='kw'>sample_type</span> <span class='op'>==</span> <span class='st'>"tumor"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'>flm_def</span>(covariate = <span class='st'>"stage"</span>, batch = <span class='st'>"sex"</span>, contrast. = <span class='st'>"help"</span>)
+</div><div class='output co'>#&gt; <span class='error'>Error in cm[, j] &lt;- eval(ej, envir = levelsenv): number of items to replace is not a multiple of replacement length</span></div><div class='input'>
 <span class='co'># ANOVA across stage in BLCA, control for sex</span>
-<span class='no'>m3</span> <span class='kw'>&lt;-</span> <span class='no'>efds</span> <span class='kw'>%&gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&gt;%</span>
-  <span class='fu'>flm_def</span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"stage"</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>)</div></pre>
+<span class='kw'>m3</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'>flm_def</span>(covariate = <span class='st'>"stage"</span>, batch = <span class='st'>"sex"</span>)
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -366,7 +368,7 @@ an error.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

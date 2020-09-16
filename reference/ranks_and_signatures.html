@@ -151,7 +151,7 @@ test performed in the analysis. The <code>ranks()</code> and <code>signatures()<
 returns a ranking induced over the features (or samples) from the analysis.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ranks</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>ranks</span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -177,17 +177,19 @@ often the "topn" ranks returned from the analysis (or a dimension thereof).</p>
 <p>Let's consider a differential gene expression (DGE) analysis, where we are
 testing the differential abundance of a gene across two groups of samples.
 The result of the analysis can induce both a signed and unsigned ranking on
-the genes under test.</p><pre><span class='no'>dge</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>() <span class='kw'>%&amp;gt;%</span>
-  <span class='kw pkg'>FacileData</span><span class='kw ns'>::</span><span class='fu'>filter_samples</span>(<span class='no'>indication</span> <span class='kw'>==</span> <span class='st'>"BLCA"</span>) <span class='kw'>%&amp;gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(<span class='kw'>covariate</span> <span class='kw'>=</span> <span class='st'>"sample_type"</span>,<span class='kw'>numer</span> <span class='kw'>=</span> <span class='st'>"tumor"</span>, <span class='kw'>denom</span> <span class='kw'>=</span> <span class='st'>"normal"</span>,
-          <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>"sex"</span>) <span class='kw'>%&amp;gt;%</span>
-  <span class='fu'><a href='fdge.html'>fdge</a></span>()</pre>
+the genes under test.</p><pre><span class='kw'>dge</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>() <span class='op'>%&gt;%</span>
+  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(covariate = <span class='st'>"sample_type"</span>,numer = <span class='st'>"tumor"</span>, denom = <span class='st'>"normal"</span>,
+          batch = <span class='st'>"sex"</span>) <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='fdge.html'>fdge</a></span>()
+</pre>
 
 <p>Ranking the results of the DGE by ascending <em>p</em>-value will provide an
 <strong>unsigned</strong> ranking on the genes: Alternatively, one could get a <strong>signed</strong>
 ranking from the result of this test simply by arranging each gene by its
-log-fold-change. Both approaches are achieved by the code below:</p><pre><span class='no'>uranks</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='fu'>ranks</span>(<span class='no'>dge</span>, <span class='kw'>signed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
-<span class='no'>sranks</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='fu'>ranks</span>(<span class='no'>dge</span>, <span class='kw'>signed</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+log-fold-change. Both approaches are achieved by the code below:</p><pre><span class='kw'>uranks</span> <span class='op'>&lt;-</span> <span class='fu'>ranks</span>(<span class='kw'>dge</span>, signed = <span class='fl'>FALSE</span>)
+<span class='kw'>sranks</span> <span class='op'>&lt;-</span> <span class='fu'>ranks</span>(<span class='kw'>dge</span>, signed = <span class='fl'>TRUE</span>)
+</pre>
 
 <p>rank each gene by its <em>p</em>-value (ascending).</p>
     <h2 class="hasAnchor" id="ranks-differential-expression-"><a class="anchor" href="#ranks-differential-expression-"></a>Ranks (Differential Expression)</h2>
@@ -247,7 +249,7 @@ of my question compare to a slightly different version?"</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
