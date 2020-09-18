@@ -99,7 +99,8 @@
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
 fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
-                 filter = "default", with_sample_weights = FALSE, ...,
+                 filter = "default", with_sample_weights = FALSE,
+                 treat_lfc = NULL, ...,
                  verbose = FALSE) {
   UseMethod("fdge", x)
 }

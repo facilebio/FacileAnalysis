@@ -11,7 +11,8 @@ test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
     filter_samples(indication == "CRC") %>%
     flm_def("sample_type", "tumor", "normal", batch = "sex") %>%
     fdge()
-  tvn.cmp <- expect_warning(compare(tvn.blca, tvn.crc), "ALPHA")
+
+  tvn.cmp <- compare(tvn.blca, tvn.crc)
 
   all.samples <- samples(tvn.crc) %>%
     bind_rows(samples(tvn.blca)) %>%
@@ -42,6 +43,36 @@ test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
   expect_equal(cmp$pval.x, cmp$pval.y)
 })
 
+test_that("interaction logFC is roughly similar when test is not run", {
+  tvn.blca <- FDS %>%
+    filter_samples(indication == "BLCA") %>%
+    flm_def("sample_type", "tumor", "normal", batch = "sex") %>%
+    fdge()
+  tvn.crc <- FDS %>%
+    filter_samples(indication == "CRC") %>%
+    flm_def("sample_type", "tumor", "normal", batch = "sex") %>%
+    fdge()
+
+  tvn.cmp <- compare(tvn.blca, tvn.crc)
+  approx <- compare(tvn.blca, tvn.crc, .run_interaction = FALSE)
+
+  cmp <- tvn.cmp %>%
+    tidy() %>%
+    select(feature_id, logFC, pval, logFC.x, pval.x, logFC.y, pval.y) %>%
+    inner_join(tidy(approx), by = "feature_id", suffix = c("", ".approx"))
+  expect_equal(cmp$logFC.x, cmp$logFC.x.approx)
+  expect_equal(cmp$logFC.y, cmp$logFC.y.approx)
+  expect_equal(cmp$pval.x, cmp$pval.x.approx)
+  expect_equal(cmp$pval.y, cmp$pval.y.approx)
+
+  icmp <- cmp %>%
+    transmute(feature_id, symbol, logFC, logFC.approx,
+              diff = abs(logFC - logFC.approx),
+              logFC.x, logFC.y)
+  diff.summary <- summary(icmp$diff)
+  expect_lt(diff.summary["3rd Qu."], 0.3)
+})
+
 test_that("ttest compare() over same covariate, different numer/denom", {
   # subset to cancer type, (stage I vs stage II) vs (stage III vs stage IV)
   crc.samples <- filter_samples(FDS, indication == "CRC")
@@ -51,5 +82,5 @@ test_that("ttest compare() over same covariate, different numer/denom", {
   stage.4v3 <- crc.samples %>%
     flm_def("stage", "IV", "III") %>%
     fdge()
-  cmp.stage <- expect_warning(compare(stage.2v1, stage.4v3), "ALPHA")
+  cmp.stage <- compare(stage.2v1, stage.4v3)
 })

@@ -304,6 +304,30 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
   out
 }
 
+#' @rdname fdge
+#' @export
+#' @section Gene Set Enrichment Analysis:
+#' There are a few ways you may consider running a gene set analysis over an
+#' interaction analysis.
+#'
+#' 1. On the statistics of the interaction itself; or
+#' 2. On the statistics of the different "quadrants" the features are binned
+#'    into that are found in the `sigclass` columns of the
+#'    tidied result table, ie. `tidy.FacileTtestComparisonAnalysisResult()`; or
+#' 3. Both.
+#'
+#' Note that an analysis on (2) only lends itself to an overrepresentation
+#' analysis, ie. `methods = "ora"`.
+ffsea.FacileTtestComparisonAnalysisResult <- function(x, gdb,
+                                                      methods = c("cameraPR", "ora"),
+                                                      min_logFC = param(x, "treat_lfc"),
+                                                      max_padj = 0.10,
+                                                      rank_by = "logFC",
+                                                      signed = TRUE,
+                                                      biased_by = NULL, ...,
+                                                      rank_order = "ranked",
+                                                      group_by = "direction",
+                                                      select_by = "significant")
 #' @noRd
 #' @export
 ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",

@@ -6,6 +6,7 @@
 \alias{fdge.FacileTtestDGEModelDefinition}
 \alias{fdge.FacileLinearModelDefinition}
 \alias{compare.FacileTtestAnalysisResult}
+\alias{tidy.FacileTtestComparisonAnalysisResult}
 \alias{report.FacileTtestAnalysisResult}
 \title{Peform a differential expression analysis.}
 \usage{
@@ -16,6 +17,7 @@ fdge(
   features = NULL,
   filter = "default",
   with_sample_weights = FALSE,
+  treat_lfc = NULL,
   ...,
   verbose = FALSE
 )
@@ -59,7 +61,17 @@ fdge(
   verbose = FALSE
 )
 
-\method{compare}{FacileTtestAnalysisResult}(x, y, treat_lfc = NULL, rerun = TRUE, ...)
+\method{compare}{FacileTtestAnalysisResult}(x, y, treat_lfc = param(x, "treat_lfc"), rerun = TRUE, ...)
+
+\method{tidy}{FacileTtestComparisonAnalysisResult}(
+  x,
+  max_padj_x = 0.1,
+  min_logFC_x = NULL,
+  max_padj_y = max_padj_x,
+  min_logFC_y = min_logFC_x,
+  labels = NULL,
+  ...
+)
 
 \method{report}{FacileTtestAnalysisResult}(
   x,
@@ -172,7 +184,7 @@ they do not pass muster given the filtering criteria.
 }
 }
 
-\section{Comparing DGE Results}{
+\section{Comparing DGE Results (interaction effect)}{
 
 It is often useful to compare the results of two t-tests, and for many
 experimental designs, this can be a an intuitive way to perform test an
@@ -180,6 +192,40 @@ interaction effect.
 
 The filtering strategy in the interaction model dictates that the union
 of all features found in \code{x} are \code{y} are used in the test.
+}
+
+\section{Statistics Tables}{
+
+The stats table from the differential expression analysis can be retrieved
+using the \code{tidy()} function. Depending upon the type of analysis run, the
+exact columns of the returned table may differ.
+
+\strong{Interaction Statistics}
+Calling \code{tidy()} on an interaction test result
+(\code{FacileTtestComparisonAnalysisResult}), returns the statistics for the
+interaction test itself (if it was performed), as well as the statistics
+for the individual DGE results that were run vai \code{compare(x, y)} to get the
+interaction results itself. The columns of statistics related to the
+individual tests will be suffixed with \verb{*.x} and \verb{*.y}, respectively.
+
+An \code{interaction_group} column will also be added to indicate what type of
+statisticaly significance was found for each gene. The values in here can be:
+\enumerate{
+\item \code{"both"}: this gene was statistically significant in both tests
+\item \code{"x"}: this gene was only significant in the \code{x} dge result
+\item \code{"y"}: this gene was only significant in the \code{y} dge result
+\item \code{"none"}: was not statistically significant in either test result
+}
+
+The genes selected for significance from the input results \code{x} and \code{y} are
+based on their \code{padj} and \code{logFC} values. The thresholds are tweaked by the
+following parameters in the call to \code{tidy(compare(x,y))}:
+\enumerate{
+\item \code{max_padj_(x|y)}: if not specified, defaults to \code{0.10}
+\item \code{min_logFC_(x|y)}: if not specified, we will take the value that was
+used in the \code{treat_lfc} parameters to \code{x} and \code{y} if those tests were
+run against a threshold, otherwise defaults to \code{1}.
+}
 }
 
 \section{Interacting with results}{
