@@ -29,18 +29,20 @@ NULL
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
-#'
-#' if (interactive()) {
-#'   viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
-#'       highlight = head(tidy(signature(dge.comp)), 5))
-#'   report(dge.comp)
-#'   shine(dge.comp)
-#' }
-#'
+#' comp.hi <- tidy(dge.comp) %>%
+#'   group_by(interaction_group) %>%
+#'   slice(1:3) %>%
+#'   ungroup()
 #' # Static visualization generates the main "4-way" plot, as well as the
 #' # facets for each category.
 #' sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
-#'             subtitle = "Tumor vs normal comparisons across indications")
+#'             subtitle = "Tumor vs normal comparisons across indications",
+#'             highlight = comp.hi)
+#' # highlight some of them
+#' s.hi <- sviz$input_data %>%
+#'   group_by(interaction_group) %>%
+#'   slice(1:3) %>%
+#'   ungroup()
 #' if (requireNamespace("patchwork")) {
 #'   patchwork::wrap_plots(
 #'     sviz$plot + ggplot2::theme(legend.position = "bottom"),
@@ -251,66 +253,36 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                                                     features = NULL,
                                                     highlight = NULL,
-                                                    facet = TRUE,
-                                                    static = FALSE,
+                                                    cor.method = "spearman",
+                                                    title = "DGE Comparison",
+                                                    subtitle = NULL,
+                                                    with_cor = TRUE,
+                                                    insignificant = c("drop", "points"),
+                                                    facets_nrow = 2,
+                                                    highlight_color = "red",
                                                     ...) {
-  if (static) {
-    ret <- sviz.FacileTtestComparisonAnalysisResult(x, max_padj = max_padj,
-                                                    features = features,
-                                                    highlight = highlight,
-                                                    facet = facet, ...)
-    return(ret)
-  }
-
-  hover <- c(
-    # feature metadata
-    "symbol", "feature_id", "meta",
-    # padj from individual fdge tests
-    "padj.x", "padj.y",
-    # stats from interaction model, if it was run
-    "logFC", "padj")
-  d <- tidy(x)
-
-  features <- extract_feature_id(features)
-  highlight <- extract_feature_id(highlight)
-  ids <- NULL
-
-  if (!is.null(x[["dge"]])) {
-    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
-    ids <- ids[["feature_id"]]
-  } else {
-    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj)[["feature_id"]]
-  }
-
-  dat <- filter(d, .data$feature_id %in% c(ids, features, highlight))
-
-  if (length(highlight)) {
-    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
-                                  "fg", "bg")
-    color_aes <- "highlight."
-  } else {
-    color_aes <- NULL
-  }
-
-  hover <- setdiff(intersect(hover, colnames(d)), "highlight.")
-  fscatterplot(dat, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE,
-               color_aes = color_aes, showlegend = FALSE, ...)
-}
-
-#' @noRd
-#' @export
-sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
-                                                     features = NULL,
-                                                     highlight = NULL,
-                                                     cor.method = "spearman",
-                                                     cor.use = "complete.obs",
-                                                     title = "DGE Comparison",
-                                                     subtitle = NULL,
-                                                     with_cor = TRUE, ...) {
   xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
+  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
+  insignificant <- match.arg(insignificant)
+  cols.comp <- setNames(
+    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
+    labels)
+  if (insignificant == "drop") {
+    xdat <- filter(xdat, interaction_group != labels["none"])
+    labels <- labels[-1]
+    cols.comp <- cols.comp[-1]
+  }
+  xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]], unname(labels))
+
+
   if (with_cor) {
-    cors.all <- lapply(c("all", unique(xdat[["interaction_group"]])), function(wut) {
-      xs <- if (wut == "all") xdat else filter(xdat, .data$interaction_group == .env$wut)
+    cor.quadrants <- c("all", levels(xdat[["interaction_group"]]))
+    cors.all <- lapply(cor.quadrants, function(wut) {
+      if (wut == "all") {
+        xs <- xdat
+      } else {
+        xs <- filter(xdat, .data$interaction_group == .env$wut)
+      }
       xs <- filter(xs, !is.na(logFC.x) & !is.na(logFC.y))
       if (nrow(xs) == 0) return(NULL)
       ct <- suppressWarnings(
@@ -322,13 +294,6 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
                    label = sprintf("cor: %0.2f\nN: %d", estimate, n))
   }
 
-  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
-  # labels <- factor(labels, labels)
-  xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]], unname(labels))
-
-  cols.comp <- setNames(
-    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
-    labels)
 
   lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))
   lims.square <- c(-1, 1) * (max(abs(lims.square)) + 0.1)
@@ -346,11 +311,22 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   gg.base <- xdat %>%
     ggplot2::ggplot(ggplot2::aes(x = logFC.x, y = logFC.y)) +
     ggplot2::geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-    ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed")
+  # if (insignificant == "density") {
+  #   gg.base <- gg.base +
+  #     ggplot2::geom_density2d(
+  #       alpha = 0.5,
+  #       data = filter(xdat, anti_join(xdat, xdat.points, by = "feature_id")))
+  # }
+  gg.base <- gg.base +
     suppressWarnings({
-      ggplot2::geom_point(ggplot2::aes(color = interaction_group, text = symbol))
-    }) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dotted") +
+      ggplot2::geom_point(
+        ggplot2::aes(color = interaction_group, text = symbol))
+    })
+
+  gg.base <- gg.base +
+    ggplot2::geom_abline(intercept = 0, slope = 1, color = "red",
+                         linetype = "dotted") +
     ggplot2::scale_color_manual(values = cols.comp) +
     ggplot2::labs(
       x = sprintf("log2FC %s", labels["x"]),
@@ -360,6 +336,20 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
     ) +
     ggplot2::xlim(lims.square) +
     ggplot2::ylim(lims.square)
+
+  if (!is.null(highlight)) {
+    fids <- extract_feature_id(highlight)
+    highlight <- filter(xdat, feature_id %in% .env$fids)
+    if (nrow(highlight)) {
+      gg.base <- gg.base +
+        suppressWarnings({
+          ggplot2::geom_point(
+            ggplot2::aes(text = symbol),
+            data = highlight,
+            color = highlight_color)
+        })
+    }
+  }
 
   if (with_cor) {
     gg.main <- gg.base +
@@ -372,25 +362,26 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   }
 
   gg.facets <- gg.base +
-    ggplot2::facet_wrap(~ interaction_group) +
+    ggplot2::facet_wrap(~ interaction_group, nrow = facets_nrow) +
     ggplot2::ylab(NULL) +
     ggplot2::labs(title = NULL, subtitle = NULL)
 
   if (with_cor) {
     fcors <- filter(cors, interaction_group != "all")
     fcors[["interaction_group"]] <- factor(fcors[["interaction_group"]],
-                                  levels(xdat[["interaction_group"]]))
+                                           levels(xdat[["interaction_group"]]))
     gg.facets <- gg.facets +
       ggplot2::geom_text(
         mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
         hjust = -0.1, vjust = 1.2,
-        data = filter(fcors))
+        data = fcors)
   }
 
   out <- list(
     plot = gg.main,
     plot_facets = gg.facets,
     input_data = xdat,
+    correlation = cors,
     params = list())
 
   class(out) <- c("FacileTtestComparisonViz", "FacileStaticViz", "FacileViz")

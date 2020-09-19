@@ -1,6 +1,6 @@
 # A place for random utility functions
 
-#' Extract a feature_id characger vector from a feature descriptor, or NULL
+#' Extract a feature_id character vector from a feature descriptor, or NULL
 #'
 #' All of the functions that take in a `features` parameter can call this
 #' function to do the id extraction ... I wrote this code a lot and all

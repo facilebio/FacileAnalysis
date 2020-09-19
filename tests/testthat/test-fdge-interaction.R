@@ -58,7 +58,7 @@ test_that("interaction logFC is roughly similar when test is not run", {
 
   cmp <- tvn.cmp %>%
     tidy() %>%
-    select(feature_id, logFC, pval, logFC.x, pval.x, logFC.y, pval.y) %>%
+    select(feature_id, starts_with("logFC"), starts_with("pval"))
     inner_join(tidy(approx), by = "feature_id", suffix = c("", ".approx"))
   expect_equal(cmp$logFC.x, cmp$logFC.x.approx)
   expect_equal(cmp$logFC.y, cmp$logFC.y.approx)
