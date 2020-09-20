@@ -248,32 +248,34 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   x[["samples"]]
 }
 
+#' If `interacive` is `TRUE` (default), then this visualizaiton will drop the
+#' interactive points by setting `insignificant = "drop"`. Static plots keep the
+#' insignificant points. If you want to change this behavior, set `interactive`
+#' and `insignificant` as you please.
 #' @noRd
 #' @export
-viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
-                                                    features = NULL,
-                                                    highlight = NULL,
-                                                    cor.method = "spearman",
-                                                    title = "DGE Comparison",
-                                                    subtitle = NULL,
-                                                    with_cor = TRUE,
-                                                    insignificant = c("drop", "points"),
-                                                    facets_nrow = 2,
-                                                    highlight_color = "red",
-                                                    ...) {
+viz.FacileTtestComparisonAnalysisResult <- function(
+    x, max_padj = 0.1, features = NULL, highlight = NULL,
+    highlight_color = "red", cor.method = "spearman", title = "DGE Comparison",
+    subtitle = NULL, with_cor = TRUE, interactive = TRUE,
+    insignificant = if (interactive) "drop" else "points",
+    facets_nrow = 2, ...) {
+
   xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
   labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
   insignificant <- match.arg(insignificant)
   cols.comp <- setNames(
     c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
     labels)
+
   if (insignificant == "drop") {
     xdat <- filter(xdat, interaction_group != labels["none"])
     labels <- labels[-1]
     cols.comp <- cols.comp[-1]
   }
-  xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]], unname(labels))
 
+  xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]],
+                                        unname(labels))
 
   if (with_cor) {
     cor.quadrants <- c("all", levels(xdat[["interaction_group"]]))
@@ -293,7 +295,6 @@ viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
     cors <- mutate(bind_rows(cors.all),
                    label = sprintf("cor: %0.2f\nN: %d", estimate, n))
   }
-
 
   lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))
   lims.square <- c(-1, 1) * (max(abs(lims.square)) + 0.1)

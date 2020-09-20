@@ -318,16 +318,55 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
 #'
 #' Note that an analysis on (2) only lends itself to an overrepresentation
 #' analysis, ie. `methods = "ora"`.
-ffsea.FacileTtestComparisonAnalysisResult <- function(x, gdb,
-                                                      methods = c("cameraPR", "ora"),
-                                                      min_logFC = param(x, "treat_lfc"),
-                                                      max_padj = 0.10,
-                                                      rank_by = "logFC",
-                                                      signed = TRUE,
-                                                      biased_by = NULL, ...,
-                                                      rank_order = "ranked",
-                                                      group_by = "direction",
-                                                      select_by = "significant")
+ffsea.FacileTtestComparisonAnalysisResult <- function(
+    x, gdb, methods = c("cameraPR", "ora"),
+    type = c("interaction", "quadrants"),
+    min_logFC = param(x, "treat_lfc"),
+    min_logFC_x = min_logFC, min_logFC_y = min_logFC,
+    max_padj = 0.10, max_padj_x = max_padj, max_padj_y = max_padj,
+    rank_by = "logFC", signed = TRUE, biased_by = NULL, ...,
+    rank_order = "ranked", group_by = "direction", select_by = "significant") {
+  assert_class(gdb, "GeneSetDb")
+  type <- match.arg(type)
+  if (type == "interaction") {
+    # NextMethod should call ffsea.FacileTtestAnalysisResult
+    # out <- NextMethod(override = parameters, as_you = like)
+    out <- NextMethod()
+    class(out) <- c("FacileTtestComparisonInteractionFseaAnalysisResult")
+  } else {
+    out <- .ffsea.ttestcomp.quadrants()
+    class(out) <- c("FacileTtestComparisonQuadrantFseaAnalysisResult")
+  }
+
+  out
+}
+
+#' @noRd
+.ffsea.ttest.comp.interaction <- function(){
+  params <- list(
+    x = x, gdb = gdb, methods = methods, type = type,
+    min_logFC = min_logFC, min_logFC_x = min_logFC_x, min_logFC_y = min_logFC_y,
+    max_padj = max_padj, max_padj_x = max_padj_x, max_padj_y = max_padj_y,
+    rank_by = rank_by, signed = signed, biased_by = biased_by,
+    rank_order = rank_order, group_by = group_by, select_by = select_by)
+
+  out <- list(
+    params = params)
+}
+
+#' @noRd
+.ffsea.ttest.comp.quadrants <- function() {
+  params <- list(
+    x = x, gdb = gdb, methods = methods, type = type,
+    min_logFC = min_logFC, min_logFC_x = min_logFC_x, min_logFC_y = min_logFC_y,
+    max_padj = max_padj, max_padj_x = max_padj_x, max_padj_y = max_padj_y,
+    rank_by = rank_by, signed = signed, biased_by = biased_by,
+    rank_order = rank_order, group_by = group_by, select_by = select_by)
+
+  out <- list(
+    params = params)
+}
+
 #' @noRd
 #' @export
 ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
