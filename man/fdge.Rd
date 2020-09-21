@@ -305,9 +305,9 @@ dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") \%>\%
   fdge()
 dge.comp <- compare(dge.crc, dge.blca)
 comp.hi <- tidy(dge.comp) \%>\%
-  group_by(interaction_group) \%>\%
-  slice(1:3) \%>\%
-  ungroup()
+  dplyr::group_by(interaction_group) \%>\%
+  dplyr::slice(1:3) \%>\%
+  dplyr::ungroup()
 # Static visualization generates the main "4-way" plot, as well as the
 # facets for each category.
 sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
@@ -315,9 +315,9 @@ sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
             highlight = comp.hi)
 # highlight some of them
 s.hi <- sviz$input_data \%>\%
-  group_by(interaction_group) \%>\%
-  slice(1:3) \%>\%
-  ungroup()
+  dplyr::group_by(interaction_group) \%>\%
+  dplyr::slice(1:3) \%>\%
+  dplyr::ungroup()
 if (requireNamespace("patchwork")) {
   patchwork::wrap_plots(
     sviz$plot + ggplot2::theme(legend.position = "bottom"),
