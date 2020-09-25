@@ -146,54 +146,54 @@
     </div>
 
     <pre class="usage"><span class='co'># S3 method for FacilePcaAnalysisResult</span>
-<span class='fu'><a href='compare.html'>compare</a></span>(<span class='kw'>x</span>, <span class='kw'>y</span>, run_all = <span class='fl'>TRUE</span>, rerun = <span class='fl'>TRUE</span>, <span class='kw'>...</span>)
+<span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span>, run_all <span class='op'>=</span> <span class='cn'>TRUE</span>, rerun <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
 
-<span class='fu'>fpca</span>(
-  <span class='kw'>x</span>,
-  assay_name = <span class='kw'>NULL</span>,
-  dims = <span class='fl'>5</span>,
-  features = <span class='kw'>NULL</span>,
-  filter = <span class='st'>"variance"</span>,
-  ntop = <span class='fl'>1000</span>,
-  row_covariates = <span class='kw'>NULL</span>,
-  col_covariates = <span class='kw'>NULL</span>,
-  batch = <span class='kw'>NULL</span>,
-  main = <span class='kw'>NULL</span>,
-  <span class='kw'>...</span>
-)
+<span class='fu'>fpca</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  assay_name <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dims <span class='op'>=</span> <span class='fl'>5</span>,
+  features <span class='op'>=</span> <span class='cn'>NULL</span>,
+  filter <span class='op'>=</span> <span class='st'>"variance"</span>,
+  ntop <span class='op'>=</span> <span class='fl'>1000</span>,
+  row_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  col_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  batch <span class='op'>=</span> <span class='cn'>NULL</span>,
+  main <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S3 method for facile_frame</span>
-<span class='fu'>fpca</span>(
-  <span class='kw'>x</span>,
-  assay_name = <span class='kw'>NULL</span>,
-  dims = <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='fu'><a href='https://dplyr.tidyverse.org/reference/compute.html'>collect</a></span>(<span class='kw'>x</span>, n = <span class='fl'>Inf</span>)) <span class='op'>-</span> <span class='fl'>1L</span>),
-  features = <span class='kw'>NULL</span>,
-  filter = <span class='st'>"variance"</span>,
-  ntop = <span class='fl'>1000</span>,
-  row_covariates = <span class='kw'>NULL</span>,
-  col_covariates = <span class='kw'>NULL</span>,
-  batch = <span class='kw'>NULL</span>,
-  main = <span class='kw'>NULL</span>,
-  custom_key = <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"USER"</span>),
-  <span class='kw'>...</span>
-)
+<span class='fu'>fpca</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  assay_name <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dims <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span><span class='op'>(</span><span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/compute.html'>collect</a></span><span class='op'>(</span><span class='va'>x</span>, n <span class='op'>=</span> <span class='cn'>Inf</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>-</span> <span class='fl'>1L</span><span class='op'>)</span>,
+  features <span class='op'>=</span> <span class='cn'>NULL</span>,
+  filter <span class='op'>=</span> <span class='st'>"variance"</span>,
+  ntop <span class='op'>=</span> <span class='fl'>1000</span>,
+  row_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  col_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  batch <span class='op'>=</span> <span class='cn'>NULL</span>,
+  main <span class='op'>=</span> <span class='cn'>NULL</span>,
+  custom_key <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span><span class='op'>(</span><span class='st'>"USER"</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S3 method for matrix</span>
-<span class='fu'>fpca</span>(
-  <span class='kw'>x</span>,
-  dims = <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='kw'>x</span>) <span class='op'>-</span> <span class='fl'>1L</span>),
-  features = <span class='kw'>NULL</span>,
-  filter = <span class='st'>"default"</span>,
-  ntop = <span class='fl'>1000</span>,
-  row_covariates = <span class='kw'>NULL</span>,
-  col_covariates = <span class='kw'>NULL</span>,
-  batch = <span class='kw'>NULL</span>,
-  main = <span class='kw'>NULL</span>,
-  use_irlba = <span class='kw'>dims</span> <span class='op'>&lt;</span> <span class='fl'>7</span>,
-  center = <span class='fl'>TRUE</span>,
-  scale. = <span class='fl'>FALSE</span>,
-  <span class='kw'>...</span>
-)</pre>
+<span class='fu'>fpca</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  dims <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span><span class='op'>(</span><span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='op'>-</span> <span class='fl'>1L</span><span class='op'>)</span>,
+  features <span class='op'>=</span> <span class='cn'>NULL</span>,
+  filter <span class='op'>=</span> <span class='st'>"default"</span>,
+  ntop <span class='op'>=</span> <span class='fl'>1000</span>,
+  row_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  col_covariates <span class='op'>=</span> <span class='cn'>NULL</span>,
+  batch <span class='op'>=</span> <span class='cn'>NULL</span>,
+  main <span class='op'>=</span> <span class='cn'>NULL</span>,
+  use_irlba <span class='op'>=</span> <span class='va'>dims</span> <span class='op'>&lt;</span> <span class='fl'>7</span>,
+  center <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  scale. <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -346,49 +346,49 @@ extra columns to <code>x</code>.</p>
 covariates, then the manually provided ones will supersede the internals.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>efds</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
-<span class='kw'>p1</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span>()
-<span class='kw'>p2</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span>()
-<span class='kw'>pcmp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span>(<span class='kw'>p1</span>, <span class='kw'>p2</span>)
-<span class='kw'>efds</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
+    <pre class="examples"><div class='input'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>p1</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>p2</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>pcmp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>p1</span>, <span class='va'>p2</span><span class='op'>)</span>
+<span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
 
 <span class='co'># A subset of samples ------------------------------------------------------</span>
-<span class='kw'>pca.crc</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span>()
-<span class='co'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
+<span class='va'>pca.crc</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
   <span class='co'># report(pca.crc, color_aes = "sample_type")</span>
-  <span class='fu'><a href='viz.html'>shine</a></span>(<span class='kw'>pca.crc</span>)
-  <span class='fu'><a href='viz.html'>viz</a></span>(<span class='kw'>pca.crc</span>, color_aes = <span class='st'>"sex"</span>)
-}
+  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span>
+  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crc</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
+<span class='op'>}</span>
 
 <span class='co'># Regress "sex" out from expression data</span>
-<span class='kw'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'>samples</span>(<span class='kw'>pca.crc</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span>(batch = <span class='st'>"sex"</span>)
-<span class='co'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
-  <span class='fu'><a href='viz.html'>viz</a></span>(<span class='kw'>pca.crcs</span>, color_aes = <span class='st'>"sex"</span>)
-}
+<span class='va'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>samples</span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>fpca</span><span class='op'>(</span>batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crcs</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
+<span class='op'>}</span>
 
 <span class='co'># Perform PCA on only the protein coding genes</span>
-<span class='kw'>genes.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span>(<span class='kw'>efds</span>) <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span>(<span class='kw'>meta</span> <span class='op'>==</span> <span class='st'>"protein_coding"</span>)
-<span class='kw'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'>samples</span>(<span class='kw'>pca.crc</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span>(features = <span class='kw'>genes.pc</span>, filter = <span class='st'>"variance"</span>)
+<span class='va'>genes.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>meta</span> <span class='op'>==</span> <span class='st'>"protein_coding"</span><span class='op'>)</span>
+<span class='va'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'>samples</span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>fpca</span><span class='op'>(</span>features <span class='op'>=</span> <span class='va'>genes.pc</span>, filter <span class='op'>=</span> <span class='st'>"variance"</span><span class='op'>)</span>
 
-<span class='kw'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='kw'>pca.crc</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='signature.html'>signature</a></span>(dims = <span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span>() <span class='op'>%&gt;%</span>
-  <span class='kw'>multiGSEA</span>::<span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/GeneSetDb-class.html'>GeneSetDb</a></span>()
+<span class='va'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='va'>pca.crc</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span>dims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>multiGSEA</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/GeneSetDb-class.html'>GeneSetDb</a></span><span class='op'>(</span><span class='op'>)</span>
 
 <span class='co'># All samples --------------------------------------------------------------</span>
-<span class='kw'>pca.all</span> <span class='op'>&lt;-</span> <span class='fu'>fpca</span>(<span class='kw'>efds</span>)
-<span class='co'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
-  <span class='fu'><a href='viz.html'>viz</a></span>(<span class='kw'>pca.all</span>, color_aes = <span class='st'>"indication"</span>, shape_aes = <span class='st'>"sample_type"</span>)
+<span class='va'>pca.all</span> <span class='op'>&lt;-</span> <span class='fu'>fpca</span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.all</span>, color_aes <span class='op'>=</span> <span class='st'>"indication"</span>, shape_aes <span class='op'>=</span> <span class='st'>"sample_type"</span><span class='op'>)</span>
   <span class='co'># report(pca.all, color_aes = "indication", shape_aes = "sample_type")</span>
-}
+<span class='op'>}</span>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

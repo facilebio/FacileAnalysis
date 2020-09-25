@@ -153,10 +153,10 @@ feature-level statistics.</p>
 section of the vignette for more information.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ffsea</span>(<span class='kw'>x</span>, <span class='kw'>gdb</span>, methods = <span class='st'>"cameraPR"</span>, <span class='kw'>...</span>)
+    <pre class="usage"><span class='fu'>ffsea</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>gdb</span>, methods <span class='op'>=</span> <span class='st'>"cameraPR"</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for FacileFseaAnalysisResult</span>
-<span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span>(<span class='kw'>x</span>, name = <span class='st'>"object"</span>, <span class='kw'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span><span class='op'>(</span><span class='va'>x</span>, name <span class='op'>=</span> <span class='st'>"object"</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -256,8 +256,8 @@ being the de-facto way to answer "tidy" like results (instead of result()).</p>
 "tidy", but in this case, result(ffsea.result) will return the
 MultiGSEAResult object itself, and <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(ffsea.result)</a></code> will dispatch
 to <code><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>multiGSEA::result()</a></code> to fetch the gsea statistcs for the method
-requested.</p><pre><span class='kw'>mgres</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span>(<span class='kw'>ffsea.res</span>) <span class='co'># return the MultiGSEAResult object</span>
-<span class='kw'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='kw'>ffsea.res</span>, name = <span class='st'>"cameraPR"</span>)
+requested.</p><pre><span class='va'>mgres</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span><span class='op'>(</span><span class='va'>ffsea.res</span><span class='op'>)</span> <span class='co'># return the MultiGSEAResult object</span>
+<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ffsea.res</span>, name <span class='op'>=</span> <span class='st'>"cameraPR"</span><span class='op'>)</span>
 </pre>
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
@@ -265,42 +265,42 @@ requested.</p><pre><span class='kw'>mgres</span> <span class='op'>&lt;-</span> <
     <div class='dont-index'><p>https://github.com/lianos/multiGSEA</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>gdb</span> <span class='op'>&lt;-</span> <span class='kw'>multiGSEA</span>::<span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/getMSigGeneSetDb.html'>getMSigGeneSetDb</a></span>(<span class='st'>"h"</span>, <span class='st'>"human"</span>, id.type = <span class='st'>"entrez"</span>)
-<span class='kw'>efds</span> <span class='op'>&lt;-</span> <span class='kw'>FacileData</span>::<span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span>()
+    <pre class="examples"><div class='input'><span class='va'>gdb</span> <span class='op'>&lt;-</span> <span class='fu'>multiGSEA</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/getMSigGeneSetDb.html'>getMSigGeneSetDb</a></span><span class='op'>(</span><span class='st'>"h"</span>, <span class='st'>"human"</span>, id.type <span class='op'>=</span> <span class='st'>"entrez"</span><span class='op'>)</span>
+<span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
 
 <span class='co'># GSEA from t-test result ---------------------------------------------------</span>
-<span class='kw'>ttest.res</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(covariate = <span class='st'>"sample_type"</span>, numer = <span class='st'>"tumor"</span>, denom = <span class='st'>"normal"</span>,
-          batch = <span class='st'>"sex"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='fdge.html'>fdge</a></span>(method = <span class='st'>"voom"</span>)
+<span class='va'>ttest.res</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span>covariate <span class='op'>=</span> <span class='st'>"sample_type"</span>, numer <span class='op'>=</span> <span class='st'>"tumor"</span>, denom <span class='op'>=</span> <span class='st'>"normal"</span>,
+          batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='fdge.html'>fdge</a></span><span class='op'>(</span>method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span>
 
-<span class='kw'>ttest.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='kw'>ttest.res</span>, <span class='kw'>gdb</span>, methods = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"cameraPR"</span>, <span class='st'>"ora"</span>),
-                    biased_by = <span class='st'>"effective_length"</span>)
-<span class='co'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
-  <span class='kw'>ttest.gsea</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ffseaGadget.html'>ffseaGadget</a></span>(<span class='kw'>ttest.res</span>, <span class='kw'>gdb</span>)
-  <span class='fu'><a href='viz.html'>shine</a></span>(<span class='kw'>ttest.gsea</span>)
-}
+<span class='va'>ttest.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span><span class='op'>(</span><span class='va'>ttest.res</span>, <span class='va'>gdb</span>, methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"cameraPR"</span>, <span class='st'>"ora"</span><span class='op'>)</span>,
+                    biased_by <span class='op'>=</span> <span class='st'>"effective_length"</span><span class='op'>)</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='va'>ttest.gsea</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ffseaGadget.html'>ffseaGadget</a></span><span class='op'>(</span><span class='va'>ttest.res</span>, <span class='va'>gdb</span><span class='op'>)</span>
+  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span><span class='op'>)</span>
+<span class='op'>}</span>
 
-<span class='kw'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='kw'>ttest.gsea</span>, <span class='st'>"cameraPR"</span>)
-<span class='kw'>ora.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span>(<span class='kw'>ttest.gsea</span>, <span class='st'>"ora"</span>)
+<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"cameraPR"</span><span class='op'>)</span>
+<span class='va'>ora.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"ora"</span><span class='op'>)</span>
 
 <span class='co'># GSEA from ANOVA result ----------------------------------------------------</span>
-<span class='kw'>stage.anova</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span>(covariate = <span class='st'>"stage"</span>, batch = <span class='st'>"sex"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='fdge.html'>fdge</a></span>(method = <span class='st'>"voom"</span>)
-<span class='kw'>anova.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='kw'>stage.anova</span>, <span class='kw'>gdb</span>)
-<span class='co'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span>()) {
- <span class='fu'><a href='viz.html'>shine</a></span>(<span class='kw'>anova.gsea</span>)
+<span class='va'>stage.anova</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span>covariate <span class='op'>=</span> <span class='st'>"stage"</span>, batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='fdge.html'>fdge</a></span><span class='op'>(</span>method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span>
+<span class='va'>anova.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span><span class='op'>(</span><span class='va'>stage.anova</span>, <span class='va'>gdb</span><span class='op'>)</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+ <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>anova.gsea</span><span class='op'>)</span>
  <span class='co'># We can generate the same GSEA result like so</span>
- <span class='kw'>anova.gsea2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ffseaGadget.html'>ffseaGadget</a></span>(<span class='kw'>stage.anova</span>, gdb = <span class='kw'>gdb</span>)
-}
+ <span class='va'>anova.gsea2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ffseaGadget.html'>ffseaGadget</a></span><span class='op'>(</span><span class='va'>stage.anova</span>, gdb <span class='op'>=</span> <span class='va'>gdb</span><span class='op'>)</span>
+<span class='op'>}</span>
 <span class='co'># GSEA over loadings on a Principal Component -------------------------------</span>
-<span class='kw'>pca.crc</span> <span class='op'>&lt;-</span> <span class='kw'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='kw'>FacileData</span>::<span class='fu'>filter_samples</span>(<span class='kw'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span>) <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='compare.FacilePcaAnalysisResult.html'>fpca</a></span>()
-</div><div class='output co'>#&gt; <span class='message'>Loading required namespace: testthat</span></div><div class='input'><span class='kw'>pca1.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span>(<span class='kw'>pca.crc</span>, <span class='kw'>gdb</span>, dim = <span class='fl'>1</span>)
+<span class='va'>pca.crc</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='compare.FacilePcaAnalysisResult.html'>fpca</a></span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Loading required namespace: testthat</span></div><div class='input'><span class='va'>pca1.gsea</span> <span class='op'>&lt;-</span> <span class='fu'>ffsea</span><span class='op'>(</span><span class='va'>pca.crc</span>, <span class='va'>gdb</span>, dim <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='warning'>Warning: Fraction of gene set IDs that match rownames in the expression object are low: 4.04% </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Deactivating 4 gene sets because conformation of GeneSetDb to the target creates gene sets smaller than 2 or greater than Inf</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
