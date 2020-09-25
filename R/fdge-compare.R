@@ -35,7 +35,7 @@ NULL
 #'   dplyr::ungroup()
 #' # Static visualization generates the main "4-way" plot, as well as the
 #' # facets for each category.
-#' sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
+#' sviz <- viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
 #'             subtitle = "Tumor vs normal comparisons across indications",
 #'             highlight = comp.hi)
 #' # highlight some of them
@@ -48,6 +48,8 @@ NULL
 #'     sviz$plot + ggplot2::theme(legend.position = "bottom"),
 #'     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
 #'     nrow = 1)
+#'   viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
+#'       color_quadrant = "darkgrey")$plot_facets
 #' }
 compare.FacileTtestAnalysisResult <- function(x, y,
                                               treat_lfc = param(x, "treat_lfc"),
@@ -256,22 +258,37 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(
     x, max_padj = 0.1, features = NULL, highlight = NULL,
-    highlight_color = "red", cor.method = "spearman", title = "DGE Comparison",
+    color_quadrant = NULL, color_highlight = "red",
+    cor.method = "spearman", title = "DGE Comparison",
     subtitle = NULL, with_cor = TRUE, interactive = TRUE,
     insignificant = if (interactive) "drop" else "points",
     facets_nrow = 2, ...) {
 
   xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
   labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
-  insignificant <- match.arg(insignificant)
-  cols.comp <- setNames(
+  insignificant <- match.arg(insignificant, c("drop", "points"))
+
+  default.quadrant.cols <- setNames(
     c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
     labels)
+  if (is.null(color_quadrant) || length(color_quadrant) == 0L) {
+    color_quadrant <- default.quadrant.cols
+  } else {
+    assert_character(color_quadrant, min.len = 1)
+    if (length(color_quadrant) == 1L) {
+      color_quadrant <- rep(color_quadrant, length(default.quadrant.cols))
+      names(color_quadrant) <- names(default.quadrant.cols)
+    }
+    color_quadrant <- ifelse(
+      is.na(color_quadrant[names(default.quadrant.cols)]),
+      default.quadrant.cols,
+      color_quadrant)
+  }
 
   if (insignificant == "drop") {
     xdat <- filter(xdat, interaction_group != labels["none"])
     labels <- labels[-1]
-    cols.comp <- cols.comp[-1]
+    color_quadrant <- color_quadrant[-1]
   }
 
   xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]],
@@ -328,7 +345,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
   gg.base <- gg.base +
     ggplot2::geom_abline(intercept = 0, slope = 1, color = "red",
                          linetype = "dotted") +
-    ggplot2::scale_color_manual(values = cols.comp) +
+    ggplot2::scale_color_manual(values = color_quadrant) +
     ggplot2::labs(
       x = sprintf("log2FC %s", labels["x"]),
       y = sprintf("log2FC %s", labels["y"]),
@@ -347,7 +364,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
           ggplot2::geom_point(
             ggplot2::aes(text = symbol),
             data = highlight,
-            color = highlight_color)
+            color = color_highlight)
         })
     }
   }

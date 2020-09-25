@@ -350,6 +350,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
                               min_logFC_x = param(param(x, "x"), "treat_lfc"),
                               min_logFC_y = param(param(x, "y"), "treat_lfc"),
                               max_padj_x = 0.10, max_padj_y = max_padj_x,
+                              exclude_other_significant = FALSE,
                               min_quadrant_count = 5,
                               ...) {
   if (is.null(min_logFC_x)) min_logFC_x <- 1

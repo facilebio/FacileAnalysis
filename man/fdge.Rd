@@ -310,7 +310,7 @@ comp.hi <- tidy(dge.comp) \%>\%
   dplyr::ungroup()
 # Static visualization generates the main "4-way" plot, as well as the
 # facets for each category.
-sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
+sviz <- viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
             subtitle = "Tumor vs normal comparisons across indications",
             highlight = comp.hi)
 # highlight some of them
@@ -323,5 +323,7 @@ if (requireNamespace("patchwork")) {
     sviz$plot + ggplot2::theme(legend.position = "bottom"),
     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
     nrow = 1)
+  viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
+      color_quadrant = "darkgrey")$plot_facets
 }
 }
