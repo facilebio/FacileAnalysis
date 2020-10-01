@@ -262,7 +262,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
     cor.method = "spearman", title = "DGE Comparison",
     subtitle = NULL, with_cor = TRUE, interactive = TRUE,
     insignificant = if (interactive) "drop" else "points",
-    facets_nrow = 2, ...) {
+    facets_nrow = if (insignificant == "drop") 3 else 2, ...) {
 
   xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
   labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
