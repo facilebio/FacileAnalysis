@@ -226,6 +226,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
     params = list(methods = methods,
                   rank_by = rank_by, select_by = select_by,
                   rank_order = rank_order,
+                  group_by = group_by,
                   biased_by = biased_by,
                   x = x, gdb = gdb))
     fds = suppressWarnings(fds(x))
@@ -303,6 +304,130 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
   out[["fds"]] <- fds(x)
   out
 }
+
+#' @rdname fdge
+#' @export
+#' @section Gene Set Enrichment Analysis:
+#' There are a few ways you may consider running a gene set analysis over an
+#' interaction analysis.
+#'
+#' 1. On the statistics of the interaction itself; or
+#' 2. On the statistics of the different "quadrants" the features are binned
+#'    into that are found in the `sigclass` columns of the
+#'    tidied result table, ie. `tidy.FacileTtestComparisonAnalysisResult()`; or
+#' 3. Both.
+#'
+#' Note that an analysis on (2) only lends itself to an overrepresentation
+#' analysis, ie. `methods = "ora"`.
+ffsea.FacileTtestComparisonAnalysisResult <- function(
+    x, gdb, methods = c("cameraPR", "ora"),
+    type = c("interaction", "quadrants"),
+    min_logFC = param(x, "treat_lfc"), max_padj = 0.10,
+    rank_by = "logFC", signed = TRUE, biased_by = NULL, ...,
+    rank_order = "ranked", group_by = "direction", select_by = "significant") {
+  assert_class(gdb, "GeneSetDb")
+  type <- match.arg(type)
+  if (missing(methods) && type == "quadrants") methods <- "ora"
+
+  if (type == "interaction") {
+    # NextMethod should call ffsea.FacileTtestAnalysisResult
+    # out <- NextMethod(override = parameters, as_you = like)
+    out <- NextMethod()
+    oclass <- "FacileTtestComparisonInteractionFseaAnalysisResult"
+  } else {
+    out <- .ffsea.iquadrants(x, gdb, methods, ...)
+    oclass <- "FacileTtestComparisonQuadrantFseaAnalysisResult"
+  }
+
+  class(out) <- c(oclass, class(out))
+  out
+}
+
+#' @noRd
+#' @param min_quadrant_count minimum number of significant genes in a quadrant
+#'   required to perform enrichment analysis.
+.ffsea.iquadrants <- function(x, gdb, methods,
+                              min_logFC_x = param(param(x, "x"), "treat_lfc"),
+                              min_logFC_y = param(param(x, "y"), "treat_lfc"),
+                              max_padj_x = 0.10, max_padj_y = max_padj_x,
+                              exclude_other_significant = FALSE,
+                              min_quadrant_count = 5,
+                              ...) {
+  if (is.null(min_logFC_x)) min_logFC_x <- 1
+  if (is.null(min_logFC_y)) min_logFC_y <- 1
+  if (!isTRUE(methods == "ora")) {
+    stop("Only 'ora' is currently supported for a quadrant analysis")
+  }
+
+  istats <- tidy(x, ...)
+  labels <- attr(istats, "labels")[c("both", "x", "y")]
+
+  params <- list(
+    x = x, gdb = gdb, methods = methods, type = "quadrants",
+    min_logFC_x = min_logFC_x, min_logFC_y = min_logFC_y,
+    max_padj_x = max_padj_x, max_padj_y = max_padj_y)
+
+  mean.lfc <- matrixStats::rowMeans2(
+    matrix(cbind(istats$logFC.x, istats$logFC.y), ncol = 2))
+  min.pval <- matrixStats::rowMins(
+    matrix(cbind(istats$pval.x, istats$pval.y), ncol = 2))
+  min.padj <- matrixStats::rowMins(
+    matrix(cbind(istats$padj.x, istats$padj.y), ncol = 2))
+
+  istats$logFC.i <- istats$logFC
+  istats$pval.i <- istats$pval
+  istats$padj.i <- istats$padj
+
+  quadrants <- sapply(names(labels), function(quadrant) {
+    qlabel <- labels[quadrant]
+    xdat <- istats %>%
+      mutate(significant = interaction_group == qlabel) %>%
+      select(feature_id, feature_type, symbol, significant,
+             starts_with("padj"), starts_with("pval"),
+             starts_with("logFC"), starts_with("t\\."))
+    if (quadrant == "both") {
+      xdat <- mutate(
+        xdat,
+        logFC = mean.lfc, pval = min.pval, padj = min.padj,
+        logFC = ifelse(sign(logFC.x) != sign(logFC.y), logFC.x, logFC),
+        direction = case_when(
+          sign(logFC.x) == sign(logFC.y) & logFC.x > 0 ~ "up",
+          sign(logFC.x) == sign(logFC.y) & logFC.x < 0 ~ "down",
+          sign(logFC.x) != sign(logFC.y) & logFC.x > 0 ~ "x.up",
+          sign(logFC.x) != sign(logFC.y) & logFC.x < 0 ~ "x.down"))
+    } else if (quadrant == "x") {
+      xdat <- mutate(
+        xdat,
+        logFC = logFC.x, pval = pval.x, padj = padj.x,
+        direction = ifelse(logFC.x > 0, "up", "down"))
+    } else {
+      xdat <- mutate(
+        xdat,
+        logFC = logFC.y, pval = pval.y, padj = padj.y,
+        direction = ifelse(logFC.y > 0, "up", "down"))
+    }
+    if (sum(xdat$significant) >= min_quadrant_count) {
+      ffsea(xdat, gdb, methods,
+            select_by = "significant", group_by = "direction")
+    } else {
+      NULL
+    }
+  }, simplify = FALSE)
+
+  out <- list(
+    quadrants = quadrants,
+    labels = labels,
+    params = params)
+
+  class(out) <- c(
+    "FacileTtestComparisonFseaAnalysisResult",
+    "FacileTtestFseaAnalysisResult",
+    "FacileDgeFseaAnalysisResult",
+    "FacileFseaAnalysisResult",
+    "FacileAnalysisResult")
+  out
+}
+
 
 #' @noRd
 #' @export

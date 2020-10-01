@@ -4,7 +4,7 @@ NULL
 #' @rdname fdge
 #' @export
 #'
-#' @section Comparing DGE Results:
+#' @section Comparing DGE Results (interaction effect):
 #' It is often useful to compare the results of two t-tests, and for many
 #' experimental designs, this can be a an intuitive way to perform test an
 #' interaction effect.
@@ -29,25 +29,30 @@ NULL
 #'   flm_def("sample_type", "tumor", "normal", "sex") %>%
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
-#'
-#' if (interactive()) {
-#'   viz(dge.comp, xlabel = "logFC(CRC)", ylabel = "logFC(BLCA)",
-#'       highlight = head(tidy(signature(dge.comp)), 5))
-#'   report(dge.comp)
-#'   shine(dge.comp)
-#' }
-#'
+#' comp.hi <- tidy(dge.comp) %>%
+#'   dplyr::group_by(interaction_group) %>%
+#'   dplyr::slice(1:3) %>%
+#'   dplyr::ungroup()
 #' # Static visualization generates the main "4-way" plot, as well as the
 #' # facets for each category.
-#' sviz <- viz(dge.comp, static = TRUE, labels = c(x = "CRC", y = "BLCA"),
-#'             subtitle = "Tumor vs normal comparisons across indications")
+#' sviz <- viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
+#'             subtitle = "Tumor vs normal comparisons across indications",
+#'             highlight = comp.hi)
+#' # highlight some of them
+#' s.hi <- sviz$input_data %>%
+#'   dplyr::group_by(interaction_group) %>%
+#'   dplyr::slice(1:3) %>%
+#'   dplyr::ungroup()
 #' if (requireNamespace("patchwork")) {
 #'   patchwork::wrap_plots(
 #'     sviz$plot + ggplot2::theme(legend.position = "bottom"),
 #'     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
 #'     nrow = 1)
+#'   viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
+#'       color_quadrant = "darkgrey")$plot_facets
 #' }
-compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
+compare.FacileTtestAnalysisResult <- function(x, y,
+                                              treat_lfc = param(x, "treat_lfc"),
                                               rerun = TRUE, ...) {
   messages <- character()
   warnings <- character()
@@ -59,20 +64,14 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
   assert_class(y, "FacileTtestAnalysisResult")
   fds. <- assert_class(fds(x), "FacileDataStore")
 
-  stopifnot(
-    param(x, "assay_name") == param(y, "assay_name"),
-    param(x, "method") == param(y, "method"))
-
-  if (!is.null(treat_lfc)) {
-    if (!test_number(treat_lfc, lower = 0)) {
-      warnings <- c(
-        warnings,
-        "Illegal parameter passed to `treat_lfc`. It is being ignored")
-      treat_lfc <- 0
-    }
-  } else {
-    treat_lfc <- 0
+  # are there any joint features found in here?
+  if (length(intersect(features(x)$feature_id, features(y)$feature_id)) == 0) {
+    stop("No joint features found, comparison is not possible")
   }
+
+  assert_flag(rerun)
+  if (is.null(treat_lfc)) treat_lfc <- 0
+  assert_number(treat_lfc, lower = 0)
 
   # override downstream with "failed/incomplete/with_i_stats" version of class?
   clazz <- NULL
@@ -97,7 +96,8 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
   })
 
   idge <- .interaction_fdge(x, y, treat_lfc = treat_lfc, rerun = rerun, ...)
-  if (is.null(idge[["result"]])) {
+
+  if (!isTRUE(idge[["with_stats"]])) {
     # this happens if idge is null, too
     samples. <- bind_rows(samples(x), samples(y))
     samples. <- set_fds(samples., fds.)
@@ -118,7 +118,7 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
 
   jcols <- intersect(colnames(xres), colnames(yres))
 
-  meta.cols <- c("feature_type", "feature_id", "symbol", "meta")
+  meta.cols <- c("feature_type", "feature_id", "symbol", "name", "meta")
   drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
                  "source")
   stat.cols <- setdiff(colnames(xres),  c(meta.cols, drop.cols))
@@ -129,17 +129,18 @@ compare.FacileTtestAnalysisResult <- function(x, y, treat_lfc = NULL,
     select(yres, feature_type, feature_id, {{stat.cols}}),
     by = c("feature_type", "feature_id"))
 
-  if (!is.null(idge[["result"]])) {
+  if (isTRUE(idge[["with_stats"]])) {
     ires <- tidy(idge[["result"]]) %>%
       select(feature_type, feature_id, {{stat.cols}})
-    xystats <- left_join(xystats, ires, by = c("feature_type", "feature_id"))
-    # put stats for interaction test up front, followed by *.x, *.y
-    # xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
-    xystats <- select(xystats, {{meta.cols}}, {{stat.cols}}, everything())
-    out[["result"]] <- idge[["result"]]
   } else {
-    # out[["result"]] <- NULL
+    ires <- idge[["result"]]
   }
+  xystats <- left_join(xystats, ires, by = c("feature_type", "feature_id"))
+  # put stats for interaction test up front, followed by *.x, *.y
+  # xystats <- select(xystats, !!c(meta.cols, stat.cols), everything())
+  take.cols <- intersect(c(meta.cols, stat.cols), colnames(xystats))
+  xystats <- select(xystats, {{take.cols}}, everything())
+  out[["result"]] <- idge[["result"]]
 
   out[["xystats"]] <- xystats
   out[["samples"]] <- samples.
@@ -160,9 +161,37 @@ result.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   x[["result"]]
 }
 
-#' Decorates statistics table w/ individual/joint significance calls
+#' @section Statistics Tables:
+#' The stats table from the differential expression analysis can be retrieved
+#' using the `tidy()` function. Depending upon the type of analysis run, the
+#' exact columns of the returned table may differ.
 #'
-#' @noRd
+#' **Interaction Statistics**
+#' Calling `tidy()` on an interaction test result
+#' (`FacileTtestComparisonAnalysisResult`), returns the statistics for the
+#' interaction test itself (if it was performed), as well as the statistics
+#' for the individual DGE results that were run vai `compare(x, y)` to get the
+#' interaction results itself. The columns of statistics related to the
+#' individual tests will be suffixed with `*.x` and `*.y`, respectively.
+#'
+#' An `interaction_group` column will also be added to indicate what type of
+#' statisticaly significance was found for each gene. The values in here can be:
+#'
+#' 1. `"both"`: this gene was statistically significant in both tests
+#' 2. `"x"`: this gene was only significant in the `x` dge result
+#' 3. `"y"`: this gene was only significant in the `y` dge result
+#' 4. `"none"`: was not statistically significant in either test result
+#'
+#' The genes selected for significance from the input results `x` and `y` are
+#' based on their `padj` and `logFC` values. The thresholds are tweaked by the
+#' following parameters in the call to `tidy(compare(x,y))`:
+#'
+#' 1. `max_padj_(x|y)`: if not specified, defaults to `0.10`
+#' 2. `min_logFC_(x|y)`: if not specified, we will take the value that was
+#'    used in the `treat_lfc` parameters to `x` and `y` if those tests were
+#'    run against a threshold, otherwise defaults to `1`.
+#'
+#' @rdname fdge
 #' @export
 tidy.FacileTtestComparisonAnalysisResult <- function(
     x, max_padj_x = 0.1, min_logFC_x = NULL,
@@ -193,13 +222,17 @@ tidy.FacileTtestComparisonAnalysisResult <- function(
   labels <- labels[!duplicated(names(labels))]
   assert_subset(c("x", "y", "both", "none"), names(labels))
 
+  .xsig <- out$padj.x <= max_padj_x & abs(out$logFC.x) >= min_logFC_x
+  .ysig <- out$padj.y <= max_padj_y & abs(out$logFC.y) >= min_logFC_y
+
   out <- mutate(
     out,
-    sigclass = case_when(
-      .data$padj.x <= .env$max_padj_x & .data$padj.y <= .env$max_padj_y ~ labels["both"],
-      .data$padj.x <= .env$max_padj_x & .data$padj.y > .env$max_padj_y ~ labels["x"],
-      .data$padj.y <= .env$max_padj_x & .data$padj.x > .env$max_padj_y ~ labels["y"],
-      TRUE ~ labels["none"]))
+    interaction_group = case_when(
+       .xsig &  .ysig         ~ labels["both"],
+       .xsig & !.ysig         ~ labels["x"],
+      !.xsig &  .ysig         ~ labels["y"],
+      TRUE                    ~ labels["none"])) %>%
+    select(interaction_group, everything())
   attr(out, "labels") <- labels
   out
 }
@@ -217,89 +250,68 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   x[["samples"]]
 }
 
+#' If `interacive` is `TRUE` (default), then this visualizaiton will drop the
+#' interactive points by setting `insignificant = "drop"`. Static plots keep the
+#' insignificant points. If you want to change this behavior, set `interactive`
+#' and `insignificant` as you please.
 #' @noRd
 #' @export
-viz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
-                                                    features = NULL,
-                                                    highlight = NULL,
-                                                    facet = TRUE,
-                                                    static = FALSE,
-                                                    ...) {
-  if (static) {
-    ret <- sviz.FacileTtestComparisonAnalysisResult(x, max_padj = max_padj,
-                                                    features = features,
-                                                    highlight = highlight,
-                                                    facet = facet, ...)
-    return(ret)
-  }
+viz.FacileTtestComparisonAnalysisResult <- function(
+    x, max_padj = 0.1, features = NULL, highlight = NULL,
+    color_quadrant = NULL, color_highlight = "red",
+    cor.method = "spearman", title = "DGE Comparison",
+    subtitle = NULL, with_cor = TRUE, interactive = TRUE,
+    insignificant = if (interactive) "drop" else "points",
+    facets_nrow = if (insignificant == "drop") 3 else 2, ...) {
 
-  hover <- c(
-    # feature metadata
-    "symbol", "feature_id", "meta",
-    # padj from individual fdge tests
-    "padj.x", "padj.y",
-    # stats from interaction model, if it was run
-    "logFC", "padj")
-  d <- tidy(x)
-
-  features <- extract_feature_id(features)
-  highlight <- extract_feature_id(highlight)
-  ids <- NULL
-
-  if (!is.null(x[["dge"]])) {
-    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj | padj <= max_padj)
-    ids <- ids[["feature_id"]]
-  } else {
-    ids <- filter(d, padj.x <= max_padj | padj.y <= max_padj)[["feature_id"]]
-  }
-
-  dat <- filter(d, .data$feature_id %in% c(ids, features, highlight))
-
-  if (length(highlight)) {
-    dat[["highlight."]] <- ifelse(dat[["feature_id"]] %in% highlight,
-                                  "fg", "bg")
-    color_aes <- "highlight."
-  } else {
-    color_aes <- NULL
-  }
-
-  hover <- setdiff(intersect(hover, colnames(d)), "highlight.")
-  fscatterplot(dat, c("logFC.x", "logFC.y"), hover = hover, webgl = TRUE,
-               color_aes = color_aes, showlegend = FALSE, ...)
-}
-
-#' @noRd
-#' @export
-sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
-                                                     features = NULL,
-                                                     highlight = NULL,
-                                                     cor.method = "spearman",
-                                                     cor.use = "complete.obs",
-                                                     title = "DGE Comparison",
-                                                     subtitle = NULL,
-                                                     with_cor = TRUE, ...) {
   xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
+  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
+  insignificant <- match.arg(insignificant, c("drop", "points"))
+
+  default.quadrant.cols <- setNames(
+    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
+    labels)
+  if (is.null(color_quadrant) || length(color_quadrant) == 0L) {
+    color_quadrant <- default.quadrant.cols
+  } else {
+    assert_character(color_quadrant, min.len = 1)
+    if (length(color_quadrant) == 1L) {
+      color_quadrant <- rep(color_quadrant, length(default.quadrant.cols))
+      names(color_quadrant) <- names(default.quadrant.cols)
+    }
+    color_quadrant <- ifelse(
+      is.na(color_quadrant[names(default.quadrant.cols)]),
+      default.quadrant.cols,
+      color_quadrant)
+  }
+
+  if (insignificant == "drop") {
+    xdat <- filter(xdat, interaction_group != labels["none"])
+    labels <- labels[-1]
+    color_quadrant <- color_quadrant[-1]
+  }
+
+  xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]],
+                                        unname(labels))
+
   if (with_cor) {
-    cors.all <- lapply(c("all", unique(xdat[["sigclass"]])), function(wut) {
-      xs <- if (wut == "all") xdat else filter(xdat, .data$sigclass == .env$wut)
+    cor.quadrants <- c("all", levels(xdat[["interaction_group"]]))
+    cors.all <- lapply(cor.quadrants, function(wut) {
+      if (wut == "all") {
+        xs <- xdat
+      } else {
+        xs <- filter(xdat, .data$interaction_group == .env$wut)
+      }
       xs <- filter(xs, !is.na(logFC.x) & !is.na(logFC.y))
       if (nrow(xs) == 0) return(NULL)
       ct <- suppressWarnings(
         cor.test(xs$logFC.x, xs$logFC.y, method = cor.method)
       )
-      mutate(tidy(ct), sigclass = wut, n = nrow(xs))
+      mutate(tidy(ct), interaction_group = wut, n = nrow(xs))
     })
     cors <- mutate(bind_rows(cors.all),
                    label = sprintf("cor: %0.2f\nN: %d", estimate, n))
   }
-
-  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
-  # labels <- factor(labels, labels)
-  xdat[["sigclass"]] <- factor(xdat[["sigclass"]], unname(labels))
-
-  cols.comp <- setNames(
-    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
-    labels)
 
   lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))
   lims.square <- c(-1, 1) * (max(abs(lims.square)) + 0.1)
@@ -311,18 +323,29 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
   lnone <- labels["none"]
   lboth <- labels["both"]
 
+  xdat$padj.min <- pmin(xdat$padj, xdat$padj.x, xdat$padj.y)
+  xdat <- arrange(xdat, interaction_group, desc(padj.min))
+
   gg.base <- xdat %>%
     ggplot2::ggplot(ggplot2::aes(x = logFC.x, y = logFC.y)) +
     ggplot2::geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-    ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
-    ggplot2::geom_point(ggplot2::aes(color = sigclass),
-                        data = filter(xdat, .data$sigclass == .env$lnone)) +
-    ggplot2::geom_point(ggplot2::aes(color = sigclass),
-                        data = filter(xdat, .data$sigclass == .env$lboth)) +
-    ggplot2::geom_point(ggplot2::aes(color = sigclass),
-                        data = filter(xdat, !.data$sigclass %in% c(lnone, lboth))) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dotted") +
-    ggplot2::scale_color_manual(values = cols.comp) +
+    ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed")
+  # if (insignificant == "density") {
+  #   gg.base <- gg.base +
+  #     ggplot2::geom_density2d(
+  #       alpha = 0.5,
+  #       data = filter(xdat, anti_join(xdat, xdat.points, by = "feature_id")))
+  # }
+  gg.base <- gg.base +
+    suppressWarnings({
+      ggplot2::geom_point(
+        ggplot2::aes(color = interaction_group, text = symbol))
+    })
+
+  gg.base <- gg.base +
+    ggplot2::geom_abline(intercept = 0, slope = 1, color = "red",
+                         linetype = "dotted") +
+    ggplot2::scale_color_manual(values = color_quadrant) +
     ggplot2::labs(
       x = sprintf("log2FC %s", labels["x"]),
       y = sprintf("log2FC %s", labels["y"]),
@@ -332,36 +355,51 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
     ggplot2::xlim(lims.square) +
     ggplot2::ylim(lims.square)
 
+  if (!is.null(highlight)) {
+    fids <- extract_feature_id(highlight)
+    highlight <- filter(xdat, feature_id %in% .env$fids)
+    if (nrow(highlight)) {
+      gg.base <- gg.base +
+        suppressWarnings({
+          ggplot2::geom_point(
+            ggplot2::aes(text = symbol),
+            data = highlight,
+            color = color_highlight)
+        })
+    }
+  }
+
   if (with_cor) {
     gg.main <- gg.base +
       ggplot2::geom_text(
         mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
         hjust = -0.1, vjust = 1.2,
-        data = filter(cors, sigclass == "all"))
+        data = filter(cors, interaction_group == "all"))
   } else {
     gg.main <- gg.base
   }
 
   gg.facets <- gg.base +
-    ggplot2::facet_wrap(~ sigclass) +
+    ggplot2::facet_wrap(~ interaction_group, nrow = facets_nrow) +
     ggplot2::ylab(NULL) +
     ggplot2::labs(title = NULL, subtitle = NULL)
 
   if (with_cor) {
-    fcors <- filter(cors, sigclass != "all")
-    fcors[["sigclass"]] <- factor(fcors[["sigclass"]],
-                                  levels(xdat[["sigclass"]]))
+    fcors <- filter(cors, interaction_group != "all")
+    fcors[["interaction_group"]] <- factor(fcors[["interaction_group"]],
+                                           levels(xdat[["interaction_group"]]))
     gg.facets <- gg.facets +
       ggplot2::geom_text(
         mapping = ggplot2::aes(x = -Inf, y = Inf, label = label),
         hjust = -0.1, vjust = 1.2,
-        data = filter(fcors))
+        data = fcors)
   }
 
   out <- list(
     plot = gg.main,
     plot_facets = gg.facets,
     input_data = xdat,
+    correlation = cors,
     params = list())
 
   class(out) <- c("FacileTtestComparisonViz", "FacileStaticViz", "FacileViz")
@@ -376,27 +414,38 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
 #'
 #' If we can't generate an interaction result, this will return NULL.
 #' @noRd
-.interaction_fdge <- function(x, y, treat_lfc = NULL, rerun = FALSE, ...) {
+.interaction_fdge <- function(x, y, treat_lfc = NULL, rerun = FALSE, ...,
+                              .run_interaction = TRUE) {
   # If these results aren't from the same FacileDataStore, get outta here
   # NOTE: This is not really a robust way to compare if two fds are the same
-  if (name(fds(x)) != name(fds(y))) {
-    return(NULL)
-  }
   xmod <- model(x)
   ymod <- model(y)
   xres <- tidy(x)
   yres <- tidy(y)
 
   covariate <- param(xmod, "covariate")
-  if (covariate != param(ymod, "covariate")) {
-    warning("Covariates used in test are not equal, no dge analysis performed",
-            immediate. = TRUE)
-    return(NULL)
-  }
 
-  warning("Properly running the interaction model here is still ALPHA\n  ",
-          "https://github.com/facilebio/FacileAnalysis/issues/19",
-          immediate. = TRUE)
+  concordant.analysis <- covariate == param(ymod, "covariate") &&
+    param(x, "assay_name") == param(y, "assay_name") &&
+    param(x, "method") == param(y, "method")
+
+  # Calculate estimated logFC's between the *.x and *.y logFC in case we don't
+  # make it all the way through the formal interaction analysis
+  ires.tmp <- xres %>%
+    full_join(yres, by = c("feature_id", "feature_type", "name")) %>%
+    transmute(feature_id, feature_type, name, logFC = logFC.x - logFC.y,
+              pval = NA_real_, padj = NA_real_)
+
+  out <- list(result = ires.tmp, x = x, y = y, rerun = FALSE,
+              with_stats = FALSE)
+  if (!concordant.analysis) {
+    warning("Analyses are not concordant. Interaction stats will not be ",
+            "generated, but delta logFC's will be provided")
+    return(out)
+  }
+  if (!.run_interaction) {
+    return(out)
+  }
 
   xsamples <- samples(xmod)
   ysamples <- samples(ymod)
@@ -486,17 +535,25 @@ sviz.FacileTtestComparisonAnalysisResult <- function(x, max_padj = 0.1,
          treat_lfc = treat_lfc),
     error = function(x) NULL)
 
-  rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
-  if (rerun) {
-    x <- fdge(xmod, features = genes., method = param(x, "method"),
-              assay_name = param(x, "assay_name"),
-              with_sample_weights = param(x, "with_sample_weights"))
-    y <- fdge(ymod, features = genes., method = param(y, "method"),
-              assay_name = param(y, "assay_name"),
-              with_sample_weights = param(y, "with_sample_weights"))
+  if (!is.null(ires)) {
+    out[["result"]] <- ires
+    out[["with_stats"]] <- TRUE
+    rerun <- rerun && !setequal(xres[["feature_id"]], genes.)
+
+    if (rerun) {
+      x <- fdge(xmod, features = genes., method = param(x, "method"),
+                assay_name = param(x, "assay_name"),
+                with_sample_weights = param(x, "with_sample_weights"))
+      y <- fdge(ymod, features = genes., method = param(y, "method"),
+                assay_name = param(y, "assay_name"),
+                with_sample_weights = param(y, "with_sample_weights"))
+      out[["rerun"]] <- TRUE
+      out[["x"]] <- x
+      out[["y"]] <- y
+    }
   }
 
-  list(result = ires, x = x, y = y, rerun = rerun)
+  out
 }
 
 #' @noRd

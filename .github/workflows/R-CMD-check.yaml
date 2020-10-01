@@ -1,8 +1,10 @@
 on:
   push:
-    branches:
-      - master
-      - develop # This will eventually require a different container
+    # branches:
+    #   - master
+    #   - develop # This will eventually require a different container
+    branches-ignore:
+      - 'notest-**'
     paths:
       - 'R/**'
       - 'DESCRIPTION'
