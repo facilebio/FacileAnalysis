@@ -77,7 +77,7 @@ parameter) over the data. flm_def accepts a" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.17</span>
       </span>
     </div>
 
@@ -138,7 +138,7 @@ parameter) over the data. flm_def accepts a" />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Peform a differential expression analysis.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge.R'><code>R/fdge.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-compare.R'><code>R/fdge-compare.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-interact.R'><code>R/fdge-interact.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge.R'><code>R/fdge.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-compare.R'><code>R/fdge-compare.R</code></a>, <a href='https://github.com/facilebio/FacileAnalysis/blob/master/R/fdge-interact.R'><code>R/fdge-interact.R</code></a>, and 1 more</small>
     <div class="hidden name"><code>fdge.Rd</code></div>
     </div>
 
@@ -156,6 +156,7 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
   features <span class='op'>=</span> <span class='cn'>NULL</span>,
   filter <span class='op'>=</span> <span class='st'>"default"</span>,
   with_sample_weights <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  treat_lfc <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span>
@@ -203,7 +204,18 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
 <span class='op'>)</span>
 
 <span class='co'># S3 method for FacileTtestAnalysisResult</span>
-<span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span>, treat_lfc <span class='op'>=</span> <span class='cn'>NULL</span>, rerun <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
+<span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span>, treat_lfc <span class='op'>=</span> <span class='fu'><a href='param.html'>param</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='st'>"treat_lfc"</span><span class='op'>)</span>, rerun <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='co'># S3 method for FacileTtestComparisonAnalysisResult</span>
+<span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  max_padj_x <span class='op'>=</span> <span class='fl'>0.1</span>,
+  min_logFC_x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  max_padj_y <span class='op'>=</span> <span class='va'>max_padj_x</span>,
+  min_logFC_y <span class='op'>=</span> <span class='va'>min_logFC_x</span>,
+  labels <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S3 method for FacileTtestAnalysisResult</span>
 <span class='fu'><a href='viz.html'>report</a></span><span class='op'>(</span>
@@ -219,6 +231,23 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
   webgl <span class='op'>=</span> <span class='cn'>TRUE</span>,
   caption <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>...</span>
+<span class='op'>)</span>
+
+<span class='co'># S3 method for FacileTtestComparisonAnalysisResult</span>
+<span class='fu'><a href='ffsea.html'>ffsea</a></span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  <span class='va'>gdb</span>,
+  methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"cameraPR"</span>, <span class='st'>"ora"</span><span class='op'>)</span>,
+  type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"interaction"</span>, <span class='st'>"quadrants"</span><span class='op'>)</span>,
+  min_logFC <span class='op'>=</span> <span class='fu'><a href='param.html'>param</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='st'>"treat_lfc"</span><span class='op'>)</span>,
+  max_padj <span class='op'>=</span> <span class='fl'>0.1</span>,
+  rank_by <span class='op'>=</span> <span class='st'>"logFC"</span>,
+  signed <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  biased_by <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>...</span>,
+  rank_order <span class='op'>=</span> <span class='st'>"ranked"</span>,
+  group_by <span class='op'>=</span> <span class='st'>"direction"</span>,
+  select_by <span class='op'>=</span> <span class='st'>"significant"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -326,7 +355,7 @@ is <code>NULL</code>, which means no genes are forcibly included in the analysis
 they do not pass muster given the filtering criteria.</p></li>
 </ul>
 
-    <h2 class="hasAnchor" id="comparing-dge-results"><a class="anchor" href="#comparing-dge-results"></a>Comparing DGE Results</h2>
+    <h2 class="hasAnchor" id="comparing-dge-results-interaction-effect-"><a class="anchor" href="#comparing-dge-results-interaction-effect-"></a>Comparing DGE Results (interaction effect)</h2>
 
     
 
@@ -335,6 +364,37 @@ experimental designs, this can be a an intuitive way to perform test an
 interaction effect.</p>
 <p>The filtering strategy in the interaction model dictates that the union
 of all features found in <code>x</code> are <code>y</code> are used in the test.</p>
+    <h2 class="hasAnchor" id="statistics-tables"><a class="anchor" href="#statistics-tables"></a>Statistics Tables</h2>
+
+    
+
+<p>The stats table from the differential expression analysis can be retrieved
+using the <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> function. Depending upon the type of analysis run, the
+exact columns of the returned table may differ.</p>
+<p><strong>Interaction Statistics</strong>
+Calling <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> on an interaction test result
+(<code>FacileTtestComparisonAnalysisResult</code>), returns the statistics for the
+interaction test itself (if it was performed), as well as the statistics
+for the individual DGE results that were run vai <code><a href='compare.html'>compare(x, y)</a></code> to get the
+interaction results itself. The columns of statistics related to the
+individual tests will be suffixed with <code>*.x</code> and <code>*.y</code>, respectively.</p>
+<p>An <code>interaction_group</code> column will also be added to indicate what type of
+statisticaly significance was found for each gene. The values in here can be:</p><ol>
+<li><p><code>"both"</code>: this gene was statistically significant in both tests</p></li>
+<li><p><code>"x"</code>: this gene was only significant in the <code>x</code> dge result</p></li>
+<li><p><code>"y"</code>: this gene was only significant in the <code>y</code> dge result</p></li>
+<li><p><code>"none"</code>: was not statistically significant in either test result</p></li>
+</ol>
+
+<p>The genes selected for significance from the input results <code>x</code> and <code>y</code> are
+based on their <code>padj</code> and <code>logFC</code> values. The thresholds are tweaked by the
+following parameters in the call to <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(compare(x,y))</a></code>:</p><ol>
+<li><p><code>max_padj_(x|y)</code>: if not specified, defaults to <code>0.10</code></p></li>
+<li><p><code>min_logFC_(x|y)</code>: if not specified, we will take the value that was
+used in the <code>treat_lfc</code> parameters to <code>x</code> and <code>y</code> if those tests were
+run against a threshold, otherwise defaults to <code>1</code>.</p></li>
+</ol>
+
     <h2 class="hasAnchor" id="interacting-with-results"><a class="anchor" href="#interacting-with-results"></a>Interacting with results</h2>
 
     
@@ -344,6 +404,21 @@ of all features found in <code>x</code> are <code>y</code> are used in the test.
 the analyst or dropped into an Rmarkdown report.</p>
 <p><code><a href='viz.html'>report(result, "dge", max_padj = 0.05, min_logFC = 1)</a></code> will create a
 side-by-side volcano and datatable for differential expression results.</p>
+    <h2 class="hasAnchor" id="gene-set-enrichment-analysis"><a class="anchor" href="#gene-set-enrichment-analysis"></a>Gene Set Enrichment Analysis</h2>
+
+    
+
+<p>There are a few ways you may consider running a gene set analysis over an
+interaction analysis.</p><ol>
+<li><p>On the statistics of the interaction itself; or</p></li>
+<li><p>On the statistics of the different "quadrants" the features are binned
+into that are found in the <code>sigclass</code> columns of the
+tidied result table, ie. <code>tidy.FacileTtestComparisonAnalysisResult()</code>; or</p></li>
+<li><p>Both.</p></li>
+</ol>
+
+<p>Note that an analysis on (2) only lends itself to an overrepresentation
+analysis, ie. <code>methods = "ora"</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
@@ -377,24 +452,27 @@ side-by-side volcano and datatable for differential expression results.</p>
   <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span>
 <span class='va'>dge.comp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>dge.crc</span>, <span class='va'>dge.blca</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='warning'>Warning: Properly running the interaction model here is still ALPHA</span>
-#&gt; <span class='warning'>  https://github.com/facilebio/FacileAnalysis/issues/19</span></div><div class='input'>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, xlabel <span class='op'>=</span> <span class='st'>"logFC(CRC)"</span>, ylabel <span class='op'>=</span> <span class='st'>"logFC(BLCA)"</span>,
-      highlight <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span><span class='op'>)</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>report</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span>
-<span class='op'>}</span>
-
+<span class='va'>comp.hi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='co'># Static visualization generates the main "4-way" plot, as well as the</span>
 <span class='co'># facets for each category.</span>
-<span class='va'>sviz</span> <span class='op'>&lt;-</span> <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, static <span class='op'>=</span> <span class='cn'>TRUE</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,
-            subtitle <span class='op'>=</span> <span class='st'>"Tumor vs normal comparisons across indications"</span><span class='op'>)</span>
+<span class='va'>sviz</span> <span class='op'>&lt;-</span> <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,
+            subtitle <span class='op'>=</span> <span class='st'>"Tumor vs normal comparisons across indications"</span>,
+            highlight <span class='op'>=</span> <span class='va'>comp.hi</span><span class='op'>)</span>
+<span class='co'># highlight some of them</span>
+<span class='va'>s.hi</span> <span class='op'>&lt;-</span> <span class='va'>sviz</span><span class='op'>$</span><span class='va'>input_data</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/ns-load.html'>requireNamespace</a></span><span class='op'>(</span><span class='st'>"patchwork"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
   <span class='fu'>patchwork</span><span class='fu'>::</span><span class='fu'><a href='https://patchwork.data-imaginist.com/reference/wrap_plots.html'>wrap_plots</a></span><span class='op'>(</span>
     <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"bottom"</span><span class='op'>)</span>,
     <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot_facets</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"none"</span><span class='op'>)</span>,
     nrow <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,
+      color_quadrant <span class='op'>=</span> <span class='st'>"darkgrey"</span><span class='op'>)</span><span class='op'>$</span><span class='va'>plot_facets</span>
 <span class='op'>}</span>
 </div><div class='output co'>#&gt; <span class='message'>Loading required namespace: patchwork</span></div><div class='img'><img src='fdge-1.png' alt='' width='700' height='433' /></div></pre>
   </div>
