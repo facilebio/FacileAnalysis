@@ -207,7 +207,7 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
 <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span>, treat_lfc <span class='op'>=</span> <span class='fu'><a href='param.html'>param</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='st'>"treat_lfc"</span><span class='op'>)</span>, rerun <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for FacileTtestComparisonAnalysisResult</span>
-<span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span>
+<span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span>
   <span class='va'>x</span>,
   max_padj_x <span class='op'>=</span> <span class='fl'>0.1</span>,
   min_logFC_x <span class='op'>=</span> <span class='cn'>NULL</span>,
@@ -369,10 +369,10 @@ of all features found in <code>x</code> are <code>y</code> are used in the test.
     
 
 <p>The stats table from the differential expression analysis can be retrieved
-using the <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> function. Depending upon the type of analysis run, the
+using the <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy()</a></code> function. Depending upon the type of analysis run, the
 exact columns of the returned table may differ.</p>
 <p><strong>Interaction Statistics</strong>
-Calling <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> on an interaction test result
+Calling <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy()</a></code> on an interaction test result
 (<code>FacileTtestComparisonAnalysisResult</code>), returns the statistics for the
 interaction test itself (if it was performed), as well as the statistics
 for the individual DGE results that were run vai <code><a href='compare.html'>compare(x, y)</a></code> to get the
@@ -388,7 +388,7 @@ statisticaly significance was found for each gene. The values in here can be:</p
 
 <p>The genes selected for significance from the input results <code>x</code> and <code>y</code> are
 based on their <code>padj</code> and <code>logFC</code> values. The thresholds are tweaked by the
-following parameters in the call to <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(compare(x,y))</a></code>:</p><ol>
+following parameters in the call to <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy(compare(x,y))</a></code>:</p><ol>
 <li><p><code>max_padj_(x|y)</code>: if not specified, defaults to <code>0.10</code></p></li>
 <li><p><code>min_logFC_(x|y)</code>: if not specified, we will take the value that was
 used in the <code>treat_lfc</code> parameters to <code>x</code> and <code>y</code> if those tests were
@@ -434,7 +434,7 @@ analysis, ie. <code>methods = "ora"</code>.</p>
   <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge</span>, <span class='st'>"146909"</span><span class='op'>)</span>
   <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
 <span class='op'>}</span>
-<span class='va'>dge.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
+<span class='va'>dge.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
 <span class='va'>dge.sig</span> <span class='op'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
 
 <span class='va'>stage.anova</span> <span class='op'>&lt;-</span> <span class='va'>samples</span> <span class='op'>%&gt;%</span>
@@ -452,7 +452,7 @@ analysis, ie. <code>methods = "ora"</code>.</p>
   <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span>
 <span class='va'>dge.comp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>dge.crc</span>, <span class='va'>dge.blca</span><span class='op'>)</span>
-<span class='va'>comp.hi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+<span class='va'>comp.hi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>

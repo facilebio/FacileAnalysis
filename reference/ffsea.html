@@ -181,7 +181,7 @@ statistics, minimally with a <code>"feature_id"</code> column as well as one or 
 
     <p>A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
 object as it's <code><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result()</a></code>. The geneset level statistics for each of the
-methods that were run are available via <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(ffsea.res, "&lt;method_name&gt;")</a></code>.</p>
+methods that were run are available via <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy(ffsea.res, "&lt;method_name&gt;")</a></code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>:
@@ -233,10 +233,10 @@ are <code>"up"</code>, and <code>"down"</code>.</p></li>
     
 
 <p>The geneset level statistics can be extracted from the
-<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> function.
+<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy()</a></code> function.
 For instance, if <code>ffsea()</code> was called with
 <code>fres &lt;- ffsea(..., methods = c("cameraPR", "ora")</code>, the <code>"cameraPR"</code>
-results can be extracted via <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(fres, "cameraPR")</a></code></p>
+results can be extracted via <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy(fres, "cameraPR")</a></code></p>
     <h2 class="hasAnchor" id="development-notes"><a class="anchor" href="#development-notes"></a>Development Notes</h2>
 
     
@@ -250,14 +250,14 @@ of the ones wrapped by multiGSEA, as enumerated below.</p>
 
     
 
-<p>We are in a bit of a schizophrenic state right now, where <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy()</a></code> is
+<p>We are in a bit of a schizophrenic state right now, where <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy()</a></code> is
 being the de-facto way to answer "tidy" like results (instead of result()).</p>
 <p>This is not to say that <code><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result()</a></code> can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
-MultiGSEAResult object itself, and <code><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy(ffsea.result)</a></code> will dispatch
+MultiGSEAResult object itself, and <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy(ffsea.result)</a></code> will dispatch
 to <code><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>multiGSEA::result()</a></code> to fetch the gsea statistcs for the method
 requested.</p><pre><span class='va'>mgres</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span><span class='op'>(</span><span class='va'>ffsea.res</span><span class='op'>)</span> <span class='co'># return the MultiGSEAResult object</span>
-<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ffsea.res</span>, name <span class='op'>=</span> <span class='st'>"cameraPR"</span><span class='op'>)</span>
+<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ffsea.res</span>, name <span class='op'>=</span> <span class='st'>"cameraPR"</span><span class='op'>)</span>
 </pre>
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
@@ -282,8 +282,8 @@ requested.</p><pre><span class='va'>mgres</span> <span class='op'>&lt;-</span> <
   <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span><span class='op'>)</span>
 <span class='op'>}</span>
 
-<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"cameraPR"</span><span class='op'>)</span>
-<span class='va'>ora.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/generics/man/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"ora"</span><span class='op'>)</span>
+<span class='va'>camera.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"cameraPR"</span><span class='op'>)</span>
+<span class='va'>ora.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>ttest.gsea</span>, <span class='st'>"ora"</span><span class='op'>)</span>
 
 <span class='co'># GSEA from ANOVA result ----------------------------------------------------</span>
 <span class='va'>stage.anova</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
