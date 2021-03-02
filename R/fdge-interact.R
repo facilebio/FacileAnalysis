@@ -33,7 +33,7 @@ shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
 viz.FacileTtestAnalysisResult <- function(x, features = NULL, type = NULL,
                                           highlight = NULL,
                                           round_digits = 3, event_source = "A",
-                                          webgl = type %in% c("volcano", "ma"),
+                                          webgl = NULL,
                                           ...) {
   try.tidy.class <- c("FacileFeatureSignature", "FacileFeatureRanks")
   if (test_multi_class(features, try.tidy.class)) {
@@ -58,7 +58,6 @@ viz.FacileTtestAnalysisResult <- function(x, features = NULL, type = NULL,
                             round_digits = round_digits,
                             event_source = event_source, ...)
   } else {
-    force(webgl)
     out <- .viz_ttest_scatter(x, type, feature_id = features,
                              highlight_id = highlight,
                              round_digits = round_digits,
@@ -166,7 +165,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
                                highlight_id = NULL,
                                round_digits = 3, event_source = "A",
                                width = NULL, height = NULL,
-                               webgl = TRUE, dat = NULL,
+                               webgl = NULL, dat = NULL,
                                color_aes = NULL,
                                hover = c("logFC", "pval", "padj", "symbol")
                                , ...) {
@@ -194,6 +193,8 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     xlabel <- "Average Expression"
     ylabel <- "log2FC"
   }
+
+  webgl <- if (is.null(webgl)) nrow(dat) > 200 else assert_flag(webgl)
 
   fp <- fscatterplot(
     dat, c("xval", "yval"), color_aes = color_aes,

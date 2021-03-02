@@ -97,8 +97,11 @@
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
 #'                     biased_by = "effective_length")
 #' if (interactive()) {
-#'   ttest.gsea <- ffseaGadget(ttest.res, gdb)
-#'   shine(ttest.gsea)
+#'   viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
+#'   viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
+#'
+#'   shine(ttest.igsea)
+#'   ttest.igsea <- ffseaGadget(ttest.res, gdb)
 #' }
 #'
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")

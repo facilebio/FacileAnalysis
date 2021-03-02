@@ -193,7 +193,9 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   dat <- biocbox(x, class = "list", assay_name = assay_name,
                  features = features, sample_covariates = col_covariates,
                  feature_covariates = row_covariates,
-                 normalized = TRUE, log = TRUE, batch = batch, main = main, ...)
+                 normalized = TRUE, log = TRUE,
+                 # batch = batch, main = main,
+                 ...)
 
   if (!is.null(features) && missing(filter)) {
     filter <- "none"
@@ -201,7 +203,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 
   out <- fpca(dat[["assay_data"]], dims, features, filter, ntop,
               row_covariates = dat[["features"]],
-              col_covariates = dat[["samples"]], ...)
+              col_covariates = dat[["samples"]],
+              batch = batch, main = main, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
   if (!is.null(batch)) out[["params"]][["batch"]] <- batch
@@ -284,6 +287,18 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   if (unselected(batch)) batch <- NULL
   if (unselected(main)) main <- NULL
 
+  # Some assays let NA's sneak in, if we observe any here let's just drop
+  # the analyte and "pray for the best". We will introduce an NA fill policy
+  # soon.
+  isna <- which(is.na(x), arr.ind = TRUE)
+  if (nrow(isna) > 0L) {
+    rm.na <- unique(isna[, 1L])
+    warning("Removing ", length(rm.na), " / ", nrow(x),
+            " features due to NA values", immediate. = TRUE)
+    x <- x[-rm.na,,drop = FALSE]
+    row_covariates <- row_covariates[-rm.na,,drop = FALSE]
+  }
+
   if (!is.null(batch)) {
     x <- remove_batch_effect(x, col_covariates, batch = batch, main = main, ...)
   }
@@ -307,7 +322,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   }
 
   if (filter == "variance") {
-    rv <- matrixStats::rowVars(x)
+    rv <- matrixStats::rowVars(x, na.rm = TRUE)
     take <- head(order(rv, decreasing = TRUE), ntop)
     ntop <- length(take)
   }

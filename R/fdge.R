@@ -580,7 +580,7 @@ biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   # delegate down to biocbox.FacileLinearModelDefinition
   assay_name <- assert_string(param(x, "assay_name"))
   method <- assert_string(param(x, "method"))
-  # browser()
+
   # meta.cols <- c("lib.size", "norm.factors", "sizeFactor")
   # meta.cols <- intersect(meta.cols, )
   out <- biocbox(model(x), assay_name = assay_name, method = method,
