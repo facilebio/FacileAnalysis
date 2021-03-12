@@ -1,0 +1,5 @@
+"dge_method",   "robust_fit", "robust_ebayes", "trend_ebayes", "can_sample_weight"
+"voom",         "FALSE",        "FALSE",           "FALSE",          "TRUE"
+"edgeR-qlf",    "TRUE",         "FALSE",           "FALSE",          "FALSE"
+"limma-trend",  "FALSE",        "FALSE",           "TRUE",           "TRUE"
+"limma",        "FALSE",        "FALSE",           "FALSE",          "TRUE"
