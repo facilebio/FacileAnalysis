@@ -194,9 +194,9 @@ result.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @rdname fdge
 #' @export
 tidy.FacileTtestComparisonAnalysisResult <- function(
-    x, max_padj_x = 0.1, min_logFC_x = NULL,
-    max_padj_y = max_padj_x, min_logFC_y = min_logFC_x,
-    labels = NULL, ...) {
+    x, max_padj = 0.1, min_logFC = NULL, labels = NULL, ...,
+    max_padj_x = max_padj, max_padj_y = max_padj,
+    min_logFC_x = min_logFC, min_logFC_y = min_logFC) {
 
   out <- x[["xystats"]]
   xres <- param(x, "x")
@@ -257,14 +257,14 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @noRd
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(
-    x, max_padj = 0.1, features = NULL, highlight = NULL,
+    x, features = NULL, highlight = NULL,
     color_quadrant = NULL, color_highlight = "red",
     cor.method = "spearman", title = "DGE Comparison",
     subtitle = NULL, with_cor = TRUE, interactive = TRUE,
     insignificant = if (interactive) "drop" else "points",
     facets_nrow = if (insignificant == "drop") 3 else 2, ...) {
 
-  xdat <- tidy(x, max_padj_x = max_padj, max_pady_y = max_padj, ...)
+  xdat <- tidy(x, ...)
   labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
   insignificant <- match.arg(insignificant, c("drop", "points"))
 
@@ -303,7 +303,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
         xs <- filter(xdat, .data$interaction_group == .env$wut)
       }
       xs <- filter(xs, !is.na(logFC.x) & !is.na(logFC.y))
-      if (nrow(xs) == 0) return(NULL)
+      if (nrow(xs) < 3) return(NULL)
       ct <- suppressWarnings(
         cor.test(xs$logFC.x, xs$logFC.y, method = cor.method)
       )
@@ -311,6 +311,8 @@ viz.FacileTtestComparisonAnalysisResult <- function(
     })
     cors <- mutate(bind_rows(cors.all),
                    label = sprintf("cor: %0.2f\nN: %d", estimate, n))
+  } else {
+    cors <- NULL
   }
 
   lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))

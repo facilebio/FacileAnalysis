@@ -8,6 +8,7 @@
 #'
 #' @noRd
 #' @param x NULL, character string, or tibble with feature_id column
+#' @return a character vector of feature ids
 extract_feature_id <- function(x, ...) {
   if (is.null(x)) return(NULL)
   if (is.data.frame(x)) x <- x[["feature_id"]]
