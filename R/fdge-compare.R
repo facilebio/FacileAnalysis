@@ -383,7 +383,6 @@ viz.FacileTtestComparisonAnalysisResult <- function(
 
   gg.facets <- gg.base +
     ggplot2::facet_wrap(~ interaction_group, nrow = facets_nrow) +
-    ggplot2::ylab(NULL) +
     ggplot2::labs(title = NULL, subtitle = NULL)
 
   if (with_cor) {

@@ -53,6 +53,7 @@ Suggests:
     org.Mm.eg.db,
     patchwork,
     RColorBrewer,
+    rmarkdown,
     RnaSeqGeneEdgeRQL,
     SummarizedExperiment,
     sva,
