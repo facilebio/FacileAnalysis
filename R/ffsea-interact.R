@@ -1,30 +1,51 @@
 #' @noRd
 #' @export
 #' @importFrom multiGSEA iplot geneSets
-viz.FacileFseaAnalysisResult <- function(x, name = NULL, collection = NULL,
-                                         ...) {
+viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
+                                         name = NULL, collection = NULL,
+                                         rank_by = NULL, ...) {
   mgres <- assert_class(result(x), "MultiGSEAResult")
+  type <- match.arg(type)
 
-  # Passing in a geneset name will use multiGSEA::iplot
-  if (is.character(name)) {
-    stopifnot(length(name) == 1L)
-    gs <- geneSets(mgres)
-    found <- gs[["name"]] == name
-    colxn <- gs[["collection"]][found]
-    if (length(colxn) == 0L) {
+  assert_string(name)
+  assert_string(collection, null.ok = TRUE)
+
+  if (is.null(rank_by)) {
+    rank_by <- param(x, "rank_by")
+  }
+  assert_string(rank_by)
+  if (rank_by != param(x, "rank_by")) {
+    warning("Plot generated using different rank statistic than tested")
+  }
+
+  # TODO: This needs refactoring to make better use of multiGSEA geneSet
+  #       retrieval mojo already there .....................................
+  gs <- geneSets(mgres)
+  found <- gs[["name"]] == name
+  if (!any(found)) {
+    stop("No geneset found with name: ", name)
+  }
+  if (!is.null(collection)) {
+    found <- found & gs[["collection"]] == collection
+  } else {
+    collection <- gs[["collection"]][found]
+    if (length(collection) == 0L) {
       stop("Can not find geneset with name: ", name)
     }
-    if (length(colxn) > 1L) {
+    if (length(collection) > 1L) {
       stop("Multiple genesets found with name '", name, "'. ",
            "Need to specify specify collection: ",
-           paste(colxn, collapse = ","))
+           paste(collection, collapse = ","))
     }
-    out <- list(
-      plot = iplot(mgres, colxn, name, ...),
-      input_data = NULL,
-      params = list(name = name, collection = colxn))
-    class(out) <- c("FacileViz")
   }
+  # ........................................................................
+  plt <- iplot(mgres, collection, name, type = type, value = rank_by, ...)
+
+  out <- list(
+    plot = plt,
+    input_data = NULL,
+    params = list(name = name, collection = collection))
+  class(out) <- c("FacileViz")
   out
 }
 

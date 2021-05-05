@@ -580,7 +580,7 @@ biocbox.FacileDgeAnalysisResult <- function(x, ...) {
   # delegate down to biocbox.FacileLinearModelDefinition
   assay_name <- assert_string(param(x, "assay_name"))
   method <- assert_string(param(x, "method"))
-  # browser()
+
   # meta.cols <- c("lib.size", "norm.factors", "sizeFactor")
   # meta.cols <- intersect(meta.cols, )
   out <- biocbox(model(x), assay_name = assay_name, method = method,
@@ -739,31 +739,15 @@ fdge_methods <- function(assay_type = NULL,
 
   # This is a table of assay_type : dge_method possibilites. The first row
   # for each assay_type is the default analysis method
-  assay_methods <- tribble(
-    ~assay_type,   ~dge_method,         ~bioc_class,   ~default_filter,
-    "rnaseq",      "voom",              "DGEList",     TRUE,
-    "rnaseq",      "edgeR-qlf",         "DGEList",     TRUE,
-    "rnaseq",      "limma-trend",       "DGEList",     TRUE,
-    "pseudobulk",  "edgeR-qlf",         "DGEList",     TRUE,
-    "umi",         "voom",              "DGEList",     TRUE,
-    "umi",         "edgeR-qlf",         "DGEList",     TRUE,
-    "umi",         "limma-trend",       "DGEList",     TRUE,
-    "tpm",         "limma-trend",       "EList",       TRUE,
-    "cpm",         "limma-trend",       "EList",       TRUE,
-    "isoseq",      "voom",              "DGEList",     TRUE,
-    "isoseq",      "limma-trend",       "EList",       TRUE,
-    "affymrna",    "limma",             "EList",       TRUE,
-    "affymirna",   "limma",             "EList",       TRUE,
-    "lognorm",     "limma",             "EList",       TRUE,
-    "real",        "ranks",             "EList",       TRUE,
-    "qpcrdct",     "limma",             "EList",       FALSE)
+  assay_methods <- read.csv(
+    system.file("extdata", "analysis-params", "fdge", "assay-methods.csv",
+                package = "FacileAnalysis"),
+    strip.white = TRUE)
 
-  method_params <- tribble(
-    ~dge_method,    ~robust_fit,  ~robust_ebayes,  ~trend_ebayes, ~can_sample_weight,
-    "voom",         FALSE,        FALSE,           FALSE,          TRUE,
-    "edgeR-qlf",    TRUE,         FALSE,           FALSE,          FALSE,
-    "limma-trend",  FALSE,        FALSE,           TRUE,           TRUE,
-    "limma",        FALSE,        FALSE,           FALSE,          TRUE)
+  method_params <- read.csv(
+    system.file("extdata", "analysis-params", "fdge", "method-params.csv",
+                package = "FacileAnalysis"),
+    strip.white = TRUE)
 
   info <- left_join(assay_methods, method_params, by = "dge_method")
 

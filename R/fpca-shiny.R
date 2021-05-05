@@ -288,6 +288,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
       feature_id <- sub("feature:", "", state$color_aes)
       current.cols <- colnames(pca.$result)
       pca.$result <- with_assay_data(pca.$result, features = feature_id,
+                                     assay_name = param(pca., "assay_name"),
                                      normalized = TRUE,
                                      batch = param(pca., "batch"),
                                      main = param(pca., "main"))

@@ -97,8 +97,11 @@
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
 #'                     biased_by = "effective_length")
 #' if (interactive()) {
-#'   ttest.gsea <- ffseaGadget(ttest.res, gdb)
-#'   shine(ttest.gsea)
+#'   viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
+#'   viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
+#'
+#'   shine(ttest.igsea)
+#'   ttest.igsea <- ffseaGadget(ttest.res, gdb)
 #' }
 #'
 #' camera.stats <- tidy(ttest.gsea, "cameraPR")
@@ -237,8 +240,15 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
 #' @noRd
 #' @export
 #' @importFrom multiGSEA multiGSEA
+#' @param features When not NULL (default), the analysis will be first filtered
+#'   down to the features indicated here. You may want to specify subsets of
+#'   features so that you could ignore certain features. For instance, if you
+#'   knocked out (or over expressed) a particular gene in an experimental
+#'   group, you wouldn't want to include that gene's differential expression
+#'   in the ffsea analysis.
 ffsea.FacileTtestAnalysisResult <- function(x, gdb,
                                             methods = c("cameraPR", "ora"),
+                                            features = NULL,
                                             min_logFC = param(x, "treat_lfc"),
                                             max_padj = 0.10,
                                             rank_by = "logFC",
@@ -264,6 +274,10 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
   assert_number(min_logFC, lower = 0, finite = TRUE)
 
   ranks. <- tidy(ranks(x, signed = signed, rank_by = rank_by, ...))
+  features <- extract_feature_id(features)
+  if (!is.null(features)) {
+    ranks. <- filter(ranks., .data[["feature_id"]] %in% .env[["features"]])
+  }
 
   ranks. <- mutate(ranks.,
                    significant = padj <= max_padj, abs(logFC) >= min_logFC,
@@ -322,6 +336,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
 ffsea.FacileTtestComparisonAnalysisResult <- function(
     x, gdb, methods = c("cameraPR", "ora"),
     type = c("interaction", "quadrants"),
+    features = NULL,
     min_logFC = param(x, "treat_lfc"), max_padj = 0.10,
     rank_by = "logFC", signed = TRUE, biased_by = NULL, ...,
     rank_order = "ranked", group_by = "direction", select_by = "significant") {
