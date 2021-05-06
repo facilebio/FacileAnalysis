@@ -142,6 +142,7 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
   fstats <- tidy(f.res)
   expect_equal(fstats$t, res.orig$t)
 
+  # TODO: Let's get FacileBiocData out of the Suggests for this!
   # Now let's use the custom weights from normal "limma" method. We use
   # FacileBiocData here so we can test the vm$E matrix directly, otherwise
   # we would have to save the vm$E matrix as an assay into fds(vm.fdge) so we

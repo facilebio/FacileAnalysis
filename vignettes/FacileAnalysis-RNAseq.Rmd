@@ -97,8 +97,8 @@ with the following ones form github:
 * [facilebio/FacileViz](https://github.com/facilebio/FacileViz)
 * [facilebio/FacileShine](https://github.com/facilebio/FacileShine)
 * [facilebio/FacileAnalysis](https://github.com/facilebio/FacileAnalysis)
-* [lianos/multiGSEA@develop](https://github.com/lianos/multiGSEA)
-* [lianos/multiGSEA.shine@develop](https://github.com/lianos/multiGSEA.shiny)
+* [lianos/sparrow](https://github.com/lianos/sparrow)
+* [lianos/sparrow.shiny](https://github.com/lianos/sparrow.shiny)
 
 We also use data from the [airway][airway] and [parathyroidSE][parathyroid]
 bioconductor packages, so make sure those are installed as well.
@@ -358,17 +358,17 @@ function (Facile Feature Set Enrichment). This will rank genes by their loadings
 on the specified PC of interest, then perform a pre-ranked GSEA test 
 (by default, we use `limma::cameraPR`).
 
-The core of our GSEA functionality is provided by the [multiGSEA][multiGSEA]
+The core of our GSEA functionality is provided by the [sparrow][]
 package. This includes easy accessor functions for geneset collection retrieval
-(as a `multiGSEA::GeneSetDb` object), as well as delegation of GSEA methods for
+(as a `sparrow::GeneSetDb` object), as well as delegation of GSEA methods for
 analysis.
 
-For this, we'll need a geneset collection stored in a `multiGSEA::GeneSetDb`
+For this, we'll need a geneset collection stored in a `sparrow::GeneSetDb`
 object. We'll use the MSigDB hallmark genesets for this purpose, and run both
 `"cameraPR"` and `"fgsea"`.
 
 ```{r pcagsea, message=FALSE, warning=FALSE}
-gdb <- multiGSEA::getMSigGeneSetDb(c("H", "reactome"), "human", "ensembl")
+gdb <- sparrow::getMSigGeneSetDb(c("H"), "human", "ensembl")
 pca.gsea <- ffsea(cpca, gdb, dim = 1, methods = c("cameraPR", "fgsea"))
 ```
 
@@ -390,10 +390,10 @@ viz(pca.gsea, name = "HALLMARK_ADIPOGENESIS")
 ```
 
 :::note
-The GSEA functionality is performed by the [multiGSEA][multiGSEA] package.
+The GSEA functionality is performed by the [sparrow][] package.
 Please read that vignette to learn more about its functionality. Also note
 that performing GSEA on anything but logFC's or t-statistics (like
-gene loadings on a principal component) is a newer feature of multiGSEA, and
+gene loadings on a principal component) is a newer feature of sparrow, and
 the visualization needs tweaking (for example, "units" plotted need to be
 updated (ie. logFC is shown here, but these are not logFC's).
 :::
@@ -963,7 +963,7 @@ Please [file bug reports][bugs] when you do!
 [FacileBioc]: https://github.com/facilebio/FacileBioc
 [fdsassembly]: https://facilebio.github.io/FacileData/articles/FacileDataSet-assembly.html
 [kallisto]: https://pachterlab.github.io/kallisto/
-[multiGSEA]: https://github.com/lianos/multiGSEA
+[sparrow]: https://github.com/lianos/sparrow
 [parathyroid]: http://bioconductor.org/packages/parathyroidSE
 [rnaseqGene]: https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
 [salmon]: https://combine-lab.github.io/salmon/

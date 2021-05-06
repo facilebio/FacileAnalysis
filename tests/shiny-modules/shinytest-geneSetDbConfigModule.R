@@ -5,7 +5,7 @@ devtools::load_all(".")
 options(facile.log.level.fshine = "trace")
 
 efds <- FacileData::exampleFacileDataSet()
-gdb.base <- multiGSEA::getMSigGeneSetDb("h", "human", "entrez")
+gdb.base <- sparrow::getMSigGeneSetDb("h", "human", "entrez")
 ttest.res <- FacileData::exampleFacileDataSet() %>%
   FacileData::filter_samples(indication == "CRC") %>%
   flm_def(covariate = "sample_type",

@@ -20,10 +20,7 @@ FacileData::features
 #' @export annotation
 NULL
 
-#' @importFrom multiGSEA result
-#' @export result
-multiGSEA::result
-
+#' @importFrom sparrow failWith
 #' @importFrom glue glue
 #' @importFrom FacileViz plot
 NULL

@@ -18,7 +18,7 @@ Gadget to run both DGE and GSEA
 }
 \examples{
 \dontrun{
-gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 efds <- FacileData::exampleFacileDataSet()
 xs <- FacileData::filter_samples(efds, indication == "CRC")
 fdgeseaGadget(xs, gdb)

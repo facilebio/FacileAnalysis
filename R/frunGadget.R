@@ -12,7 +12,7 @@
 #' facile objects (`x`). When `x` is a:
 #'
 #' * `FacileDataStore` the analysis module will include a
-#'   [FacileShine::filteredReactiveFacileDataStoreUI()], which allows the user
+#'   `FacileShine::filteredReactiveFacileDataStoreUI()`, which allows the user
 #'   to interactrively subset down to the samples that the analysis module will
 #'   have access to and analyze. The user can then configure and run and
 #'   analysis, and subsequently interact with the results.
@@ -28,7 +28,6 @@
 #'   gadgetTitleBar
 #'   miniContentPanel
 #'   miniPage
-#' @importFrom multiGSEA failWith
 #' @importFrom FacileShine
 #'   filteredReactiveFacileDataStore
 #'   filteredReactiveFacileDataStoreUI

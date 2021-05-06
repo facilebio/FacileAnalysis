@@ -22,9 +22,9 @@ set.seed(0xFEED)
 
 **Under Construction**
 
-The facile feature set enrichment analysis leans on the multiGSEA framework
+The facile feature set enrichment analysis leans on the sparrow framework
 for running GSEA methods, as well as providing gene set collections via 
-`multiGSEA::GeneSetDb` objects.
+`sparrow::GeneSetDb` objects.
 
 This vignette assumes that you've got a `GeneSetDb` object in hand named `gdb`.
 
@@ -63,9 +63,9 @@ For now, I imagine (gene) set enerichment analyses will be performed over
       ffsea(gdb, pc = 1)
     ```
 
-In the immediate term, the GSEA functionality will lean heavily on the multiGSEA
+In the immediate term, the GSEA functionality will lean heavily on the sparrow
 package, including the bits that enable interactivity over the results
-(ie. the multiGSEA.shiny package).
+(ie. the sparrow.shiny package).
 
 **Comparing (Gene) Set Enrichment Results**
 

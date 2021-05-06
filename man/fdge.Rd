@@ -67,12 +67,14 @@ fdge(
 
 \method{tidy}{FacileTtestComparisonAnalysisResult}(
   x,
-  max_padj_x = 0.1,
-  min_logFC_x = NULL,
-  max_padj_y = max_padj_x,
-  min_logFC_y = min_logFC_x,
+  max_padj = 0.1,
+  min_logFC = NULL,
   labels = NULL,
-  ...
+  ...,
+  max_padj_x = max_padj,
+  max_padj_y = max_padj,
+  min_logFC_x = min_logFC,
+  min_logFC_y = min_logFC
 )
 
 \method{report}{FacileTtestAnalysisResult}(
@@ -95,6 +97,7 @@ fdge(
   gdb,
   methods = c("cameraPR", "ora"),
   type = c("interaction", "quadrants"),
+  features = NULL,
   min_logFC = param(x, "treat_lfc"),
   max_padj = 0.1,
   rank_by = "logFC",

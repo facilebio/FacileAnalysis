@@ -57,7 +57,7 @@ We want to support building interactive components over different types of
 facile objects (\code{x}). When \code{x} is a:
 \itemize{
 \item \code{FacileDataStore} the analysis module will include a
-\code{\link[FacileShine:filteredReactiveFacileDataStoreUI]{FacileShine::filteredReactiveFacileDataStoreUI()}}, which allows the user
+\code{FacileShine::filteredReactiveFacileDataStoreUI()}, which allows the user
 to interactrively subset down to the samples that the analysis module will
 have access to and analyze. The user can then configure and run and
 analysis, and subsequently interact with the results.

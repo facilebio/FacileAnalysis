@@ -5,7 +5,7 @@ options(facile.log.level.fshine = "trace")
 options(facile.log.level.fanalysis = "trace")
 
 efds <- FacileData::exampleFacileDataSet()
-gdb <- multiGSEA::getMSigGeneSetDb("h", "human", "entrez")
+gdb <- sparrow::getMSigGeneSetDb("h", "human", "entrez")
 
 pca.crc <- efds %>%
   FacileData::filter_samples(indication == "CRC") %>%

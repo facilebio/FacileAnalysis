@@ -226,7 +226,7 @@ pca.crc.pc <- samples(pca.crc) \%>\%
 pca.gdb <- pca.crc \%>\%
   signature(dims = 1:3) \%>\%
   result() \%>\%
-  multiGSEA::GeneSetDb()
+  sparrow::GeneSetDb()
 
 # All samples --------------------------------------------------------------
 pca.all <- fpca(efds)

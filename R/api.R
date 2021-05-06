@@ -175,10 +175,11 @@ compare.FacileAnalysisResult <- function(x, y, ...) {
 }
 
 
-# This is defined in multiGSEA@develop
-# result <- function(x, name = "result", ...) {
-#   UseMethod("result", x)
-# }
+#' @export
+#' @noRd
+result <- function(x, name = "result", ...) {
+  UseMethod("result", x)
+}
 
 #' @export
 #' @noRd
