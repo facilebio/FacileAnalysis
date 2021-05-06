@@ -43,7 +43,7 @@ that extract and invokes the function.
 }
 
 \examples{
-gdb <- multiGSEA::exampleGeneSetDb()
+gdb <- sparrow::exampleGeneSetDb()
 dge.crc <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",

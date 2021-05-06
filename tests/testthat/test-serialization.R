@@ -4,7 +4,7 @@ if (!exists("FDS")) {
   FDS <- FacileData::exampleFacileDataSet()
 }
 if (!exists("gdb")) {
-  gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+  gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 }
 
 ttest.res <- FDS %>%

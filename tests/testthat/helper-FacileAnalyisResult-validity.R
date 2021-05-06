@@ -18,7 +18,7 @@ test_valid_ffsea <- function(x, fds, ...) {
 
   expect_is(x, "FacileFseaAnalysisResult")
   mgres <- result(x)
-  expect_is(mgres, "MultiGSEAResult")
+  expect_is(mgres, "SparrowResult")
 
   parent <- param(x, "x")
   if (is(parent, "FacileDgeAnalysisResult")) {

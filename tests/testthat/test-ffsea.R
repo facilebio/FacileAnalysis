@@ -4,7 +4,7 @@ if (!exists("FDS")) {
   FDS <- FacileData::exampleFacileDataSet()
 }
 if (!exists("gdb")) {
-  gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+  gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 }
 
 ttest.res <- FDS %>%
@@ -33,7 +33,7 @@ test_that("ffsea.FacileAnalysisResult transfers all feature-level statistics to 
 
   finfo.mgres <- facile.gsea %>%
     result() %>%
-    multiGSEA::logFC() %>%
+    sparrow::logFC() %>%
     arrange(feature_id)
 
   expect_equal(nrow(finfo.mgres), nrow(finfo.ttest))
@@ -43,7 +43,7 @@ test_that("ffsea.FacileAnalysisResult transfers all feature-level statistics to 
   }
 })
 
-test_that("cameraPR call through ffsea works like multiGSEA call", {
+test_that("cameraPR call through ffsea works like sparrow::seas()", {
   # GSEA the facile way
   facile.gsea <- ffsea(ttest.res, gdb, method = "cameraPR")
 
@@ -51,13 +51,13 @@ test_that("cameraPR call through ffsea works like multiGSEA call", {
     tidy(name = "cameraPR") %>%
     arrange(pval)
 
-  # GSEA the "traditional" multiGSEA way
+  # GSEA the "traditional" sparrow way
   vm <- biocbox(ttest.res)
-  mgres <- multiGSEA::multiGSEA(gdb, vm, vm$design, c(-1, 1, 0),
-                                "cameraPR", score.by = "logFC")
+  mgres <- sparrow::seas(gdb, vm, vm$design, c(-1, 1, 0),
+                         "cameraPR", score.by = "logFC")
 
   mgres.cameraPR <- mgres %>%
-    multiGSEA::result("cameraPR") %>%
+    sparrow::result("cameraPR") %>%
     arrange(pval) %>%
     as_tibble()
 
@@ -72,8 +72,8 @@ test_that("overrepresentation analysis (ora) works with ttest result", {
   input <- ranks(ttest.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.10)
-  mgres <- multiGSEA::ora(gdb, input, selected = "significant",
-                          feature.bias = "effective_length")
+  mgres <- sparrow::ora(gdb, input, selected = "significant",
+                        feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
   facile.gsea <- ffsea(ttest.res, gdb, method = "ora",
                        biased_by = "effective_length",
@@ -87,8 +87,8 @@ test_that("ffsea(anova_result) runs enrichment test", {
   astats <- ranks(anova.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.2)
-  mgres <- multiGSEA::ora(gdb, astats, selected = "significant",
-                          feature.bias = "effective_length")
+  mgres <- sparrow::ora(gdb, astats, selected = "significant",
+                        feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
 
   facile.gsea <- ffsea(anova.res, gdb, max_padj = 0.2,
@@ -107,11 +107,11 @@ test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
   mgres <- result(pca1.gsea)
 
   # check that pc-stuff are in features of gsea result.
-  # currently (multiGSEA_v0.12.8), the mgres@logFC $logFC and $t columns will
+  # currently (sparrow_0.99), the mgres@logFC $logFC and $t columns will
   # be loaded with the "score" of the fpca feature rankings
   pca.fstats <- ranks(pca.res, signed = TRUE, dims = 1) %>% tidy()
   mgres.fstats <- mgres %>%
-    multiGSEA::logFC() %>%
+    sparrow::logFC() %>%
     arrange(desc(score))
   expect_equal(nrow(mgres.fstats), nrow(pca.fstats))
 

@@ -5,7 +5,6 @@
 \alias{reexports}
 \alias{samples}
 \alias{features}
-\alias{result}
 \alias{plot_data}
 \alias{tidy}
 \alias{\%>\%}
@@ -22,8 +21,6 @@ below to see their documentation.
   \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
 
   \item{broom}{\code{\link[broom:reexports]{tidy}}}
-
-  \item{multiGSEA}{\code{\link[multiGSEA:results]{result}}}
 
   \item{shiny}{\code{\link[shiny]{callModule}}}
 }}

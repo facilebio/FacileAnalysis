@@ -33,7 +33,7 @@
 #' `biased_by` which can be used to account for bias in the enrichment tests,
 #' such as gene length, GC content, etc.
 #'
-#' Gene sets must be supplied as a [multiGSEA::GeneSetDb()] object.
+#' Gene sets must be supplied as a [sparrow::GeneSetDb()] object.
 #'
 #' @section GSEA Methods:
 #' Currently, only the following GSEA methods are supported:
@@ -63,28 +63,27 @@
 #' results can be extracted via `tidy(fres, "cameraPR")`
 #'
 #' @section Development Notes:
-#' This functionality delegates to multiGSEA to do all of the work. The
-#' multiGSEA interface is undergoing a bit of refactoring in order to better
+#' This functionality delegates to [sparrow::seas()] to do all of the work. The
+#' sparrow::seas interface is undergoing a bit of refactoring in order to better
 #' support a table of feature statistcs as input (for preranked and enrichment
 #' tests), so the `"methods"` supported via `ffsea()` are limited to a subset
-#' of the ones wrapped by multiGSEA, as enumerated below.
+#' of the ones wrapped by [sparrow::seas()], as enumerated below.
 
 #' @export
-#' @importFrom multiGSEA multiGSEA
-#' @seealso https://github.com/lianos/multiGSEA
+#' @seealso https://github.com/lianos/sparrow
 #' @aliases gsea GSEA fsea FSEA
 #'
 #' @param x A `FacileAnalysisResult` object, or a data.frame with feature-level
 #'   statistics, minimally with a `"feature_id"` column as well as one or more
 #'   `numeric` columns to rank features on.
-#' @param gdb A [multiGSEA::GeneSetDb()] object
+#' @param gdb A [sparrow::GeneSetDb()] object
 #' @param methods the GSEA methods to use on `x`.
-#' @return A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
+#' @return A FacileFseaAnalysisResult object, which includes a `SparrowResult`
 #'   object as it's `result()`. The geneset level statistics for each of the
 #'   methods that were run are available via `tidy(ffsea.res, "<method_name>")`.
 #'
 #' @examples
-#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 #' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # GSEA from t-test result ---------------------------------------------------
@@ -114,6 +113,7 @@
 #'   fdge(method = "voom")
 #' anova.gsea <- ffsea(stage.anova, gdb)
 #' if (interactive()) {
+#'  # TODO: shine(anova.gsea) doesn't work
 #'  shine(anova.gsea)
 #'  # We can generate the same GSEA result like so
 #'  anova.gsea2 <- ffseaGadget(stage.anova, gdb = gdb)
@@ -200,7 +200,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
     assert_choice(select_by, colnames(x))
     assert_logical(xx[[select_by]])
     if (select_by != "significant") {
-      # currently multiGSEA() enrichment methods like goseq or hyperG require
+      # currently seas() enrichment methods like goseq or hyperG require
       # a "significant" and "direction" column
       xx[["significant"]] <- xx[[select_by]]
     }
@@ -221,8 +221,8 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
   }
   names(input) <- xx[["feature_id"]]
 
-  mg <- multiGSEA(gdb, input, methods = methods, feature.bias = biased_by,
-                  groups = group_by, xmeta. = xx, ...)
+  mg <- sparrow::seas(gdb, input, methods = methods, feature.bias = biased_by,
+                      groups = group_by, xmeta. = xx, ...)
 
   out <- list(
     result = mg,
@@ -239,7 +239,6 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
 
 #' @noRd
 #' @export
-#' @importFrom multiGSEA multiGSEA
 #' @param features When not NULL (default), the analysis will be first filtered
 #'   down to the features indicated here. You may want to specify subsets of
 #'   features so that you could ignore certain features. For instance, if you
@@ -487,7 +486,6 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
 #'
 #' @noRd
 #' @export
-#' @importFrom multiGSEA multiGSEA
 ffsea.FacilePcaAnalysisResult <- function(x, gdb, methods = "cameraPR", dim = 1,
                                           signed = TRUE, ...) {
   fds. <- assert_facile_data_store(fds(x))
@@ -542,13 +540,12 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, methods = "cameraPR", dim = 1,
 #'
 #' @rdname features
 #' @export
-#' @importFrom multiGSEA encode_gskey
 features.FacileFseaAnalysisResult <- function(x, ...) {
   warning("The feature_id,feature_type feature representation for fsea is a ",
           "bit loose, refer to the 'Feature Set Enrichment Analyais' section ",
           "of ?features")?
   stat.table <- tidy(x)
-  stat.table[["feature_id"]] <- encode_gskey(stat.table)
+  stat.table[["feature_id"]] <- sparrow::encode_gskey(stat.table)
   stat.table[["feature_type"]] <- "feature_set"
   select(stat.table, collection, name, feature_id, feature_type, everything())
 }
@@ -560,18 +557,17 @@ features.FacileFseaAnalysisResult <- function(x, ...) {
 #'
 #' This is not to say that `result()` can't also return something that's
 #' "tidy", but in this case, result(ffsea.result) will return the
-#' MultiGSEAResult object itself, and `tidy(ffsea.result)` will dispatch
-#' to [multiGSEA::result()] to fetch the gsea statistcs for the method
+#' SparrowResult object itself, and `tidy(ffsea.result)` will dispatch
+#' to [sparrow::result()] to fetch the gsea statistcs for the method
 #' requested.
 #'
 #' ```
-#' mgres <- result(ffsea.res) # return the MultiGSEAResult object
+#' mgres <- result(ffsea.res) # returns the SparrowResult object
 #' camera.stats <- tidy(ffsea.res, name = "cameraPR")
 #' ```
 #'
 #' @rdname ffsea
 #' @export
-#' @importFrom multiGSEA resultNames
 result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
   mgres <- x[["result"]]
   if (name == "object") {
@@ -586,7 +582,7 @@ result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
 #' @noRd
 #' @export
 initialized.FacileFseaAnalysisResult <- function(x, ...) {
-  is(result(x), "MultiGSEAResult")
+  is(result(x), "SparrowResult")
 }
 
 #' @noRd
@@ -602,8 +598,8 @@ tidy.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
                                           ...) {
   mgres <- x[["result"]]
   # name. <- assert_choice(name, param(x, "methods"))
-  name. <- assert_choice(name, multiGSEA::resultNames(mgres))
-  out <- as_tibble(result(mgres, name.))
+  name. <- assert_choice(name, sparrow::resultNames(mgres))
+  out <- as_tibble(sparrow::result(mgres, name.))
   select(out, collection, name, pval, padj, padj.by.collection, everything())
 }
 
@@ -660,10 +656,9 @@ print.FacileFseaAnalysisResult <- function(x, ...) {
 
 #' @noRd
 #' @export
-#' @importFrom multiGSEA resultNames tabulateResults
 format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
   mgres <- result(x)
-  gsea.res.table <- tabulateResults(mgres, max.p = max_padj)
+  gsea.res.table <- sparrow::tabulateResults(mgres, max.p = max_padj)
   source.type <- class(param(x, "x"))[1L]
 
   if (source.type == "FacilePcaAnalysisResult") {

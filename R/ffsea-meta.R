@@ -43,8 +43,8 @@ ffsea_methods.FacileAnalysisResult <- function(x, ...) {
 
 #' Returns a table of type,method combinations that can be used in ffsea
 #'
-#' This defines the type of gsea methods that we can pass to multiGSEA to
-#' perfrom GSEA.
+#' This defines the type of gsea methods that we can pass to [sparrow::seas()]
+#' to perfrom GSEA.
 #'
 #' @export
 #' @return a type,method table

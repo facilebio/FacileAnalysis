@@ -20,6 +20,7 @@ unfds <- function(x, ...) {
 #' @export
 #' @noRd
 unfds.default <- function(x, ...) {
+  lifecycle::signal_stage("experimental", "unfds()")
   set_fds(x, NULL)
 }
 

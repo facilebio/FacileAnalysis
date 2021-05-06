@@ -76,31 +76,33 @@ test_that("ttest compare() over same covariate, different numer/denom", {
 
 # GSEA -------------------------------------------------------------------------
 if (!exists("gdb.h")) {
-  gdb.h <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+  gdb.h <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 }
 
 if (!exists("gdb.go")) {
+  # Do you ever wonder if you are making your life more complicated than it
+  # needs to be?
   if (!exists("gdb.go.bp")) {
-    gdb.go.bp <- multiGSEA::getMSigGeneSetDb("c5", "human", id.type = "entrez")
-    gdb.go.bp <- gdb.go.bp[geneSets(gdb.go.bp)$collection == "GO_BP"]
+    gdb.go.bp <- sparrow::getMSigGeneSetDb("c5", "human", id.type = "entrez")
+    gdb.go.bp <- gdb.go.bp[sparrow::geneSets(gdb.go.bp)$subcategory == "GO:BP"]
   }
   set.seed(0xBEEF)
   .pselected <- 0.05
   .gk <- sample(c(TRUE, FALSE), length(gdb.go.bp), replace = TRUE,
                 prob = c(.pselected, 1 - .pselected))
   .some.gs <- c(
-    "DNA_STRAND_ELONGATION",
-    "DNA_STRAND_ELONGATION_INVOLVED_IN_DNA_REPLICATION",
-    "GENE_SILENCING_BY_RNA",
-    "MULTICELLULAR_ORGANISMAL_SIGNALING",
-    "REGULATION_OF_CELL_DIFFERENTIATION",
-    "REGULATION_OF_OSTEOBLAST_DIFFERENTIATION",
-    "FLAVONOID_GLUCURONIDATION",
-    "HOMOPHILIC_CELL_ADHESION_VIA_PLASMA_MEMBRANE_ADHESION_MOLECULES",
-    "URONIC_ACID_METABOLIC_PROCESS",
-    "XENOBIOTIC_GLUCURONIDATION")
+    "GOBP_DNA_STRAND_ELONGATION",
+    "GOBP_DNA_STRAND_ELONGATION_INVOLVED_IN_DNA_REPLICATION",
+    "GOBP_GENE_SILENCING_BY_RNA",
+    "GOBP_MULTICELLULAR_ORGANISMAL_SIGNALING",
+    "GOBP_REGULATION_OF_CELL_DIFFERENTIATION",
+    "GOBP_REGULATION_OF_OSTEOBLAST_DIFFERENTIATION",
+    "GOBP_FLAVONOID_GLUCURONIDATION",
+    "GOBP_HOMOPHILIC_CELL_ADHESION_VIA_PLASMA_MEMBRANE_ADHESION_MOLECULES",
+    "GOBP_URONIC_ACID_METABOLIC_PROCESS",
+    "GOBP_XENOBIOTIC_GLUCURONIDATION")
 
-  .gk <- .gk | geneSets(gdb.go.bp)$name %in% .some.gs
+  .gk <- .gk | sparrow::geneSets(gdb.go.bp)$name %in% .some.gs
   gdb.go <- gdb.go.bp[.gk]
 }
 

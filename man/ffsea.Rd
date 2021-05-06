@@ -18,12 +18,12 @@ ffsea(x, gdb, methods = "cameraPR", ...)
 statistics, minimally with a \code{"feature_id"} column as well as one or more
 \code{numeric} columns to rank features on.}
 
-\item{gdb}{A \code{\link[multiGSEA:GeneSetDb-class]{multiGSEA::GeneSetDb()}} object}
+\item{gdb}{A \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} object}
 
 \item{methods}{the GSEA methods to use on \code{x}.}
 }
 \value{
-A FacileFseaAnalysisResult object, which includes a MultiGSEAResult
+A FacileFseaAnalysisResult object, which includes a \code{SparrowResult}
 object as it's \code{result()}. The geneset level statistics for each of the
 methods that were run are available via \code{tidy(ffsea.res, "<method_name>")}.
 }
@@ -61,7 +61,7 @@ Lastly, the user can provide the name of another numeric column in \code{x} with
 \code{biased_by} which can be used to account for bias in the enrichment tests,
 such as gene length, GC content, etc.
 
-Gene sets must be supplied as a \code{\link[multiGSEA:GeneSetDb-class]{multiGSEA::GeneSetDb()}} object.
+Gene sets must be supplied as a \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} object.
 }
 \section{GSEA Methods}{
 
@@ -97,11 +97,11 @@ results can be extracted via \code{tidy(fres, "cameraPR")}
 
 \section{Development Notes}{
 
-This functionality delegates to multiGSEA to do all of the work. The
-multiGSEA interface is undergoing a bit of refactoring in order to better
+This functionality delegates to \code{\link[sparrow:seas]{sparrow::seas()}} to do all of the work. The
+sparrow::seas interface is undergoing a bit of refactoring in order to better
 support a table of feature statistcs as input (for preranked and enrichment
 tests), so the \code{"methods"} supported via \code{ffsea()} are limited to a subset
-of the ones wrapped by multiGSEA, as enumerated below.
+of the ones wrapped by \code{\link[sparrow:seas]{sparrow::seas()}}, as enumerated below.
 }
 
 \section{Accessing Results}{
@@ -111,15 +111,15 @@ being the de-facto way to answer "tidy" like results (instead of result()).
 
 This is not to say that \code{result()} can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
-MultiGSEAResult object itself, and \code{tidy(ffsea.result)} will dispatch
-to \code{\link[multiGSEA:results]{multiGSEA::result()}} to fetch the gsea statistcs for the method
-requested.\preformatted{mgres <- result(ffsea.res) # return the MultiGSEAResult object
+SparrowResult object itself, and \code{tidy(ffsea.result)} will dispatch
+to \code{\link[sparrow:results]{sparrow::result()}} to fetch the gsea statistcs for the method
+requested.\preformatted{mgres <- result(ffsea.res) # returns the SparrowResult object
 camera.stats <- tidy(ffsea.res, name = "cameraPR")
 }
 }
 
 \examples{
-gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 efds <- FacileData::exampleFacileDataSet()
 
 # GSEA from t-test result ---------------------------------------------------
@@ -132,8 +132,11 @@ ttest.res <- efds \%>\%
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
                     biased_by = "effective_length")
 if (interactive()) {
-  ttest.gsea <- ffseaGadget(ttest.res, gdb)
-  shine(ttest.gsea)
+  viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
+  viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
+
+  shine(ttest.igsea)
+  ttest.igsea <- ffseaGadget(ttest.res, gdb)
 }
 
 camera.stats <- tidy(ttest.gsea, "cameraPR")
@@ -146,6 +149,7 @@ stage.anova <- efds \%>\%
   fdge(method = "voom")
 anova.gsea <- ffsea(stage.anova, gdb)
 if (interactive()) {
+ # TODO: shine(anova.gsea) doesn't work
  shine(anova.gsea)
  # We can generate the same GSEA result like so
  anova.gsea2 <- ffseaGadget(stage.anova, gdb = gdb)
@@ -157,5 +161,5 @@ pca.crc <- efds \%>\%
 pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 }
 \seealso{
-https://github.com/lianos/multiGSEA
+https://github.com/lianos/sparrow
 }

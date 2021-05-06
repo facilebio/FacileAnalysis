@@ -12,7 +12,7 @@
 #' @param x A FacileAnalysisResult that has an implemented `ffsea.*` method
 #' @param gdb A `GeneSetDb` to use for the FSEA.
 #' @examples
-#' gdb <- multiGSEA::exampleGeneSetDb()
+#' gdb <- sparrow::exampleGeneSetDb()
 #' dge.crc <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
@@ -223,15 +223,6 @@ ffseaRunUI <- function(id, ..., debug = FALSE) {
 #'
 #' @noRd
 #' @export
-#' @importFrom multiGSEA failWith
-#' @importFrom multiGSEA.shiny
-#'   geneSetContrastView
-#'   mgGeneSetSummaryByGene
-#'   mgResultFilter
-#'   mgTableBrowser
-#'   MultiGSEAResultContainer
-#'   summaryHTMLTable.multiGSEA
-#'   updateActiveGeneSetInContrastView
 #' @importFrom shiny observeEvent reactiveValues validate
 #' @param rfds the reactive facile data store
 #' @param ares The `FacileFseaAnalysisResult`
@@ -254,51 +245,60 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
     # `output$xxx <- render*({})` block, which is generating outpout into the
     # shiny app
     validate(
-      need(is(mgres, "MultiGSEAResult"), "MultiGSEAResult can't be found")
+      need(is(mgres, "SparrowResult"), "SparrowResult can't be found")
     )
-
-    MultiGSEAResultContainer(mgres)
+    sparrow.shiny::SparrowResultContainer(mgres)
   })
 
-  gs_result_filter <- callModule(mgResultFilter, "mg_result_filter", mgc)
+  gs_result_filter <- callModule(
+    sparrow.shiny::mgResultFilter,
+    "mg_result_filter", mgc)
 
   # Overview Tab ...............................................................
   output$gseaMethodSummary <- renderUI({
     mgc. <- req(mgc())
     tagList(
       tags$h4("GSEA Analyses Overview"),
-      summaryHTMLTable.multiGSEA(mgc.$mg, mgc.$methods,
-                                 gs_result_filter()$fdr(),
-                                 p.col = "padj.by.collection")
+      sparrow.shiny::summaryHTMLTable.sparrow(
+        mgc.$mg, mgc.$methods,
+        gs_result_filter()$fdr(),
+        p.col = "padj.by.collection")
     )
   })
 
   # GSEA Results Tab ...........................................................
-  gs_viewer <- callModule(geneSetContrastView, "geneset_viewer",
-                          mgc, maxOptions=500, server=TRUE)
+  gs_viewer <- callModule(
+    sparrow.shiny::geneSetContrastView,
+    "geneset_viewer",
+    mgc, maxOptions = 500, feature_table_filter = "top", server = TRUE)
 
   # A table of GSEA statistics/results for the given method and fdr threshold
   # The table is wired to the gs_viewer so that row clicks can signal updates
   # to the contrast viewer
-  gs_table_browser <- callModule(mgTableBrowser, "mg_table_browser", mgc,
-                                 method=gs_result_filter()$method,
-                                 fdr=gs_result_filter()$fdr,
-                                 server=TRUE)
+  gs_table_browser <- callModule(
+    sparrow.shiny::mgTableBrowser,
+    "mg_table_browser",
+    mgc,
+    method=gs_result_filter()$method,
+    fdr=gs_result_filter()$fdr,
+    server=TRUE)
   # clicks on gsea result table update the contrast view
   observeEvent(gs_table_browser$selected(), {
     .mgc <- req(mgc())
     geneset <- req(gs_table_browser$selected())
-    updateActiveGeneSetInContrastView(session, gs_viewer, geneset, .mgc)
+    sparrow.shiny::updateActiveGeneSetInContrastView(session, gs_viewer,
+                                                     geneset, .mgc)
   })
 
   # A table of other genesets that brushed genes in the contrast viewer
   # belong to. This table is also wired to the contrast viewer, so that
   # a click on a row of the table will update the contrast view, too.
-  other_genesets_gsea <- callModule(mgGeneSetSummaryByGene,
-                                    "other_genesets_gsea",
-                                    mgc, features = gs_viewer()$selected,
-                                    method = gs_result_filter()$method,
-                                    fdr = gs_result_filter()$fdr)
+  other_genesets_gsea <- callModule(
+    sparrow.shiny::mgGeneSetSummaryByGene,
+    "other_genesets_gsea",
+    mgc, features = gs_viewer()$selected,
+    method = gs_result_filter()$method,
+    fdr = gs_result_filter()$fdr)
 
   vals <- list(
     selected_features = reactive(state$gsview_select),
@@ -311,11 +311,6 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
 #' @noRd
 #' @export
 #' @importFrom shiny fluidRow NS tags uiOutput wellPanel
-#' @importFrom multiGSEA.shiny
-#'   geneSetContrastViewUI
-#'   mgGeneSetSummaryByGeneUI
-#'   mgResultFilterUI
-#'   mgTableBrowserUI
 ffseaViewUI <- function(id, ..., debug = FALSE) {
   ns <- NS(id)
 
@@ -330,15 +325,16 @@ ffseaViewUI <- function(id, ..., debug = FALSE) {
     fluidRow(
       column(
         5, style = "padding: 0",
-        mgResultFilterUI(ns("mg_result_filter")),
-        wellPanel(geneSetContrastViewUI(ns("geneset_viewer")))),
+        sparrow.shiny::mgResultFilterUI(ns("mg_result_filter")),
+        wellPanel(sparrow.shiny::geneSetContrastViewUI(ns("geneset_viewer")))),
       column(
-        7, mgTableBrowserUI(ns("mg_table_browser")))),
+        7,
+        sparrow.shiny::mgTableBrowserUI(ns("mg_table_browser")))),
 
     fluidRow(
       column(
         12,
         tags$h4("Other Gene Sets with Selected Genes"),
-        mgGeneSetSummaryByGeneUI(ns("other_genesets_gsea"))))
+        sparrow.shiny::mgGeneSetSummaryByGeneUI(ns("other_genesets_gsea"))))
   )
 }

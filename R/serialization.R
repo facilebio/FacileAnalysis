@@ -47,6 +47,7 @@ fsave <- function(x, file, with_fds = FALSE, ...) {
 #' @noRd
 #' @export
 fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
+  lifecycle::signal_stage("experimental", "fsave()")
   fds. <- assert_class(fds(x), "FacileDataStore")
   assert_string(file, pattern = "\\.rds$")
 

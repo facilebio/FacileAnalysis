@@ -4,7 +4,6 @@
 #'
 #' @noRd
 #' @export
-#' @importFrom multiGSEA.shiny reactiveGeneSetDb
 #' @importFrom shiny outputOptions renderUI
 #' @param ares a reactive that contains a FacileAnalysisResult
 #' @param gdb A `reactive(GeneSetDb)` object
@@ -24,7 +23,9 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
   })
 
   # Enable user to configure the GeneSetDb used for testing
-  rgdb <- callModule(reactiveGeneSetDb, "gdb", gdb, ..., debug = debug)
+  rgdb <- callModule(
+    sparrow.shiny::reactiveGeneSetDb,
+    "gdb", gdb, ..., debug = debug)
 
   observeEvent(ares(), {
     ares. <- req(ares())
@@ -79,7 +80,6 @@ ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
 #'
 #' @noRd
 #' @export
-#' @importFrom multiGSEA.shiny reactiveGeneSetDbFilterUI
 #' @importFrom shiny NS tags uiOutput
 #' @importFrom shinyWidgets dropdown dropdownButton
 #' @return a list with `$ui` for the tagList of interface components and
@@ -100,7 +100,7 @@ ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
         tags$span("Gene Set Selection",
                   style = "background: #fff; padding: 0 10px 0 0"),
         style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
-      reactiveGeneSetDbFilterUI(ns("gdb"))),
+      sparrow.shiny::reactiveGeneSetDbFilterUI(ns("gdb"))),
     tags$div(
       id = ns("ffseaRunOptsContainer"),
       # style = "height: 400px",

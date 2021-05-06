@@ -1,10 +1,9 @@
 #' @noRd
 #' @export
-#' @importFrom multiGSEA iplot geneSets
 viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
                                          name = NULL, collection = NULL,
                                          rank_by = NULL, ...) {
-  mgres <- assert_class(result(x), "MultiGSEAResult")
+  mgres <- assert_class(result(x), "SparrowResult")
   type <- match.arg(type)
 
   assert_string(name)
@@ -18,9 +17,9 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
     warning("Plot generated using different rank statistic than tested")
   }
 
-  # TODO: This needs refactoring to make better use of multiGSEA geneSet
+  # TODO: This needs refactoring to make better use of sparrow::geneSet
   #       retrieval mojo already there .....................................
-  gs <- geneSets(mgres)
+  gs <- sparrow::geneSets(mgres)
   found <- gs[["name"]] == name
   if (!any(found)) {
     stop("No geneset found with name: ", name)
@@ -39,7 +38,8 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
     }
   }
   # ........................................................................
-  plt <- iplot(mgres, collection, name, type = type, value = rank_by, ...)
+  plt <- sparrow::iplot(mgres, collection, name, type = type, value = rank_by,
+                        ...)
 
   out <- list(
     plot = plt,
@@ -52,7 +52,7 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
 #' @noRd
 #' @export
 #' @examples
-#' gdb <- multiGSEA::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 #' dge.ttest <- FacileData::exampleFacileDataSet() %>%
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",

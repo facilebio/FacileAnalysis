@@ -60,8 +60,6 @@
 #'   they do not pass muster given the filtering criteria.
 #'
 #' @export
-#' @importFrom multiGSEA calculateIndividualLogFC logFC multiGSEA
-#'
 #' @param x a data source
 #' @param assay_name the name of the assay that holds the measurements for test.
 #'   Defaults to `default_assay(x)`.
@@ -241,13 +239,14 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       dup.corr <- bb$block.corr
     }
 
-    result <- calculateIndividualLogFC(bb, des, contrast = testme,
-                                       treat.lfc = treat_lfc,
-                                       trend.eBayes = trend.eBayes,
-                                       robust.eBayes = robust.eBayes,
-                                       block = block, correlation = dup.corr)
+    result <- sparrow::calculateIndividualLogFC(
+      bb, des, contrast = testme,
+      treat.lfc = treat_lfc,
+      trend.eBayes = trend.eBayes,
+      robust.eBayes = robust.eBayes,
+      block = block, correlation = dup.corr)
 
-    # multiGSEA::calculateIndividualLogFC returns the stats table ordered by
+    # sparrow::calculateIndividualLogFC returns the stats table ordered by
     # featureId, let's put the features back in the order they are in y
     rownames(result) <- result[["feature_id"]]
     result <- result[rownames(bb),]
