@@ -1,8 +1,7 @@
 on:
   push:
-    # branches:
-    #   - master
-    #   - develop # This will eventually require a different container
+    branches:
+      - main
     branches-ignore:
       - 'notest-**'
     paths:
