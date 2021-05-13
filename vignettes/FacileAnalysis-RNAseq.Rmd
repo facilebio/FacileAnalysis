@@ -149,8 +149,7 @@ expression container objects that allow them to be queried using the facilebio
 API:
 
 ```{r facilitate, message=FALSE, warning=FALSE}
-# library(FacileBiocData)
-devtools::load_all("~/workspace/facilebio/public/packages/FacileBiocData")
+library(FacileBiocData)
 library(FacileAnalysis)
 ddf <- facilitate(dds, blind = FALSE)
 ```
