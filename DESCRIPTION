@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Analysis routines over a FacileDataStore
-Version: 0.98.0
+Version: 0.98.1
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
@@ -44,6 +44,7 @@ Imports:
     tibble,
     tidyr
 Suggests:
+    airway,
     curl,
     DESeq2,
     FacileBiocData,

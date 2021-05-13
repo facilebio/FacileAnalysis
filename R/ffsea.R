@@ -670,7 +670,7 @@ format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
     paste(rep("=", 80), collapse = ""), "\n",
     sprintf("FacileFseaAnalysisResult (from a %s)\n", source.type),
     paste(rep("-", 80), collapse = ""), "\n",
-    paste(tibble:::format.tbl(gsea.res.table)[-1], collapse = "\n"), "\n",
+    # paste(tibble:::format.tbl_df(gsea.res.table)[-1], collapse = "\n"), "\n",
     paste(rep("=", 80), collapse = ""), "\n",
     sep = "")
   msg
