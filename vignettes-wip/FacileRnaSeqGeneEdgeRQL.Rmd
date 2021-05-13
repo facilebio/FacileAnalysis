@@ -34,17 +34,11 @@ options(digits = 3)
 This demonstrates how to use the facile.bio ecosystem to perform the analyses
 of RNA-seq data as outlined in the *[edgeR QLF From reads to genes to pathways: differential expression analysis of RNA-Seq experiments using Rsubread and the edgeR quasi-likelihood pipeline workflow][qlfwflow]*.
 
-
-
-
 ```{r, message=FALSE, warning=FALSE}
 library(edgeR)
 library(dplyr)
-library(FacileData)
 library(FacileBiocData)
-# library(FacileAnalysis)
-devtools::load_all(".")
-
+library(FacileAnalysis)
 library(ggplot2)
 theme_set(theme_bw())
 ```
@@ -74,7 +68,7 @@ In order to directly use this DGEList within the facile framework, we just
 have to invoke the FacileBiocData::facilitate function:
 
 ```{r}
-y <- facilitate(y)
+yf <- facilitate(y)
 ```
 
 ## Dimensionality Reduction
@@ -82,7 +76,7 @@ y <- facilitate(y)
 For now, we only support PCA:
 
 ```{r}
-pca.y <- fpca(y, ntop = 500)
+pca.y <- fpca(yf, ntop = 500)
 colors <- c(lactating = "darkgreen", pregnant = "red", virgin = "blue")
 viz(pca.y, color_aes = "Status", shape_aes = "CellType", color_map = colors,
     width = 600)
@@ -95,7 +89,7 @@ Test differential among lactating b cells vs pregnant b cells.
 Feture filtering is performed by default:
 
 ```{r}
-dge.b <- y %>% 
+dge.b <- yf %>% 
   flm_def("group", numer = "B.lactating", denom = "B.pregnant") %>% 
   fdge(method = "edgeR-qlf")
 ```
@@ -151,7 +145,7 @@ Suppose we want to compare the three groups within in the luminal population,
 i.e., virgin, pregnant and lactating:
 
 ```{r}
-anova.luminal <- y %>% 
+anova.luminal <- yf %>% 
   filter_samples(CellType == "L") %>% 
   flm_def("Status") %>% 
   fdge(method = "edgeR-qlf")
@@ -180,13 +174,13 @@ within the B cell population stored in `dge.b`. We now have to run the
 same comparison within the lumina cells:
 
 ```{r}
-dge.L <- y %>% 
+dge.L <- yf %>% 
   flm_def("group", numer = "L.lactating", denom = "L.pregnant") %>% 
   fdge(method = "edgeR-qlf")
 ```
 
 And now run the interaction. By default, each analysis will be rerun using
-the union of the (filtered) features from the inidividual comparisons so that
+the union of the (filtered) features from the individual comparisons so that
 we generate statistics for all genes from each comparison.
 
 ```{r}

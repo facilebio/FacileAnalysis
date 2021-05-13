@@ -31,6 +31,8 @@ assemble_edgeRQLF_DGEList <- function(tmpdir = tempdir()) {
   genes[["symbol"]] <- a$mapIds(org.Mm.eg.db::org.Mm.eg.db,
                                 rownames(GenewiseCounts),
                                 keytype = "ENTREZID", column = "SYMBOL")
+  genes[["feature_id"]] <- as.character(rownames(genes))
+  genes[["feature_type"]] <- 'entrez'
   edgeR::DGEList(GenewiseCounts[, -1L], genes = genes,
                  samples = transform(targets, GEO = NULL, SRA = NULL))
 }
