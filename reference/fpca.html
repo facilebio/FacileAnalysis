@@ -75,7 +75,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.17</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.98.1</span>
       </span>
     </div>
 
@@ -83,7 +83,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -118,7 +118,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/facilebio/FacileAnalysis/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -380,8 +380,8 @@ covariates, then the manually provided ones will supersede the internals.</p>
 
 <span class='va'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='va'>pca.crc</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span>dims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/results.html'>result</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>multiGSEA</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/multiGSEA/man/GeneSetDb-class.html'>GeneSetDb</a></span><span class='op'>(</span><span class='op'>)</span>
+  <span class='fu'>result</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>sparrow</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/sparrow/man/GeneSetDb-class.html'>GeneSetDb</a></span><span class='op'>(</span><span class='op'>)</span>
 
 <span class='co'># All samples --------------------------------------------------------------</span>
 <span class='va'>pca.all</span> <span class='op'>&lt;-</span> <span class='fu'>fpca</span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span>

@@ -35,7 +35,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.17</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.98.1</span>
       </span>
     </div>
 
@@ -43,7 +43,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -78,7 +78,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/facilebio/FacileAnalysis/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -103,7 +103,7 @@
 <p>The over-arching goal of developing analyses within this framework is to enable quick and effortless interrogation of genomic data by enabling a <strong>hybrid</strong> interactive and code-driven approach to data analysis. Analyses can be either completely code-driven, GUI driven, or some mix of the two.</p>
 <p>To achieve this goal, analysis modules break down a general analysis task into smaller constituent steps, the results of which can:</p>
 <ol>
-<li>be piped together (<code><a href="https://rdrr.io/pkg/magrittr/man/pipe.html">%&gt;%</a></code>) to perform a complete analysis;</li>
+<li>be piped together (<code><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></code>) to perform a complete analysis;</li>
 <li>be explored at <strong>different levels of interactivity</strong>, via the <code><a href="reference/viz.html">shine()</a></code>, <code><a href="reference/viz.html">viz()</a></code>, and <code><a href="reference/viz.html">report()</a></code> methods; and</li>
 <li>act as starting (or reference) points for <strong>the next</strong> analysis task, either directly or by via the <code><a href="reference/ranks.html">ranks()</a></code>, <code><a href="reference/signature.html">signature()</a></code>, or <code><a href="reference/compare.html">compare()</a></code> methods.</li>
 </ol>
@@ -136,8 +136,8 @@ You can find a more in-depth overview and philosophy of this package in the
 <li>defining the parameters to run the statistical test, ie. 1) the assay from the samples to run the analysis on 2) the differential expression pipeline to use (<code>"voom"</code>, <code>"edgeR-qlf"</code>, <code>"limma-trend"</code>, <code>"limma"</code>) 3) advanced options, like the threshold to test against (limma/treat), or whether to incorporate sample level weights</li>
 </ol>
 <p>The example below identifies genes differentially expression between tumor and normal samples (and controlling for sex) in the “BLCA” indication of the example TCGA dataset included in the <a href="https://facilebio.github.io/FacileData">FacileData</a> package.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit">
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/facilebio/FacileData">FacileData</a></span><span class="op">)</span>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/facilebio/FacileData">FacileData</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/facilebio/FacileAnalysis">FacileAnalysis</a></span><span class="op">)</span>
 <span class="va">efds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html">exampleFacileDataSet</a></span><span class="op">(</span><span class="op">)</span>
 
@@ -152,10 +152,10 @@ You can find a more in-depth overview and philosophy of this package in the
 <span class="co"># Step 3: configure the options to run the test, which include the assay that</span>
 <span class="co">#         holds the data used to test and the statistical method/framework we</span>
 <span class="co">#         should use to perform the test</span>
-<span class="va">vdge</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdge.html">fdge</a></span><span class="op">(</span><span class="va">model</span>, assay_name <span class="op">=</span> <span class="st">"rnaseq"</span>, method <span class="op">=</span> <span class="st">"voom"</span><span class="op">)</span></pre></div>
+<span class="va">vdge</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdge.html">fdge</a></span><span class="op">(</span><span class="va">model</span>, assay_name <span class="op">=</span> <span class="st">"rnaseq"</span>, method <span class="op">=</span> <span class="st">"voom"</span><span class="op">)</span></code></pre></div>
 <p>Perhaps you prefer the <a href="https://f1000research.com/articles/5-1438">edgeR/QLF</a> analysis framework, instead? No problem, we only need to tweak one of the parameters in the last step of the pipeline:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit">
-<span class="va">qdge</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdge.html">fdge</a></span><span class="op">(</span><span class="va">model</span>, assay_name <span class="op">=</span> <span class="st">"rnaseq"</span>, method <span class="op">=</span> <span class="st">"edgeR-qlf"</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">qdge</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdge.html">fdge</a></span><span class="op">(</span><span class="va">model</span>, assay_name <span class="op">=</span> <span class="st">"rnaseq"</span>, method <span class="op">=</span> <span class="st">"edgeR-qlf"</span><span class="op">)</span></code></pre></div>
 <p>… or DESeq2, perhaps? No problem, <a href="https://github.com/denalitherapeutics/FacileAnalysis/pulls">we accept pull requests</a>!</p>
 </div>
 <div id="interrogation-of-analyses-at-different-levels-of-interactivity" class="section level2">
@@ -167,26 +167,26 @@ You can find a more in-depth overview and philosophy of this package in the
 <h3 class="hasAnchor">
 <a href="#deep-interaction-via-shine" class="anchor"></a>Deep Interaction via shine()</h3>
 <p>The <code><a href="reference/viz.html">shine(aresult, ...)</a></code> method provides the richest interactive view over a <code>FacileAnalysisResult</code> by launching a <a href="https://shiny.rstudio.com/articles/gadgets.html">shiny gadget</a> that enables the end-user to fully interrogate the results.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit">
-<span class="fu"><a href="reference/viz.html">shine</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/viz.html">shine</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/fdge-shine.gif" width="75%"></p>
 </div>
 <div id="interactive-graphics-via-viz" class="section level3">
 <h3 class="hasAnchor">
 <a href="#interactive-graphics-via-viz" class="anchor"></a>Interactive Graphics via viz()</h3>
 <p>The <code><a href="reference/viz.html">viz(aresult, ...)</a></code> methods leverage <a href="https://www.htmlwidgets.org">htmlwidgets</a> to create a JavaScript-powered interactive view of the analysis result, which is detached from a running R-process.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit">
-<span class="fu"><a href="reference/viz.html">viz</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/viz.html">viz</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="reporting-results-via-report" class="section level3">
 <h3 class="hasAnchor">
 <a href="#reporting-results-via-report" class="anchor"></a>Reporting Results via report()</h3>
 <p>While the output of the <code><a href="reference/viz.html">viz()</a></code> functions can be used directly in Rmarkdown reports, <code><a href="reference/viz.html">report(aresult, ...)</a></code> is meant to create a “more complete” (perhaps multi-htmlwidget) view over the result that can be more suitable for inclusion into an Rmarkdown report.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit">
-<span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span>
   <span class="st">"Differential expression of tumor vs normal samples, in the TCGA bladder"</span>,
   <span class="st">"cancer indication (BLCA)"</span><span class="op">)</span>
-<span class="fu"><a href="reference/viz.html">report</a></span><span class="op">(</span><span class="va">vdge</span>, caption <span class="op">=</span> <span class="va">cap</span><span class="op">)</span></pre></div>
+<span class="fu"><a href="reference/viz.html">report</a></span><span class="op">(</span><span class="va">vdge</span>, caption <span class="op">=</span> <span class="va">cap</span><span class="op">)</span></code></pre></div>
 <!--
 <img src="man/figures/fdge-report.gif" width = "75%" />
 -->
@@ -197,11 +197,11 @@ You can find a more in-depth overview and philosophy of this package in the
 <a href="#hybrid-analyses" class="anchor"></a>Hybrid Analyses</h2>
 <p>The same differential expression analysis that created the <code>vdge</code> object above can be performed entirely interactively, with the same results.</p>
 <p>We can either start the analysis from the same predefined set of samples, but define the linear model and testing framework to use interactively, by launching a the <strong>f</strong>acile <strong>d</strong>ifferential <strong>g</strong>ene <strong>e</strong>xpression gadget:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit">
-<span class="va">vdge2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdgeGadget.html">fdgeGadget</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">vdge2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdgeGadget.html">fdgeGadget</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></code></pre></div>
 <p>Or we can perform the whole thing via a GUI which lets us select the subset of samples and run the differential expression analysis without using any code at all:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit">
-<span class="va">vdge3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdgeGadget.html">fdgeGadget</a></span><span class="op">(</span><span class="va">efds</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">vdge3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fdgeGadget.html">fdgeGadget</a></span><span class="op">(</span><span class="va">efds</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/vignette-fdgeGadget-trim.gif" width="75%"></p>
 <p>Assuming the same filtering and testing strategies were selected in the GUI using the <code>fdgeGadget</code> calls above, the objects they return will all be equivalent to the <code>vdge</code> result, which was entirely generated programmatically.</p>
 <p><strong>Note</strong>: the screen capture of the <code><a href="reference/fdgeGadget.html">fdgeGadget()</a></code> above actually corresponds to the analyses in the <a href="https://facilebio.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html">RNA-seq the facile way</a> vignette.</p>
@@ -210,9 +210,9 @@ You can find a more in-depth overview and philosophy of this package in the
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
 <p>Because the packages in the facileverse have not officially been released yet and they also depend heavily on <a href="https://bioconductor.org">bioconductor</a> packages, we recommend using the <a href="https://cran.r-project.org/package=BiocManager">BiocManager</a> package for installation.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit">
-<span class="co"># install.packages("BiocManager")</span>
-<span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"facilebio/FacileAnalysis"</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># install.packages("BiocManager")</span>
+<span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"facilebio/FacileAnalysis"</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="resources" class="section level2">
 <h2 class="hasAnchor">
