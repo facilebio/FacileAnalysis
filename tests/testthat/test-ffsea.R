@@ -53,8 +53,9 @@ test_that("cameraPR call through ffsea works like sparrow::seas()", {
 
   # GSEA the "traditional" sparrow way
   vm <- biocbox(ttest.res)
-  mgres <- sparrow::seas(gdb, vm, vm$design, c(-1, 1, 0),
-                         "cameraPR", score.by = "logFC")
+  mgres <- sparrow::seas(vm, gdb, "cameraPR",
+                         design = vm$design, contrast = c(-1, 1, 0),
+                         score.by = "logFC")
 
   mgres.cameraPR <- mgres %>%
     sparrow::result("cameraPR") %>%

@@ -221,7 +221,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
   }
   names(input) <- xx[["feature_id"]]
 
-  mg <- sparrow::seas(gdb, input, methods = methods, feature.bias = biased_by,
+  mg <- sparrow::seas(input, gdb, methods = methods, feature.bias = biased_by,
                       groups = group_by, xmeta. = xx, ...)
 
   out <- list(
