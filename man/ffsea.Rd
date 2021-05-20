@@ -9,7 +9,7 @@
 \alias{result.FacileFseaAnalysisResult}
 \title{Performs Feature (Gene) Set Enrichment Analyses}
 \usage{
-ffsea(x, fsets, methods, ...)
+ffsea(x, fsets, methods = NULL, ...)
 
 \method{result}{FacileFseaAnalysisResult}(x, name = "object", ...)
 }
@@ -23,7 +23,8 @@ object will be passed through the \code{\link[sparrow:GeneSetDb-class]{sparrow::
 create a \code{GeneSetDb} object that will be used for testing.}
 
 \item{methods}{A character vector of GSEA methods to use on \code{x}. Chose any
-of the \code{method} names listed by running \code{ffsea_methods(x)}.}
+of the \code{method} names listed by running \code{ffsea_methods(x)}. If \code{NULL}
+(default), the first method from  \code{ffsea_methods(x)} will be selected.}
 }
 \value{
 A FacileFseaAnalysisResult object, which includes a \code{SparrowResult}

@@ -80,7 +80,8 @@
 #'   object will be passed through the [sparrow::GeneSetDb()] constructor to
 #'   create a `GeneSetDb` object that will be used for testing.
 #' @param methods A character vector of GSEA methods to use on `x`. Chose any
-#'   of the `method` names listed by running `ffsea_methods(x)`.
+#'   of the `method` names listed by running `ffsea_methods(x)`. If `NULL`
+#'   (default), the first method from  `ffsea_methods(x)` will be selected.
 #' @return A FacileFseaAnalysisResult object, which includes a `SparrowResult`
 #'   object as it's `result()`. The geneset level statistics for each of the
 #'   methods that were run are available via `tidy(ffsea.res, "<method_name>")`.
@@ -126,7 +127,7 @@
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-ffsea <- function(x, fsets, methods, ...) {
+ffsea <- function(x, fsets, methods = NULL, ...) {
   UseMethod("ffsea", x)
 }
 
@@ -135,7 +136,7 @@ ffsea <- function(x, fsets, methods, ...) {
 #' of genes.
 #'
 #' @noRd
-ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods, ...) {
+ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL, ...) {
   stop("Run fdge(x) %>% ffsea() for now")
 }
 
@@ -157,13 +158,16 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods, ...) {
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
 #'   order. If `"rankded"`, then we assume that the data.frame is already
 #'   ranked as desired.
-ffsea.data.frame <- function(x, fsets, methods,
+ffsea.data.frame <- function(x, fsets, methods = NULL,
                              rank_by = NULL, select_by = NULL,
                              rank_order = "descending", group_by = NULL,
                              biased_by = NULL, ...,
                              feature.bias = "thebuckstopshere",
                              xmeta. = "thebuckstopshere",
                              groups = "thebuckstopshere") {
+  if (is.null(methods)) {
+    stop("A gsea method name must be provided to the `methods` parameter.")
+  }
   if (is.factor(x[["feature_id"]])) {
     x[["feature_id"]] <- as.character(x[["feature_id"]])
   }
@@ -248,7 +252,7 @@ ffsea.data.frame <- function(x, fsets, methods,
 #'   knocked out (or over expressed) a particular gene in an experimental
 #'   group, you wouldn't want to include that gene's differential expression
 #'   in the ffsea analysis.
-ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods,
+ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods = NULL,
                                             features = NULL,
                                             min_logFC = param(x, "treat_lfc"),
                                             max_padj = 0.10,
@@ -258,6 +262,12 @@ ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods,
                                             rank_order = "ranked",
                                             group_by = "direction",
                                             select_by = "significant") {
+  fsets <- sparrow::GeneSetDb(fsets)
+
+  all.methods <- ffsea_methods(x)
+  if (is.null(methods)) methods <- all.methods[["method"]][1L]
+  assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
+
   if (assert_string(rank_order) != "ranked") {
     warning("non-default value used for `rank_order`")
   }
@@ -267,9 +277,6 @@ ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods,
   if (assert_string(select_by) != "significant") {
     warning("non-default value used for `select_by`")
   }
-  fsets <- sparrow::GeneSetDb(fsets)
-  all.methods <- ffsea_methods(x)
-  assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
   if (is.null(min_logFC)) min_logFC <- 0
   assert_number(min_logFC, lower = 0, finite = TRUE)
@@ -335,7 +342,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods,
 #' Note that an analysis on (2) only lends itself to an overrepresentation
 #' analysis, ie. `methods = "ora"`.
 ffsea.FacileTtestComparisonAnalysisResult <- function(
-    x, fsets, methods,
+    x, fsets, methods = NULL,
     type = c("interaction", "quadrants"),
     features = NULL,
     min_logFC = param(x, "treat_lfc"), max_padj = 0.10,
@@ -343,7 +350,16 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
     rank_order = "ranked", group_by = "direction", select_by = "significant") {
   fsets <- sparrow::GeneSetDb(fsets)
   type <- match.arg(type)
-  if (missing(methods) && type == "quadrants") methods <- "ora"
+
+  if (is.null(methods)) {
+    if (type == "quadrants") {
+      methods <- "ora"
+    } else {
+      all.methods <- ffsea_methods(x)
+      if (is.null(methods)) methods <- all.methods[["method"]][1L]
+      assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
+    }
+  }
 
   if (type == "interaction") {
     # NextMethod should call ffsea.FacileTtestAnalysisResult
@@ -447,7 +463,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
 
 #' @noRd
 #' @export
-ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods,
+ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods = NULL,
                                             max_padj = 0.10, biased_by = NULL,
                                             ...,
                                             rank_by = "F",
@@ -464,8 +480,8 @@ ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods,
   }
 
   all.methods <- ffsea_methods(x)
+  if (is.null(methods)) methods <- all.methods[["method"]][1L]
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
-  fds. <- assert_facile_data_store(fds(x))
 
   ranks. <- tidy(x)
   ranks. <- mutate(ranks., significant = padj <= max_padj)
@@ -488,8 +504,12 @@ ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods,
 #'
 #' @noRd
 #' @export
-ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = "cameraPR", dim = 1,
+ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = NULL, dim = 1,
                                           signed = TRUE, ...) {
+  all.methods <- ffsea_methods(x)
+  if (is.null(methods)) methods <- all.methods[["method"]][1L]
+  assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
+
   fds. <- assert_facile_data_store(fds(x))
   aname. <- assert_choice(param(x, "assay_name"), assay_names(fds.))
 

@@ -95,7 +95,7 @@ fdge(
 \method{ffsea}{FacileTtestComparisonAnalysisResult}(
   x,
   fsets,
-  methods,
+  methods = NULL,
   type = c("interaction", "quadrants"),
   features = NULL,
   min_logFC = param(x, "treat_lfc"),
