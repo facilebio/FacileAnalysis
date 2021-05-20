@@ -367,7 +367,7 @@ covariates, then the manually provided ones will supersede the internals.</p>
 <span class='op'>}</span>
 
 <span class='co'># Regress "sex" out from expression data</span>
-<span class='va'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>samples</span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+<span class='va'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>fpca</span><span class='op'>(</span>batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
 <span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
   <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crcs</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
@@ -375,7 +375,7 @@ covariates, then the manually provided ones will supersede the internals.</p>
 
 <span class='co'># Perform PCA on only the protein coding genes</span>
 <span class='va'>genes.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>meta</span> <span class='op'>==</span> <span class='st'>"protein_coding"</span><span class='op'>)</span>
-<span class='va'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'>samples</span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+<span class='va'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'>fpca</span><span class='op'>(</span>features <span class='op'>=</span> <span class='va'>genes.pc</span>, filter <span class='op'>=</span> <span class='st'>"variance"</span><span class='op'>)</span>
 
 <span class='va'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='va'>pca.crc</span> <span class='op'>%&gt;%</span>
