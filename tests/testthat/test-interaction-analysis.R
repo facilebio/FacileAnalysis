@@ -122,7 +122,7 @@ test_that("ffsea on interaction stats works like a normal ttest ffsea", {
   exp.gsea.h <- tidy(tvn.compare) %>%
     mutate(direction = ifelse(logFC > 0, "up", "down"),
            significant = abs(logFC) >= min.logFC & padj <= max.padj) %>%
-    ffsea(gdb = param(res.gsea.h, "gdb"),
+    ffsea(param(res.gsea.h, "fsets"),
           methods = param(res.gsea.h, "methods"),
           rank_by = param(res.gsea.h, "rank_by"),
           rank_order = "descending",

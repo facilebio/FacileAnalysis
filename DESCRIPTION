@@ -1,14 +1,15 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore.
-Version: 0.98.2
+Version: 0.98.3
 Authors@R: c(
     person("Steve", "Lianoglou", , "lianoglou@dnli.com", c("aut", "cre"),
       comment = c(ORCID = "0000-0002-0924-1754")),
     person("Denali Therapeutics", role = c("cph", "fnd")))
-Description: Provides modularized versions of analyses that are commonly
-    performed over genomics data. Analysis results can be interactively explored
-    by analysts using the "vizualize" or "shine" functions, and embedded into
+Description: Provides modularized analysis methods commonly performed over 
+    genomics data. Analysis results can be interactively explored
+    by analysts using the "viz" or "shine" functions, which produce JavaScript-
+    and shiny-based visualizations. Results can also be embedded into
     Rmarkdown reports using their respective "report" functions.
 URL: https://github.com/facilebio/FacileAnalysis
 BugReports: https://github.com/facilebio/FacileAnalysis/issues

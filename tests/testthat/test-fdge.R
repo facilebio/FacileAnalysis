@@ -237,7 +237,7 @@ test_that("ttest ranks and signatures generated correctly", {
     tidy() %>%
     arrange(desc(logFC))
   ranks.signed <- TRES %>%
-    ranks(signed = TRUE) %>%
+    ranks(signed = TRUE, rank_by = "logFC") %>%
     tidy()
   expect_equal(ranks.signed[["feature_id"]], eranks.signed[["feature_id"]])
 
@@ -246,7 +246,7 @@ test_that("ttest ranks and signatures generated correctly", {
     tidy() %>%
     arrange(pval)
   ranks.unsigend <- TRES %>%
-    ranks(signed = FALSE) %>%
+    ranks(signed = FALSE, rank_by = "pval") %>%
     tidy()
   expect_equal(ranks.unsigend[["feature_id"]], eranks.unsigned[["feature_id"]])
 })
@@ -268,9 +268,15 @@ test_that("ranks returns anova features in expected order", {
 test_that("t-test signatures generated correcty", {
   # we'll compare these to parts of the correctly-generated ranks, which were
   # tested above.
-  sig.signed <- signature(TRES, signed = TRUE)
+  sig.signed <- signature(TRES, signed = TRUE) %>% tidy()
+  sig.unsigned <- signature(TRES, signed = FALSE) %>% tidy()
 
-  sig.unsinged <- signature(TRES, signed = FALSE)
+  nup.signed <- sum(sig.signed$direction == "up")
+  expect_equal(nup.signed, nrow(sig.signed) / 2)
+  expect_equal(nup.signed, sum(sig.signed$direction == "down"))
+
+  joint <- intersect(sig.unsigned$feature_id, sig.signed$feature_id)
+  expect_gt(length(joint), nup.signed - 1)
 })
 
 

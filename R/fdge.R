@@ -413,12 +413,13 @@ label.FacileAnovaAnalysisResult <- function(x, ...) {
 ranks.FacileTtestAnalysisResult <- function(x, signed = TRUE, rank_by = "logFC",
                                             ...) {
   ranks. <- tidy(x, ...)
+  rank_by <- assert_choice(rank_by, colnames(ranks.))
+  assert_numeric(ranks.[[rank_by]])
+  ofn <- if (rank_by %in% c("pval", "padj")) identity else dplyr::desc
   if (signed) {
-    rank_by <- assert_choice(rank_by, colnames(ranks.))
-    assert_numeric(ranks.[[rank_by]])
-    ranks. <- arrange_at(ranks., rank_by, desc)
+    ranks. <- arrange(ranks., ofn(ranks.[[rank_by]]))
   } else {
-    ranks. <- arrange(ranks., pval)
+    ranks. <- arrange(ranks., ofn(abs(ranks.[[rank_by]])))
   }
 
   out <- list(

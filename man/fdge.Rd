@@ -94,8 +94,8 @@ fdge(
 
 \method{ffsea}{FacileTtestComparisonAnalysisResult}(
   x,
-  gdb,
-  methods = c("cameraPR", "ora"),
+  fsets,
+  methods,
   type = c("interaction", "quadrants"),
   features = NULL,
   min_logFC = param(x, "treat_lfc"),

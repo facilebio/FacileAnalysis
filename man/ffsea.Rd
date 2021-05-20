@@ -9,7 +9,7 @@
 \alias{result.FacileFseaAnalysisResult}
 \title{Performs Feature (Gene) Set Enrichment Analyses}
 \usage{
-ffsea(x, gdb, methods = "cameraPR", ...)
+ffsea(x, fsets, methods, ...)
 
 \method{result}{FacileFseaAnalysisResult}(x, name = "object", ...)
 }
@@ -18,9 +18,12 @@ ffsea(x, gdb, methods = "cameraPR", ...)
 statistics, minimally with a \code{"feature_id"} column as well as one or more
 \code{numeric} columns to rank features on.}
 
-\item{gdb}{A \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} object}
+\item{fsets}{The feature sets (likely genesets) to use for testing. This
+object will be passed through the \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} constructor to
+create a \code{GeneSetDb} object that will be used for testing.}
 
-\item{methods}{the GSEA methods to use on \code{x}.}
+\item{methods}{A character vector of GSEA methods to use on \code{x}. Chose any
+of the \code{method} names listed by running \code{ffsea_methods(x)}.}
 }
 \value{
 A FacileFseaAnalysisResult object, which includes a \code{SparrowResult}
@@ -119,7 +122,7 @@ camera.stats <- tidy(ffsea.res, name = "cameraPR")
 }
 
 \examples{
-gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
+gdb <- sparrow::exampleGeneSetDb()
 efds <- FacileData::exampleFacileDataSet()
 
 # GSEA from t-test result ---------------------------------------------------

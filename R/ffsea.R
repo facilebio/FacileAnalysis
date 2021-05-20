@@ -76,14 +76,17 @@
 #' @param x A `FacileAnalysisResult` object, or a data.frame with feature-level
 #'   statistics, minimally with a `"feature_id"` column as well as one or more
 #'   `numeric` columns to rank features on.
-#' @param gdb A [sparrow::GeneSetDb()] object
-#' @param methods the GSEA methods to use on `x`.
+#' @param fsets The feature sets (likely genesets) to use for testing. This
+#'   object will be passed through the [sparrow::GeneSetDb()] constructor to
+#'   create a `GeneSetDb` object that will be used for testing.
+#' @param methods A character vector of GSEA methods to use on `x`. Chose any
+#'   of the `method` names listed by running `ffsea_methods(x)`.
 #' @return A FacileFseaAnalysisResult object, which includes a `SparrowResult`
 #'   object as it's `result()`. The geneset level statistics for each of the
 #'   methods that were run are available via `tidy(ffsea.res, "<method_name>")`.
 #'
 #' @examples
-#' gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
+#' gdb <- sparrow::exampleGeneSetDb()
 #' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # GSEA from t-test result ---------------------------------------------------
@@ -123,7 +126,7 @@
 #'   FacileData::filter_samples(indication == "CRC") %>%
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-ffsea <- function(x, gdb, methods = "cameraPR", ...) {
+ffsea <- function(x, fsets, methods, ...) {
   UseMethod("ffsea", x)
 }
 
@@ -132,8 +135,7 @@ ffsea <- function(x, gdb, methods = "cameraPR", ...) {
 #' of genes.
 #'
 #' @noRd
-ffsea.FacileTtestDGEModelDefinition <- function(x, gdb, methods = "cameraPR",
-                                                ...) {
+ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods, ...) {
   stop("Run fdge(x) %>% ffsea() for now")
 }
 
@@ -155,7 +157,7 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, gdb, methods = "cameraPR",
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
 #'   order. If `"rankded"`, then we assume that the data.frame is already
 #'   ranked as desired.
-ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
+ffsea.data.frame <- function(x, fsets, methods,
                              rank_by = NULL, select_by = NULL,
                              rank_order = "descending", group_by = NULL,
                              biased_by = NULL, ...,
@@ -166,7 +168,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
     x[["feature_id"]] <- as.character(x[["feature_id"]])
   }
   assert_character(x[["feature_id"]])
-  assert_class(gdb, "GeneSetDb")
+  fsets <- sparrow::GeneSetDb(fsets)
 
   methods. <- local({
     assert_character(methods, min.len = 1L)
@@ -221,7 +223,8 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
   }
   names(input) <- xx[["feature_id"]]
 
-  mg <- sparrow::seas(input, gdb, methods = methods, feature.bias = biased_by,
+  mg <- sparrow::seas(input, fsets, methods = methods,
+                      feature.bias = biased_by,
                       groups = group_by, xmeta. = xx, ...)
 
   out <- list(
@@ -231,7 +234,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
                   rank_order = rank_order,
                   group_by = group_by,
                   biased_by = biased_by,
-                  x = x, gdb = gdb))
+                  x = x, fsets = fsets))
     fds = suppressWarnings(fds(x))
   class(out) <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
   out
@@ -245,8 +248,7 @@ ffsea.data.frame <- function(x, gdb, methods = "cameraPR",
 #'   knocked out (or over expressed) a particular gene in an experimental
 #'   group, you wouldn't want to include that gene's differential expression
 #'   in the ffsea analysis.
-ffsea.FacileTtestAnalysisResult <- function(x, gdb,
-                                            methods = c("cameraPR", "ora"),
+ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods,
                                             features = NULL,
                                             min_logFC = param(x, "treat_lfc"),
                                             max_padj = 0.10,
@@ -265,7 +267,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
   if (assert_string(select_by) != "significant") {
     warning("non-default value used for `select_by`")
   }
-  assert_class(gdb, "GeneSetDb")
+  fsets <- sparrow::GeneSetDb(fsets)
   all.methods <- ffsea_methods(x)
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
   fds. <- assert_facile_data_store(fds(x))
@@ -304,7 +306,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
     return(out)
   })
 
-  out <- ffsea(input, gdb, methods = methods,
+  out <- ffsea(input, fsets, methods = methods,
                rank_by = rank_by, rank_order = "ranked",
                select_by = "significant", group_by = "direction",
                biased_by = biased_by, ...)
@@ -333,13 +335,13 @@ ffsea.FacileTtestAnalysisResult <- function(x, gdb,
 #' Note that an analysis on (2) only lends itself to an overrepresentation
 #' analysis, ie. `methods = "ora"`.
 ffsea.FacileTtestComparisonAnalysisResult <- function(
-    x, gdb, methods = c("cameraPR", "ora"),
+    x, fsets, methods,
     type = c("interaction", "quadrants"),
     features = NULL,
     min_logFC = param(x, "treat_lfc"), max_padj = 0.10,
     rank_by = "logFC", signed = TRUE, biased_by = NULL, ...,
     rank_order = "ranked", group_by = "direction", select_by = "significant") {
-  assert_class(gdb, "GeneSetDb")
+  fsets <- sparrow::GeneSetDb(fsets)
   type <- match.arg(type)
   if (missing(methods) && type == "quadrants") methods <- "ora"
 
@@ -349,7 +351,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
     out <- NextMethod()
     oclass <- "FacileTtestComparisonInteractionFseaAnalysisResult"
   } else {
-    out <- .ffsea.iquadrants(x, gdb, methods, ...)
+    out <- .ffsea.iquadrants(x, fsets, methods, ...)
     oclass <- "FacileTtestComparisonQuadrantFseaAnalysisResult"
   }
 
@@ -360,7 +362,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
 #' @noRd
 #' @param min_quadrant_count minimum number of significant genes in a quadrant
 #'   required to perform enrichment analysis.
-.ffsea.iquadrants <- function(x, gdb, methods,
+.ffsea.iquadrants <- function(x, fsets, methods,
                               min_logFC_x = param(param(x, "x"), "treat_lfc"),
                               min_logFC_y = param(param(x, "y"), "treat_lfc"),
                               max_padj_x = 0.10, max_padj_y = max_padj_x,
@@ -377,7 +379,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
   labels <- attr(istats, "labels")[c("both", "x", "y")]
 
   params <- list(
-    x = x, gdb = gdb, methods = methods, type = "quadrants",
+    x = x, fsets = fsets, methods = methods, type = "quadrants",
     min_logFC_x = min_logFC_x, min_logFC_y = min_logFC_y,
     max_padj_x = max_padj_x, max_padj_y = max_padj_y)
 
@@ -421,7 +423,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
         direction = ifelse(logFC.y > 0, "up", "down"))
     }
     if (sum(xdat$significant) >= min_quadrant_count) {
-      ffsea(xdat, gdb, methods,
+      ffsea(xdat, fsets, methods,
             select_by = "significant", group_by = "direction")
     } else {
       NULL
@@ -445,7 +447,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
 
 #' @noRd
 #' @export
-ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
+ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods,
                                             max_padj = 0.10, biased_by = NULL,
                                             ...,
                                             rank_by = "F",
@@ -468,7 +470,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
   ranks. <- tidy(x)
   ranks. <- mutate(ranks., significant = padj <= max_padj)
 
-  out <- ffsea(ranks., gdb, methods = methods,
+  out <- ffsea(ranks., fsets, methods = methods,
                select_by = select_by, rank_by = rank_by,
                rank_order = rank_order, biased_by = biased_by, ...)
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]
@@ -486,7 +488,7 @@ ffsea.FacileAnovaAnalysisResult <- function(x, gdb, methods = "ora",
 #'
 #' @noRd
 #' @export
-ffsea.FacilePcaAnalysisResult <- function(x, gdb, methods = "cameraPR", dim = 1,
+ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = "cameraPR", dim = 1,
                                           signed = TRUE, ...) {
   fds. <- assert_facile_data_store(fds(x))
   aname. <- assert_choice(param(x, "assay_name"), assay_names(fds.))
@@ -514,7 +516,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, gdb, methods = "cameraPR", dim = 1,
   rank.column <- if (signed) "score" else "weight"
   pc.ranks <- tidy(ranks(x, dims = dim, signed = signed, ...))
 
-  out <- ffsea(pc.ranks, gdb, methods = methods, rank_by = rank.column,
+  out <- ffsea(pc.ranks, fsets, methods = methods, rank_by = rank.column,
                rank_order = "descending", ...)
 
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]

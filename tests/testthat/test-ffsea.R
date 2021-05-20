@@ -92,7 +92,7 @@ test_that("ffsea(anova_result) runs enrichment test", {
                         feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
 
-  facile.gsea <- ffsea(anova.res, gdb, max_padj = 0.2,
+  facile.gsea <- ffsea(anova.res, gdb, "ora", max_padj = 0.2,
                        biased_by = "effective_length")
   fres <- tidy(facile.gsea) %>% select(collection, name, pval, N, n, n.drawn)
 
