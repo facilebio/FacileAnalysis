@@ -109,13 +109,19 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
     req(initialized(rfds))
     samples. <- active.samples()
     assay_name <- assay$assay_info()$assay
+    features. <- assay$features()
+    if (assay$assay_info()$assay_type == "rnaseq") {
+      features. <- filter(features., meta == "protein_coding")
+    }
     pcs <- input$pcs
     ntop <- input$ntop
     pcount <- input$priorcount
     batch. <- name(batch$batch)
     main. <- name(batch$main)
+
     withProgress({
       fpca(samples., dims = pcs, ntop = ntop, assay_name = assay_name,
+           features = features., filter = "variance",
            batch = batch., main = main., prior.count = pcount,
            custom_key = user(rfds))
     }, message = "Performing PCA")

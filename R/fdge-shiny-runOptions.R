@@ -25,7 +25,15 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   # features measured using the selected assay
   # ffilter <- callModule(fdgeFeatureFilter, "ffilter", rfds, model,
   #                       assay, ..., debug = debug)
-  ffilter <- NULL
+  ffilter <- list(
+    universe = reactive({
+      out <- assay$features()
+      if (assay$assay_info()$assay_type == "rnaseq") {
+        out <- filter(out, meta == "protein_coding")
+      }
+      out
+    })
+  )
 
   # When the assay type changes, we need to update the type of testing we can do.
   observeEvent(assay$assay_info(), {

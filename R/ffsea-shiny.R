@@ -91,7 +91,8 @@ ffseaAnalysisUI <- function(id, ...) {
 #' @export
 #' @importFrom shiny eventReactive withProgress
 #' @importFrom shinyWidgets updatePickerInput
-#'
+#' @importFrom sparrow GeneSetDb
+#' @importFrom sparrow.shiny GeneSetDb.ReactiveGeneSetDb
 #' @param aresult A `FacileAnalysisResult` that has a `ffsea.*` method defined.
 #' @param gdb A `reactive(GeneSetDb)` object
 ffseaRun <- function(input, output, session, rfds, aresult, gdb, ...,
@@ -159,7 +160,7 @@ ffseaRun <- function(input, output, session, rfds, aresult, gdb, ...,
 
     gdb.args <- list(
       x = ares(),
-      gdb = GeneSetDb(runopts$gdb),
+      fsets = GeneSetDb(runopts$gdb),
       # min.gs.size = runopts$gdb$min.gs.size(),
       # max.gs.size = runopts$gdb$max.gs.size(),
       #
