@@ -122,8 +122,8 @@ compare.FacileTtestAnalysisResult <- function(x, y,
   drop.cols <- c("seqnames", "start", "end", "strand", "effective_length",
                  "source")
   stat.cols <- setdiff(colnames(xres),  c(meta.cols, drop.cols))
-  stat.cols.y <- intersect(stat.cols, colnames(yrest))
-  
+  stat.cols.y <- intersect(stat.cols, colnames(yres))
+
   meta.cols <- intersect(meta.cols, jcols)
   xystats <- full_join(
     select(xres, {{meta.cols}}, {{stat.cols}}),
