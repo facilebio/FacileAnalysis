@@ -245,6 +245,10 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   warnings <- character()
   errors <- character()
 
+  if (!is.null(features)) {
+    features <- extract_feature_id(features)
+    features <- unique(features)
+  }
   if (!is.null(features) && missing(filter)) {
     filter <- "none"
   }
@@ -295,6 +299,9 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     rm.na <- unique(isna[, 1L])
     warning("Removing ", length(rm.na), " / ", nrow(x),
             " features due to NA values", immediate. = TRUE)
+    if (is.character(features)) {
+      features <- setdiff(features, rownames(x)[rm.na])
+    }
     x <- x[-rm.na,,drop = FALSE]
     row_covariates <- row_covariates[-rm.na,,drop = FALSE]
   }
@@ -304,14 +311,6 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   }
 
   if (!is.null(features)) {
-    if (is.data.frame(features)) {
-      features <- features[["feature_id"]]
-    }
-    if (is.factor(features)) features <- as.character(features)
-    if (!is.character(features)) {
-      stop("Invalid argument used for features")
-    }
-    features <- unique(features)
     take <- match(features, rownames(x))
     if (any(is.na(take))) {
       stop("The pca filtering strategy only allows you to specify rownames ",
