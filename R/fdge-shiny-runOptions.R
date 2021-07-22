@@ -28,8 +28,10 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   ffilter <- list(
     universe = reactive({
       out <- assay$features()
-      if (assay$assay_info()$assay_type == "rnaseq") {
-        out <- filter(out, meta == "protein_coding")
+      if (is.character(out[["meta"]])) {
+        if (assay$assay_info()$assay_type == "rnaseq") {
+          out <- filter(out, meta == "protein_coding")
+        }
       }
       out
     })
