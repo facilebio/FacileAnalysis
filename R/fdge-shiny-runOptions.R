@@ -6,11 +6,10 @@ NULL
 # Method options ===============================================================
 
 #' @noRd
-#' @importFrom shinyWidgets updatePrettyCheckbox
+#' @importFrom shinyWidgets updatePrettyCheckbox updatePickerInput
 #' @param rfds ReactiveFacileDataStore
 #' @param model a FacileLinearModelDefinition (or ReactiveFacileLinearModelDefinition)
-fdgeRunOptions <- function(input, output, session, rfds, model, assay,
-                           ...) {
+fdgeRunOptions <- function(input, output, session, rfds, model, assay, ...) {
   kosher <- is(model, "FacileLinearModelDefinition") ||
     is(model, "ReactiveFacileLinearModelDefinition")
   if (!kosher) {
@@ -18,8 +17,30 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   }
 
   state <- reactiveValues(
-    dge_method = "__initializing__"
-  )
+    dge_method = "__initializing__",
+    feature_class = "__initializing__")
+
+  # When the assay type changes, we need to update the type of testing we can do.
+  observeEvent(assay$assay_info(), {
+    ainfo <- req(assay$assay_info())
+    assay_type. <- req(ainfo$assay_type, !unselected(ainfo$assay_type))
+
+    methods. <- fdge_methods(assay_type., on_missing = "warning")$dge_method
+    selected <- state$dge_method
+    if (!selected %in% methods.) selected <- methods.[1L]
+    updateSelectInput(session, "dge_method", choices = methods.,
+                      selected = selected)
+
+    features. <- assay$features()
+    ftypes <- unique(features.[["meta"]])
+    if (ainfo$assay_type == "rnaseq" && "protein_coding" %in% ftypes) {
+      selected <- "protein_coding"
+    } else {
+      selected <- ftypes
+    }
+    updatePickerInput(session, "features", choices = ftypes,
+                      selected = selected)
+  })
 
   # Sets up appropriate UI to retreive the params used to filter out
   # features measured using the selected assay
@@ -27,26 +48,9 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
   #                       assay, ..., debug = debug)
   ffilter <- list(
     universe = reactive({
-      out <- assay$features()
-      if (is.character(out[["meta"]])) {
-        if (assay$assay_info()$assay_type == "rnaseq") {
-          out <- filter(out, meta == "protein_coding")
-        }
-      }
-      out
+      filter(assay$features(), .data$meta %in% input$features)
     })
   )
-
-  # When the assay type changes, we need to update the type of testing we can do.
-  observeEvent(assay$assay_info(), {
-    ainfo <- req(assay$assay_info())
-    assay_type. <- req(ainfo$assay_type, !unselected(ainfo$assay_type))
-    methods. <- fdge_methods(assay_type., on_missing = "warning")$dge_method
-    selected <- state$dge_method
-    if (!selected %in% methods.) selected <- methods.[1L]
-    updateSelectInput(session, "dge_method", choices = methods.,
-                      selected = selected)
-  })
 
   observeEvent(input$dge_method, {
     if (input$dge_method != state$dge_method) {
@@ -93,17 +97,26 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay,
 }
 
 #' @noRd
-#' @importFrom shinyWidgets dropdownButton prettyCheckbox
+#' @importFrom shinyWidgets dropdown prettyCheckbox pickerInput
 #' @importFrom shiny icon wellPanel
 fdgeRunOptionsUI <- function(id, width = "300px", ..., debug = FALSE) {
   ns <- NS(id)
-  dropdownButton(
+  dropdown(
     inputId = ns("opts"),
     icon = icon("sliders"),
-    status = "primary", circle = FALSE,
+    status = "primary",
     width = width,
 
     selectInput(ns("dge_method"), label = "Method", choices = NULL),
+    pickerInput(
+      ns("features"),
+      label = "Feature Class",
+      choices = NULL,
+      multiple = TRUE,
+      options = list(
+        `selected-text-format`= "count",
+        `count-selected-text` = "{0} classes chosen"
+      )),
     numericInput(ns("treatfc"), label = "Min. Fold Change",
                  value = 1, min = 1, max = 10, step = 0.25),
     prettyCheckbox(ns("sample_weights"), label = "Use Sample Weights",
@@ -118,7 +131,9 @@ fdgeRunOptionsUI <- function(id, width = "300px", ..., debug = FALSE) {
 initialized.FdgeRunOptions <- function(x, ...) {
   # Waiting on: FacileAnalysis/issues/8
   dge.method <- x$dge_method()
-  !unselected(dge.method) && dge.method != "ranks"
+  !unselected(dge.method) &&
+    dge.method != "ranks" &&
+    nrow(x$feature_filter$universe()) > 0
 }
 
 # Filtering Options ============================================================

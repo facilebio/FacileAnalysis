@@ -21,5 +21,3 @@ shiny::shinyApp(
     analysis <- callModule(fdgeAnalysis, "analysis", rfds)
   }
 )
-
-

@@ -157,7 +157,7 @@ fdgeRun <- function(input, output, session, rfds, model, with_gsea = FALSE, ...,
   })
 
   observe({
-    toggleState("run", condition = runnable())
+    shinyjs::toggleState("run", condition = runnable())
   })
 
   dge <- eventReactive(input$run, {

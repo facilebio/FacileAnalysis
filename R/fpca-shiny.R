@@ -105,14 +105,35 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
 
   assay <- callModule(assaySelect, "assay", rfds)
 
+  observeEvent(assay$assay_info(), {
+    ainfo <- req(assay$assay_info())
+    features. <- assay$features()
+    ftypes <- unique(features.[["meta"]])
+    if (ainfo$assay_type == "rnaseq" && "protein_coding" %in% ftypes) {
+      selected <- "protein_coding"
+    } else {
+      selected <- ftypes
+    }
+    updatePickerInput(session, "features", choices = ftypes, selected = selected)
+  })
+
+  feature_universe <- reactive({
+    filter(assay$features(), .data$meta %in% input$features)
+  })
+
+  runnable <- reactive({
+    req(initialized(rfds)) && nrow(feature_universe()) >= input$pcs
+  })
+
+  observe({
+    shinyjs::toggleState("run", condition = runnable())
+  })
+
   result <- eventReactive(input$run, {
-    req(initialized(rfds))
+    req(runnable())
     samples. <- active.samples()
     assay_name <- assay$assay_info()$assay
-    features. <- assay$features()
-    if (assay$assay_info()$assay_type == "rnaseq") {
-      features. <- filter(features., meta == "protein_coding")
-    }
+    features. <- feature_universe()
     pcs <- input$pcs
     ntop <- input$ntop
     pcount <- input$priorcount
@@ -129,6 +150,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
 
   vals <- list(
     faro = result,
+    feature_universe = feature_universe,
     .ns = session$ns)
   class(vals) <- c("ReactiveFacilePcaAnalysisResult",
                    "ReactiveFacileAnalysisResult",
@@ -148,7 +170,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
 #'   NS
 #'   numericInput
 #'   tagList
-#' @importFrom shinyWidgets dropdownButton
+#' @importFrom shinyWidgets dropdown pickerInput
 fpcaRunUI <- function(id, width_opts = "200px", ..., debug = FALSE) {
   ns <- NS(id)
   # 1. Assay to run PCA on
@@ -162,12 +184,21 @@ fpcaRunUI <- function(id, width_opts = "200px", ..., debug = FALSE) {
         1,
         tags$div(
           style = "padding-top: 1.7em",
-          dropdownButton(
+          dropdown(
             inputId = ns("opts"),
             icon = icon("sliders"),
             status = "primary", circle = FALSE,
             width = width_opts,
 
+            pickerInput(
+              ns("features"),
+              label = "Feature Class",
+              choices = NULL,
+              multiple = TRUE,
+              options = list(
+                `selected-text-format`= "count",
+                `count-selected-text` = "{0} classes chosen"
+              )),
             numericInput(ns("pcs"), label = "Number of PCs",
                          value = 10, min = 2, max = 30, step = 1),
             numericInput(ns("ntop"), label = "Number of genes",
