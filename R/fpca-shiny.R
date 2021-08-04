@@ -232,6 +232,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     # store brushed samples from scatterplot
     color_aes = NULL,
     shape_aes = NULL,
+    facet_aes = NULL,
     hover = NULL,
     scatter_select = tibble(assay_name = character(), feature_id = character()))
 
@@ -275,7 +276,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
   })
 
   aes <- callModule(categoricalAestheticMap, "aes", rfds,
-                    color = TRUE, shape = TRUE, group = FALSE, facet = FALSE,
+                    color = TRUE, shape = TRUE, group = FALSE, facet = TRUE,
                     hover = TRUE, ..., debug = debug)
 
   # Color Mapping ..............................................................
@@ -289,9 +290,12 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     acolor <- aes.map$color
     ashape <- aes.map$shape
     ahover <- aes.map$hover
+    afacet <- aes.map$facet
     if (!identical(state$color_aes, acolor)) state$color_aes <- acolor
     if (!identical(state$shape_aes, ashape)) state$shape_aes <- ashape
+    if (!identical(state$facet_aes, afacet)) state$facet_aes <- afacet
     if (!identical(state$hover, ahover)) state$hover <- ahover
+
   })
 
   # A gene was selected from the PC loadings table
@@ -319,6 +323,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     aes.map <- aes$map()
     acolor <- state$color_aes
     ashape <- state$shape_aes
+    afacet <- state$facet_aes
     ahover <- state$hover
 
     if (identical(substr(acolor, 1L, 8L), "feature:")) {
@@ -334,7 +339,7 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
     }
 
     viz(pca., axes, color_aes = acolor, shape_aes = ashape, hover = ahover,
-        width = NULL, height = 550)
+        facet_aes = afacet, width = NULL, height = 550)
   })
 
   output$pcaplot <- renderPlotly({
@@ -398,7 +403,7 @@ fpcaViewUI <- function(id, ..., debug = FALSE) {
             wellPanel(
               categoricalAestheticMapUI(
                 ns("aes"),
-                color = TRUE, shape = TRUE, hover = TRUE,
+                color = TRUE, shape = TRUE, facet = TRUE, hover = TRUE,
                 group = FALSE)))),
         plotlyOutput(ns("pcaplot"))),
       column(

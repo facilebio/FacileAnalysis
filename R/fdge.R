@@ -618,16 +618,19 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
   res <- result(x)
   ntested <- nrow(res)
   nsig <- sum(!is.na(res[["padj"]]) & res[["padj"]] < 0.10)
+  nsig2 <- sum(!is.na(res[["padj"]]) & res[["padj"]] < 0.10 & abs(res[["logFC"]]) > 1)
 
   out <- paste(
-    "===========================================================\n",
+    "=======================================================================\n",
     sprintf("FacileDgeAnalysisResult (%s)\n", test_type),
-    "-----------------------------------------------------------\n",
-    glue("Significant Results (FDR < 0.1): ({nsig} / {ntested})"), "\n",
-    "Formula: ", formula, "\n",
-    "Tested: ", test, "\n",
-    "Number of samples: ", nsamples, "\n",
-    "===========================================================\n",
+    "-----------------------------------------------------------------------\n",
+    glue(
+      "Significant Results (FDR < 0.1): ",
+      "{nsig} / {ntested} [{nsig2} > 2fold]", .trim = FALSE), "\n",
+      "Formula: ", formula, "\n",
+      "Tested: ", test, "\n",
+      "Number of samples: ", nsamples, "\n",
+    "=======================================================================\n",
     sep = "")
   out
 }
