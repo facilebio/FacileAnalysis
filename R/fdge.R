@@ -315,8 +315,29 @@ result.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
   tidy(x, name, ...)
 }
 
-tidy.FacileDgeAnalysisResult <- function(x, name = "result", ...) {
-  x[["result"]]
+#' @param features you can provide a set of features to reduce the analysis
+#'   to. This will readjust the `padj` values to the features used.
+#' @param padjust The method used to readjust pvalues. Passed to `method`
+#'   parameter in [stats::p.adjust()].
+#' @noRd
+#' @export
+tidy.FacileDgeAnalysisResult <- function(x, name = "result", features = NULL,
+                                         padjust = "BH", ...) {
+  out <- x[["result"]]
+  if (!is.null(features)) {
+    features <- extract_feature_id(features, as_tibble = TRUE)
+    out <- left_join(features, out, by = "feature_id")
+    if (nrow(out) == 0L) {
+      stop("None of the requested features were found in the resut.")
+    }
+    missed <- anti_join(features, out, by = "feature_id")
+    nmiss <- nrow(missed)
+    if (nmiss) {
+      warning(length(nmiss), " features not found in result")
+    }
+    out[["padj"]] <- stats::p.adjust(out[["pval"]], padjust)
+  }
+  out
 }
 
 #' @noRd

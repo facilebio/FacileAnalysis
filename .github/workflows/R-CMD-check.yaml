@@ -16,6 +16,12 @@ on:
     # facilebio_base_extra builds every day 4AM pacific time (11 AM UTC), so
     # we will build this an hour after that (the same time facilebio/facilebio)
     - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      dummy:
+        description: 'A dummy variable to enable manual workflow execution'
+        required: false
+        default: 'gitty up'
 
 name: R-CMD-check
 
@@ -28,6 +34,7 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       NOT_CRAN: true
       CI: true
+      GITHUB_PAT: "${{secrets.GH_PAT}}"
 
     steps:
       - name: Checkout Repository

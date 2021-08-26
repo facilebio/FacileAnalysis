@@ -9,12 +9,15 @@
 #' @noRd
 #' @param x NULL, character string, or tibble with feature_id column
 #' @return a character vector of feature ids
-extract_feature_id <- function(x, ...) {
+extract_feature_id <- function(x, as_tibble = FALSE, ...) {
   if (is.null(x)) return(NULL)
   if (is.data.frame(x)) x <- x[["feature_id"]]
   if (is.factor(x)) x <- as.character(x)
   if (!is.character(x)) {
     stop("Could not extract feature_id from feature descriptor", call. = FALSE)
+  }
+  if (as_tibble) {
+    x <- tibble(feature_id = x)
   }
   x
 }

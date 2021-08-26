@@ -3,6 +3,12 @@ on:
     # Only push the test coverage up on a schedule. We can use the full
     # facilebio image for this for expediency
     - cron: '30 12 * * *'
+  workflow_dispatch:
+    inputs:
+      dummy:
+        description: 'A dummy variable to enable manual workflow execution'
+        required: false
+        default: 'gitty up'
 
 name: test-coverage
 
