@@ -34,7 +34,8 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       NOT_CRAN: true
       CI: true
-      GITHUB_PAT: "${{secrets.GH_PAT}}"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout Repository
