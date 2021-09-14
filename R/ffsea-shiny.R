@@ -312,7 +312,7 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
 #' @noRd
 #' @export
 #' @importFrom shiny fluidRow NS tags uiOutput wellPanel
-ffseaViewUI <- function(id, ..., debug = FALSE) {
+ffseaViewUI <- function(id, rmd = FALSE, ..., debug = FALSE) {
   ns <- NS(id)
 
   tagList(

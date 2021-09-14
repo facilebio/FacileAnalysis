@@ -537,6 +537,8 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
 
 #' @noRd
 #' @export
+#' @param rmd set to `TRUE` if you are embedding the widged in a
+#'   `runtime: shiny` Rmd.
 #' @importFrom DT DTOutput
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny column downloadButton fluidRow NS
@@ -544,9 +546,11 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
 #' @importFrom shinydashboard box
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyWidgets switchInput
-fdgeViewUI <- function(id, ..., debug = FALSE) {
+fdgeViewUI <- function(id, rmd = FALSE, ..., debug = FALSE) {
   ns <- NS(id)
   box <- shinydashboard::box
+
+  withSpinner <- if (rmd) identity else shinycssloaders::withSpinner
 
   volcano.box <- tags$div(
     style = "margin-top: 10px",
