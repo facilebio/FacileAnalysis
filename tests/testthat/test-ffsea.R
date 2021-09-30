@@ -73,7 +73,7 @@ test_that("overrepresentation analysis (ora) works with ttest result", {
   input <- ranks(ttest.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.10)
-  mgres <- sparrow::ora(gdb, input, selected = "significant",
+  mgres <- sparrow::ora(input, gdb, selected = "significant",
                         feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
   facile.gsea <- ffsea(ttest.res, gdb, method = "ora",
@@ -88,7 +88,7 @@ test_that("ffsea(anova_result) runs enrichment test", {
   astats <- ranks(anova.res) %>%
     tidy() %>%
     mutate(significant = padj <= 0.2)
-  mgres <- sparrow::ora(gdb, astats, selected = "significant",
+  mgres <- sparrow::ora(astats, gdb, selected = "significant",
                         feature.bias = "effective_length")
   mgres$name <- sub(".*;;", "", mgres$Pathway)
 

@@ -66,7 +66,7 @@ fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
 #' @rdname serialize
 #' @export
 #' @param fds The `FacileDataStore` the object was run on.
-fload <- function(file, fds = NULL, with_fds = TRUE, ...) {
+fload <- function(file, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
   res <- readRDS(file)
   assert_class(res, "FacileAnalysisResult")
 
@@ -94,8 +94,10 @@ fload <- function(file, fds = NULL, with_fds = TRUE, ...) {
         stop("No path to linked FacileDataStore object found in `file`,
            please pass in a value for `fds` explicitly")
       }
-      fds <- FacileData::FacileDataSet(
-        fds, anno.dir = fds.info[["fds_anno_dir"]])
+      if (is.null(anno)) {
+        anno <- fds.info[["fds_anno_dir"]]
+      }
+      fds <- FacileData::FacileDataSet(fds, anno.dir = anno)
     }
     if (!is(fds, "FacileDataStore")) {
       stop("We expected a FacileDataStore by now")
