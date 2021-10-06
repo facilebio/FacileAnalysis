@@ -262,7 +262,7 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
       tags$h4("GSEA Analyses Overview"),
       sparrow.shiny::summaryHTMLTable.sparrow(
         mgc.$mg, mgc.$methods,
-        gs_result_filter()$fdr(),
+        gs_result_filter$fdr(),
         p.col = "padj.by.collection")
     )
   })
@@ -280,8 +280,8 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
     sparrow.shiny::mgTableBrowser,
     "mg_table_browser",
     mgc,
-    method=gs_result_filter()$method,
-    fdr=gs_result_filter()$fdr,
+    method=gs_result_filter$method,
+    fdr=gs_result_filter$fdr,
     server=TRUE)
   # clicks on gsea result table update the contrast view
   observeEvent(gs_table_browser$selected(), {
@@ -297,9 +297,9 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
   other_genesets_gsea <- callModule(
     sparrow.shiny::mgGeneSetSummaryByGene,
     "other_genesets_gsea",
-    mgc, features = gs_viewer()$selected,
-    method = gs_result_filter()$method,
-    fdr = gs_result_filter()$fdr)
+    mgc, features = gs_viewer$selected,
+    method = gs_result_filter$method,
+    fdr = gs_result_filter$fdr)
 
   vals <- list(
     selected_features = reactive(state$gsview_select),
