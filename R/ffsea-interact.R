@@ -19,27 +19,27 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
 
   # TODO: This needs refactoring to make better use of sparrow::geneSet
   #       retrieval mojo already there .....................................
-  gs <- sparrow::geneSets(mgres)
-  found <- gs[["name"]] == name
-  if (!any(found)) {
-    stop("No geneset found with name: ", name)
-  }
-  if (!is.null(collection)) {
-    found <- found & gs[["collection"]] == collection
-  } else {
-    collection <- gs[["collection"]][found]
-    if (length(collection) == 0L) {
-      stop("Can not find geneset with name: ", name)
-    }
-    if (length(collection) > 1L) {
-      stop("Multiple genesets found with name '", name, "'. ",
-           "Need to specify specify collection: ",
-           paste(collection, collapse = ","))
-    }
-  }
+  # gs <- sparrow::geneSets(mgres)
+  # found <- gs[["name"]] == name
+  # if (!any(found)) {
+  #   stop("No geneset found with name: ", name)
+  # }
+  # if (!is.null(collection)) {
+  #   found <- found & gs[["collection"]] == collection
+  # } else {
+  #   collection <- gs[["collection"]][found]
+  #   if (length(collection) == 0L) {
+  #     stop("Can not find geneset with name: ", name)
+  #   }
+  #   if (length(collection) > 1L) {
+  #     stop("Multiple genesets found with name '", name, "'. ",
+  #          "Need to specify specify collection: ",
+  #          paste(collection, collapse = ","))
+  #   }
+  # }
   # ........................................................................
-  plt <- sparrow::iplot(mgres, collection, name, type = type, value = rank_by,
-                        ...)
+  plt <- sparrow::iplot(mgres, name = name, collection = collection,
+                        type = type, value = rank_by, ...)
 
   out <- list(
     plot = plt,
