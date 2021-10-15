@@ -100,7 +100,7 @@ ffseaRunOptsUI <- function(id, width = "350px", ..., debug = FALSE) {
         tags$span("Gene Set Selection",
                   style = "background: #fff; padding: 0 10px 0 0"),
         style = "border-bottom: 1px solid #000; line-height: 0.1em; margin-bottom: 13px"),
-      sparrow.shiny::reactiveGeneSetDbFilterUI(ns("gdb"))),
+      sparrow.shiny::reactiveGeneSetDbUI(ns("gdb"))),
     tags$div(
       id = ns("ffseaRunOptsContainer"),
       # style = "height: 400px",

@@ -261,7 +261,7 @@ ffseaView <- function(input, output, session, rfds, aresult, ...,
     tagList(
       tags$h4("GSEA Analyses Overview"),
       sparrow.shiny::summaryHTMLTable.sparrow(
-        mgc.$mg, mgc.$methods,
+        mgc.$sr, mgc.$methods,
         gs_result_filter$fdr(),
         p.col = "padj.by.collection")
     )
