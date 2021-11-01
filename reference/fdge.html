@@ -299,7 +299,7 @@ to use when <code>method == "limma"</code>.</p></td>
       <td><p>When comparing two results, the features analyzed in each may
 differ, making comparisons between the two objects sparse, at times.
 When <code>rerun = TRUE</code> (default), the original linear models are rerun with
-their features set to <code><a href='https://rdrr.io/r/base/sets.html'>union(features(x), features(y))</a></code>.</p></td>
+their features set to <code>union(features(x), features(y))</code>.</p></td>
     </tr>
     </table>
 
@@ -337,7 +337,7 @@ or by setting <code>filter = "default</code>.</p>
 <p>When <code>filter == "default"</code>, the filtering strategy is largely based on the
 logic found in <code><a href='https://rdrr.io/pkg/edgeR/man/filterByExpr.html'>edgeR::filterByExpr()</a></code>.</p>
 <p>When <code>fdge</code> analysis is performed on count data, the filtering is precisely
-executed using this function, using <code><a href='design.html'>design(x)</a></code> as the design parameter to
+executed using this function, using <code>design(x)</code> as the design parameter to
 <code>filterByExpr</code>. You can modify the filtering behavior by passing any
 named parameters found in the <code><a href='https://rdrr.io/pkg/edgeR/man/filterByExpr.html'>edgeR::filterByExpr()</a></code> function down to it via
 <code>fdge</code>'s <code>...</code> parameter (don't pass <code>design</code>, as this is already defined).</p>
@@ -378,7 +378,7 @@ exact columns of the returned table may differ.</p>
 Calling <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy()</a></code> on an interaction test result
 (<code>FacileTtestComparisonAnalysisResult</code>), returns the statistics for the
 interaction test itself (if it was performed), as well as the statistics
-for the individual DGE results that were run vai <code><a href='compare.html'>compare(x, y)</a></code> to get the
+for the individual DGE results that were run vai <code>compare(x, y)</code> to get the
 interaction results itself. The columns of statistics related to the
 individual tests will be suffixed with <code>*.x</code> and <code>*.y</code>, respectively.</p>
 <p>An <code>interaction_group</code> column will also be added to indicate what type of
@@ -391,7 +391,7 @@ statisticaly significance was found for each gene. The values in here can be:</p
 
 <p>The genes selected for significance from the input results <code>x</code> and <code>y</code> are
 based on their <code>padj</code> and <code>logFC</code> values. The thresholds are tweaked by the
-following parameters in the call to <code><a href='https://generics.r-lib.org/reference/tidy.html'>tidy(compare(x,y))</a></code>:</p><ol>
+following parameters in the call to <code>tidy(compare(x,y))</code>:</p><ol>
 <li><p><code>max_padj_(x|y)</code>: if not specified, defaults to <code>0.10</code></p></li>
 <li><p><code>min_logFC_(x|y)</code>: if not specified, we will take the value that was
 used in the <code>treat_lfc</code> parameters to <code>x</code> and <code>y</code> if those tests were
@@ -405,7 +405,7 @@ run against a threshold, otherwise defaults to <code>1</code>.</p></li>
 
 <p>The <code>report</code> function will create an htmlwidget which can be explored by
 the analyst or dropped into an Rmarkdown report.</p>
-<p><code><a href='viz.html'>report(result, "dge", max_padj = 0.05, min_logFC = 1)</a></code> will create a
+<p><code>report(result, "dge", max_padj = 0.05, min_logFC = 1)</code> will create a
 side-by-side volcano and datatable for differential expression results.</p>
     <h2 class="hasAnchor" id="gene-set-enrichment-analysis"><a class="anchor" href="#gene-set-enrichment-analysis"></a>Gene Set Enrichment Analysis</h2>
 
@@ -424,60 +424,62 @@ tidied result table, ie. <code>tidy.FacileTtestComparisonAnalysisResult()</code>
 analysis, ie. <code>methods = "ora"</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>samples</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>something <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"a"</span>, <span class='st'>"b"</span><span class='op'>)</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span><span class='op'>(</span><span class='va'>.</span><span class='op'>)</span>, replace <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>mdef</span> <span class='op'>&lt;-</span> <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='va'>samples</span>, covariate <span class='op'>=</span> <span class='st'>"sample_type"</span>,
-                numer <span class='op'>=</span> <span class='st'>"tumor"</span>, denom <span class='op'>=</span> <span class='st'>"normal"</span>,
-                batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
-<span class='va'>dge</span> <span class='op'>&lt;-</span> <span class='fu'>fdge</span><span class='op'>(</span><span class='va'>mdef</span>, method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge</span>, <span class='st'>"146909"</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
-<span class='op'>}</span>
-<span class='va'>dge.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
-<span class='va'>dge.sig</span> <span class='op'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span>
-
-<span class='va'>stage.anova</span> <span class='op'>&lt;-</span> <span class='va'>samples</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span>covariate <span class='op'>=</span> <span class='st'>"stage"</span>, batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fdge</span><span class='op'>(</span>method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span>
-<span class='va'>anova.sig</span> <span class='op'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>stage.anova</span><span class='op'>)</span>
-<span class='co'># Comparing two T-test results ----------------------------------------------</span>
-<span class='co'># Let's compare the tumor vs normal DGE results in CRC vs BLCA</span>
-
-<span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>dge.crc</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>efds</span>, <span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>dge.blca</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>efds</span>, <span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>dge.comp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>dge.crc</span>, <span class='va'>dge.blca</span><span class='op'>)</span>
-<span class='va'>comp.hi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='co'># Static visualization generates the main "4-way" plot, as well as the</span>
-<span class='co'># facets for each category.</span>
-<span class='va'>sviz</span> <span class='op'>&lt;-</span> <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,
-            subtitle <span class='op'>=</span> <span class='st'>"Tumor vs normal comparisons across indications"</span>,
-            highlight <span class='op'>=</span> <span class='va'>comp.hi</span><span class='op'>)</span>
-<span class='co'># highlight some of them</span>
-<span class='va'>s.hi</span> <span class='op'>&lt;-</span> <span class='va'>sviz</span><span class='op'>$</span><span class='va'>input_data</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/ns-load.html'>requireNamespace</a></span><span class='op'>(</span><span class='st'>"patchwork"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'>patchwork</span><span class='fu'>::</span><span class='fu'><a href='https://patchwork.data-imaginist.com/reference/wrap_plots.html'>wrap_plots</a></span><span class='op'>(</span>
-    <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"bottom"</span><span class='op'>)</span>,
-    <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot_facets</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"none"</span><span class='op'>)</span>,
-    nrow <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,
-      color_quadrant <span class='op'>=</span> <span class='st'>"darkgrey"</span><span class='op'>)</span><span class='op'>$</span><span class='va'>plot_facets</span>
-<span class='op'>}</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading required namespace: patchwork</span></div><div class='img'><img src='fdge-1.png' alt='' width='700' height='433' /></div></pre>
+    <pre class="examples"><span class='r-in'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>samples</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>something <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"a"</span>, <span class='st'>"b"</span><span class='op'>)</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span><span class='op'>(</span><span class='va'>.</span><span class='op'>)</span>, replace <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>mdef</span> <span class='op'>&lt;-</span> <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='va'>samples</span>, covariate <span class='op'>=</span> <span class='st'>"sample_type"</span>,</span>
+<span class='r-in'>                numer <span class='op'>=</span> <span class='st'>"tumor"</span>, denom <span class='op'>=</span> <span class='st'>"normal"</span>,</span>
+<span class='r-in'>                batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>dge</span> <span class='op'>&lt;-</span> <span class='fu'>fdge</span><span class='op'>(</span><span class='va'>mdef</span>, method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge</span>, <span class='st'>"146909"</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'><span class='va'>dge.stats</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>dge.sig</span> <span class='op'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>dge</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='va'>stage.anova</span> <span class='op'>&lt;-</span> <span class='va'>samples</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span>covariate <span class='op'>=</span> <span class='st'>"stage"</span>, batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fdge</span><span class='op'>(</span>method <span class='op'>=</span> <span class='st'>"voom"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>anova.sig</span> <span class='op'>&lt;-</span> <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span><span class='va'>stage.anova</span><span class='op'>)</span></span>
+<span class='r-in'><span class='co'># Comparing two T-test results ----------------------------------------------</span></span>
+<span class='r-in'><span class='co'># Let's compare the tumor vs normal DGE results in CRC vs BLCA</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>dge.crc</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>efds</span>, <span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>dge.blca</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>efds</span>, <span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'><a href='flm_def.html'>flm_def</a></span><span class='op'>(</span><span class='st'>"sample_type"</span>, <span class='st'>"tumor"</span>, <span class='st'>"normal"</span>, <span class='st'>"sex"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fdge</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>dge.comp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>dge.crc</span>, <span class='va'>dge.blca</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>comp.hi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://generics.r-lib.org/reference/tidy.html'>tidy</a></span><span class='op'>(</span><span class='va'>dge.comp</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='co'># Static visualization generates the main "4-way" plot, as well as the</span></span>
+<span class='r-in'><span class='co'># facets for each category.</span></span>
+<span class='r-in'><span class='va'>sviz</span> <span class='op'>&lt;-</span> <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,</span>
+<span class='r-in'>            subtitle <span class='op'>=</span> <span class='st'>"Tumor vs normal comparisons across indications"</span>,</span>
+<span class='r-in'>            highlight <span class='op'>=</span> <span class='va'>comp.hi</span><span class='op'>)</span></span>
+<span class='r-in'><span class='co'># highlight some of them</span></span>
+<span class='r-in'><span class='va'>s.hi</span> <span class='op'>&lt;-</span> <span class='va'>sviz</span><span class='op'>$</span><span class='va'>input_data</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>interaction_group</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/slice.html'>slice</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>dplyr</span><span class='fu'>::</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/ns-load.html'>requireNamespace</a></span><span class='op'>(</span><span class='st'>"patchwork"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='fu'>patchwork</span><span class='fu'>::</span><span class='fu'><a href='https://patchwork.data-imaginist.com/reference/wrap_plots.html'>wrap_plots</a></span><span class='op'>(</span></span>
+<span class='r-in'>    <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"bottom"</span><span class='op'>)</span>,</span>
+<span class='r-in'>    <span class='va'>sviz</span><span class='op'>$</span><span class='va'>plot_facets</span> <span class='op'>+</span> <span class='fu'>ggplot2</span><span class='fu'>::</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a></span><span class='op'>(</span>legend.position <span class='op'>=</span> <span class='st'>"none"</span><span class='op'>)</span>,</span>
+<span class='r-in'>    nrow <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>dge.comp</span>, labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"CRC"</span>, y <span class='op'>=</span> <span class='st'>"BLCA"</span><span class='op'>)</span>,</span>
+<span class='r-in'>      color_quadrant <span class='op'>=</span> <span class='st'>"darkgrey"</span><span class='op'>)</span><span class='op'>$</span><span class='va'>plot_facets</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-msg co'><span class='r-pr'>#&gt;</span> Loading required namespace: patchwork</span>
+<span class='r-plt img'><img src='fdge-1.png' alt='' width='700' height='433' /></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

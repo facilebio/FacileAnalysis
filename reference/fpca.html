@@ -346,50 +346,50 @@ extra columns to <code>x</code>.</p>
 covariates, then the manually provided ones will supersede the internals.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>p1</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>p2</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>pcmp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>p1</span>, <span class='va'>p2</span><span class='op'>)</span>
-<span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span>
-
-<span class='co'># A subset of samples ------------------------------------------------------</span>
-<span class='va'>pca.crc</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='co'># report(pca.crc, color_aes = "sample_type")</span>
-  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crc</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
-<span class='op'>}</span>
-
-<span class='co'># Regress "sex" out from expression data</span>
-<span class='va'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span><span class='op'>(</span>batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crcs</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span>
-<span class='op'>}</span>
-
-<span class='co'># Perform PCA on only the protein coding genes</span>
-<span class='va'>genes.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>meta</span> <span class='op'>==</span> <span class='st'>"protein_coding"</span><span class='op'>)</span>
-<span class='va'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>fpca</span><span class='op'>(</span>features <span class='op'>=</span> <span class='va'>genes.pc</span>, filter <span class='op'>=</span> <span class='st'>"variance"</span><span class='op'>)</span>
-
-<span class='va'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='va'>pca.crc</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span>dims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>result</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>sparrow</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/sparrow/man/GeneSetDb-class.html'>GeneSetDb</a></span><span class='op'>(</span><span class='op'>)</span>
-
-<span class='co'># All samples --------------------------------------------------------------</span>
-<span class='va'>pca.all</span> <span class='op'>&lt;-</span> <span class='fu'>fpca</span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span>
-<span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.all</span>, color_aes <span class='op'>=</span> <span class='st'>"indication"</span>, shape_aes <span class='op'>=</span> <span class='st'>"sample_type"</span><span class='op'>)</span>
-  <span class='co'># report(pca.all, color_aes = "indication", shape_aes = "sample_type")</span>
-<span class='op'>}</span>
-</div></pre>
+    <pre class="examples"><span class='r-in'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>p1</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>p2</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"BLCA"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>pcmp</span> <span class='op'>&lt;-</span> <span class='fu'><a href='compare.html'>compare</a></span><span class='op'>(</span><span class='va'>p1</span>, <span class='va'>p2</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>efds</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html'>exampleFacileDataSet</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># A subset of samples ------------------------------------------------------</span></span>
+<span class='r-in'><span class='va'>pca.crc</span> <span class='op'>&lt;-</span> <span class='va'>efds</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'>filter_samples</span><span class='op'>(</span><span class='va'>indication</span> <span class='op'>==</span> <span class='st'>"CRC"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fpca</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='co'># report(pca.crc, color_aes = "sample_type")</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>shine</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crc</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Regress "sex" out from expression data</span></span>
+<span class='r-in'><span class='va'>pca.crcs</span> <span class='op'>&lt;-</span> <span class='fu'>FacileData</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fpca</span><span class='op'>(</span>batch <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.crcs</span>, color_aes <span class='op'>=</span> <span class='st'>"sex"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Perform PCA on only the protein coding genes</span></span>
+<span class='r-in'><span class='va'>genes.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/features.html'>features</a></span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>meta</span> <span class='op'>==</span> <span class='st'>"protein_coding"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>pca.crc.pc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/FacileData/man/samples.html'>samples</a></span><span class='op'>(</span><span class='va'>pca.crc</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>fpca</span><span class='op'>(</span>features <span class='op'>=</span> <span class='va'>genes.pc</span>, filter <span class='op'>=</span> <span class='st'>"variance"</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='va'>pca.gdb</span> <span class='op'>&lt;-</span> <span class='va'>pca.crc</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'><a href='signature.html'>signature</a></span><span class='op'>(</span>dims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>result</span><span class='op'>(</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span></span>
+<span class='r-in'>  <span class='fu'>sparrow</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/sparrow/man/GeneSetDb-class.html'>GeneSetDb</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># All samples --------------------------------------------------------------</span></span>
+<span class='r-in'><span class='va'>pca.all</span> <span class='op'>&lt;-</span> <span class='fu'>fpca</span><span class='op'>(</span><span class='va'>efds</span><span class='op'>)</span></span>
+<span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/interactive.html'>interactive</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='fu'><a href='viz.html'>viz</a></span><span class='op'>(</span><span class='va'>pca.all</span>, color_aes <span class='op'>=</span> <span class='st'>"indication"</span>, shape_aes <span class='op'>=</span> <span class='st'>"sample_type"</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='co'># report(pca.all, color_aes = "indication", shape_aes = "sample_type")</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

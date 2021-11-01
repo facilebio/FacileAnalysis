@@ -226,7 +226,7 @@ with one form limma or another.</p>
 <p>Assumptions on different <code>assay_type</code> values include:</p><ul>
 <li><p><code>rnaseq</code>: assumed to be "vanilla" bulk rnaseq gene counts</p></li>
 <li><p><code>umi</code>: data from bulk rnaseq, UMI data, like quantseq</p></li>
-<li><p><code>tpm</code>: TPM values. These will be <code><a href='https://rdrr.io/r/base/Log.html'>log2(TPM + prior_count)</a></code> transformed,
+<li><p><code>tpm</code>: TPM values. These will be <code>log2(TPM + prior_count)</code> transformed,
 then differentially tested using the limma-trended pipeline</p></li>
 </ul>
 

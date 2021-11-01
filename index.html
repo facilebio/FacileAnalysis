@@ -104,7 +104,7 @@
 <p>The over-arching goal of developing analyses within this framework is to enable quick and effortless interrogation of genomic data by enabling a <strong>hybrid</strong> interactive and code-driven approach to data analysis. Analyses can be either completely code-driven, GUI driven, or some mix of the two.</p>
 <p>To achieve this goal, analysis modules break down a general analysis task into smaller constituent steps, the results of which can:</p>
 <ol>
-<li>be piped together (<code><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></code>) to perform a complete analysis;</li>
+<li>be piped together (<code>%&gt;%</code>) to perform a complete analysis;</li>
 <li>be explored at <strong>different levels of interactivity</strong>, via the <code><a href="reference/viz.html">shine()</a></code>, <code><a href="reference/viz.html">viz()</a></code>, and <code><a href="reference/viz.html">report()</a></code> methods; and</li>
 <li>act as starting (or reference) points for <strong>the next</strong> analysis task, either directly or by via the <code><a href="reference/ranks.html">ranks()</a></code>, <code><a href="reference/signature.html">signature()</a></code>, or <code><a href="reference/compare.html">compare()</a></code> methods.</li>
 </ol>
@@ -167,7 +167,7 @@ You can find a more in-depth overview and philosophy of this package in the
 <div id="deep-interaction-via-shine" class="section level3">
 <h3 class="hasAnchor">
 <a href="#deep-interaction-via-shine" class="anchor"></a>Deep Interaction via shine()</h3>
-<p>The <code><a href="reference/viz.html">shine(aresult, ...)</a></code> method provides the richest interactive view over a <code>FacileAnalysisResult</code> by launching a <a href="https://shiny.rstudio.com/articles/gadgets.html">shiny gadget</a> that enables the end-user to fully interrogate the results.</p>
+<p>The <code>shine(aresult, ...)</code> method provides the richest interactive view over a <code>FacileAnalysisResult</code> by launching a <a href="https://shiny.rstudio.com/articles/gadgets.html">shiny gadget</a> that enables the end-user to fully interrogate the results.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/viz.html">shine</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/fdge-shine.gif" width="75%"></p>
@@ -175,14 +175,14 @@ You can find a more in-depth overview and philosophy of this package in the
 <div id="interactive-graphics-via-viz" class="section level3">
 <h3 class="hasAnchor">
 <a href="#interactive-graphics-via-viz" class="anchor"></a>Interactive Graphics via viz()</h3>
-<p>The <code><a href="reference/viz.html">viz(aresult, ...)</a></code> methods leverage <a href="https://www.htmlwidgets.org">htmlwidgets</a> to create a JavaScript-powered interactive view of the analysis result, which is detached from a running R-process.</p>
+<p>The <code>viz(aresult, ...)</code> methods leverage <a href="https://www.htmlwidgets.org">htmlwidgets</a> to create a JavaScript-powered interactive view of the analysis result, which is detached from a running R-process.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/viz.html">viz</a></span><span class="op">(</span><span class="va">vdge</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="reporting-results-via-report" class="section level3">
 <h3 class="hasAnchor">
 <a href="#reporting-results-via-report" class="anchor"></a>Reporting Results via report()</h3>
-<p>While the output of the <code><a href="reference/viz.html">viz()</a></code> functions can be used directly in Rmarkdown reports, <code><a href="reference/viz.html">report(aresult, ...)</a></code> is meant to create a “more complete” (perhaps multi-htmlwidget) view over the result that can be more suitable for inclusion into an Rmarkdown report.</p>
+<p>While the output of the <code><a href="reference/viz.html">viz()</a></code> functions can be used directly in Rmarkdown reports, <code>report(aresult, ...)</code> is meant to create a “more complete” (perhaps multi-htmlwidget) view over the result that can be more suitable for inclusion into an Rmarkdown report.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span>
   <span class="st">"Differential expression of tumor vs normal samples, in the TCGA bladder"</span>,
