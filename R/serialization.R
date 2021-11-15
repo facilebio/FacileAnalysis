@@ -33,9 +33,11 @@
 #' @export
 #' @rdname serialize
 #'
-#' @param A `FacileAnalysisResult` object.
-#' @param file A path to a file (should support `base::connections` in the
-#'   future.
+#' @param x A `FacileAnalysisResult` object.
+#' @param file A path to a file to save. If filename ends with '*.rds', then
+#'   object will be serialized with `saveRDS`. If filename ends with '*.qs',
+#'   then `qs::qsave` will be used. In teh future, we should support
+#'   `base::connections`.
 #' @param with_fds Serialize the FacileDataStore with the object? Default is
 #'   `FALSE` and you should have a good reason to change this behavior.
 #' @return `NULL` for `fsave`, the (correctly sublcassed) `FacileAnalysisResult`
@@ -47,6 +49,16 @@ fsave <- function(x, file, with_fds = FALSE, ...) {
 #' @noRd
 #' @export
 fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
+  ext <- tolower(tools::file_ext(file))
+  if (ext == "rds") {
+    save.fn <- saveRDS
+  } else if (ext == "qs") {
+    reqpkg("qs")
+    save.fn <- qs::qsave
+  } else {
+    stop("Unknown filetype extension to save: ", ext)
+  }
+
   lifecycle::signal_stage("experimental", "fsave()")
   fds. <- assert_class(fds(x), "FacileDataStore")
   assert_string(file, pattern = "\\.rds$")
@@ -59,7 +71,8 @@ fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
 
   x <- unfds(x)
   attr(x, "fsave_info") <- fds.info
-  saveRDS(x, file)
+  save.fn(x, file)
+  invisible(file)
 }
 
 
@@ -67,7 +80,17 @@ fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
 #' @export
 #' @param fds The `FacileDataStore` the object was run on.
 fload <- function(file, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
-  res <- readRDS(file)
+  ext <- tolower(tools::file_ext(file))
+  if (ext == "rds") {
+    read.fn <- readRDS
+  } else if (ext == "qs") {
+    reqpkg("qs")
+    read.fn <- qs::qload
+  } else {
+    stop("Unknown filetype extension to load: ", ext)
+  }
+
+  res <- read.fn(file)
   assert_class(res, "FacileAnalysisResult")
 
   fds.info <- attr(res, "fsave_info")
