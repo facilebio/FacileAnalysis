@@ -79,21 +79,22 @@ fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
 #' @rdname serialize
 #' @export
 #' @param fds The `FacileDataStore` the object was run on.
-fload <- function(file, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
-  ext <- tolower(tools::file_ext(file))
-  if (ext == "rds") {
-    read.fn <- readRDS
-  } else if (ext == "qs") {
-    reqpkg("qs")
-    read.fn <- qs::qload
-  } else {
-    stop("Unknown filetype extension to load: ", ext)
+fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
+  if (test_string(x)) {
+    ext <- tolower(tools::file_ext(x))
+    if (ext == "rds") {
+      read.fn <- readRDS
+    } else if (ext == "qs") {
+      reqpkg("qs")
+      read.fn <- qs::qload
+    } else {
+      stop("Unknown filetype extension to load: ", ext)
+    }
+    x <- read.fn(x)
   }
+  assert_class(x, "FacileAnalysisResult")
 
-  res <- read.fn(file)
-  assert_class(res, "FacileAnalysisResult")
-
-  fds.info <- attr(res, "fsave_info")
+  fds.info <- attr(x, "fsave_info")
   if (is.null(fds.info)) {
     stop("Meta information about connected FacileDataStore not found, ",
          "did you save this object using the FacileAnalysis::fsave() function?")
@@ -130,8 +131,8 @@ fload <- function(file, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
       stop("It doesn't look like the FacileDataStore you are trying to ",
            "associate with this result is the one that was used")
     }
-    res <- refds(res, fds)
+    x <- refds(x, fds)
   }
 
-  res
+  x
 }
