@@ -1,7 +1,7 @@
 #' Save and load FacileAnalysisResult objects to/from disk.
 #'
 #' @description
-#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#' `r lifecycle::badge("experimental")`
 #'
 #' Saving and loading FacileAnalysisResults can be tricky because they rely
 #' on a chain of parent objects that created them, all of which have a reference

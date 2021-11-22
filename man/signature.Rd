@@ -18,7 +18,7 @@ insipiration strike.
 Most of the \verb{signature.*} functions defined over the result of analysis first
 passes through a call to \code{ranks()} first, which then calls the \code{signature()}
 method on those ranks, ie. the two segments below will produce the same
-result.\if{html}{\out{<div class="r">}}\preformatted{sigs1 <- FacileData::exampleFacileDataSet() \%>\%
+result.\if{html}{\out{<div class="sourceCode r">}}\preformatted{sigs1 <- FacileData::exampleFacileDataSet() \%>\%
   FacileData::filter_samples(indication == "CRC") \%>\%
   fpca() \%>\%
   signature()

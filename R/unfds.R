@@ -1,7 +1,7 @@
 #' Strip and restore FacileDataStore pointers from/to FacileAnalysis Results
 #'
 #' @description
-#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#' `r lifecycle::badge("experimental")`
 #'
 #' These functions are here to support serialization. `unfds` removes the link
 #' to a FacileDataStore from any object, and `refds` restores it to only the
