@@ -161,15 +161,21 @@ brought back to life via <code>fload()</code>.</p>
 
     <pre class="usage"><span class='fu'>fsave</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>file</span>, with_fds <span class='op'>=</span> <span class='cn'>FALSE</span>, <span class='va'>...</span><span class='op'>)</span>
 
-<span class='fu'>fload</span><span class='op'>(</span><span class='va'>file</span>, fds <span class='op'>=</span> <span class='cn'>NULL</span>, with_fds <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+<span class='fu'>fload</span><span class='op'>(</span><span class='va'>x</span>, fds <span class='op'>=</span> <span class='cn'>NULL</span>, anno <span class='op'>=</span> <span class='cn'>NULL</span>, with_fds <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>x</th>
+      <td><p>A <code>FacileAnalysisResult</code> object.</p></td>
+    </tr>
+    <tr>
       <th>file</th>
-      <td><p>A path to a file (should support <code><a href='https://rdrr.io/r/base/connections.html'>base::connections</a></code> in the
-future.</p></td>
+      <td><p>A path to a file to save. If filename ends with '<em>.rds', then
+object will be serialized with <code>saveRDS</code>. If filename ends with '</em>.qs',
+then <code><a href='https://rdrr.io/pkg/qs/man/qsave.html'>qs::qsave</a></code> will be used. In teh future, we should support
+<code><a href='https://rdrr.io/r/base/connections.html'>base::connections</a></code>.</p></td>
     </tr>
     <tr>
       <th>with_fds</th>
@@ -179,10 +185,6 @@ future.</p></td>
     <tr>
       <th>fds</th>
       <td><p>The <code>FacileDataStore</code> the object was run on.</p></td>
-    </tr>
-    <tr>
-      <th>A</th>
-      <td><p><code>FacileAnalysisResult</code> object.</p></td>
     </tr>
     </table>
 
