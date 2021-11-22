@@ -13,7 +13,7 @@ unfds(x, ...)
 a stripped out object
 }
 \description{
-\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
 These functions are here to support serialization. \code{unfds} removes the link
 to a FacileDataStore from any object, and \code{refds} restores it to only the

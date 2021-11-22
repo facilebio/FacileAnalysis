@@ -7,25 +7,27 @@
 \usage{
 fsave(x, file, with_fds = FALSE, ...)
 
-fload(file, fds = NULL, with_fds = TRUE, ...)
+fload(x, fds = NULL, anno = NULL, with_fds = TRUE, ...)
 }
 \arguments{
-\item{file}{A path to a file (should support \code{base::connections} in the
-future.}
+\item{x}{A \code{FacileAnalysisResult} object.}
+
+\item{file}{A path to a file to save. If filename ends with '\emph{.rds', then
+object will be serialized with \code{saveRDS}. If filename ends with '}.qs',
+then \code{qs::qsave} will be used. In teh future, we should support
+\code{base::connections}.}
 
 \item{with_fds}{Serialize the FacileDataStore with the object? Default is
 \code{FALSE} and you should have a good reason to change this behavior.}
 
 \item{fds}{The \code{FacileDataStore} the object was run on.}
-
-\item{A}{\code{FacileAnalysisResult} object.}
 }
 \value{
 \code{NULL} for \code{fsave}, the (correctly sublcassed) \code{FacileAnalysisResult}
 for \code{fload}, along with \code{FacileDataStore} (\code{fds}) attached
 }
 \description{
-\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
 Saving and loading FacileAnalysisResults can be tricky because they rely
 on a chain of parent objects that created them, all of which have a reference
