@@ -20,6 +20,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -32,18 +34,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FacileAnalysis</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.98.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.14</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -74,7 +70,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/facilebio/FacileAnalysis/">
+  <a href="https://github.com/facilebio/FacileAnalysis/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -89,24 +85,24 @@
 
       
 
-      </header><script src="FacileAnalysis-examples_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Reproducing genomic anlayses the facile way</h1>
-                        <h4 class="author">Steve Lianoglou</h4>
+                        <h4 data-toc-skip class="author">Steve Lianoglou</h4>
             
-            <h4 class="date">2021-11-28</h4>
+            <h4 data-toc-skip class="date">2021-12-03</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/facilebio/FacileAnalysis/blob/master/vignettes/FacileAnalysis-examples.Rmd"><code>vignettes/FacileAnalysis-examples.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/facilebio/FacileAnalysis/blob/HEAD/vignettes/FacileAnalysis-examples.Rmd" class="external-link"><code>vignettes/FacileAnalysis-examples.Rmd</code></a></small>
       <div class="hidden name"><code>FacileAnalysis-examples.Rmd</code></div>
 
     </div>
 
     
     
-<div id="overview" class="section level2">
-<h2 class="hasAnchor">
-<a href="#overview" class="anchor"></a>Overview</h2>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
 <p>The goal of this vignette is to collect examples of a variety of publically available analyses and redo them using the packages available in the facileverse. This is useful in two ways:</p>
 <ol style="list-style-type: decimal">
 <li>this can help guide the development of packages within the facileverse by identifying things we can’t do yet, or should be able to do more easily; and</li>
@@ -117,22 +113,22 @@
 <li>Publically available workflows for data analysis, such as those found in:
 <ol style="list-style-type: lower-alpha">
 <li>
-<a href="https://www.bioconductor.org/packages/release/BiocViews.html#___Workflow">Bioconductor Workflow</a> packages.</li>
+<a href="https://www.bioconductor.org/packages/release/BiocViews.html#___Workflow" class="external-link">Bioconductor Workflow</a> packages.</li>
 <li>
-<a href="https://www.bioconductor.org/help/course-materials/">Bioconductor Courses</a>.</li>
+<a href="https://www.bioconductor.org/help/course-materials/" class="external-link">Bioconductor Courses</a>.</li>
 <li>Other places?</li>
 </ol>
 </li>
-<li>Questions asked on the <a href="https://support.bioconductor.org/">bioconductor</a> or <a href="https://www.biostars.org/">biostars</a> support sites</li>
+<li>Questions asked on the <a href="https://support.bioconductor.org/" class="external-link">bioconductor</a> or <a href="https://www.biostars.org/" class="external-link">biostars</a> support sites</li>
 </ol>
 </div>
-<div id="hitlist" class="section level2">
-<h2 class="hasAnchor">
-<a href="#hitlist" class="anchor"></a>Hitlist</h2>
+<div class="section level2">
+<h2 id="hitlist">Hitlist<a class="anchor" aria-label="anchor" href="#hitlist"></a>
+</h2>
 <ul>
-<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RnaSeqGeneEdgeRQL.html">edgeR-QLF genes to reads to pahtways workflow</a></li>
-<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RNAseq123.html">glimma 1-2-3 biocworkflow</a></li>
-<li><a href="https://www.bioconductor.org/packages/release/workflows/html/rnaseqGene.html">rnaseqGene DESeq2 workflow</a></li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RnaSeqGeneEdgeRQL.html" class="external-link">edgeR-QLF genes to reads to pahtways workflow</a></li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/RNAseq123.html" class="external-link">glimma 1-2-3 biocworkflow</a></li>
+<li><a href="https://www.bioconductor.org/packages/release/workflows/html/rnaseqGene.html" class="external-link">rnaseqGene DESeq2 workflow</a></li>
 </ul>
 </div>
   </div>
@@ -148,11 +144,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Steve Lianoglou, Denali Therapeutics.</p>
+  <p></p>
+<p>Developed by Steve Lianoglou, Denali Therapeutics.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
 </div>
 
       </footer>
@@ -160,6 +158,8 @@
 
   
 
+
+  
 
   </body>
 </html>
