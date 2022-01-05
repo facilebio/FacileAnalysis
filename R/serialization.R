@@ -48,6 +48,14 @@ fsave <- function(x, file, with_fds = FALSE, ...) {
 
 #' @noRd
 #' @export
+fsave.FacileDgeAnalysisResult <- function(x, file, with_fds = FALSE,
+                                          with_biocbox = FALSE, ...) {
+  if (!with_biocbox) x[["biocbox"]] <- NULL
+  NextMethod()
+}
+
+#' @noRd
+#' @export
 fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
   ext <- tolower(tools::file_ext(file))
   if (ext == "rds") {

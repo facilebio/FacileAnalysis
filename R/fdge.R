@@ -148,6 +148,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              treat_lfc = NULL,
                                              weights = NULL, with_box = FALSE,
                                              ...,
+                                             biocbox = NULL,
                                              trend.eBayes = FALSE,
                                              robust.eBayes = FALSE,
                                              verbose = FALSE) {
@@ -182,17 +183,41 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   if (length(errors) == 0L) {
-    if (verbose) {
-      message("... retrieving expression data")
-    }
+    if (!is.null(biocbox)) {
+      # We are doing this so we don't have to recalculate things like
+      # edgeR::estimateDisp, or limma::voom
+      if (verbose) {
+        warning("... using a cached biocbox: here be dragons!")
+      }
+      if (is.null(method)) {
+        stop("Using a cached biocbox requires you to explicitly set `method` ",
+             "parameter")
+      }
+      bb <- biocbox
+      fbits <- attr(bb, "facile")
 
-    bb <- biocbox(x, assay_name, method, features, filter,
-                  with_sample_weights = with_sample_weights,
-                  weights = weights, ...)
-    fbits <- attr(bb, "facile")
-    messages <- c(messages, fbits[["messages"]])
-    warnings <- c(warnings, fbits[["warnings"]])
-    errors <- c(errors, fbits[["errors"]])
+      if (method != fbits[["params"]][["method"]]) {
+        stop("The `method` used in the cached biocbox does not match the ",
+             "`method` parameter in this `fdge()` call")
+      }
+
+      # WARNING: This is probably the wrong thing to do.
+      messages <- c(messages, fbits[["messages"]])
+      warnings <- c(warnings, fbits[["warnings"]])
+      errors <- c(errors, fbits[["errors"]])
+    } else {
+      if (verbose) {
+        message("... retrieving expression data")
+      }
+
+      bb <- biocbox(x, assay_name, method, features, filter,
+                    with_sample_weights = with_sample_weights,
+                    weights = weights, ...)
+      fbits <- attr(bb, "facile")
+      messages <- c(messages, fbits[["messages"]])
+      warnings <- c(warnings, fbits[["warnings"]])
+      errors <- c(errors, fbits[["errors"]])
+    }
 
     method <- fbits[["params"]][["method"]]
 
@@ -286,6 +311,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   out <- list(
+    biocbox = bb,
     result = result,
     params = list(
       assay_name = assay_name,
@@ -593,21 +619,25 @@ samples.FacileDgeAnalysisResult <- function(x, ...) {
 #'
 #' @export
 #' @rdname biocbox
-biocbox.FacileDgeAnalysisResult <- function(x, ...) {
-  # I originally had this method signature as (x, ...) and then explicitly
-  # passed down assay_name = param(x, "assay_name"), but if we don't catch
-  # this arguments in the function and the user calls the function with them,
-  # we get an error of duplicate parameters in the function call when we
-  # delegate down to biocbox.FacileLinearModelDefinition
-  assay_name <- assert_string(param(x, "assay_name"))
-  method <- assert_string(param(x, "method"))
+biocbox.FacileDgeAnalysisResult <- function(x, cached = TRUE, ...) {
+  if (cached) {
+    out <- x[["biocbox"]]
+  } else {
+    # I originally had this method signature as (x, ...) and then explicitly
+    # passed down assay_name = param(x, "assay_name"), but if we don't catch
+    # this arguments in the function and the user calls the function with them,
+    # we get an error of duplicate parameters in the function call when we
+    # delegate down to biocbox.FacileLinearModelDefinition
+    assay_name <- assert_string(param(x, "assay_name"))
+    method <- assert_string(param(x, "method"))
 
-  # meta.cols <- c("lib.size", "norm.factors", "sizeFactor")
-  # meta.cols <- intersect(meta.cols, )
-  out <- biocbox(model(x), assay_name = assay_name, method = method,
-                 features = features(x),
-                 with_sample_weights = param(x, "with_sample_weights"),
-                 weights = param(x, "weights"), ...)
+    # meta.cols <- c("lib.size", "norm.factors", "sizeFactor")
+    # meta.cols <- intersect(meta.cols, )
+    out <- biocbox(model(x), assay_name = assay_name, method = method,
+                   features = features(x),
+                   with_sample_weights = param(x, "with_sample_weights"),
+                   weights = param(x, "weights"), ...)
+  }
   out
 }
 

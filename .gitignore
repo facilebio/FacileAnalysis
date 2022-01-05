@@ -4,3 +4,5 @@
 .Ruserdata
 screencasts/
 docs/
+.DS_Store
+*.Rproj

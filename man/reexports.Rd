@@ -16,11 +16,11 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{broom}{\code{\link[broom:reexports]{tidy}}}
-
   \item{FacileData}{\code{\link[FacileData:reexports]{\%>\%}}, \code{\link[FacileData]{features}}, \code{\link[FacileData]{samples}}}
 
   \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
+
+  \item{broom}{\code{\link[broom:reexports]{tidy}}}
 
   \item{shiny}{\code{\link[shiny]{callModule}}}
 }}

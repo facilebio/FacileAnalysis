@@ -216,6 +216,31 @@ test_that("duplicateCorrelation is supported with voom", {
   expect_equal(vm.res$t, ex.res$t)
 })
 
+test_that("a cached biocbox can be used in a call to `fdge`", {
+  sf <- samples(FDS) %>%
+    with_sample_covariates() %>%
+    mutate(group = paste(indication, sample_type, sep = "_"))
+
+  res1 <- sf %>%
+    flm_def("group", "BLCA_tumor", "BLCA_normal") %>%
+    fdge(method = "edgeR-qlf")
+
+  expect_s4_class(biocbox(res1), "DGEList")
+
+  expect_message({
+    expect_warning({
+      res2 <- sf %>%
+        flm_def("group", "BLCA_tumor", "BLCA_normal") %>%
+        fdge(method = "edgeR-qlf", biocbox = biocbox(res1), verbose = TRUE)
+    }, "here be dragons")
+  }, "expression analysis")
+
+  t1 <- tidy(res1)
+  t2 <- tidy(res2)
+
+  expect_equal(t2, t1)
+})
+
 # Ranks and Signatures =========================================================
 
 # Let's pre-compute and ANOVA and ttest result so we can break up our

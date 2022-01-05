@@ -20,7 +20,7 @@
   ...
 )
 
-\method{biocbox}{FacileDgeAnalysisResult}(x, ...)
+\method{biocbox}{FacileDgeAnalysisResult}(x, cached = TRUE, ...)
 }
 \arguments{
 \item{assay_name}{the name of the assay to pull data for}
