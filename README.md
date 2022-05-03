@@ -48,17 +48,17 @@ You can find a more in-depth overview and philosophy of this package in the
 The analyses implemented within this package are listed below, with
 links to vignettes that describe their functionality in more detail:
 
-  - `fpca`: [Interactive Principal Components
+-   `fpca`: [Interactive Principal Components
     Analyses](FacileAnalysis-fpca.html)
-  - `fdge`: [Interactive Differential Gene Expression
+-   `fdge`: [Interactive Differential Gene Expression
     Analysis](FacileAnalysis-fdge.html)
-  - `fsea`: [Interactive (Gene) Set Enrichment
+-   `fsea`: [Interactive (Gene) Set Enrichment
     Analysis](FacileAnalysis-fsea.html)
 
 **A note on the experimental lifecycle**: This package is tagged as
-“experimental” due to its limited use by a broader audience, and not
-as a sign of the commitment to its development or how long it has been
-in (internal) use. As we find the edge cases and pain points in the APIs
+“experimental” due to its limited use by a broader audience, and not as
+a sign of the commitment to its development or how long it has been in
+(internal) use. As we find the edge cases and pain points in the APIs
 through broader adoption, we expect to soon move to “maturing” (and
 eventually “stable”) [lifecycle](https://www.tidyverse.org/lifecycle/).
 
@@ -116,7 +116,7 @@ qdge <- fdge(model, assay_name = "rnaseq", method = "edgeR-qlf")
 ```
 
 … or DESeq2, perhaps? No problem, [we accept pull
-requests](https://github.com/denalitherapeutics/FacileAnalysis/pulls)\!
+requests](https://github.com/facilebio/FacileAnalysis/pulls)!
 
 ## Interrogation of Analyses at Different Levels of Interactivity
 
@@ -218,13 +218,13 @@ BiocManager::install("facilebio/FacileAnalysis")
 
 ## Resources
 
-  - [facilebio.github.io/FacileAnalysis](https://facilebio.github.io/FacileAnalysis)
+-   [facilebio.github.io/FacileAnalysis](https://facilebio.github.io/FacileAnalysis)
     (online documentation and vignettes)
-  - [Open an issue](https://github.com/facilebio/FacileAnalysis/issues)
+-   [Open an issue](https://github.com/facilebio/FacileAnalysis/issues)
     (GitHub issues for questions, bug reports, and feature requests)
 
 ## Acknowledgements
 
-  - Thanks to Morten Just, who developed the
+-   Thanks to Morten Just, who developed the
     [droptogif](https://github.com/mortenjust/droptogif), which we used
     to convert screen-captured `*.mov` files to animated gifs.

@@ -233,6 +233,6 @@ BiocManager::install("facilebio/FacileAnalysis")
 [issues]: https://github.com/facilebio/FacileAnalysis/issues
 [pkgvign]: FacileAnalysis.html
 [rnafway]: https://facilebio.github.io/FacileAnalysis/articles/FacileAnalysis-RNAseq.html
-[PR]: https://github.com/denalitherapeutics/FacileAnalysis/pulls
+[PR]: https://github.com/facilebio/FacileAnalysis/pulls
 [qlf]: https://f1000research.com/articles/5-1438
 [sgadget]: https://shiny.rstudio.com/articles/gadgets.html
