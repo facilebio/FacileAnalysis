@@ -98,7 +98,7 @@ fpcaRun <- function(input, output, session, rfds, ..., debug = FALSE,
   observeEvent(active.samples(), {
     asamples. <- req(active.samples())
     nsamples <- nrow(asamples.)
-    value <- if (input$pcs > nsamples) nsamples else NULL
+    value <- if (req(input$pcs) > nsamples) nsamples else NULL
     updateNumericInput(session, "pcs", value = value, max = nsamples)
     toggleState("run", condition = nsamples >= 3L)
   })
