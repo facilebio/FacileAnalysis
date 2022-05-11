@@ -279,7 +279,7 @@ test_that("ttest ranks and signatures generated correctly", {
 test_that("ranks returns anova features in expected order", {
   eranks <- ARES %>%
     tidy() %>%
-    arrange(pval)
+    arrange(desc(.data[["F"]]))
   anova.ranks <- ARES %>%
     ranks() %>%
     tidy()
