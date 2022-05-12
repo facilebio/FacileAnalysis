@@ -417,7 +417,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
       select(feature_id, feature_type, symbol, significant,
              starts_with("padj"), starts_with("pval"),
              starts_with("logFC"), starts_with("t\\."))
-    if (quadrant == "both") {
+    if (!is.null(quadrant) && quadrant == "both") {
       xdat <- mutate(
         xdat,
         logFC = mean.lfc, pval = min.pval, padj = min.padj,
@@ -427,7 +427,7 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
           sign(logFC.x) == sign(logFC.y) & logFC.x < 0 ~ "down",
           sign(logFC.x) != sign(logFC.y) & logFC.x > 0 ~ "x.up",
           sign(logFC.x) != sign(logFC.y) & logFC.x < 0 ~ "x.down"))
-    } else if (quadrant == "x") {
+    } else if (!is.null(quadrant) && quadrant == "x") {
       xdat <- mutate(
         xdat,
         logFC = logFC.x, pval = pval.x, padj = padj.x,
@@ -533,7 +533,7 @@ ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = NULL, dim = 1,
     return(out)
   })
 
-  rank.column <- if (signed) "score" else "weight"
+  rank.column <- if (!is.null(signed) && signed) "score" else "weight"
   pc.ranks <- tidy(ranks(x, dims = dim, signed = signed, ...))
 
   out <- ffsea(pc.ranks, fsets, methods = methods, rank_by = rank.column,
@@ -592,7 +592,7 @@ features.FacileFseaAnalysisResult <- function(x, ...) {
 #' @export
 result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
   mgres <- x[["result"]]
-  if (name == "object") {
+  if (!is.null(name) && name == "object") {
     return(mgres)
   }
 
@@ -636,7 +636,7 @@ ranks.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
                                            signed = FALSE, ...) {
   name. <- assert_choice(name, param(x, "methods"))
   rnks <- tidy(x, name.)
-  if (signed) {
+  if (!is.null(signed) && signed) {
     rnks <- arrange(rnks, des(mean.logFC.trim))
   } else {
     rnks <- arrange(rnks, pval)
@@ -650,7 +650,7 @@ ranks.FacileFseaAnalysisResult <- function(x, name = param(x, "methods")[1L],
     params = list(name = name, signed = signed))
   # todo: need to add feature_type
   clazz <- "FacileFeatureSetRanks%s"
-  s <- if (signed) "Signed" else "Unsigned"
+  s <- if (!is.null(signed) && signed) "Signed" else "Unsigned"
   classes <- sprintf(clazz, c(s, ""))
   class(out) <- classes
   out
@@ -683,7 +683,7 @@ format.FacileFseaAnalysisResult <- function(x, max_padj = 0.20, ...) {
   gsea.res.table <- sparrow::tabulateResults(mgres, max.p = max_padj)
   source.type <- class(param(x, "x"))[1L]
 
-  if (source.type == "FacilePcaAnalysisResult") {
+  if (!is.null(source.type) && source.type == "FacilePcaAnalysisResult") {
     source.type <- sprintf("%s [PC: %s]", source.type,
                            as.character(param(x, "dim")))
   }

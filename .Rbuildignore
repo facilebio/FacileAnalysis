@@ -2,3 +2,9 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^README\.Rmd$
+^LICENSE\.md$
+^codecov\.yml$
+^pkgdown$
+^vignettes-wip$
