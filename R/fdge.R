@@ -552,7 +552,7 @@ ranks.FacileAnovaAnalysisResult <- function(x, signed = FALSE, ...) {
             immediate. = TRUE)
     signed <- FALSE
   }
-  ranks. <- arrange(result(x, ...), desc(F))
+  ranks. <- arrange(result(x, ...), desc(.data[["F"]]))
 
   out <- list(
     result = ranks.,

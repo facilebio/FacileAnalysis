@@ -45,12 +45,14 @@ For now, I imagine (gene) set enerichment analyses will be performed over
    or some combination of the two.
    
     ```{r, eval=FALSE}
+    gdb <- sparrow::exampleGeneSetDb()
+    
     dge.gsea <- samples %>% 
       flm_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
                  batch = "sex") %>% 
       fdge() %>% 
-      ffsea(gdb, pc = 1, method = c("cameraPR", "goseq", rank_by = "t"))
+      ffsea(gdb, method = c("cameraPR", "ora"), rank_by = "t")
     ```
 
 2. The "highly loaded" genes from the first prinicpal component of a
