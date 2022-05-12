@@ -1,11 +1,19 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.15
+Version: 0.98.16
 Authors@R: c(
-    person("Steve", "Lianoglou", , "slianoglou@gmail.com", c("aut", "cre"),
-      comment = c(ORCID = "0000-0002-0924-1754")),
-    person("Denali Therapeutics", role = c("cph", "fnd"), comment = "2018 - 2022"))
+    person(
+      "Steve", "Lianoglou",
+      email = "slianoglou@gmail.com", 
+      role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0924-1754")),
+    person(
+      "Jonathan", "Carroll", 
+      email = "rpkg@jcarroll.com.au", 
+      role = c("ctb"), comment = c(ORCID = "0000-0002-1404-5264")),
+    person(
+      "Denali Therapeutics",
+      role = c("cph", "fnd"), comment = "2018 - 2021"))
 Description: Provides modularized analysis methods commonly performed over 
     genomics data. Analysis results can be interactively explored
     by analysts using the "viz" or "shine" functions, which produce JavaScript-
