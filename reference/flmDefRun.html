@@ -75,8 +75,8 @@ model_info &amp;lt;- fds %&amp;gt;%
 
     <div class="ref-description">
     
-<div class="sourceCode"><pre><code><span class="va">model_info</span> <span class="op">&lt;-</span> <span class="va">fds</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>
-  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"BLCA"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>
+<div class="sourceCode"><pre><code><span class="va">model_info</span> <span class="op">&lt;-</span> <span class="va">fds</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span>
+  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"BLCA"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span>
   <span class="fu"><a href="../reference/flm_def.html">flm_def</a></span><span class="op">(</span>covariate <span class="op">=</span> <span class="st">"sample_type"</span>, numer <span class="op">=</span> <span class="st">"tumor"</span>, denom <span class="op">=</span> <span class="st">"normal"</span>,
           batch <span class="op">=</span> <span class="st">"sex"</span><span class="op">)</span></code></pre></div>
 

@@ -158,7 +158,7 @@ are <code>"up"</code>, and <code>"down"</code>.</p></li>
     
 
 <p>The geneset level statistics can be extracted from the
-<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> function.
+<code>FacileFseaAnalysisResult</code> on a per-method basis usig the <code><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy()</a></code> function.
 For instance, if <code>ffsea()</code> was called with
 <code>fres &lt;- ffsea(..., methods = c("cameraPR", "ora")</code>, the <code>"cameraPR"</code>
 results can be extracted via <code>tidy(fres, "cameraPR")</code></p>
@@ -177,14 +177,14 @@ of the ones wrapped by <code><a href="https://rdrr.io/pkg/sparrow/man/seas.html"
     <h2>Accessing Results</h2>
     
 
-<p>We are in a bit of a schizophrenic state right now, where <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> is
+<p>We are in a bit of a schizophrenic state right now, where <code><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy()</a></code> is
 being the de-facto way to answer "tidy" like results (instead of result()).</p>
 <p>This is not to say that <code>result()</code> can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
 SparrowResult object itself, and <code>tidy(ffsea.result)</code> will dispatch
 to <code><a href="https://rdrr.io/pkg/sparrow/man/results.html" class="external-link">sparrow::result()</a></code> to fetch the gsea statistcs for the method
 requested.</p><div class="sourceCode"><pre><code><span class="va">mgres</span> <span class="op">&lt;-</span> <span class="fu">result</span><span class="op">(</span><span class="va">ffsea.res</span><span class="op">)</span> <span class="co"># returns the SparrowResult object</span>
-<span class="va">camera.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ffsea.res</span>, name <span class="op">=</span> <span class="st">"cameraPR"</span><span class="op">)</span></code></pre></div>
+<span class="va">camera.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ffsea.res</span>, name <span class="op">=</span> <span class="st">"cameraPR"</span><span class="op">)</span></code></pre></div>
 
     </div>
     <div id="see-also">
@@ -198,10 +198,10 @@ requested.</p><div class="sourceCode"><pre><code><span class="va">mgres</span> <
 <span class="r-in"><span class="va">efds</span> <span class="op">&lt;-</span> <span class="fu">FacileData</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FacileData/man/exampleFacileDataSet.html" class="external-link">exampleFacileDataSet</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># GSEA from t-test result ---------------------------------------------------</span></span>
-<span class="r-in"><span class="va">ttest.res</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"CRC"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in"><span class="va">ttest.res</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"CRC"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu"><a href="flm_def.html">flm_def</a></span><span class="op">(</span>covariate <span class="op">=</span> <span class="st">"sample_type"</span>, numer <span class="op">=</span> <span class="st">"tumor"</span>, denom <span class="op">=</span> <span class="st">"normal"</span>,</span>
-<span class="r-in">          batch <span class="op">=</span> <span class="st">"sex"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">          batch <span class="op">=</span> <span class="st">"sex"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu"><a href="fdge.html">fdge</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"voom"</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">ttest.gsea</span> <span class="op">&lt;-</span> <span class="fu">ffsea</span><span class="op">(</span><span class="va">ttest.res</span>, <span class="va">gdb</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cameraPR"</span>, <span class="st">"ora"</span><span class="op">)</span>,</span>
@@ -214,13 +214,13 @@ requested.</p><div class="sourceCode"><pre><code><span class="va">mgres</span> <
 <span class="r-in">  <span class="va">ttest.igsea</span> <span class="op">&lt;-</span> <span class="fu"><a href="interactive-ffsea.html">ffseaGadget</a></span><span class="op">(</span><span class="va">ttest.res</span>, <span class="va">gdb</span><span class="op">)</span></span>
 <span class="r-in"><span class="op">}</span></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="va">camera.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ttest.gsea</span>, <span class="st">"cameraPR"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">ora.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ttest.gsea</span>, <span class="st">"ora"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">camera.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ttest.gsea</span>, <span class="st">"cameraPR"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">ora.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ttest.gsea</span>, <span class="st">"ora"</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># GSEA from ANOVA result ----------------------------------------------------</span></span>
-<span class="r-in"><span class="va">stage.anova</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"BLCA"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu"><a href="flm_def.html">flm_def</a></span><span class="op">(</span>covariate <span class="op">=</span> <span class="st">"stage"</span>, batch <span class="op">=</span> <span class="st">"sex"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in"><span class="va">stage.anova</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"BLCA"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu"><a href="flm_def.html">flm_def</a></span><span class="op">(</span>covariate <span class="op">=</span> <span class="st">"stage"</span>, batch <span class="op">=</span> <span class="st">"sex"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu"><a href="fdge.html">fdge</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"voom"</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">anova.gsea</span> <span class="op">&lt;-</span> <span class="fu">ffsea</span><span class="op">(</span><span class="va">stage.anova</span>, <span class="va">gdb</span><span class="op">)</span></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -230,8 +230,8 @@ requested.</p><div class="sourceCode"><pre><code><span class="va">mgres</span> <
 <span class="r-in"> <span class="va">anova.gsea2</span> <span class="op">&lt;-</span> <span class="fu"><a href="interactive-ffsea.html">ffseaGadget</a></span><span class="op">(</span><span class="va">stage.anova</span>, gdb <span class="op">=</span> <span class="va">gdb</span><span class="op">)</span></span>
 <span class="r-in"><span class="op">}</span></span>
 <span class="r-in"><span class="co"># GSEA over loadings on a Principal Component -------------------------------</span></span>
-<span class="r-in"><span class="va">pca.crc</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"CRC"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in"><span class="va">pca.crc</span> <span class="op">&lt;-</span> <span class="va">efds</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">FacileData</span><span class="fu">::</span><span class="fu">filter_samples</span><span class="op">(</span><span class="va">indication</span> <span class="op">==</span> <span class="st">"CRC"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/magrittr/man/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu"><a href="fpca.html">fpca</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: testthat</span>
 <span class="r-in"><span class="va">pca1.gsea</span> <span class="op">&lt;-</span> <span class="fu">ffsea</span><span class="op">(</span><span class="va">pca.crc</span>, <span class="va">gdb</span>, dim <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
