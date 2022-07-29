@@ -137,7 +137,7 @@ parameter) over the data. <code>flm_def</code> accepts a</p>
 <span class="fu"><a href="compare.html">compare</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, treat_lfc <span class="op">=</span> <span class="fu"><a href="param.html">param</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"treat_lfc"</span><span class="op">)</span>, rerun <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span>
 
 <span class="co"># S3 method for FacileTtestComparisonAnalysisResult</span>
-<span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span>
+<span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span>
   <span class="va">x</span>,
   max_padj <span class="op">=</span> <span class="fl">0.1</span>,
   min_logFC <span class="op">=</span> <span class="cn">NULL</span>,
@@ -282,10 +282,10 @@ of all features found in <code>x</code> are <code>y</code> are used in the test.
     
 
 <p>The stats table from the differential expression analysis can be retrieved
-using the <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> function. Depending upon the type of analysis run, the
+using the <code><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy()</a></code> function. Depending upon the type of analysis run, the
 exact columns of the returned table may differ.</p>
 <p><strong>Interaction Statistics</strong>
-Calling <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> on an interaction test result
+Calling <code><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy()</a></code> on an interaction test result
 (<code>FacileTtestComparisonAnalysisResult</code>), returns the statistics for the
 interaction test itself (if it was performed), as well as the statistics
 for the individual DGE results that were run vai <code>compare(x, y)</code> to get the
@@ -342,7 +342,7 @@ analysis, ie. <code>methods = "ora"</code>.</p>
 <span class="r-in">  <span class="fu"><a href="FacileAnalysisResultViz.html">viz</a></span><span class="op">(</span><span class="va">dge</span>, <span class="st">"146909"</span><span class="op">)</span></span>
 <span class="r-in">  <span class="fu"><a href="FacileAnalysisResultViz.html">shine</a></span><span class="op">(</span><span class="va">dge</span><span class="op">)</span></span>
 <span class="r-in"><span class="op">}</span></span>
-<span class="r-in"><span class="va">dge.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dge</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">dge.stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dge</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">dge.sig</span> <span class="op">&lt;-</span> <span class="fu"><a href="signature.html">signature</a></span><span class="op">(</span><span class="va">dge</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">stage.anova</span> <span class="op">&lt;-</span> <span class="va">samples</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -360,7 +360,7 @@ analysis, ie. <code>methods = "ora"</code>.</p>
 <span class="r-in">  <span class="fu"><a href="flm_def.html">flm_def</a></span><span class="op">(</span><span class="st">"sample_type"</span>, <span class="st">"tumor"</span>, <span class="st">"normal"</span>, <span class="st">"sex"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu">fdge</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">dge.comp</span> <span class="op">&lt;-</span> <span class="fu"><a href="compare.html">compare</a></span><span class="op">(</span><span class="va">dge.crc</span>, <span class="va">dge.blca</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">comp.hi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dge.comp</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in"><span class="va">comp.hi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/generics/man/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dge.comp</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">interaction_group</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
