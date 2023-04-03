@@ -22,16 +22,16 @@ NULL
 #' # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 #'
 #' efds <- FacileData::exampleFacileDataSet()
-#' dge.crc <- FacileData::filter_samples(efds, indication == "CRC") %>%
-#'   flm_def("sample_type", "tumor", "normal", "sex") %>%
+#' dge.crc <- FacileData::filter_samples(efds, indication == "CRC") |>
+#'   flm_def("sample_type", "tumor", "normal", "sex") |>
 #'   fdge()
-#' dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") %>%
-#'   flm_def("sample_type", "tumor", "normal", "sex") %>%
+#' dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") |>
+#'   flm_def("sample_type", "tumor", "normal", "sex") |>
 #'   fdge()
 #' dge.comp <- compare(dge.crc, dge.blca)
-#' comp.hi <- tidy(dge.comp) %>%
-#'   dplyr::group_by(interaction_group) %>%
-#'   dplyr::slice(1:3) %>%
+#' comp.hi <- tidy(dge.comp) |>
+#'   dplyr::group_by(interaction_group) |>
+#'   dplyr::slice(1:3) |>
 #'   dplyr::ungroup()
 #' # Static visualization generates the main "4-way" plot, as well as the
 #' # facets for each category.
@@ -39,9 +39,9 @@ NULL
 #'             subtitle = "Tumor vs normal comparisons across indications",
 #'             highlight = comp.hi)
 #' # highlight some of them
-#' s.hi <- sviz$input_data %>%
-#'   dplyr::group_by(interaction_group) %>%
-#'   dplyr::slice(1:3) %>%
+#' s.hi <- sviz$input_data |>
+#'   dplyr::group_by(interaction_group) |>
+#'   dplyr::slice(1:3) |>
 #'   dplyr::ungroup()
 #' if (requireNamespace("patchwork")) {
 #'   patchwork::wrap_plots(
@@ -131,7 +131,7 @@ compare.FacileTtestAnalysisResult <- function(x, y,
     by = c("feature_type", "feature_id"))
 
   if (isTRUE(idge[["with_stats"]])) {
-    ires <- tidy(idge[["result"]]) %>%
+    ires <- tidy(idge[["result"]]) |>
       select(feature_type, feature_id, {{stat.cols}})
   } else {
     ires <- idge[["result"]]
@@ -232,7 +232,7 @@ tidy.FacileTtestComparisonAnalysisResult <- function(
        .xsig &  .ysig         ~ labels["both"],
        .xsig & !.ysig         ~ labels["x"],
       !.xsig &  .ysig         ~ labels["y"],
-      TRUE                    ~ labels["none"])) %>%
+      TRUE                    ~ labels["none"])) |>
     select(interaction_group, everything())
   attr(out, "labels") <- labels
   out
@@ -329,7 +329,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
   xdat$padj.min <- pmin(xdat$padj, xdat$padj.x, xdat$padj.y)
   xdat <- arrange(xdat, interaction_group, desc(padj.min))
 
-  gg.base <- xdat %>%
+  gg.base <- xdat |>
     ggplot2::ggplot(ggplot2::aes(x = logFC.x, y = logFC.y)) +
     ggplot2::geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
     ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed")
@@ -433,8 +433,8 @@ viz.FacileTtestComparisonAnalysisResult <- function(
 
   # Calculate estimated logFC's between the *.x and *.y logFC in case we don't
   # make it all the way through the formal interaction analysis
-  ires.tmp <- xres %>%
-    full_join(yres, by = c("feature_id", "feature_type", "name")) %>%
+  ires.tmp <- xres |>
+    full_join(yres, by = c("feature_id", "feature_type", "name")) |>
     transmute(feature_id, feature_type, name, logFC = logFC.x - logFC.y,
               pval = NA_real_, padj = NA_real_)
 

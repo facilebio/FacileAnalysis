@@ -5,8 +5,8 @@ if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 # Simpler Linear Models ========================================================
 
 test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal")
@@ -54,8 +54,8 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
   vm.facile <- biocbox(vm_test)
   expect_equal(vm.facile$weights, vm$weights)
 
-  vres <- limma::lmFit(vm, vm$design) %>%
-    limma::eBayes() %>%
+  vres <- limma::lmFit(vm, vm$design) |>
+    limma::eBayes() |>
     limma::topTable(coef = 2, Inf, sort.by = "none")
 
   expect_equal(vres$feature_id, vm_dge$feature_id)
@@ -65,8 +65,8 @@ test_that("Simple fdge t-test matches explicit limma/edgeR tests", {
 })
 
 test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "stage", batch = "sex")
 
   # Test edgeR quasilikelihood
@@ -95,8 +95,8 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
   vm <- limma::voom(y, y$design)
   expect_equal(vm$weights, vmf$weights)
 
-  vres <- limma::lmFit(vm, vm$design) %>%
-    limma::eBayes() %>%
+  vres <- limma::lmFit(vm, vm$design) |>
+    limma::eBayes() |>
     limma::topTable(coef = coefs, Inf, sort.by = "none")
   expect_equal(vm_dge$feature_id, vres$feature_id)
   expect_equal(vm_dge$pval, vres$P.Value)
@@ -106,11 +106,11 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 
 test_that("custom observational weights used in fdge(..., weights = W)", {
   # TODO: test weighted linear models!
-  vm.fdge <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  vm.fdge <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
-            denom = "normal") %>%
+            denom = "normal") |>
     fdge(method = "voom", with_box = TRUE) # This will calculate weights for us
   res.orig <- tidy(vm.fdge)
 
@@ -124,15 +124,15 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
   wdf <- cbind(tibble(feature_id = rownames(vm)), as.data.frame(W))
 
   weights <- pivot_longer(wdf, -feature_id, names_to = "sample_id",
-                          values_to = "weight") %>%
+                          values_to = "weight") |>
     separate(sample_id, "__", into = c("dataset", "sample_id"))
 
   cm <- limma::makeContrasts(tumor = tumor - normal, levels = vm$design)
-  ex.res <- limma::lmFit(vm$E, vm$design, weights = W) %>%
-    limma::contrasts.fit(cm) %>%
-    limma::eBayes() %>%
-    limma::topTable("tumor", n = Inf, sort.by = "none") %>%
-    mutate(feature_id = rownames(.))
+  ex.res <- limma::lmFit(vm$E, vm$design, weights = W) |>
+    limma::contrasts.fit(cm) |>
+    limma::eBayes() |>
+    limma::topTable("tumor", n = Inf, sort.by = "none")
+  ex.res[["feature_id"]] <- rownames(ex.res)
 
   # Let's make sure user knows they can't provide custom weights for voom
   f.res <- expect_warning(
@@ -151,19 +151,19 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
   el$weights <- NULL
   fvm <- FacileBiocData:::facilitate.EList(el, assay_type = "lognorm",
                                            organism = "Homo sapiens")
-  w.res <- samples(fvm) %>%
-    flm_def("sample_type", "tumor", "normal") %>%
+  w.res <- samples(fvm) |>
+    flm_def("sample_type", "tumor", "normal") |>
     fdge(method = "limma",
          features = features(vm.fdge),
          weights = weights)
 
   expect_setequal(tidy(w.res)[["feature_id"]], ex.res[["feature_id"]])
 
-  cmp <- tidy(w.res) %>%
-    select(feature_id, symbol, logFC, t, pval, padj) %>%
+  cmp <- tidy(w.res) |>
+    select(feature_id, symbol, logFC, t, pval, padj) |>
     left_join(select(ex.res, feature_id, logFC.ex = logFC, pval.ex = P.Value,
                      t.ex = t),
-              by = "feature_id") %>%
+              by = "feature_id") |>
     left_join(select(fstats, feature_id, logFC.vm = logFC, pval.vm = pval,
                      t.vm = t),
               by = "feature_id")
@@ -175,8 +175,8 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
 })
 
 test_that("duplicateCorrelation is supported with voom", {
-  flm <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  flm <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal",
@@ -189,8 +189,8 @@ test_that("duplicateCorrelation is supported with voom", {
   vm.res <- tidy(vm.fdge)
 
   # Test against two-pass voom/duplicateCorrelation mojo
-  y <- samples(flm) %>%
-    biocbox(class = "DGEList", features = features(vm.fdge)) %>%
+  y <- samples(flm) |>
+    biocbox(class = "DGEList", features = features(vm.fdge)) |>
     edgeR::calcNormFactors()
   expect_equal(nrow(y), nrow(vm.res))
   des <- model.matrix(~ 0 + sample_type, data = y$samples)
@@ -207,8 +207,8 @@ test_that("duplicateCorrelation is supported with voom", {
   ex.fit <- limma::lmFit(vm, des, block = vm$targets$sex,
                          correlation =  dup$consensus.correlation)
   ex.fit <- limma::contrasts.fit(ex.fit, c(-1, 1))
-  ex.res <- ex.fit %>%
-    limma::eBayes() %>%
+  ex.res <- ex.fit |>
+    limma::eBayes() |>
     limma::topTable(n = Inf, sort.by = "none")
 
   expect_equal(vm.res$feature_id, rownames(ex.res))
@@ -217,20 +217,20 @@ test_that("duplicateCorrelation is supported with voom", {
 })
 
 test_that("a cached biocbox can be used in a call to `fdge`", {
-  sf <- samples(FDS) %>%
-    with_sample_covariates() %>%
+  sf <- samples(FDS) |>
+    with_sample_covariates() |>
     mutate(group = paste(indication, sample_type, sep = "_"))
 
-  res1 <- sf %>%
-    flm_def("group", "BLCA_tumor", "BLCA_normal") %>%
+  res1 <- sf |>
+    flm_def("group", "BLCA_tumor", "BLCA_normal") |>
     fdge(method = "edgeR-qlf")
 
   expect_s4_class(biocbox(res1), "DGEList")
 
   expect_message({
     expect_warning({
-      res2 <- sf %>%
-        flm_def("group", "BLCA_tumor", "BLCA_normal") %>%
+      res2 <- sf |>
+        flm_def("group", "BLCA_tumor", "BLCA_normal") |>
         fdge(method = "edgeR-qlf", biocbox = biocbox(res1), verbose = TRUE)
     }, "here be dragons")
   }, "expression analysis")
@@ -245,43 +245,43 @@ test_that("a cached biocbox can be used in a call to `fdge`", {
 
 # Let's pre-compute and ANOVA and ttest result so we can break up our
 # ranks and signature tests
-TRES <- FDS %>%
-  filter_samples(indication == "BLCA") %>%
+TRES <- FDS |>
+  filter_samples(indication == "BLCA") |>
   flm_def(covariate = "sample_type",
                  numer = "tumor",
-                 denom = "normal") %>%
+                 denom = "normal") |>
   fdge(method = "voom")
-ARES <- FDS %>%
-  filter_samples(indication == "BLCA") %>%
-  flm_def(covariate = "stage", batch = "sex") %>%
+ARES <- FDS |>
+  filter_samples(indication == "BLCA") |>
+  flm_def(covariate = "stage", batch = "sex") |>
   fdge(method = "voom")
 
 test_that("ttest ranks and signatures generated correctly", {
   # Signed Ranks
-  eranks.signed <- TRES %>%
-    tidy() %>%
+  eranks.signed <- TRES |>
+    tidy() |>
     arrange(desc(logFC))
-  ranks.signed <- TRES %>%
-    ranks(signed = TRUE, rank_by = "logFC") %>%
+  ranks.signed <- TRES |>
+    ranks(signed = TRUE, rank_by = "logFC") |>
     tidy()
   expect_equal(ranks.signed[["feature_id"]], eranks.signed[["feature_id"]])
 
   # Unsigned Ranks
-  eranks.unsigned <- TRES %>%
-    tidy() %>%
+  eranks.unsigned <- TRES |>
+    tidy() |>
     arrange(pval)
-  ranks.unsigend <- TRES %>%
-    ranks(signed = FALSE, rank_by = "pval") %>%
+  ranks.unsigend <- TRES |>
+    ranks(signed = FALSE, rank_by = "pval") |>
     tidy()
   expect_equal(ranks.unsigend[["feature_id"]], eranks.unsigned[["feature_id"]])
 })
 
 test_that("ranks returns anova features in expected order", {
-  eranks <- ARES %>%
-    tidy() %>%
+  eranks <- ARES |>
+    tidy() |>
     arrange(desc(.data[["F"]]))
-  anova.ranks <- ARES %>%
-    ranks() %>%
+  anova.ranks <- ARES |>
+    ranks() |>
     tidy()
   expect_equal(anova.ranks[["feature_id"]], eranks[["feature_id"]])
 
@@ -293,8 +293,8 @@ test_that("ranks returns anova features in expected order", {
 test_that("t-test signatures generated correcty", {
   # we'll compare these to parts of the correctly-generated ranks, which were
   # tested above.
-  sig.signed <- signature(TRES, signed = TRUE) %>% tidy()
-  sig.unsigned <- signature(TRES, signed = FALSE) %>% tidy()
+  sig.signed <- signature(TRES, signed = TRUE) |> tidy()
+  sig.unsigned <- signature(TRES, signed = FALSE) |> tidy()
 
   nup.signed <- sum(sig.signed$direction == "up")
   expect_equal(nup.signed, nrow(sig.signed) / 2)

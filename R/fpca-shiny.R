@@ -8,8 +8,8 @@
 #' if (interactive()) {
 #' efds <- FacileData::exampleFacileDataSet()
 #' # run tumor vs normal comparisons vs each, then run compare9) on the results
-#' pca.crc <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' pca.crc <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpcaGadget()
 #' report(pca.crc)
 #' shine(pca.crc)
@@ -347,15 +347,15 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
   })
 
   feature.ranks <- reactive({
-    req(pca()) %>%
-      signature(signed = TRUE, ntop = 50) %>%
+    req(pca()) |>
+      signature(signed = TRUE, ntop = 50) |>
       tidy()
   })
 
   pc.loadings <- reactive({
     pc <- paste0("PC", input$loadingsPC)
-    req(feature.ranks()) %>%
-      filter(dimension == pc) %>%
+    req(feature.ranks()) |>
+      filter(dimension == pc) |>
       select(symbol, feature_id, score)
   })
 

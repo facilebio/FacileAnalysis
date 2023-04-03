@@ -20,9 +20,9 @@ A \code{ReactiveFacileLinearModelDefinition} object, the output from
 \code{\link[=flm_def]{flm_def()}}.
 }
 \description{
-\preformatted{model_info <- fds \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
+\if{html}{\out{<div class="sourceCode">}}\preformatted{model_info <- fds |>
+  FacileData::filter_samples(indication == "BLCA") |>
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
           batch = "sex")
-}
+}\if{html}{\out{</div>}}
 }

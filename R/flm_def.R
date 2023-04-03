@@ -51,29 +51,29 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # Look for tumor vs normal differences, controling for stage and sex
-#' model_info <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' model_info <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = "sex")
-#' m2 <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' m2 <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = c("sex", "stage"))
 #'
 #' # stageIV vs stageII & stageIII
-#' m3 <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA", sample_type == "tumor") %>%
+#' m3 <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA", sample_type == "tumor") |>
 #'   flm_def(covariate = "stage", numer = "IV", denom = c("II", "III"),
 #'           batch = "sex")
 #'
 #' # Incomplete ttest to help with custom contrast vector
-#' mi <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA", sample_type == "tumor") %>%
+#' mi <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA", sample_type == "tumor") |>
 #'   flm_def(covariate = "stage", batch = "sex", contrast. = "help")
 #'
 #' # ANOVA across stage in BLCA, control for sex
-#' m3 <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' m3 <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   flm_def(covariate = "stage", batch = "sex")
 flm_def <- function(x, covariate, numer = NULL, denom = NULL,
                     batch = NULL, block = NULL,

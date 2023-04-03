@@ -89,13 +89,13 @@ Test differential among lactating b cells vs pregnant b cells.
 Feture filtering is performed by default:
 
 ```{r}
-dge.b <- yf %>% 
-  flm_def("group", numer = "B.lactating", denom = "B.pregnant") %>% 
+dge.b <- yf |> 
+  flm_def("group", numer = "B.lactating", denom = "B.pregnant") |> 
   fdge(method = "edgeR-qlf")
 ```
 
 ```{r}
-tidy(dge.b) %>% head(10)
+tidy(dge.b) |> head(10)
 ```
 
 The MA plots in facile are interactive, so we don't want to overload the
@@ -103,8 +103,8 @@ web-browser. Here we'll chose to show a sample of both significant and
 "background" genes.
 
 ```{r}
-bg.genes <- tidy(dge.b) %>% filter(padj > 0.1) %>% sample_n(200)
-fg.genes <- tidy(dge.b) %>% filter(padj < 0.1) %>% sample_n(1000)
+bg.genes <- tidy(dge.b) |> filter(padj > 0.1) |> sample_n(200)
+fg.genes <- tidy(dge.b) |> filter(padj < 0.1) |> sample_n(1000)
 viz(dge.b, type = "MA", features = bg.genes, highlight = fg.genes,
     width = 600)
 ```
@@ -121,13 +121,13 @@ Instead of automatically filtering, we just specify to use the same features
 from the previous analysis.
 
 ```{r}
-dge.bthres <- dge.b %>% 
-  model() %>% 
+dge.bthres <- dge.b |> 
+  model() |> 
   fdge(method = "edgeR-qlf", treat_lfc = log2(1.5), features = features(dge.b))
 ```
 
 ```{r}
-tidy(dge.bthres) %>% head(10)
+tidy(dge.bthres) |> head(10)
 ```
 
 
@@ -145,14 +145,14 @@ Suppose we want to compare the three groups within in the luminal population,
 i.e., virgin, pregnant and lactating:
 
 ```{r}
-anova.luminal <- yf %>% 
-  filter_samples(CellType == "L") %>% 
-  flm_def("Status") %>% 
+anova.luminal <- yf |> 
+  filter_samples(CellType == "L") |> 
+  flm_def("Status") |> 
   fdge(method = "edgeR-qlf")
 ```
 
 ```{r}
-tidy(anova.luminal) %>% head(10)
+tidy(anova.luminal) |> head(10)
 ```
 
 
@@ -174,8 +174,8 @@ within the B cell population stored in `dge.b`. We now have to run the
 same comparison within the lumina cells:
 
 ```{r}
-dge.L <- yf %>% 
-  flm_def("group", numer = "L.lactating", denom = "L.pregnant") %>% 
+dge.L <- yf |> 
+  flm_def("group", numer = "L.lactating", denom = "L.pregnant") |> 
   fdge(method = "edgeR-qlf")
 ```
 

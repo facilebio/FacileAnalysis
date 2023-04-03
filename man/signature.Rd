@@ -18,20 +18,22 @@ insipiration strike.
 Most of the \verb{signature.*} functions defined over the result of analysis first
 passes through a call to \code{ranks()} first, which then calls the \code{signature()}
 method on those ranks, ie. the two segments below will produce the same
-result.\if{html}{\out{<div class="sourceCode r">}}\preformatted{sigs1 <- FacileData::exampleFacileDataSet() \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
-  fpca() \%>\%
+result.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{sigs1 <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "CRC") |>
+  fpca() |>
   signature()
-sigs2 <- FacileData::exampleFacileDataSet() \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
-  fpca() \%>\%
-  ranks() \%>\%
+sigs2 <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "CRC") |>
+  fpca() |>
+  ranks() |>
   signature()
 }\if{html}{\out{</div>}}
 }
 \examples{
-pca.sigs <- FacileData::exampleFacileDataSet() \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
-  fpca() \%>\%
+pca.sigs <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "CRC") |>
+  fpca() |>
   signature()
 }

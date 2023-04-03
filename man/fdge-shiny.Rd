@@ -56,11 +56,11 @@ if (interactive()) {
 # run tumor vs normal comparisons vs each, then run compare() on the results
 options(facile.log.level.fshine = "trace")
 efds <- FacileData::exampleFacileDataSet()
-dge.crc <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+dge.crc <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   fdgeGadget(viewer = "pane")
-dge.blca <- efds \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
+dge.blca <- efds |>
+  FacileData::filter_samples(indication == "BLCA") |>
   fdgeGadget(viewer = "pane")
 dge.comp <- compare(dge.crc, dge.blca)
 

@@ -192,18 +192,18 @@ covariates, then the manually provided ones will supersede the internals.
 
 \examples{
 efds <- FacileData::exampleFacileDataSet()
-p1 <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+p1 <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   fpca()
-p2 <- efds \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
+p2 <- efds |>
+  FacileData::filter_samples(indication == "BLCA") |>
   fpca()
 pcmp <- compare(p1, p2)
 efds <- FacileData::exampleFacileDataSet()
 
 # A subset of samples ------------------------------------------------------
-pca.crc <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+pca.crc <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   fpca()
 if (interactive()) {
   # report(pca.crc, color_aes = "sample_type")
@@ -212,20 +212,20 @@ if (interactive()) {
 }
 
 # Regress "sex" out from expression data
-pca.crcs <- FacileData::samples(pca.crc) \%>\%
+pca.crcs <- FacileData::samples(pca.crc) |>
   fpca(batch = "sex")
 if (interactive()) {
   viz(pca.crcs, color_aes = "sex")
 }
 
 # Perform PCA on only the protein coding genes
-genes.pc <- features(efds) \%>\% subset(meta == "protein_coding")
-pca.crc.pc <- samples(pca.crc) \%>\%
+genes.pc <- features(efds) |> subset(meta == "protein_coding")
+pca.crc.pc <- samples(pca.crc) |>
   fpca(features = genes.pc, filter = "variance")
 
-pca.gdb <- pca.crc \%>\%
-  signature(dims = 1:3) \%>\%
-  result() \%>\%
+pca.gdb <- pca.crc |>
+  signature(dims = 1:3) |>
+  result() |>
   sparrow::GeneSetDb()
 
 # All samples --------------------------------------------------------------

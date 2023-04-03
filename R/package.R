@@ -35,10 +35,6 @@ FacileViz::plot_data
 #' @export
 broom::tidy
 
-#' @importFrom FacileData %>%
-#' @export
-FacileData::`%>%`
-
 #' @importFrom shiny callModule
 #' @export
 shiny::callModule

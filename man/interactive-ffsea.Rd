@@ -44,10 +44,10 @@ that extract and invokes the function.
 
 \examples{
 gdb <- sparrow::exampleGeneSetDb()
-dge.crc <- FacileData::exampleFacileDataSet() \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+dge.crc <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-          batch = "sex") \%>\%
+          batch = "sex") |>
   fdge(method = "voom")
 if (interactive()) {
   fres <- ffseaGadget(dge.crc, gdb)
