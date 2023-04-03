@@ -6,10 +6,10 @@ options(facile.log.level.fshine = "trace")
 
 efds <- FacileData::exampleFacileDataSet()
 gdb.base <- sparrow::getMSigGeneSetDb("h", "human", "entrez")
-ttest.res <- FacileData::exampleFacileDataSet() %>%
-  FacileData::filter_samples(indication == "CRC") %>%
+ttest.res <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type",
-          numer = "tumor", denom = "normal", batch = "sex") %>%
+          numer = "tumor", denom = "normal", batch = "sex") |>
   fdge(method = "voom")
 
 modres <- FacileAnalysis::frunGadget(

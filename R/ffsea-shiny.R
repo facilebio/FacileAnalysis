@@ -13,10 +13,10 @@
 #' @param gdb A `GeneSetDb` to use for the FSEA.
 #' @examples
 #' gdb <- sparrow::exampleGeneSetDb()
-#' dge.crc <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' dge.crc <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-#'           batch = "sex") %>%
+#'           batch = "sex") |>
 #'   fdge(method = "voom")
 #' if (interactive()) {
 #'   fres <- ffseaGadget(dge.crc, gdb)

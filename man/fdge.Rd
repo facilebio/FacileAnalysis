@@ -278,8 +278,8 @@ analysis, ie. \code{methods = "ora"}.
 
 \examples{
 efds <- FacileData::exampleFacileDataSet()
-samples <- efds \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
+samples <- efds |>
+  FacileData::filter_samples(indication == "BLCA") |>
   dplyr::mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
 mdef <- flm_def(samples, covariate = "sample_type",
                 numer = "tumor", denom = "normal",
@@ -293,24 +293,24 @@ if (interactive()) {
 dge.stats <- tidy(dge)
 dge.sig <- signature(dge)
 
-stage.anova <- samples \%>\%
-  flm_def(covariate = "stage", batch = "sex") \%>\%
+stage.anova <- samples |>
+  flm_def(covariate = "stage", batch = "sex") |>
   fdge(method = "voom")
 anova.sig <- signature(stage.anova)
 # Comparing two T-test results ----------------------------------------------
 # Let's compare the tumor vs normal DGE results in CRC vs BLCA
 
 efds <- FacileData::exampleFacileDataSet()
-dge.crc <- FacileData::filter_samples(efds, indication == "CRC") \%>\%
-  flm_def("sample_type", "tumor", "normal", "sex") \%>\%
+dge.crc <- FacileData::filter_samples(efds, indication == "CRC") |>
+  flm_def("sample_type", "tumor", "normal", "sex") |>
   fdge()
-dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") \%>\%
-  flm_def("sample_type", "tumor", "normal", "sex") \%>\%
+dge.blca <- FacileData::filter_samples(efds, indication == "BLCA") |>
+  flm_def("sample_type", "tumor", "normal", "sex") |>
   fdge()
 dge.comp <- compare(dge.crc, dge.blca)
-comp.hi <- tidy(dge.comp) \%>\%
-  dplyr::group_by(interaction_group) \%>\%
-  dplyr::slice(1:3) \%>\%
+comp.hi <- tidy(dge.comp) |>
+  dplyr::group_by(interaction_group) |>
+  dplyr::slice(1:3) |>
   dplyr::ungroup()
 # Static visualization generates the main "4-way" plot, as well as the
 # facets for each category.
@@ -318,9 +318,9 @@ sviz <- viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
             subtitle = "Tumor vs normal comparisons across indications",
             highlight = comp.hi)
 # highlight some of them
-s.hi <- sviz$input_data \%>\%
-  dplyr::group_by(interaction_group) \%>\%
-  dplyr::slice(1:3) \%>\%
+s.hi <- sviz$input_data |>
+  dplyr::group_by(interaction_group) |>
+  dplyr::slice(1:3) |>
   dplyr::ungroup()
 if (requireNamespace("patchwork")) {
   patchwork::wrap_plots(

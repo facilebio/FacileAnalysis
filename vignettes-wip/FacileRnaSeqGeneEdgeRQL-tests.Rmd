@@ -107,8 +107,8 @@ qlf.tt <- as.data.frame(topTags(res, n = Inf))
 ```
 
 ```{r}
-facile.res <- y %>% 
-  flm_def("group", numer = "B.lactating", denom = "B.pregnant") %>% 
+facile.res <- y |> 
+  flm_def("group", numer = "B.lactating", denom = "B.pregnant") |> 
   fdge(method = "edgeR-qlf", filter = FALSE)
 facile.tt <- tidy(facile.res)
 ```
@@ -141,8 +141,8 @@ web-browser. Here we'll chose to show a sample of both significant and
 "background" genes.
 
 ```{r}
-bg.genes <- filter(facile.tt, padj > 0.1) %>% sample_n(200)
-fg.genes <- filter(facile.tt, padj < 0.1) %>% sample_n(1000)
+bg.genes <- filter(facile.tt, padj > 0.1) |> sample_n(200)
+fg.genes <- filter(facile.tt, padj < 0.1) |> sample_n(1000)
 viz(facile.res, type = "MA", features = bg.genes, highlight = fg.genes)
 ```
 
@@ -161,8 +161,8 @@ tr.tt <- as.data.frame(topTags(tr, n = Inf))
 We'll re-use the model from the original analsis and tweak the fdge parameters.
 
 ```{r}
-facile.thresh <- facile.res %>% 
-  model() %>% 
+facile.thresh <- facile.res |> 
+  model() |> 
   fdge(method = "edgeR-qlf", treat_lfc = log2(1.5), filter = FALSE)
 facile.tt.thresh <- tidy(facile.thresh)
 ```
@@ -202,8 +202,8 @@ con <- makeContrasts(
   L.VvsL = L.virgin - L.lactating,
   L.VvsP = L.virgin - L.pregnant, levels = design)
 
-anova.res <- glmQLFTest(fit, contrast = con) %>% 
-  topTags(n = Inf) %>% 
+anova.res <- glmQLFTest(fit, contrast = con) |> 
+  topTags(n = Inf) |> 
   as.data.frame()
 ```
 
@@ -219,14 +219,14 @@ the number of samples used for the Bayes-like step in the analysis isn't the
 same, but should be close.
 
 ```{r}
-anova.facile <- y %>% 
-  filter_samples(CellType == "L") %>% 
-  flm_def("Status") %>% 
+anova.facile <- y |> 
+  filter_samples(CellType == "L") |> 
+  flm_def("Status") |> 
   fdge(method = "edgeR-qlf", filter = FALSE)
 ```
 
 ```{r}
-cmp.anova <- anova.res %>% 
+cmp.anova <- anova.res |> 
   full_join(select(tidy(anova.facile), feature_id, F, pval, padj),
             by = "feature_id", suffix = c(".edger", ".facile"))
 ```
@@ -249,8 +249,8 @@ Basically testing an interaction term
 con <- makeContrasts(
   (L.lactating-L.pregnant)-(B.lactating-B.pregnant), 
   levels=design)
-interaction.res <- glmQLFTest(fit, contrast=con) %>% 
-  topTags(n = Inf) %>% 
+interaction.res <- glmQLFTest(fit, contrast=con) |> 
+  topTags(n = Inf) |> 
   as.data.frame()
 ```
 
@@ -261,8 +261,8 @@ We already have the `B.lactating - B.pregnant` results stored in `facile.res`.
 We'll make another one for `L.lactating - L.pregnant`, and compare them.
 
 ```{r}
-facile.L <- y %>% 
-  flm_def("group", numer = "L.lactating", denom = "L.pregnant") %>% 
+facile.L <- y |> 
+  flm_def("group", numer = "L.lactating", denom = "L.pregnant") |> 
   fdge(method = "edgeR-qlf", filter = FALSE)
 ```
 

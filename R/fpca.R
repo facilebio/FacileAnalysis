@@ -98,8 +98,8 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # A subset of samples ------------------------------------------------------
-#' pca.crc <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' pca.crc <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpca()
 #' if (interactive()) {
 #'   # report(pca.crc, color_aes = "sample_type")
@@ -108,20 +108,20 @@
 #' }
 #'
 #' # Regress "sex" out from expression data
-#' pca.crcs <- FacileData::samples(pca.crc) %>%
+#' pca.crcs <- FacileData::samples(pca.crc) |>
 #'   fpca(batch = "sex")
 #' if (interactive()) {
 #'   viz(pca.crcs, color_aes = "sex")
 #' }
 #'
 #' # Perform PCA on only the protein coding genes
-#' genes.pc <- features(efds) %>% subset(meta == "protein_coding")
-#' pca.crc.pc <- samples(pca.crc) %>%
+#' genes.pc <- features(efds) |> subset(meta == "protein_coding")
+#' pca.crc.pc <- samples(pca.crc) |>
 #'   fpca(features = genes.pc, filter = "variance")
 #'
-#' pca.gdb <- pca.crc %>%
-#'   signature(dims = 1:3) %>%
-#'   result() %>%
+#' pca.gdb <- pca.crc |>
+#'   signature(dims = 1:3) |>
+#'   result() |>
 #'   sparrow::GeneSetDb()
 #'
 #' # All samples --------------------------------------------------------------
@@ -217,12 +217,12 @@ fpca.facile_frame <- function(x, assay_name = NULL,
     out[["samples"]][["sample_id"]] <- col_covariates[["sample_id"]]
   }
 
-  out[["result"]] <- out[["result"]] %>%
-    as_tibble() %>%
-    select(dataset, sample_id, everything()) %>%
+  out[["result"]] <- out[["result"]] |>
+    as_tibble() |>
+    select(dataset, sample_id, everything()) |>
     as_facile_frame(.fds)
-  out[["feature_stats"]] <- out[["feature_stats"]] %>%
-    as_tibble() %>%
+  out[["feature_stats"]] <- out[["feature_stats"]] |>
+    as_tibble() |>
     as_facile_frame(.fds)
 
   out[["samples"]] <- x
@@ -453,9 +453,9 @@ ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
   }
 
   # Order by PC and rank
-  ranks. <- ranks. %>%
-    mutate(PC. = as.integer(sub("PC", "", ranks.$dimension))) %>%
-    arrange(PC., rank) %>%
+  ranks. <- ranks. |>
+    mutate(PC. = as.integer(sub("PC", "", ranks.$dimension))) |>
+    arrange(PC., rank) |>
     mutate(PC. = NULL)
 
   # Add metadata to ranks, if there.
@@ -504,25 +504,25 @@ signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
   }
 
   if (isTRUE(x$params$signed)) {
-    sig.up <- res. %>%
-      group_by(dimension) %>%
-      slice(1:ntop) %>%
-      mutate(name = paste(dimension, "pos")) %>%
+    sig.up <- res. |>
+      group_by(dimension) |>
+      slice(1:ntop) |>
+      mutate(name = paste(dimension, "pos")) |>
       ungroup()
-    sig.down <- res. %>%
-      group_by(dimension) %>%
-      slice(max(1, n() - ntop + 1L):n()) %>%
-      mutate(name = paste(dimension, "neg")) %>%
+    sig.down <- res. |>
+      group_by(dimension) |>
+      slice(max(1, n() - ntop + 1L):n()) |>
+      mutate(name = paste(dimension, "neg")) |>
       ungroup()
-    sig <- sig.up %>%
-      bind_rows(sig.down) %>%
+    sig <- sig.up |>
+      bind_rows(sig.down) |>
       arrange(dimension, desc(score))
   } else {
-    sig <- res. %>%
-      group_by(dimension) %>%
-      # head(ntop) %>%
-      slice(1:ntop) %>%
-      mutate(name = paste(dimension, "unsigned")) %>%
+    sig <- res. |>
+      group_by(dimension) |>
+      # head(ntop) |>
+      slice(1:ntop) |>
+      mutate(name = paste(dimension, "unsigned")) |>
       ungroup()
   }
 
@@ -592,12 +592,12 @@ samples.FacilePcaAnalysisResult <- function(x, ...) {
     meta[["feature_type"]] <- ftype[["feature_type"]]
   }
 
-  rlong <- rotation %>%
-    gather("PC", "rotation", -feature_id) %>%
-    mutate(weight = abs(rotation)) %>%
-    group_by(PC) %>%
+  rlong <- rotation |>
+    gather("PC", "rotation", -feature_id) |>
+    mutate(weight = abs(rotation)) |>
+    group_by(PC) |>
     mutate(rank_rotation = rank(-rotation, ties.method = "random"),
-           rank_weight = rank(-weight, ties.method = "random")) %>%
+           rank_weight = rank(-weight, ties.method = "random")) |>
     ungroup()
 
   stats <- inner_join(meta, rlong, by = "feature_id")

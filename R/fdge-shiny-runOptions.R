@@ -64,9 +64,9 @@ fdgeRunOptions <- function(input, output, session, rfds, model, assay, ...) {
     method. <- req(dge_method(), !unselected(dge_method()))
     ainfo <- req(assay$assay_info())
     atype <- req(ainfo$assay_type, !unselected(ainfo$assay_type))
-    fdge_methods() %>%
-      filter(.data$assay_type == .env$atype, .data$dge_method == .env$method.) %>%
-      pull(can_sample_weight) %>%
+    fdge_methods() |>
+      filter(.data$assay_type == .env$atype, .data$dge_method == .env$method.) |>
+      pull(can_sample_weight) |>
       isTRUE()
   })
 

@@ -7,10 +7,10 @@ if (!exists("gdb")) {
   gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 }
 
-ttest.res <- FDS %>%
-  FacileData::filter_samples(indication == "CRC") %>%
+ttest.res <- FDS |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type",
-          numer = "tumor", denom = "normal", batch = "sex") %>%
+          numer = "tumor", denom = "normal", batch = "sex") |>
   fdge(method = "voom")
 
 gsea.res <- ffsea(ttest.res, gdb, "cameraPR")
@@ -36,7 +36,7 @@ test_that("unfds/refds removes and restores 'facility' of ffsea results", {
   # strip
   ugsea <- unfds(gsea.res)
   expect_null(fds(ugsea))
-  expect_null(param(ugsea, "x") %>% fds())
+  expect_null(param(ugsea, "x") |> fds())
   expect_warning(fds(samples(ugsea)), "no.*datastore.*found", ignore.case = TRUE)
 
   # reconstitute

@@ -7,8 +7,8 @@ options(facile.log.level.fanalysis = "trace")
 efds <- FacileData::exampleFacileDataSet()
 gdb <- sparrow::getMSigGeneSetDb("h", "human", "entrez")
 
-pca.crc <- efds %>%
-  FacileData::filter_samples(indication == "CRC") %>%
+pca.crc <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   fpca()
 pca.gsea <- ffseaGadget(pca.crc, gdb)
 
@@ -18,16 +18,16 @@ if (FALSE) {
 }
 
 
-ttest.res <- efds %>%
-  FacileData::filter_samples(indication == "CRC") %>%
+ttest.res <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type",
-                 numer = "tumor", denom = "normal", batch = "sex") %>%
+                 numer = "tumor", denom = "normal", batch = "sex") |>
   fdge(method = "voom")
 ttest.gsea <- ffseaGadget(ttest.res, gdb)
 
-stage.anova <- efds %>%
-  FacileData::filter_samples(indication == "BLCA") %>%
-  flm_def(covariate = "stage", batch = "sex") %>%
+stage.anova <- efds |>
+  FacileData::filter_samples(indication == "BLCA") |>
+  flm_def(covariate = "stage", batch = "sex") |>
   fdge(method = "voom")
 anova.gsea <- ffseaGadget(stage.anova, gdb)
 

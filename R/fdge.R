@@ -77,8 +77,8 @@
 #'   to use when `method == "limma"`.
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
-#' samples <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' samples <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   dplyr::mutate(something = sample(c("a", "b"), nrow(.), replace = TRUE))
 #' mdef <- flm_def(samples, covariate = "sample_type",
 #'                 numer = "tumor", denom = "normal",
@@ -92,8 +92,8 @@
 #' dge.stats <- tidy(dge)
 #' dge.sig <- signature(dge)
 #'
-#' stage.anova <- samples %>%
-#'   flm_def(covariate = "stage", batch = "sex") %>%
+#' stage.anova <- samples |>
+#'   flm_def(covariate = "stage", batch = "sex") |>
 #'   fdge(method = "voom")
 #' anova.sig <- signature(stage.anova)
 fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
@@ -512,25 +512,25 @@ signature.FacileTtestFeatureRanks <- function(x, min_logFC = x[["treat_lfc"]],
   if (is.null(min_logFC)) min_logFC <- 0
   min_logFC <- abs(min_logFC)
 
-  res <- tidy(x) %>%
+  res <- tidy(x) |>
     mutate(direction = ifelse(logFC > 0, "up", "down"))
 
   if (signed(x)) {
-    up <- res %>%
-      filter(padj <= max_padj, logFC > min_logFC) %>%
+    up <- res |>
+      filter(padj <= max_padj, logFC > min_logFC) |>
       head(ntop)
-    down <- res %>%
-      filter(padj <= max_padj, logFC < -min_logFC) %>%
+    down <- res |>
+      filter(padj <= max_padj, logFC < -min_logFC) |>
       tail(ntop)
     sig <- bind_rows(up, down)
   } else {
-    sig <- res %>%
-      filter(padj <= max_padj) %>%
+    sig <- res |>
+      filter(padj <= max_padj) |>
       head(ntop)
   }
 
-  sig <- sig %>%
-    mutate(collection = collection_name, name = paste(name., direction)) %>%
+  sig <- sig |>
+    mutate(collection = collection_name, name = paste(name., direction)) |>
     select(collection, name, feature_id, symbol, direction,
            logFC, pval, padj, everything())
 
@@ -588,11 +588,11 @@ signature.FacileAnovaFeatureRanks <- function(x, max_padj = 0.10,
   if (is.null(collection_name)) collection_name <- class(x)[1L]
   assert_string(collection_name)
 
-  sig <- result(x) %>%
-    filter(padj <= max_padj) %>%
+  sig <- result(x) |>
+    filter(padj <= max_padj) |>
     mutate(collection = collection_name, name = name.,
-           direction = "udefined") %>%
-    head(ntop) %>%
+           direction = "udefined") |>
+    head(ntop) |>
     select(collection, name, feature_id, symbol, direction, F, pval, padj,
            everything())
 

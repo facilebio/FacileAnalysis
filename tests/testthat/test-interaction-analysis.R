@@ -2,24 +2,24 @@ context("Interaction models: dge and gsea")
 
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
-anova.all <- samples(FDS) %>%
-  with_sample_covariates(c("indication", "sample_type", "sex")) %>%
-  mutate(group = paste(indication, sample_type, sep = "_")) %>%
-  flm_def("group", batch = "sex") %>%
+anova.all <- samples(FDS) |>
+  with_sample_covariates(c("indication", "sample_type", "sex")) |>
+  mutate(group = paste(indication, sample_type, sep = "_")) |>
+  flm_def("group", batch = "sex") |>
   fdge()
-tvn.blca <- samples(anova.all) %>%
-  flm_def("group", "BLCA_tumor", "BLCA_normal", batch = "sex") %>%
+tvn.blca <- samples(anova.all) |>
+  flm_def("group", "BLCA_tumor", "BLCA_normal", batch = "sex") |>
   fdge(features = features(anova.all))
-tvn.crc <- samples(anova.all) %>%
-  flm_def("group", "CRC_tumor", "CRC_normal", batch = "sex") %>%
+tvn.crc <- samples(anova.all) |>
+  flm_def("group", "CRC_tumor", "CRC_normal", batch = "sex") |>
   fdge(features = features(anova.all))
 tvn.compare <- compare(tvn.blca, tvn.crc)
 istats <- tidy(tvn.compare)
 
 # Differential Expression ------------------------------------------------------
 test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
-  y.all <- anova.all %>%
-    samples() %>%
+  y.all <- anova.all |>
+    samples() |>
     biocbox("DGEList", features = features(anova.all))
   y.all <- suppressWarnings(edgeR::calcNormFactors(y.all))
 
@@ -32,12 +32,12 @@ test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
     interaction = (BLCA_tumor - BLCA_normal) - (CRC_tumor - CRC_normal),
     levels = des)
   vm <- limma::voom(y.all, des)
-  fit <- limma::lmFit(vm, vm$des) %>%
-    limma::contrasts.fit(ctr) %>%
+  fit <- limma::lmFit(vm, vm$des) |>
+    limma::contrasts.fit(ctr) |>
     limma::eBayes()
 
-  lres <- fit %>%
-    limma::topTable("interaction", n = Inf, sort.by = "none") %>%
+  lres <- fit |>
+    limma::topTable("interaction", n = Inf, sort.by = "none") |>
     select(feature_id, logFC, t, pval = P.Value, padj = adj.P.Val)
   expect_set_equal(istats$feature_id, lres$feature_id)
   lres <- lres[istats$feature_id,]
@@ -64,11 +64,11 @@ if (FALSE) {
 test_that("ttest compare() over same covariate, different numer/denom", {
   # subset to cancer type, (stage I vs stage II) vs (stage III vs stage IV)
   crc.samples <- filter_samples(FDS, indication == "CRC")
-  stage.2v1 <- crc.samples %>%
-    flm_def("stage", "II", "I") %>%
+  stage.2v1 <- crc.samples |>
+    flm_def("stage", "II", "I") |>
     fdge()
-  stage.4v3 <- crc.samples %>%
-    flm_def("stage", "IV", "III") %>%
+  stage.4v3 <- crc.samples |>
+    flm_def("stage", "IV", "III") |>
     fdge()
   cmp.stage <- compare(stage.2v1, stage.4v3)
 })
@@ -119,9 +119,9 @@ test_that("ffsea on interaction stats works like a normal ttest ffsea", {
                       # these are default values for params, but being explicit
                       max_padj = max.padj, min_logFC = min.logFC,
                       group_by = "direction")
-  exp.gsea.h <- tidy(tvn.compare) %>%
+  exp.gsea.h <- tidy(tvn.compare) |>
     mutate(direction = ifelse(logFC > 0, "up", "down"),
-           significant = abs(logFC) >= min.logFC & padj <= max.padj) %>%
+           significant = abs(logFC) >= min.logFC & padj <= max.padj) |>
     ffsea(param(res.gsea.h, "fsets"),
           methods = param(res.gsea.h, "methods"),
           rank_by = param(res.gsea.h, "rank_by"),

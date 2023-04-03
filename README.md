@@ -29,7 +29,7 @@ of the two.
 To achieve this goal, analysis modules break down a general analysis
 task into smaller constituent steps, the results of which can:
 
-1.  be piped together (`%>%`) to perform a complete analysis;
+1.  be piped together (`|>`) to perform a complete analysis;
 2.  be explored at **different levels of interactivity**, via the
     `shine()`, `viz()`, and `report()` methods; and
 3.  act as starting (or reference) points for **the next** analysis

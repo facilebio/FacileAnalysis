@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.16
+Version: 0.98.17
 Authors@R: c(
     person(
       "Steve", "Lianoglou",
@@ -22,7 +22,7 @@ Description: Provides modularized analysis methods commonly performed over
 URL: https://github.com/facilebio/FacileAnalysis
 BugReports: https://github.com/facilebio/FacileAnalysis/issues
 Depends:
-    R (>= 3.6)
+    R (>= 4.2.0)
 Imports:
     broom,
     checkmate,
@@ -30,7 +30,7 @@ Imports:
     dplyr,
     DT,
     edgeR,
-    FacileData (>= 0.98.0),
+    FacileData (>= 0.98.5),
     FacileShine (>= 0.98.0),
     FacileViz (>= 0.98.0),
     ggplot2,
@@ -42,6 +42,7 @@ Imports:
     miniUI,
     sparrow (>= 0.98.5),
     sparrow.shiny,
+    statmod (>= 1.5.0),
     plotly (>= 4.9.0),
     shiny (>= 1.3.1),
     shinycssloaders,
@@ -53,6 +54,7 @@ Imports:
     tidyr
 Suggests:
     airway,
+    BiasedUrn,
     curl,
     DESeq2,
     FacileBiocData,
@@ -88,7 +90,7 @@ License: Apache License (>= 2.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Collate: 
     'api.R'
     'biocbox.R'

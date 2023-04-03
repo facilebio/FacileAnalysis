@@ -467,24 +467,24 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
     ntop <- ntop
   }
 
-  dat.all <- tidy(x) %>%
+  dat.all <- tidy(x) |>
     select(symbol, feature_id, logFC, padj, pval)
 
-  dat.sig <- dat.all %>%
+  dat.sig <- dat.all |>
     filter(
       (abs(logFC) >= min_logFC & padj <= max_padj) |
         feature_id %in% highlight)
 
-  dat.up <- dat.sig %>%
-    arrange(desc(logFC)) %>%
+  dat.up <- dat.sig |>
+    arrange(desc(logFC)) |>
     head(ntop / 2)
-  dat.down <- dat.sig %>%
-    arrange(logFC) %>%
+  dat.down <- dat.sig |>
+    arrange(logFC) |>
     head(ntop / 2)
 
-  dat <- dat.up %>%
-    bind_rows(dat.down) %>%
-    rename(FDR = padj) %>%
+  dat <- dat.up |>
+    bind_rows(dat.down) |>
+    rename(FDR = padj) |>
     distinct(feature_id, .keep_all = TRUE)
 
   # Add link for gene and axe feature_id
@@ -511,7 +511,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   # Generate volcano given the filtered data
   yaxis <- list(range = c(0, max(-log10(dat$pval)) + 0.1))
   xaxis <- list(range = (max(abs(dat$logFC)) + 0.2) * c(-1, 1))
-  p <- sdat %>%
+  p <- sdat |>
     plot_ly(x = ~logFC, y = ~-log10(pval),
             type = "scatter", mode = "markers",
             hoverinfo = "text",
@@ -529,9 +529,9 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
               "Symbol: ", symbol, "<br>",
               sprintf(paste0("logFC: %.", round_digits, "f<br>"), logFC),
               sprintf(paste0("FDR: %.", round_digits, "f<br>"), FDR),
-              sprintf(paste0("pvalue: %.", round_digits, "f<br>"), pval))) %>%
+              sprintf(paste0("pvalue: %.", round_digits, "f<br>"), pval))) |>
     layout(yaxis = yaxis, xaxis = xaxis, dragmode = "select",
-           showlegend = FALSE) %>%
+           showlegend = FALSE) |>
     config(displaylogo = FALSE)
 
   if (webgl) p <- toWebGL(p)
@@ -541,11 +541,11 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   if (isTRUE(all.equal(dat$symbol, dat$feature_id))) {
     noshow <- c(noshow, "symbol")
   }
-  dtable <- sdat %>%
+  dtable <- sdat |>
     datatable(filter = "top", extensions = "Scroller", style = "bootstrap",
               class = "compact", width = "100%", rownames = FALSE,
               options = dtopts, escape = !link_feature,
-              colnames = setdiff(colnames(dat), noshow)) %>%
+              colnames = setdiff(colnames(dat), noshow)) |>
     formatRound(c("logFC", "FDR", "pval"), round_digits)
 
   # Title

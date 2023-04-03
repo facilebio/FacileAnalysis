@@ -38,12 +38,12 @@ efds <- exampleFacileDataSet()
 **Tumor vs Normal in TCGA BLCA Indication**
 
 ```{r blcadge}
-blca.dge <- efds %>% 
-  filter_samples(indication == "BLCA") %>% 
+blca.dge <- efds |> 
+  filter_samples(indication == "BLCA") |> 
   flm_def(assay_name = "rnaseq", # can run on CNV, proteomics, etc.
                  covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 batch = "sex",) %>% 
+                 batch = "sex",) |> 
   fdge(method = "voom", with_sample_weights = TRUE)
 ```
 
@@ -57,11 +57,11 @@ report(
 **Tumor vs Normal in TCGA CRC Indication**
 
 ```{r crcdge}
-crc.dge <- efds %>% 
-  filter_samples(indication == "CRC") %>% 
+crc.dge <- efds |> 
+  filter_samples(indication == "CRC") |> 
   flm_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 batch = "sex") %>% 
+                 batch = "sex") |> 
   fdge(method = "voom", with_sample_weights = TRUE)
 ```
 

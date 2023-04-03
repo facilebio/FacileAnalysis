@@ -3,8 +3,8 @@ context("Model definition for Gene Expression and GSEA (flm_def)")
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
 test_that("flm_def supports simple t-test specification", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor", denom = "normal",
             batch = "sex")
@@ -12,8 +12,8 @@ test_that("flm_def supports simple t-test specification", {
   expect_equal(mdef$contrast, c(normal = -1, tumor = 1, sexf = 0))
 
   # Flip numerator and denominator
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "normal", denom = "tumor",
             batch = "sex")
@@ -22,8 +22,8 @@ test_that("flm_def supports simple t-test specification", {
 })
 
 test_that("Partial t-test spec is not allowed (no numer or denom)", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "normal", denom = NULL,
             batch = "sex")
@@ -32,8 +32,8 @@ test_that("Partial t-test spec is not allowed (no numer or denom)", {
 })
 
 test_that("flm_def supports ANOVA specification", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "stage", batch = "sex")
   expect_is(mdef, "FacileAnovaModelDefinition")
   expect_equal(colnames(mdef$design)[1], "(Intercept)")
@@ -83,8 +83,8 @@ test_that("flm_def removes samples with NA in covariates", {
 
 test_that("flm_def supports retrieving test covaraites on the fly", {
   # sample descriptor with all required covariates for model building
-  ff0 <- FDS %>%
-    filter_samples(indication == "BLCA", sample_type == "tumor") %>%
+  ff0 <- FDS |>
+    filter_samples(indication == "BLCA", sample_type == "tumor") |>
     with_sample_covariates(c("stage", "sex"))
   mref <- flm_def(ff0, covariate = "stage", batch = "sex")
 
@@ -105,21 +105,21 @@ test_that("flm_def supports retrieving test covaraites on the fly", {
 test_that("Errors gracefully with duplicate entries in numer and denom", {
   samples <- filter_samples(FDS, indication == "CRC")
   good.model <- expect_warning({
-    samples %>%
+    samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = c("CMS1", "CMS2"),
               denom = c("CMS3", "CMS4"))
   }, "NA")
 
   bad1 <- expect_warning({
-    samples %>%
+    samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = "CMS1",
               denom = c("CMS1", "CMS2", "CMS3"))
   }, "NA.*required covariates")
 
   bad1 <- expect_warning({
-    samples %>%
+    samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = "CMS1", denom = "CMS1")
   }, "NA.*required covariates")
@@ -130,7 +130,7 @@ test_that("flm_def errors on non-fullrank matrices", {
   samples <- filter_samples(FDS, indication == "CRC")
 
   good.model <- expect_warning({
-    samples %>%
+    samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = c("CMS1", "CMS2"),
               denom = c("CMS3", "CMS4"))
@@ -139,7 +139,7 @@ test_that("flm_def errors on non-fullrank matrices", {
 
   # adding `batch = "sex"` makes this not full rank
   bad.model <- expect_warning({
-    samples %>%
+    samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = c("CMS1", "CMS2"),
               denom = c("CMS3", "CMS4"),

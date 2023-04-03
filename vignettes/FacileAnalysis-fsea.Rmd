@@ -31,7 +31,7 @@ This vignette assumes that you've got a `GeneSetDb` object in hand named `gdb`.
 ```{r, eval = FALSE}
 library(FacileData)
 library(FacileAnalysis)
-samples <- exampleFacileDataSet() %>% 
+samples <- exampleFacileDataSet() |> 
   filter_samples(indication == "BLCA")
 ```
 
@@ -47,11 +47,11 @@ For now, I imagine (gene) set enerichment analyses will be performed over
     ```{r, eval=FALSE}
     gdb <- sparrow::exampleGeneSetDb()
     
-    dge.gsea <- samples %>% 
+    dge.gsea <- samples |> 
       flm_def(covariate = "sample_type", 
                  numer = "tumor", denom = "normal",
-                 batch = "sex") %>% 
-      fdge() %>% 
+                 batch = "sex") |> 
+      fdge() |> 
       ffsea(gdb, method = c("cameraPR", "ora"), rank_by = "t")
     ```
 
@@ -60,8 +60,8 @@ For now, I imagine (gene) set enerichment analyses will be performed over
    each analysis result type, too, if you don't want to specify them.
 
     ```{r, eval=FALSE}
-    pc1.gsea <- samples %>% 
-      fpca() %>% 
+    pc1.gsea <- samples |> 
+      fpca() |> 
       ffsea(gdb, pc = 1)
     ```
 

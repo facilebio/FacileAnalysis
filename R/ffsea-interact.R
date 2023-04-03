@@ -53,10 +53,10 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
 #' @export
 #' @examples
 #' gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
-#' dge.ttest <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' dge.ttest <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-#'           batch = "sex") %>%
+#'           batch = "sex") |>
 #'   fdge(method = "voom")
 #' gsea.ttest <- ffsea(dge.ttest, gdb, methods = c("cameraPR", "fgsea"))
 #'

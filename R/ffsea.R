@@ -3,7 +3,7 @@
 #' @description
 #' Currently we support running a number of feature (gene) set enrichment
 #' analyses downstream of a *some other* `FacileAnalysisResult` (ie.,
-#' `[fdge() | fpca()] %>% ffsea()`), or over an arbitrary data.frame of
+#' `[fdge() | fpca()] |> ffsea()`), or over an arbitrary data.frame of
 #' feature-level statistics.
 #'
 #' Please refer to the examples here, as well as theh *"Feature Set Analysis"*
@@ -91,10 +91,10 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #'
 #' # GSEA from t-test result ---------------------------------------------------
-#' ttest.res <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' ttest.res <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-#'           batch = "sex") %>%
+#'           batch = "sex") |>
 #'   fdge(method = "voom")
 #'
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
@@ -111,9 +111,9 @@
 #' ora.stats <- tidy(ttest.gsea, "ora")
 #'
 #' # GSEA from ANOVA result ----------------------------------------------------
-#' stage.anova <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
-#'   flm_def(covariate = "stage", batch = "sex") %>%
+#' stage.anova <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
+#'   flm_def(covariate = "stage", batch = "sex") |>
 #'   fdge(method = "voom")
 #' anova.gsea <- ffsea(stage.anova, gdb)
 #' if (interactive()) {
@@ -123,8 +123,8 @@
 #'  anova.gsea2 <- ffseaGadget(stage.anova, gdb = gdb)
 #' }
 #' # GSEA over loadings on a Principal Component -------------------------------
-#' pca.crc <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' pca.crc <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 ffsea <- function(x, fsets, methods = NULL, ...) {
@@ -137,7 +137,7 @@ ffsea <- function(x, fsets, methods = NULL, ...) {
 #'
 #' @noRd
 ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL, ...) {
-  stop("Run fdge(x) %>% ffsea() for now")
+  stop("Run fdge(x) |> ffsea() for now")
 }
 
 #' @section Generic Set Enrichment Analysis from a table of statistics:
@@ -412,8 +412,8 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
 
   quadrants <- sapply(names(labels), function(quadrant) {
     qlabel <- labels[quadrant]
-    xdat <- istats %>%
-      mutate(significant = interaction_group == qlabel) %>%
+    xdat <- istats |>
+      mutate(significant = interaction_group == qlabel) |>
       select(feature_id, feature_type, symbol, significant,
              starts_with("padj"), starts_with("pval"),
              starts_with("logFC"), starts_with("t\\."))

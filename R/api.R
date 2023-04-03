@@ -320,10 +320,10 @@ param.BiocBox <- function(x, name = NULL, ...) {
 #' the genes under test.
 #'
 #' ```
-#' dge <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' dge <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   flm_def(covariate = "sample_type",numer = "tumor", denom = "normal",
-#'           batch = "sex") %>%
+#'           batch = "sex") |>
 #'   fdge()
 #' ```
 #'
@@ -387,23 +387,23 @@ ranks <- function(x, ...) {
 #' result.
 #'
 #' ```r
-#' sigs1 <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
-#'   fpca() %>%
+#' sigs1 <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "CRC") |>
+#'   fpca() |>
 #'   signature()
-#' sigs2 <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
-#'   fpca() %>%
-#'   ranks() %>%
+#' sigs2 <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "CRC") |>
+#'   fpca() |>
+#'   ranks() |>
 #'   signature()
 #' ```
 #'
 #' @export
 #' @param x A `FacileAnalysisResult`.
 #' @examples
-#' pca.sigs <- FacileData::exampleFacileDataSet() %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
-#'   fpca() %>%
+#' pca.sigs <- FacileData::exampleFacileDataSet() |>
+#'   FacileData::filter_samples(indication == "CRC") |>
+#'   fpca() |>
 #'   signature()
 signature <- function(x, ...) {
   UseMethod("signature", x)

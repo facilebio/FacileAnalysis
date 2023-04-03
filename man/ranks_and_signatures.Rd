@@ -30,19 +30,23 @@ often the "topn" ranks returned from the analysis (or a dimension thereof).
 Let's consider a differential gene expression (DGE) analysis, where we are
 testing the differential abundance of a gene across two groups of samples.
 The result of the analysis can induce both a signed and unsigned ranking on
-the genes under test.\preformatted{dge <- FacileData::exampleFacileDataSet() \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
+the genes under test.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{dge <- FacileData::exampleFacileDataSet() |>
+  FacileData::filter_samples(indication == "BLCA") |>
   flm_def(covariate = "sample_type",numer = "tumor", denom = "normal",
-          batch = "sex") \%>\%
+          batch = "sex") |>
   fdge()
-}
+}\if{html}{\out{</div>}}
 
 Ranking the results of the DGE by ascending \emph{p}-value will provide an
 \strong{unsigned} ranking on the genes: Alternatively, one could get a \strong{signed}
 ranking from the result of this test simply by arranging each gene by its
-log-fold-change. Both approaches are achieved by the code below:\preformatted{uranks <- ranks(dge, signed = FALSE)
+log-fold-change. Both approaches are achieved by the code below:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{uranks <- ranks(dge, signed = FALSE)
 sranks <- ranks(dge, signed = TRUE)
-}
+}\if{html}{\out{</div>}}
 
 rank each gene by its \emph{p}-value (ascending).
 }

@@ -3,8 +3,8 @@ context("Building bioconductor assay containers with biocbox (biocbox)")
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
 test_that("Correct bioc container built from model def and method spec", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal")
@@ -40,8 +40,8 @@ test_that("Correct bioc container built from model def and method spec", {
 })
 
 test_that("Various filter* combinations to biocbox work", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal")
@@ -85,8 +85,8 @@ test_that("Various filter* combinations to biocbox work", {
 })
 
 test_that("biocbox(..., features = something) only ever returns `something`", {
-  mdef <- FDS %>%
-    filter_samples(indication == "BLCA") %>%
+  mdef <- FDS |>
+    filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
             numer = "tumor",
             denom = "normal")

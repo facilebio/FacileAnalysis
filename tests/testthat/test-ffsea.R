@@ -7,14 +7,14 @@ if (!exists("gdb")) {
   gdb <- sparrow::getMSigGeneSetDb("h", "human", id.type = "entrez")
 }
 
-ttest.res <- FDS %>%
-  FacileData::filter_samples(indication == "CRC") %>%
+ttest.res <- FDS |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type",
-          numer = "tumor", denom = "normal", batch = "sex") %>%
+          numer = "tumor", denom = "normal", batch = "sex") |>
   fdge(method = "voom")
-anova.res <- FDS %>%
-  FacileData::filter_samples(indication == "CRC", sample_type == "tumor") %>%
-  flm_def(covariate = "stage", batch = "sex") %>%
+anova.res <- FDS |>
+  FacileData::filter_samples(indication == "CRC", sample_type == "tumor") |>
+  flm_def(covariate = "stage", batch = "sex") |>
   fdge(method = "voom")
 
 pca.res <- fpca(samples(anova.res))
@@ -27,13 +27,13 @@ test_that("ffsea.FacileAnalysisResult transfers all feature-level statistics to 
 
   # are the logFC, t-statistics, pvals, padj for each gene transferred
   # successfully?
-  finfo.ttest <- ttest.res %>%
-    tidy() %>%
+  finfo.ttest <- ttest.res |>
+    tidy() |>
     arrange(feature_id)
 
-  finfo.mgres <- facile.gsea %>%
-    result() %>%
-    sparrow::logFC() %>%
+  finfo.mgres <- facile.gsea |>
+    result() |>
+    sparrow::logFC() |>
     arrange(feature_id)
 
   expect_equal(nrow(finfo.mgres), nrow(finfo.ttest))
@@ -47,8 +47,8 @@ test_that("cameraPR call through ffsea works like sparrow::seas()", {
   # GSEA the facile way
   facile.gsea <- ffsea(ttest.res, gdb, method = "cameraPR")
 
-  facile.cameraPR <- facile.gsea %>%
-    tidy(name = "cameraPR") %>%
+  facile.cameraPR <- facile.gsea |>
+    tidy(name = "cameraPR") |>
     arrange(pval)
 
   # GSEA the "traditional" sparrow way
@@ -57,21 +57,21 @@ test_that("cameraPR call through ffsea works like sparrow::seas()", {
                          design = vm$design, contrast = c(-1, 1, 0),
                          score.by = "logFC")
 
-  mgres.cameraPR <- mgres %>%
-    sparrow::result("cameraPR") %>%
-    arrange(pval) %>%
+  mgres.cameraPR <- mgres |>
+    sparrow::result("cameraPR") |>
+    arrange(pval) |>
     as_tibble()
 
   # expect_equal on tbls does not fly:
   # https://github.com/tidyverse/dplyr/issues/2751
   expect_equal(
-    select(facile.cameraPR, name, pval) %>% as.data.frame(),
-    select(mgres.cameraPR, name, pval) %>% as.data.frame())
+    select(facile.cameraPR, name, pval) |> as.data.frame(),
+    select(mgres.cameraPR, name, pval) |> as.data.frame())
 })
 
 test_that("overrepresentation analysis (ora) works with ttest result", {
-  input <- ranks(ttest.res) %>%
-    tidy() %>%
+  input <- ranks(ttest.res) |>
+    tidy() |>
     mutate(significant = padj <= 0.10)
   mgres <- sparrow::ora(input, gdb, selected = "significant",
                         feature.bias = "effective_length")
@@ -85,8 +85,8 @@ test_that("overrepresentation analysis (ora) works with ttest result", {
 })
 
 test_that("ffsea(anova_result) runs enrichment test", {
-  astats <- ranks(anova.res) %>%
-    tidy() %>%
+  astats <- ranks(anova.res) |>
+    tidy() |>
     mutate(significant = padj <= 0.2)
   mgres <- sparrow::ora(astats, gdb, selected = "significant",
                         feature.bias = "effective_length")
@@ -94,7 +94,7 @@ test_that("ffsea(anova_result) runs enrichment test", {
 
   facile.gsea <- ffsea(anova.res, gdb, "ora", max_padj = 0.2,
                        biased_by = "effective_length")
-  fres <- tidy(facile.gsea) %>% select(collection, name, pval, N, n, n.drawn)
+  fres <- tidy(facile.gsea) |> select(collection, name, pval, N, n, n.drawn)
 
   expect_equal(fres$name, mgres$name)
   expect_equal(fres$n, mgres$N)
@@ -110,9 +110,9 @@ test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
   # check that pc-stuff are in features of gsea result.
   # currently (sparrow_0.99), the mgres@logFC $logFC and $t columns will
   # be loaded with the "score" of the fpca feature rankings
-  pca.fstats <- ranks(pca.res, signed = TRUE, dims = 1) %>% tidy()
-  mgres.fstats <- mgres %>%
-    sparrow::logFC() %>%
+  pca.fstats <- ranks(pca.res, signed = TRUE, dims = 1) |> tidy()
+  mgres.fstats <- mgres |>
+    sparrow::logFC() |>
     arrange(desc(score))
   expect_equal(nrow(mgres.fstats), nrow(pca.fstats))
 

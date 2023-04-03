@@ -10,11 +10,11 @@
 #'
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
-#' p1 <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' p1 <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpca()
-#' p2 <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' p2 <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   fpca()
 #' pcmp <- compare(p1, p2)
 compare.FacilePcaAnalysisResult <- function(x, y, run_all = TRUE, rerun = TRUE,
@@ -96,8 +96,8 @@ compare.FacilePcaAnalysisResult <- function(x, y, run_all = TRUE, rerun = TRUE,
   xystats <- full_join(
     select(ranks.x, feature_id, {{meta.cols}}, dimension, rank, score, weight),
     select(ranks.y, feature_id, dimension, rank, score, weight),
-    by = c("feature_id", "dimension")) %>%
-    group_by(dimension) %>%
+    by = c("feature_id", "dimension")) |>
+    group_by(dimension) |>
     mutate(
       membership = case_when(
         feature_id %in% fids.both ~ "both",
@@ -105,7 +105,7 @@ compare.FacilePcaAnalysisResult <- function(x, y, run_all = TRUE, rerun = TRUE,
         feature_id %in% fids.y    ~ "only_y",
         TRUE                      ~ "wtf"),
       score.x = ifelse(is.na(score.x), min(score.x, na.rm = TRUE), score.x),
-      score.y = ifelse(is.na(score.y), min(score.y, na.rm = TRUE), score.y)) %>%
+      score.y = ifelse(is.na(score.y), min(score.y, na.rm = TRUE), score.y)) |>
     ungroup()
 
 

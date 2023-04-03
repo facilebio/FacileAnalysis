@@ -34,7 +34,7 @@ methods that were run are available via \code{tidy(ffsea.res, "<method_name>")}.
 \description{
 Currently we support running a number of feature (gene) set enrichment
 analyses downstream of a \emph{some other} \code{FacileAnalysisResult} (ie.,
-\verb{[fdge() | fpca()] \%>\% ffsea()}), or over an arbitrary data.frame of
+\verb{[fdge() | fpca()] |> ffsea()}), or over an arbitrary data.frame of
 feature-level statistics.
 
 Please refer to the examples here, as well as theh \emph{"Feature Set Analysis"}
@@ -117,9 +117,11 @@ This is not to say that \code{result()} can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
 SparrowResult object itself, and \code{tidy(ffsea.result)} will dispatch
 to \code{\link[sparrow:results]{sparrow::result()}} to fetch the gsea statistcs for the method
-requested.\preformatted{mgres <- result(ffsea.res) # returns the SparrowResult object
+requested.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{mgres <- result(ffsea.res) # returns the SparrowResult object
 camera.stats <- tidy(ffsea.res, name = "cameraPR")
-}
+}\if{html}{\out{</div>}}
 }
 
 \examples{
@@ -127,10 +129,10 @@ gdb <- sparrow::exampleGeneSetDb()
 efds <- FacileData::exampleFacileDataSet()
 
 # GSEA from t-test result ---------------------------------------------------
-ttest.res <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+ttest.res <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
-          batch = "sex") \%>\%
+          batch = "sex") |>
   fdge(method = "voom")
 
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
@@ -147,9 +149,9 @@ camera.stats <- tidy(ttest.gsea, "cameraPR")
 ora.stats <- tidy(ttest.gsea, "ora")
 
 # GSEA from ANOVA result ----------------------------------------------------
-stage.anova <- efds \%>\%
-  FacileData::filter_samples(indication == "BLCA") \%>\%
-  flm_def(covariate = "stage", batch = "sex") \%>\%
+stage.anova <- efds |>
+  FacileData::filter_samples(indication == "BLCA") |>
+  flm_def(covariate = "stage", batch = "sex") |>
   fdge(method = "voom")
 anova.gsea <- ffsea(stage.anova, gdb)
 if (interactive()) {
@@ -159,8 +161,8 @@ if (interactive()) {
  anova.gsea2 <- ffseaGadget(stage.anova, gdb = gdb)
 }
 # GSEA over loadings on a Principal Component -------------------------------
-pca.crc <- efds \%>\%
-  FacileData::filter_samples(indication == "CRC") \%>\%
+pca.crc <- efds |>
+  FacileData::filter_samples(indication == "CRC") |>
   fpca()
 pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
 }

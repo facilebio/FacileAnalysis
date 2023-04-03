@@ -31,11 +31,11 @@ NULL
 #' # run tumor vs normal comparisons vs each, then run compare() on the results
 #' options(facile.log.level.fshine = "trace")
 #' efds <- FacileData::exampleFacileDataSet()
-#' dge.crc <- efds %>%
-#'   FacileData::filter_samples(indication == "CRC") %>%
+#' dge.crc <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
 #'   fdgeGadget(viewer = "pane")
-#' dge.blca <- efds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' dge.blca <- efds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   fdgeGadget(viewer = "pane")
 #' dge.comp <- compare(dge.crc, dge.blca)
 #'
@@ -441,9 +441,9 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
       paste0(name, ".csv")
     },
     content = function(file) {
-      dat <- req(featureviz()) %>%
-        FacileViz::input_data() %>%
-        select(dataset, sample_id, feature_id, feature_name, value) %>%
+      dat <- req(featureviz()) |>
+        FacileViz::input_data() |>
+        select(dataset, sample_id, feature_id, feature_name, value) |>
         with_sample_covariates()
       write.csv(dat, file, row.names = FALSE)
     }
@@ -457,9 +457,9 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     if (is.null(selected)) {
       selected <- tibble(dataset = character(), sample_id = character())
     } else {
-      selected <- featureviz() %>%
-        input_data() %>%
-        slice(as.integer(selected$key)) %>%
+      selected <- featureviz() |>
+        input_data() |>
+        slice(as.integer(selected$key)) |>
         select(dataset, sample_id)
     }
     current <- paste(state$boxplot_select$dataset,
@@ -482,7 +482,7 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
     },
     content = function(file) {
       .fdge <- req(isolate(dge()))
-      # .result <- ranks(.fdge) %>% result()
+      # .result <- ranks(.fdge) |> result()
       .result <- req(dge.stats())
       if ("padj" %in% colnames(.result)) {
         .result <- rename(.result, FDR = "padj")
@@ -512,13 +512,13 @@ fdgeView <- function(input, output, session, rfds, dgeres, ...,
                    pageLength = 15,
                    lengthMenu = c(15, 30, 50))
 
-    dtable <- dat %>%
+    dtable <- dat |>
       datatable(filter = "top",
                 # extensions = "Scroller",
                 style = "bootstrap",
                 class = "display", width = "100%", rownames = FALSE,
                 selection = list(mode = "single", selected = 1, target = "row"),
-                options = dtopts) %>%
+                options = dtopts) |>
       formatRound(num.cols, 3)
     dtable
   }, server = TRUE)

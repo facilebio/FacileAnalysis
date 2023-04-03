@@ -1,8 +1,8 @@
 #' A shiny module that generates a linear model definition via `flm_def`.
 #'
 #' ```
-#' model_info <- fds %>%
-#'   FacileData::filter_samples(indication == "BLCA") %>%
+#' model_info <- fds |>
+#'   FacileData::filter_samples(indication == "BLCA") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = "sex")
 #' ```

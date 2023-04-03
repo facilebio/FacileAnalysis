@@ -7,7 +7,6 @@
 \alias{features}
 \alias{plot_data}
 \alias{tidy}
-\alias{\%>\%}
 \alias{callModule}
 \title{Objects exported from other packages}
 \keyword{internal}
@@ -16,7 +15,7 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{FacileData}{\code{\link[FacileData:reexports]{\%>\%}}, \code{\link[FacileData]{features}}, \code{\link[FacileData]{samples}}}
+  \item{FacileData}{\code{\link[FacileData]{features}}, \code{\link[FacileData]{samples}}}
 
   \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
 
