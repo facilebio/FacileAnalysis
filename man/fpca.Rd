@@ -4,7 +4,6 @@
 \alias{compare.FacilePcaAnalysisResult}
 \alias{fpca}
 \alias{fpca.facile_frame}
-\alias{fpca.matrix}
 \title{Runs a principal components analysis, the facile way.}
 \usage{
 \method{compare}{FacilePcaAnalysisResult}(x, y, run_all = TRUE, rerun = TRUE, ...)
@@ -35,22 +34,6 @@ fpca(
   batch = NULL,
   main = NULL,
   custom_key = Sys.getenv("USER"),
-  ...
-)
-
-\method{fpca}{matrix}(
-  x,
-  dims = min(5, ncol(x) - 1L),
-  features = NULL,
-  filter = "default",
-  ntop = 1000,
-  row_covariates = NULL,
-  col_covariates = NULL,
-  batch = NULL,
-  main = NULL,
-  use_irlba = dims < 7,
-  center = TRUE,
-  scale. = FALSE,
   ...
 )
 }

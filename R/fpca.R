@@ -232,8 +232,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   out
 }
 
-#' @export
-#' @rdname fpca
+#' @noRd
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
@@ -319,8 +318,11 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
            "https://github.com/facilebio/FacileAnalysis/issues/20")
     }
   }
-
-  if (filter == "variance") {
+  
+  if (filter == "none") {
+    take <- seq(nrow(x))
+    ntop <- nrow(x)
+  } else if (filter == "variance") {
     rv <- matrixStats::rowVars(x, na.rm = TRUE)
     take <- head(order(rv, decreasing = TRUE), ntop)
     ntop <- length(take)
