@@ -244,25 +244,24 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
   pcs_calculated <- reactive({
     pca. <- req(pca())
     names(pca.$percent_var)
+    out <- tibble(
+      name = names(pca.$percent_var),
+      variance = unname(pca.$percent_var))
+    out$index <- as.integer(sub("^[^0-9]*", "", out$name))
+    out$label <- sprintf("%s (%0.1f%%)", out$name, out$variance)
+    out
   })
 
   # When a new fpca result is produced, we may want to reset a few things.
   # Trigger that UI restting/cleanup work here.
   observeEvent(pca(), {
     pca. <- req(pca())
-    pcs <- req(pcs_calculated())
-    pcs <- setNames(seq(pcs), pcs)
-    pcs <- setNames(seq(pcs),
-                    sprintf("PC%d (%0.1f%% variance)", as.integer(pcs),
-                            pca.$percent_var * 100))
-
+    components <- req(pcs_calculated())
+    pcs <- setNames(components$index, components$label)
+    
     updateSelectInput(session, "xaxis", choices = pcs, selected = pcs[1])
     updateSelectInput(session, "yaxis", choices = pcs, selected = pcs[2])
     updateSelectInput(session, "zaxis", choices = c("---", pcs), selected = "")
-
-    pc.choices <- setNames(
-      names(pca.$percent_var),
-      sprintf("%s (%0.1f%%)", names(pca.$percent_var), pca.$percent_var * 100))
 
     updateSelectInput(session, "loadingsPC", choices = pcs, selected = pcs[1L])
   }, priority = 5) # upping priority so some withProgress things hide quick
@@ -316,8 +315,9 @@ fpcaView <- function(input, output, session, rfds, pcares, ...,
   pcaviz <- reactive({
     pca. <- req(pca())
     pc.calcd <- pcs_calculated()
-    req(length(pc.calcd) >= 2)
-    axes <- intersect(c(input$xaxis, input$yaxis, input$zaxis), seq(pc.calcd))
+    req(nrow(pc.calcd) >= 2)
+    axes <- intersect(c(input$xaxis, input$yaxis, input$zaxis), pc.calcd$index)
+    axes <- as.integer(axes)
     req(length(axes) >= 2)
 
     aes.map <- aes$map()
