@@ -189,6 +189,14 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   # This should do the batch effect removal
   if (unselected(batch)) batch <- NULL
   if (unselected(main)) main <- NULL
+  
+  ax <- assay_sample_info(x, assay_name)
+  noassay <- is.na(ax[["assay"]])
+  if (nno <- sum(noassay)) {
+    warning(nno, " samples have no ", assay_name, " data. These samples will ",
+            "be removed for downstream analysis.")
+    x <- semi_join(x, ax[!noassay,], by = c("dataset", "sample_id"))
+  }
 
   dat <- biocbox(x, class = "list", assay_name = assay_name,
                  features = features, sample_covariates = col_covariates,

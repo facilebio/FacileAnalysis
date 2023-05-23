@@ -18,6 +18,14 @@
 #' The samples that the differential expression should be run on will be
 #' enumerated by the `(dataset,sample_id)` pair in the `result$covariates`
 #' tibble.
+#' 
+#' @section Alignment with assay data:
+#' This builds a linear model by working with the covariates that are defined
+#' over the samples. This does not ask which assay will be used downstream in
+#' combination with this linear model to run the fit and test. It is the
+#' responsibility of the downstream users/functions of this linear model to
+#' ensure that the samples defined in the linear model have data from the
+#' assay that the actual measurements/data is coming from.
 #'
 #' @export
 #'
