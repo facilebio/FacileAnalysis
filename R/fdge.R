@@ -157,14 +157,6 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   errors <- character()
   .fds <- assert_facile_data_store(fds(x))
 
-  if (is.ttest(x)) {
-    testme <- x[["contrast"]]
-    clazz <- "FacileTtestAnalysisResult"
-  } else {
-    testme <- x[["coef"]]
-    clazz <- "FacileAnovaAnalysisResult"
-  }
-
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
   ainfo <- try(assay_info(.fds, assay_name), silent = TRUE)
   if (is(ainfo, "try-error")) {
@@ -209,7 +201,24 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       if (verbose) {
         message("... retrieving expression data")
       }
-
+    
+      # Let's cut out samples(x) that do not have assay data for the given assay
+      # browser()
+      xo <- x
+      asi <- assay_sample_info(samples(x), assay_name = assay_name)
+      noassay <- is.na(asi$assay)
+      if (any(noassay)) {
+        warning("removing ", sum(noassay), " samples with no `", assay_name, 
+                "` assay. Refitting model to subset", immediate. = TRUE)
+        subsamples <- semi_join(
+          samples(x),
+          filter(asi, !noassay),
+          by = c("dataset", "sample_id")) 
+        xp <- param(xo)
+        x <- flm_def(subsamples, covariate = xp$covariate, numer = xp$numer,
+                     denom = xp$denom, batch = xp$batch, bloc = xp$block)
+      }
+      
       bb <- biocbox(x, assay_name, method, features, filter,
                     with_sample_weights = with_sample_weights,
                     weights = weights, ...)
@@ -227,6 +236,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       # return(out)
       stop(errors)
     }
+
     if (!isTRUE(all.equal(rownames(des), colnames(bb)))) {
       bb <- bb[,rownames(des)]
     }
@@ -264,6 +274,14 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       dup.corr <- bb$block.corr
     }
 
+    if (is.ttest(x)) {
+      testme <- x[["contrast"]]
+      clazz <- "FacileTtestAnalysisResult"
+    } else {
+      testme <- x[["coef"]]
+      clazz <- "FacileAnovaAnalysisResult"
+    }
+    
     result <- sparrow::calculateIndividualLogFC(
       bb, des, contrast = testme,
       treat.lfc = treat_lfc,

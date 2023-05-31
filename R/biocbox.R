@@ -136,8 +136,11 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
 
   des <- design(x)
   if (!setequal(rownames(des), colnames(bb))) {
-    errors <- c(errors, "rownames of design(x) does not match biocbox")
-    return(out)
+    # This can be triggered when the samples the design was defined on do not
+    # have molecular data from the `assay_name` we are testing against.
+    warning("Reducing size of samples", immediate. = TRUE)
+    # errors <- c(errors, "rownames of design(x) does not match biocbox")
+    # return(out)
   }
   if (!isTRUE(all.equal(rownames(des), colnames(bb)))) {
     bb <- bb[,rownames(des)]
