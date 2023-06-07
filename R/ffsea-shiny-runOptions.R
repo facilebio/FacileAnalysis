@@ -10,7 +10,7 @@
 #' @return An `FfseaRunOptions` list, where `$args()` is a reactive list, with
 #'   name=value pairs set to the arguments to run the appropriate `ffsea.*`
 #'   method for `aresult`.
-ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = gdb, ...,
+ffseaRunOpts <- function(input, output, session, rfds, aresult, gdb = NULL, ...,
                          debug = FALSE) {
   ns <- session$ns
   state <- reactiveValues(
