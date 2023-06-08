@@ -309,7 +309,8 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   # Hack here to support call from a bioc-container that we haven't turned
   # into a facile data store yet
   if (!is.null(result) && !"feature_type" %in% colnames(result)) {
-    feature_type <- guess_feature_type(result[["feature_id"]], summarize = TRUE)
+    feature_type <- FacileData::infer_feature_type(
+      result[["feature_id"]], summarize = TRUE)
     result[["feature_type"]] <- feature_type[["feature_type"]]
     result <- select(result, feature_type, everything())
   }
@@ -382,15 +383,6 @@ tidy.FacileDgeAnalysisResult <- function(x, name = "result", features = NULL,
     out[["padj"]] <- stats::p.adjust(out[["pval"]], padjust)
   }
   out
-}
-
-#' @noRd
-#' @export
-initialized.FacileDgeAnalysisResult <- function(x, ...) {
-  stat.table <- tidy(x)
-  is.data.frame(stat.table) &&
-    is.numeric(stat.table[["pval"]]) &&
-    is.numeric(stat.table[["padj"]])
 }
 
 #' @noRd

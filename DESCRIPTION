@@ -28,27 +28,17 @@ Imports:
     checkmate,
     crosstalk,
     dplyr,
-    DT,
     edgeR,
-    FacileData (>= 0.98.5),
-    FacileShine (>= 0.98.0),
+    FacileData (>= 0.98.8),
     FacileViz (>= 0.98.0),
     ggplot2,
     glue,
-    htmltools,
     irlba,
     limma,
     matrixStats,
-    miniUI,
     sparrow (>= 0.98.5),
-    sparrow.shiny,
     statmod (>= 1.5.0),
     plotly (>= 4.9.0),
-    shiny (>= 1.3.1),
-    shinycssloaders,
-    shinydashboard,
-    shinyjs,
-    shinyWidgets,
     stringr,
     tibble,
     tidyr
@@ -94,34 +84,23 @@ RoxygenNote: 7.2.3
 Collate: 
     'api.R'
     'biocbox.R'
-    'classify_as_gadget.R'
     'facile_api_extras.R'
     'fdge.R'
     'fdge-compare.R'
-    'fdge-ffsea-analysis-module.R'
     'fdge-helpers.R'
     'fdge-interact.R'
-    'fdge-shiny-runOptions.R'
-    'fdge-shiny.R'
     'feature-rankings.R'
-    'feature-types.R'
     'ffsea-interact.R'
     'ffsea-meta.R'
-    'ffsea-shiny-runOptions.R'
-    'ffsea-shiny.R'
     'ffsea.R'
-    'flm_def-shiny.R'
     'flm_def.R'
     'fpca-compare.R'
     'fpca-interact.R'
-    'fpca-shiny.R'
     'fpca.R'
-    'frunGadget.R'
     'logging.R'
     'package.R'
     'serialization.R'
     'sparrow-extensions.R'
     'test-helpers.R'
     'unfds.R'
-    'unreact.R'
     'utils.R'

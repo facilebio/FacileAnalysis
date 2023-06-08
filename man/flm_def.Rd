@@ -144,6 +144,16 @@ enumerated by the \verb{(dataset,sample_id)} pair in the \code{result$covariates
 tibble.
 }
 
+\section{Alignment with assay data}{
+
+This builds a linear model by working with the covariates that are defined
+over the samples. This does not ask which assay will be used downstream in
+combination with this linear model to run the fit and test. It is the
+responsibility of the downstream users/functions of this linear model to
+ensure that the samples defined in the linear model have data from the
+assay that the actual measurements/data is coming from.
+}
+
 \section{data.frame}{
 
 The \verb{*.data.frame} function definition assumes that \code{x} is a data.frame of

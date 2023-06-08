@@ -16,10 +16,6 @@ FacileData::features
 
 # Ubiquitously used methods from other package =================================
 
-#' @importFrom FacileShine annotation
-#' @export annotation
-NULL
-
 #' @importFrom sparrow failWith
 #' @importFrom glue glue
 #' @importFrom FacileViz plot
@@ -34,7 +30,3 @@ FacileViz::plot_data
 #' @importFrom broom tidy
 #' @export
 broom::tidy
-
-#' @importFrom shiny callModule
-#' @export
-shiny::callModule

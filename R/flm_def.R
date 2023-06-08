@@ -425,12 +425,6 @@ flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
 
 #' @noRd
 #' @export
-initialized.FacileLinearModelDefinition <- function(x, ...) {
-  !is(x, "FacileFailedModelDefinition") && !is(x, "IncompleteModelDefintion")
-}
-
-#' @noRd
-#' @export
 samples.FacileTtestModelDefinition <- function(x, tested_only = FALSE, ...) {
   out <- x[["covariates"]]
   if (tested_only) {

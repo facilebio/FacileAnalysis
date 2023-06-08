@@ -2,16 +2,6 @@
 
 #' @noRd
 #' @export
-shine.FacilePcaAnalysisResult <- function(x, dims = 2, user = Sys.getenv("USER"),
-                                          title = "PCA Results",
-                                          viewer = "browser", ...) {
-  frunGadget(fpcaView, fpcaViewUI, x, pcares = x, title = title,
-             viewer = viewer, ...)
-}
-
-
-#' @noRd
-#' @export
 viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
                                         height = 400,
                                         width = 700,

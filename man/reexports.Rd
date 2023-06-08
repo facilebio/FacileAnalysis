@@ -7,7 +7,6 @@
 \alias{features}
 \alias{plot_data}
 \alias{tidy}
-\alias{callModule}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -20,7 +19,5 @@ below to see their documentation.
   \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
 
   \item{broom}{\code{\link[broom:reexports]{tidy}}}
-
-  \item{shiny}{\code{\link[shiny]{callModule}}}
 }}
 

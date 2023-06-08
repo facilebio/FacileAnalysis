@@ -3,17 +3,6 @@ NULL
 
 # Interactivity and Vizualization over FacileDGEResults ========================
 
-#' For some reason, default views in a dialog or pane freeze up like y0!
-#'
-#' @noRd
-#' @export
-shine.FacileDgeAnalysisResult <- function(x, user = Sys.getenv("USER"),
-                                          title = "Differential Expression Results",
-                                          viewer = "browser", ...) {
-  frunGadget(fdgeView, fdgeViewUI, x, dgeres = x, title = title,
-             viewer = viewer, ...)
-}
-
 #' The most common visualization downstream from a DGE analysis is either
 #' a volcano plot, or the expression of signficant (or not) genes across the
 #' samples tested in the DGE analysis.
