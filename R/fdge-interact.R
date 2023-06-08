@@ -182,7 +182,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
   webgl <- if (is.null(webgl)) nrow(dat) > 200 else assert_flag(webgl)
 
-  fp <- fscatterplot(
+  fp <- FacileViz::fscatterplot(
     dat, c("xval", "yval"), color_aes = color_aes,
     hover = hover, key = ".key", event_source = event_source,
     xlabel = xlabel, ylabel = ylabel,
@@ -284,7 +284,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   xaxis <- test.covariate
   xlabel <- test.covariate
   color.by <- test.covariate
-  if (is.ttest(x)) {
+  if (is_ttest(x)) {
     if (length(numer) + length(denom) > 2) {
       is.numer <- dat[[test.covariate]] %in% numer
       dat[["xaxe."]] <- ifelse(is.numer, "numer", "denom")
@@ -295,12 +295,13 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
 
   facet_aes <- if (length(fid) > 1) "feature_name" else NULL
 
-  fplot <- fboxplot(dat, xaxis, "value", with_points = TRUE,
-                    event_source = event_source, key = ".key",
-                    color_aes = color.by, facet_aes = facet_aes,
-                    hover = c("dataset", "sample_id", test.covariate, batch),
-                    width = width, height = height, legendside = legendside,
-                    xlabel = "", ylabel = ylabel, title = title)
+  fplot <- FacileViz::fboxplot(
+    dat, xaxis, "value", with_points = TRUE,
+    event_source = event_source, key = ".key",
+    color_aes = color.by, facet_aes = facet_aes,
+    hover = c("dataset", "sample_id", test.covariate, batch),
+    width = width, height = height, legendside = legendside,
+    xlabel = "", ylabel = ylabel, title = title)
   # TODO: Add DGE stats to the fdge feature plot. from dat:
   #   * [["pval"]]
   #   * [["padj"]]
@@ -361,7 +362,7 @@ report.FacileTtestAnalysisResult <- function(x, type = c("dge", "features"),
   dat[[".key"]] <- seq(nrow(dat))
 
   # transfer dge statistics to outgoing data.frame
-  if (is.ttest(x)) {
+  if (is_ttest(x)) {
     xfer.cols <- c("logFC", "pval", "padj", "t")
   } else {
     xfer.cols <- c("F", "pval", "padj")

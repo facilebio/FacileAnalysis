@@ -242,7 +242,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
 
     if (!is.null(treat_lfc)) {
-      if (!test_number(treat_lfc, lower = 0) || !is.ttest(x)) {
+      if (!test_number(treat_lfc, lower = 0) || !is_ttest(x)) {
         warnings <- c(
           warnings,
           "Illegal parameter passed to `treat_lfc`. It is being ignored")
@@ -274,7 +274,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       dup.corr <- bb$block.corr
     }
 
-    if (is.ttest(x)) {
+    if (is_ttest(x)) {
       testme <- x[["contrast"]]
       clazz <- "FacileTtestAnalysisResult"
     } else {
@@ -659,7 +659,7 @@ print.FacileDgeAnalysisResult <- function(x, ...) {
 
 #' @noRd
 format.FacileDgeAnalysisResult <- function(x, ...) {
-  test_type <- if (is.ttest(x)) "ttest" else "ANOVA"
+  test_type <- if (is_ttest(x)) "ttest" else "ANOVA"
   mdef <- model(x)
   des <- design(mdef)
   formula <- mdef[["design_formula"]]
