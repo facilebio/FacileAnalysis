@@ -38,83 +38,6 @@ faro.FacileAnalysisResult <- function(x, ...) {
   x
 }
 
-#' @noRd
-#' @export
-faro.ReactiveFacileAnalysisResult <- function(x, ...) {
-  assert_class(x$faro, "reactive")
-  x$faro()
-}
-
-#' ReactiveFacileAnalysisResultContainer are results from a shiny module that
-#' encapsulate a single complete analysis step, such as the fdgeAnalysis, for
-#' instance.
-#'
-#' These `*Analysis` will store the main FacileAnalysisResult in their
-#' `"main"` list element.
-#'
-#' @noRd
-#' @export
-faro.ReactiveFacileAnalysisResultContainer <- function(x, main = "main", ...) {
-  # assert_choice(main, names(x))
-  req(test_choice(main, names(x)))
-  main. <- x[[main]]
-  # assert_class(main., "ReactiveFacileAnalysisResult")
-  req(test_class(main., "ReactiveFacileAnalysisResult"))
-  faro(main.)
-}
-
-#' See combined fDgeSeaAnalysis module
-#' @noRd
-#' @export
-faro.ReactiveFacileMultiAnalysisResult <- function(x, main = names(x$names)[1L],
-                                                   ...) {
-  results <- x[["main"]]
-  assert_list(results, names = "unique")
-  assert_choice(main, names(results))
-  res <- results[[main]]
-  faro(res)
-}
-
-#' A shiny module that produces a FacileAnalysisResult as its main
-#' result will store it as a reactive() in its result$faro element.
-#'
-#' Triggering its reactivity will result in the return of that object.
-#' If the analysis-result has not be generated yet within that shiny module,
-#' then triggering it MUST raise an error, due to the module ensuring
-#' req() is in all the right places
-#'
-#' For instance, the fdgeRun module is responsible for everything being
-#' set up properly, and when the Run button is hit, it includes a req()
-#' in response to make sure the result is built correctly
-#'
-#' @noRd
-#' @export
-#' @importFrom FacileShine initialized
-initialized.ReactiveFacileAnalysisResult <- function(x, ...) {
-  obj <- try(faro(x), silent = TRUE)
-  is(obj, "FacileAnalysisResult") && initialized(obj)
-}
-
-#' A ReactiveFacileMultiAnalysisResult is an analysis module that combines
-#' two individual analyses together, like fdge and ffsea.
-#'
-#' For now, this might just be the fDgeSeaAnalysis module, as I'm not sure that
-#' this is a good idea ...
-#'
-#' @noRd
-#' @export
-initialized.ReactiveFacileMultiAnalysisResult <- function(x, ...) {
-  assert_list(x$main)
-  resnames <- names(x$main)
-  all(sapply(x$main, initialized))
-}
-
-#' @noRd
-#' @export
-initialized.FacileAnalysisResult <- function(x, ...) {
-  length(x$errors) == 0L
-}
-
 #' Reports the status of the AnalysisResult
 #'
 #' @export
@@ -198,18 +121,6 @@ tidy.FacileAnalysisResult <- function(x, name = "result", ...) {
 
 #' @export
 #' @noRd
-result.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
-  result(faro(x, ...), name = name, ...)
-}
-
-#' @export
-#' @noRd
-tidy.ReactiveFacileAnalysisResult <- function(x, name = "result", ...) {
-  tidy(faro(x, ...), name = name, ...)
-}
-
-#' @export
-#' @noRd
 result.FacileFeatureRanks <- function(x, name = "result", ...) {
   assert_choice(name, names(x))
   x[[name]]
@@ -282,13 +193,6 @@ param.FacileAnalysisResult <- function(x, name = NULL, ...) {
     }
   }
   out
-}
-
-#' @noRd
-#' @export
-param.ReactiveFacileAnalysisResult <- function(x, name = NULL, ...) {
-  assert_choice("result", names(x))
-  param(x$result(), name, ...)
 }
 
 #' @noRd
@@ -447,36 +351,6 @@ viz <- function(x, ...) {
   UseMethod("viz", x)
 }
 
-#' @noRd
-#' @export
-viz.FacileGadgetResult <- function(x, ...) {
-  viz(result(x), ...)
-}
-
-#' @section Shine:
-#' The `shine` functions generate shiny gadgets that provide a more interactive
-#' view over a `FacileAnalysisResult`. This empowers the analyst to provide more
-#' context around the results, likely by leveraging all of the data available
-#' within the FacileDataStore.
-#'
-#' The respective `shine` functions must return a `FacileAnalysisShine` object
-#' invisibly to the caller. These should be able to be past into an overladed
-#' `report` function, the result of which can be embedded into an Rmarkdown
-#' report. In this way the analyst can embed a feature-reduced version of what
-#' was observed in the gadget into an Rmarkdown report.
-#'
-#' I'm not sure how exactly we can do this, but perhaps this will require some
-#' code generation that the analyst can copy and paste paste into the Rmarkdown
-#' document. This might simply be a parameterized version of the `report`
-#' function call.
-#'
-#' @export
-#' @rdname FacileAnalysisResultViz
-#' @aliases shine
-shine <- function(x, ...) {
-  UseMethod("shine", x)
-}
-
 #' @section Report:
 #' The `report` function produces an object that can be embedded into an
 #' Rmarkdown document. The implementation of these functions will likely
@@ -493,12 +367,6 @@ shine <- function(x, ...) {
 #' @aliases report
 report <- function(x, ...) {
   UseMethod("report", x)
-}
-
-#' @noRd
-#' @export
-report.FacileGadgetResult <- function(x, ...) {
-  report(result(x), ...)
 }
 
 # Statistical Modeling Stuff ===================================================
@@ -527,25 +395,23 @@ model <- function(x, ...) {
 #' @export
 model.NULL <- function(x, ...) NULL
 
-# Generic API calls on results from running an analysis through a gadget =======
+# Vizualization and Rmarkdon reporting =========================================
 
-#' #' @noRd
-#' report.FacileGadgetResult <- function(x, ...) {
-#'   report(result(x), ...)
-#' }
+#' Methods to interactively explore and report FacileAnalysisResults.
 #'
-#' #' @noRd
-#' viz.FacileGadgetResult <- function(x, ...) {
-#'   viz(result(x), ...)
-#' }
+#' The `vizualize`, `shine`, and `report` triumverate provide the analyst with
+#' the tools required to interact and explore the results of a FacileAnalysis.
 #'
-#' #' @noRd
-#' shine.FacileGadgetResult <- function(x, ...) {
-#'   shine(result(x), ...)
-#' }
+#' @section Vizualize:
+#' The `vizualize` functions generate an analysis-specific interactive
+#' htmlwidget for the analysist to explore.
 #'
-#' #' @noRd
-#' compare.FacileGadgetResult <- function(x, y, ...) {
-#'   if (is(y, "FacileGadgetResult")) y <- result(y)
-#'   compare(result(x), y)
-#' }
+#' @export
+#' @rdname FacileAnalysisResultViz
+#'
+#' @param x A `FacileAnalysisResult` object
+#' @param ... passed down to the `x`-specific `vizualize.*`, `report.*`, and
+#'   `shine.*` functions.
+viz <- function(x, ...) {
+  UseMethod("viz", x)
+}

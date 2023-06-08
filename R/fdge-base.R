@@ -242,7 +242,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
 
     if (!is.null(treat_lfc)) {
-      if (!test_number(treat_lfc, lower = 0) || !is.ttest(x)) {
+      if (!test_number(treat_lfc, lower = 0) || !is_ttest(x)) {
         warnings <- c(
           warnings,
           "Illegal parameter passed to `treat_lfc`. It is being ignored")
@@ -274,7 +274,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       dup.corr <- bb$block.corr
     }
 
-    if (is.ttest(x)) {
+    if (is_ttest(x)) {
       testme <- x[["contrast"]]
       clazz <- "FacileTtestAnalysisResult"
     } else {
@@ -309,7 +309,8 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   # Hack here to support call from a bioc-container that we haven't turned
   # into a facile data store yet
   if (!is.null(result) && !"feature_type" %in% colnames(result)) {
-    feature_type <- guess_feature_type(result[["feature_id"]], summarize = TRUE)
+    feature_type <- FacileData::infer_feature_type(
+      result[["feature_id"]], summarize = TRUE)
     result[["feature_type"]] <- feature_type[["feature_type"]]
     result <- select(result, feature_type, everything())
   }
@@ -382,15 +383,6 @@ tidy.FacileDgeAnalysisResult <- function(x, name = "result", features = NULL,
     out[["padj"]] <- stats::p.adjust(out[["pval"]], padjust)
   }
   out
-}
-
-#' @noRd
-#' @export
-initialized.FacileDgeAnalysisResult <- function(x, ...) {
-  stat.table <- tidy(x)
-  is.data.frame(stat.table) &&
-    is.numeric(stat.table[["pval"]]) &&
-    is.numeric(stat.table[["padj"]])
 }
 
 #' @noRd
@@ -667,7 +659,7 @@ print.FacileDgeAnalysisResult <- function(x, ...) {
 
 #' @noRd
 format.FacileDgeAnalysisResult <- function(x, ...) {
-  test_type <- if (is.ttest(x)) "ttest" else "ANOVA"
+  test_type <- if (is_ttest(x)) "ttest" else "ANOVA"
   mdef <- model(x)
   des <- design(mdef)
   formula <- mdef[["design_formula"]]

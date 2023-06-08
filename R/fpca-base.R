@@ -394,14 +394,6 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
 
 #' @noRd
 #' @export
-initialized.FacilePcaAnalysisResult <- function(x, ...) {
-  stat.table <- tidy(x)
-  is.data.frame(stat.table) &&
-    nrow(stat.table) == nrow(samples(x))
-}
-
-#' @noRd
-#' @export
 features.FacilePcaAnalysisResult <- function(x, ...) {
   # out <- assert_class(x[["feature_stats"]], "data.frame")
   # out
@@ -596,9 +588,10 @@ samples.FacilePcaAnalysisResult <- function(x, ...) {
   assert_character(meta[["feature_id"]])
 
   if (!is.character(meta[["feature_type"]])) {
-    ftype <- guess_feature_type(meta[["feature_id"]],
-                                with_organism = FALSE,
-                                summarize = TRUE)
+    ftype <- FacileData::infer_feature_type(
+      meta[["feature_id"]],
+      with_organism = FALSE,
+      summarize = TRUE)
     meta[["feature_type"]] <- ftype[["feature_type"]]
   }
 

@@ -2,15 +2,14 @@
 % Please edit documentation in R/api.R
 \name{viz}
 \alias{viz}
-\alias{shine}
 \alias{report}
 \title{Methods to interactively explore and report FacileAnalysisResults.}
 \usage{
 viz(x, ...)
 
-shine(x, ...)
-
 report(x, ...)
+
+viz(x, ...)
 }
 \arguments{
 \item{x}{A \code{FacileAnalysisResult} object}
@@ -21,30 +20,18 @@ report(x, ...)
 \description{
 The \code{vizualize}, \code{shine}, and \code{report} triumverate provide the analyst with
 the tools required to interact and explore the results of a FacileAnalysis.
+
+The \code{vizualize}, \code{shine}, and \code{report} triumverate provide the analyst with
+the tools required to interact and explore the results of a FacileAnalysis.
 }
 \section{Vizualize}{
 
 The \code{vizualize} functions generate an analysis-specific interactive
 htmlwidget for the analysist to explore.
-}
 
-\section{Shine}{
 
-The \code{shine} functions generate shiny gadgets that provide a more interactive
-view over a \code{FacileAnalysisResult}. This empowers the analyst to provide more
-context around the results, likely by leveraging all of the data available
-within the FacileDataStore.
-
-The respective \code{shine} functions must return a \code{FacileAnalysisShine} object
-invisibly to the caller. These should be able to be past into an overladed
-\code{report} function, the result of which can be embedded into an Rmarkdown
-report. In this way the analyst can embed a feature-reduced version of what
-was observed in the gadget into an Rmarkdown report.
-
-I'm not sure how exactly we can do this, but perhaps this will require some
-code generation that the analyst can copy and paste paste into the Rmarkdown
-document. This might simply be a parameterized version of the \code{report}
-function call.
+The \code{vizualize} functions generate an analysis-specific interactive
+htmlwidget for the analysist to explore.
 }
 
 \section{Report}{

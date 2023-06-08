@@ -272,7 +272,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     # des.matrix[, design$text_covs]. If anova, then we also include the
     # intercept column
     filter.cols <- model$test_covs
-    if (is.anova(model)) {
+    if (is_anova(model)) {
       filter.cols <- c(
         grep("(Intercept)", colnames(des.matrix), ignore.case = TRUE),
         filter.cols)

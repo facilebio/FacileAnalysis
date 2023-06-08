@@ -2,16 +2,6 @@
 
 #' @noRd
 #' @export
-shine.FacilePcaAnalysisResult <- function(x, dims = 2, user = Sys.getenv("USER"),
-                                          title = "PCA Results",
-                                          viewer = "browser", ...) {
-  frunGadget(fpcaView, fpcaViewUI, x, pcares = x, title = title,
-             viewer = viewer, ...)
-}
-
-
-#' @noRd
-#' @export
 viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
                                         height = 400,
                                         width = 700,
@@ -62,10 +52,11 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
   if (!is.null(color_aes)) {
 
   }
-  p <- fscatterplot(xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
-                    zlabel = zlabel, event_source = event_source,
-                    webgl = webgl, height = height, width = width,
-                    color_aes = color_aes, ...)
+  p <- FacileViz::fscatterplot(
+    xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
+    zlabel = zlabel, event_source = event_source,
+    webgl = webgl, height = height, width = width,
+    color_aes = color_aes, ...)
   p
 }
 
@@ -114,7 +105,6 @@ report.FacilePcaAnalysisResult <- function(x, pcs = 3, with_features = TRUE,
 #' Internal worker vizualization function
 #' @noRd
 #' @importFrom DT datatable
-#' @importFrom FacileViz fscatterplot
 #' @importFrom shiny tagList tags
 .viz.fpca <- function(x, pcs = 3, ntop = 100, with_features = TRUE,
                       report_feature_as = NULL, webgl = FALSE, ...,
