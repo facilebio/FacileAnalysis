@@ -603,12 +603,6 @@ result.FacileFseaAnalysisResult <- function(x, name = "object", ...) {
 
 #' @noRd
 #' @export
-initialized.FacileFseaAnalysisResult <- function(x, ...) {
-  is(result(x), "SparrowResult")
-}
-
-#' @noRd
-#' @export
 samples.FacileFseaAnalysisResult <- function(x, ...) {
   x.parent <- param(x, "x")
   samples(x.parent)

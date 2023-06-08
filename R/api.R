@@ -1,5 +1,4 @@
 # Universal FacileAnalysisResult methods =======================================
-# Initial pass for ifacile branch done.
 
 #' Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.
 #'
@@ -395,3 +394,24 @@ model <- function(x, ...) {
 #' @noRd
 #' @export
 model.NULL <- function(x, ...) NULL
+
+# Vizualization and Rmarkdon reporting =========================================
+
+#' Methods to interactively explore and report FacileAnalysisResults.
+#'
+#' The `vizualize`, `shine`, and `report` triumverate provide the analyst with
+#' the tools required to interact and explore the results of a FacileAnalysis.
+#'
+#' @section Vizualize:
+#' The `vizualize` functions generate an analysis-specific interactive
+#' htmlwidget for the analysist to explore.
+#'
+#' @export
+#' @rdname FacileAnalysisResultViz
+#'
+#' @param x A `FacileAnalysisResult` object
+#' @param ... passed down to the `x`-specific `vizualize.*`, `report.*`, and
+#'   `shine.*` functions.
+viz <- function(x, ...) {
+  UseMethod("viz", x)
+}

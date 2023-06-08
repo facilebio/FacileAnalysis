@@ -8,6 +8,8 @@
 viz(x, ...)
 
 report(x, ...)
+
+viz(x, ...)
 }
 \arguments{
 \item{x}{A \code{FacileAnalysisResult} object}
@@ -18,8 +20,15 @@ report(x, ...)
 \description{
 The \code{vizualize}, \code{shine}, and \code{report} triumverate provide the analyst with
 the tools required to interact and explore the results of a FacileAnalysis.
+
+The \code{vizualize}, \code{shine}, and \code{report} triumverate provide the analyst with
+the tools required to interact and explore the results of a FacileAnalysis.
 }
 \section{Vizualize}{
+
+The \code{vizualize} functions generate an analysis-specific interactive
+htmlwidget for the analysist to explore.
+
 
 The \code{vizualize} functions generate an analysis-specific interactive
 htmlwidget for the analysist to explore.
