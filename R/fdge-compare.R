@@ -1,6 +1,3 @@
-#' @include fdge.R
-NULL
-
 #' @rdname fdge
 #' @export
 #'

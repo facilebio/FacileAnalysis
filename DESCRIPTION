@@ -81,26 +81,3 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Collate: 
-    'api.R'
-    'biocbox.R'
-    'facile_api_extras.R'
-    'fdge.R'
-    'fdge-compare.R'
-    'fdge-helpers.R'
-    'fdge-interact.R'
-    'feature-rankings.R'
-    'ffsea-interact.R'
-    'ffsea-meta.R'
-    'ffsea.R'
-    'flm_def.R'
-    'fpca-compare.R'
-    'fpca-interact.R'
-    'fpca.R'
-    'logging.R'
-    'package.R'
-    'serialization.R'
-    'sparrow-extensions.R'
-    'test-helpers.R'
-    'unfds.R'
-    'utils.R'

@@ -1,6 +1,3 @@
-#' @include fdge.R
-NULL
-
 # Interactivity and Vizualization over FacileDGEResults ========================
 
 #' The most common visualization downstream from a DGE analysis is either
