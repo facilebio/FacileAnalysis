@@ -29,7 +29,7 @@ faro <- function(x, ...) {
 #' @noRd
 #' @export
 faro.default <- function(x, ...) {
-  stop("faro.default is undefined")
+  NULL
 }
 
 #' @noRd
