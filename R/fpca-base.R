@@ -191,11 +191,11 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   if (unselected(main)) main <- NULL
   
   ax <- assay_sample_info(x, assay_name)
-  noassay <- is.na(ax[["assay"]])
-  if (nno <- sum(noassay)) {
+  dropped <- samples(ax, dropped = TRUE)
+  if (nno <- nrow(dropped)) {
     warning(nno, " samples have no ", assay_name, " data. These samples will ",
             "be removed for downstream analysis.")
-    x <- semi_join(x, ax[!noassay,], by = c("dataset", "sample_id"))
+    x <- anti_join(x, dropped, by = c("dataset", "sample_id"))
   }
 
   dat <- biocbox(x, class = "list", assay_name = assay_name,
