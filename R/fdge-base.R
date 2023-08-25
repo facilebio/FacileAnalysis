@@ -137,6 +137,7 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
   res
 }
 
+
 #' @export
 #' @rdname fdge
 #' @param ... passed down into inner methods, such as `biocbox` to tweak
@@ -158,29 +159,59 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   .fds <- assert_facile_data_store(fds(x))
 
   if (is.null(assay_name)) assay_name <- default_assay(.fds)
+  
   ainfo <- try(assay_info(.fds, assay_name), silent = TRUE)
-  if (is(ainfo, "try-error")) {
+  bad_assay <- is(ainfo, "try-error")
+
+  if (bad_assay) {
     msg <- glue("assay_name `{assay_name}` not present in FacileDataStore")
     errors <- c(errors, msg)
     assay_type <- "ERROR"
   } else {
     assay_type <- ainfo$assay_type
   }
-
-  dge_methods <- fdge_methods(assay_type)
+  
+  if (bad_assay) {
+    dge_methods <- filter(fdge_methods(), FALSE)
+    dropped <- distinct(samples(x), dataset, sample_id, .keep_all = TRUE)
+    assay_samples <- filter(dropped, FALSE)
+  } else {
+    dge_methods <- fdge_methods(assay_type)
+    assay_samples <- filter_by_assay_support(samples(x), assay_name)
+    dropped <- samples(assay_samples, dropped = TRUE)
+  }
+    
   if (nrow(dge_methods) == 0L) {
     msg <- glue("Differential expression method `{method}` for assay_type ",
                 "`{assay_type}` not found")
     errors <- c(errors, msg)
   }
-
+  
+  ndropped <- nrow(dropped)
+  if (ndropped > 0) {
+    xo <- x
+    msg <- paste(
+      nno, "samples have no", assay_name, "data. These samples will ",
+      "be removed for downstream analysis.")
+    ftrace(msg)
+    
+    # Re-estimate the linear model
+    # NOTE: This should be moved to biocbox.FacileLinearModelDefinition
+    if (length(errors) == 0L) {
+      ftrace("re-estimating linear model from reduced sample")
+      x <- redo(x, samples = assay_samples)
+      errors <- c(errors, errors(x))
+      warnings <- c(warnings, warnings(x))
+      messages <- c(messags, messages(x))
+    }
+  }
+  
   if (length(errors) == 0L) {
     if (!is.null(biocbox)) {
       # We are doing this so we don't have to recalculate things like
       # edgeR::estimateDisp, or limma::voom
-      if (verbose) {
-        warning("... using a cached biocbox: here be dragons!")
-      }
+      ftrace("reusing a cached biocbox")
+      messages <- c(messages, "using a cached biobox needs more testing")
       if (is.null(method)) {
         stop("Using a cached biocbox requires you to explicitly set `method` ",
              "parameter")
@@ -189,35 +220,23 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       fbits <- attr(bb, "facile")
 
       if (method != fbits[["params"]][["method"]]) {
-        stop("The `method` used in the cached biocbox does not match the ",
-             "`method` parameter in this `fdge()` call")
+        msg <- paste0(
+          "The previously used `method` ('",
+          fbits[["params"]][["method"]],
+          "'), does not match the one currently being run ('", method, "')")
+        warnings <- c(warnings, msg)
+        fbits[["params"]][["method"]] <- method
       }
-
-      # WARNING: This is probably the wrong thing to do.
+      
+      if (!is.null(weights)) {
+        bb <- .add_observation_weights(bb, weights)
+      }
+      
       messages <- c(messages, fbits[["messages"]])
       warnings <- c(warnings, fbits[["warnings"]])
       errors <- c(errors, fbits[["errors"]])
     } else {
-      if (verbose) {
-        message("... retrieving expression data")
-      }
-    
-      # Let's cut out samples(x) that do not have assay data for the given assay
-      # browser()
-      xo <- x
-      asi <- assay_sample_info(samples(x), assay_name = assay_name)
-      noassay <- is.na(asi$assay)
-      if (any(noassay)) {
-        warning("removing ", sum(noassay), " samples with no `", assay_name, 
-                "` assay. Refitting model to subset", immediate. = TRUE)
-        subsamples <- semi_join(
-          samples(x),
-          filter(asi, !noassay),
-          by = c("dataset", "sample_id")) 
-        xp <- param(xo)
-        x <- flm_def(subsamples, covariate = xp$covariate, numer = xp$numer,
-                     denom = xp$denom, batch = xp$batch, bloc = xp$block)
-      }
+      ftrace("... retrieving expression data")
       
       bb <- biocbox(x, assay_name, method, features, filter,
                     with_sample_weights = with_sample_weights,

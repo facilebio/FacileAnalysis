@@ -1,5 +1,3 @@
-context("Differential Gene Expression")
-
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
 # Simpler Linear Models ========================================================
@@ -105,7 +103,6 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
 })
 
 test_that("custom observational weights used in fdge(..., weights = W)", {
-  # TODO: test weighted linear models!
   vm.fdge <- FDS |>
     filter_samples(indication == "BLCA") |>
     flm_def(covariate = "sample_type",
@@ -126,7 +123,8 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
   weights <- pivot_longer(wdf, -feature_id, names_to = "sample_id",
                           values_to = "weight") |>
     separate(sample_id, "__", into = c("dataset", "sample_id"))
-
+  
+  # This is what the limma analysis looks like with custom weights
   cm <- limma::makeContrasts(tumor = tumor - normal, levels = vm$design)
   ex.res <- limma::lmFit(vm$E, vm$design, weights = W) |>
     limma::contrasts.fit(cm) |>
@@ -141,34 +139,36 @@ test_that("custom observational weights used in fdge(..., weights = W)", {
     ".*weights.*provided.*set to NULL")
   fstats <- tidy(f.res)
   expect_equal(fstats$t, res.orig$t)
-
-  # TODO: Let's get FacileBiocData out of the Suggests for this!
-  # Now let's use the custom weights from normal "limma" method. We use
-  # FacileBiocData here so we can test the vm$E matrix directly, otherwise
-  # we would have to save the vm$E matrix as an assay into fds(vm.fdge) so we
-  # can pull it out "in flight" during the analysis ... ugh.
+  
+  # We will provide our own EList with a side-laoded set of weights
   el <- vm
   el$weights <- NULL
-  fvm <- FacileBiocData:::facilitate.EList(el, assay_type = "lognorm",
-                                           organism = "Homo sapiens")
-  w.res <- samples(fvm) |>
-    flm_def("sample_type", "tumor", "normal") |>
-    fdge(method = "limma",
-         features = features(vm.fdge),
-         weights = weights)
-
+  w.res <- fdge(model(vm.fdge), method = "limma", features = features(vm.fdge),
+               biocbox = el, weights = weights)
+  # we should have been warned about a different method used in the original
+  # analysis vs what we are doing now.
+  expect_true(any(grepl(".*method.*does not match", warnings(w.res))))
   expect_setequal(tidy(w.res)[["feature_id"]], ex.res[["feature_id"]])
 
   cmp <- tidy(w.res) |>
     select(feature_id, symbol, logFC, t, pval, padj) |>
+    # join to stats table from manually driven weighted limma analysis
     left_join(select(ex.res, feature_id, logFC.ex = logFC, pval.ex = P.Value,
                      t.ex = t),
               by = "feature_id") |>
+    # join to stats table from original voom analysis
     left_join(select(fstats, feature_id, logFC.vm = logFC, pval.vm = pval,
                      t.vm = t),
               by = "feature_id")
 
   expect_true(all(complete.cases(cmp))) # "full" join worked
+  if (FALSE) {
+    # plot similarity of logFC and tstatistics of analysis with random weignts
+    # in the facile analysis vs limma-based analysis (logFC vs logFC.ex)
+    plot(cmp$logFC.ex, cmp$logFC, pch = 16, col = "#3f3f3faa",
+         xlab = "limma", ylab = "facile")
+    abline(0, 1, col = "red")
+  }
   expect_equal(cmp$logFC, cmp$logFC.ex)
   expect_equal(cmp$t, cmp$t.ex)
   expect_false(isTRUE(all.equal(cmp$t, cmp$t.vm)))
@@ -226,18 +226,14 @@ test_that("a cached biocbox can be used in a call to `fdge`", {
     fdge(method = "edgeR-qlf")
 
   expect_s4_class(biocbox(res1), "DGEList")
-
-  expect_message({
-    expect_warning({
-      res2 <- sf |>
-        flm_def("group", "BLCA_tumor", "BLCA_normal") |>
-        fdge(method = "edgeR-qlf", biocbox = biocbox(res1), verbose = TRUE)
-    }, "here be dragons")
-  }, "expression analysis")
+  
+  res2 <- sf |>
+    flm_def("group", "BLCA_tumor", "BLCA_normal") |>
+    fdge(method = "edgeR-qlf", biocbox = biocbox(res1))
+  expect_true(any(grepl("cached biobox", messages(res2))))
 
   t1 <- tidy(res1)
   t2 <- tidy(res2)
-
   expect_equal(t2, t1)
 })
 

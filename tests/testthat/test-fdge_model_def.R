@@ -1,6 +1,6 @@
-context("Model definition for Gene Expression and GSEA (flm_def)")
-
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
+if (!exists("ssamples")) ssamples <- FacileData::some_samples(sparse = TRUE)
+if (!exists("fsamples")) fsamples <- FacileData::some_samples(sparse = FALSE)
 
 test_that("flm_def supports simple t-test specification", {
   mdef <- FDS |>
@@ -20,6 +20,32 @@ test_that("flm_def supports simple t-test specification", {
   expect_is(mdef, "FacileTtestModelDefinition")
   expect_equal(mdef$contrast, c(normal = 1, tumor = -1, sexf = 0))
 })
+
+test_that("redo-ing flm_def on reduced sample space is clean", {
+  # confirm that a subset of samples exist without scrnaseq assay data
+  has_assay <- filter_by_assay_support(ssamples, "scrnaseq")
+  no_assay <- samples(has_assay, dropped = TRUE)
+  expect_lt(nrow(has_assay), nrow(ssamples))
+  expect_gt(nrow(no_assay), 0)
+  expect_equal(nrow(has_assay) + nrow(no_assay), nrow(ssamples))
+  
+  # we define a model over a set of samples, some of which do not have data
+  # from the scrnaseq assay
+  flm.all <- ssamples |> 
+    flm_def(covariate = "cond", numer = "AKI", denom = "DKD", batch = "sex")
+  expect_equal(nrow(samples(flm.all)), nrow(ssamples))
+  expect_equal(nrow(design(flm.all)), nrow(ssamples))
+  
+  # now redefine the same model over only the samples that have the assay
+  flm.less <- redo(flm.all, samples = has_assay)
+  expect_equal(formula(flm.less), formula(flm.all))
+  expect_equal(nrow(samples(flm.less)), nrow(has_assay))
+  expect_equal(nrow(design(flm.less)), nrow(has_assay))
+  
+  # the samples from the reduced model bring their "dropped siblings" with them
+  expect_equal(samples(flm.less, dropped = TRUE), no_assay)
+})
+
 
 test_that("Partial t-test spec is not allowed (no numer or denom)", {
   mdef <- FDS |>

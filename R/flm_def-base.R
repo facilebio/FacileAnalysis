@@ -163,6 +163,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   }
 
   x <- distinct(x, dataset, sample_id, .keep_all = TRUE)
+  
   # Build the design matrix ----------------------------------------------------
   req.cols <- c("dataset",  "sample_id", covariate, batch, block)
   incomplete <- !complete.cases(select(x, !!req.cols))
@@ -218,8 +219,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                  paste(non_estimable, collapse = ","),
                  "\n")
     if (is.null(batch)) {
-      err <- glue(err, "This is a catastrophic error, please contact ",
-                  "lianoglou@dnli.com for help")
+      err <- glue(err, "This is a catastrophic error, please contact support")
     } else {
       check <- sapply(batch, function(fcov) any(grepl(fcov, non_estimable)))
       if (length(check)) {
@@ -227,8 +227,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                     "Try removing one of these covariates from the model: ",
                     paste(batch[check], collapse = ","))
       } else {
-        err <- glue(err, "There must be a problem in sample annotation, ",
-                    "please contact lianoglou@dnli.com")
+        err <- glue(err, "There must be a problem in sample annotation")
       }
     }
     errors <- c(errors, err)
@@ -421,11 +420,32 @@ flm_def.ReactiveFacileDataStore <- function(x, covariate, numer = NULL,
           custom_key = custom_key, ...)
 }
 
+# redo =========================================================================
+
+#' @noRd
+#' @export
+redo.FacileLinearModelDefinition <- function(x, ..., samples = NULL) {
+  if (is.null(samples)) {
+    samples <- samples(x)
+  }
+  
+  op <- param(x)
+  out <- flm_def(
+    samples, 
+    covariate = op[["covariate"]],
+    numer = op[["numer"]],
+    denom = op[["denom"]],
+    batch = op[["batch"]],
+    block = op[["block"]])
+  out
+}
+
 # Accessor Functions ===========================================================
 
 #' @noRd
 #' @export
-samples.FacileTtestModelDefinition <- function(x, tested_only = FALSE, ...) {
+samples.FacileTtestModelDefinition <- function(x, tested_only = FALSE, ...,
+                                               dropped = FALSE) {
   out <- x[["covariates"]]
   if (tested_only) {
     cov <- param(x, "covariate")
@@ -433,14 +453,15 @@ samples.FacileTtestModelDefinition <- function(x, tested_only = FALSE, ...) {
     den <- param(x, "denom")
     out <- filter(out, .data[[cov]] %in% c(num, den))
   }
-  out
+  
+  samples(out, dropped = dropped)
 }
 
 
 #' @noRd
 #' @export
-samples.FacileLinearModelDefinition <- function(x, ...) {
-  x[["covariates"]]
+samples.FacileLinearModelDefinition <- function(x, ..., dropped = FALSE) {
+  samples(x[["covariates"]], dropped = dropped)
 }
 
 #' @noRd

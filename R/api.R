@@ -38,6 +38,16 @@ faro.FacileAnalysisResult <- function(x, ...) {
   x
 }
 
+#' Redoes the analysis based on something new (samples, params, etc.)
+#' 
+#' @export
+#' @param x The original FacileAnalysisResult
+#' @param ... probably additional arguments to retweak the original analysis
+#' @param samples redo the analysis on a subset of these samples
+redo <- function(x, ..., samples = NULL) {
+  UseMethod("redo", x)
+}
+
 #' Reports the status of the AnalysisResult
 #'
 #' @export

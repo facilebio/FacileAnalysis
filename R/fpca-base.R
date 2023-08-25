@@ -177,6 +177,10 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   assert_sample_subset(x)
   x <- collect(x, n = Inf)
 
+  messages <- character()
+  warnings <- character()
+  errors <- character()
+  
   if (!is.null(row_covariates)) {
     warning("Custom row_covariates not yet supported for facile_frame ",
             "(it's not hard, I'm just lazy right now)", immediate. = TRUE)
@@ -190,12 +194,15 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   if (unselected(batch)) batch <- NULL
   if (unselected(main)) main <- NULL
   
-  ax <- assay_sample_info(x, assay_name)
-  dropped <- samples(ax, dropped = TRUE)
+  # Subset the samples from `x` that have values for the given assay under test.
+  xs <- filter_by_assay_support(x, assay_name)
+  dropped <- samples(xs, dropped = TRUE)
   if (nno <- nrow(dropped)) {
-    warning(nno, " samples have no ", assay_name, " data. These samples will ",
-            "be removed for downstream analysis.")
-    x <- anti_join(x, dropped, by = c("dataset", "sample_id"))
+    msg <- paste(
+      nno, "samples have no", assay_name, "data. These samples will ",
+      "be removed for downstream analysis.")
+    warnings <- c(warnings, msg)
+    x <- xs
   }
 
   dat <- biocbox(x, class = "list", assay_name = assay_name,
@@ -237,6 +244,10 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 
   # add facile stuff
   out[["fds"]] <- .fds
+  
+  out[["messages"]] <- c(messages, out[["fds"]][["messages"]])
+  out[["warnings"]] <- c(warnings, out[["fds"]][["warnings"]])
+  out[["erros"]] <- c(errors, out[["fds"]][["errors"]])
   out
 }
 
