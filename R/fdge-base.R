@@ -191,7 +191,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   if (ndropped > 0) {
     xo <- x
     msg <- paste(
-      nno, "samples have no", assay_name, "data. These samples will ",
+      ndropped, "samples have no", assay_name, "data. These samples will ",
       "be removed for downstream analysis.")
     ftrace(msg)
     
@@ -202,7 +202,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       x <- redo(x, samples = assay_samples)
       errors <- c(errors, errors(x))
       warnings <- c(warnings, warnings(x))
-      messages <- c(messags, messages(x))
+      messages <- c(messages, messages(x))
     }
   }
   

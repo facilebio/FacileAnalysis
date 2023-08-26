@@ -1,5 +1,3 @@
-context("Serialization")
-
 if (!exists("FDS")) {
   FDS <- FacileData::exampleFacileDataSet()
 }

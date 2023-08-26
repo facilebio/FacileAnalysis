@@ -197,9 +197,10 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   # Subset the samples from `x` that have values for the given assay under test.
   xs <- filter_by_assay_support(x, assay_name)
   dropped <- samples(xs, dropped = TRUE)
-  if (nno <- nrow(dropped)) {
+  ndropped <- nrow(dropped)
+  if (ndropped > 0) {
     msg <- paste(
-      nno, "samples have no", assay_name, "data. These samples will ",
+      ndropped, "samples have no", assay_name, "data. These samples will ",
       "be removed for downstream analysis.")
     warnings <- c(warnings, msg)
     x <- xs

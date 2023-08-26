@@ -14,7 +14,7 @@ test_that("fpca output has expected things", {
 })
 
 test_that("fpca reports and recovers from running of sparse-sample assays", {
-  res <- expect_warning(fpca(ssamples, "scrnaseq", ntop = 100), "no scrnaseq")
+  res <- fpca(ssamples, "scrnaseq", ntop = 100)
   ws <- warnings(res)
   expect_true(any(grepl("no scrnaseq", ws)))
   
