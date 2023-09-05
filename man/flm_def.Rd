@@ -6,7 +6,6 @@
 \alias{flm_def.tbl}
 \alias{flm_def.facile_frame}
 \alias{flm_def.FacileDataStore}
-\alias{flm_def.ReactiveFacileDataStore}
 \title{Builds (simple) design and contrast matrices for use with \code{\link[=fdge]{fdge()}}}
 \usage{
 flm_def(
@@ -67,19 +66,6 @@ flm_def(
   ...,
   samples = NULL,
   custom_key = NULL
-)
-
-\method{flm_def}{ReactiveFacileDataStore}(
-  x,
-  covariate,
-  numer = NULL,
-  denom = NULL,
-  batch = NULL,
-  block = NULL,
-  on_missing = c("warning", "error"),
-  ...,
-  samples = active_samples(x),
-  custom_key = user(x)
 )
 }
 \arguments{
