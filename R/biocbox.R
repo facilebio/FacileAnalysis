@@ -332,11 +332,13 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     warning("We are only filtering ELists", immediate. = TRUE)
     return(x)
   }
-  x <- x[rownames(x) %in% filter_universe,]
+  if (is.character(filter_universe)) {
+    x <- x[rownames(x) %in% filter_universe,]
+  }
   rv <- matrixStats::rowVars(x$E, na.rm = TRUE)
   keep <- rv > 1e-3
   if (is.character(filter_require)) {
-    keep <- keep & rownames(x) %in% filter_require
+    keep <- keep | rownames(x) %in% filter_require
   }
   x[keep,]
 }
