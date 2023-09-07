@@ -198,11 +198,14 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     # Re-estimate the linear model
     # NOTE: This should be moved to biocbox.FacileLinearModelDefinition
     if (length(errors) == 0L) {
-      ftrace("re-estimating linear model from reduced sample")
+      msg <- paste(
+        "re-estimating linear model from reduced sample space",
+        "from", nrow(samples(xo)), "->", nrow(assay_samples))
+      ftrace(msg)
       x <- redo(x, samples = assay_samples)
       errors <- c(errors, errors(x))
       warnings <- c(warnings, warnings(x))
-      messages <- c(messages, messages(x))
+      messages <- c(msg, messages(x))
     }
   }
   

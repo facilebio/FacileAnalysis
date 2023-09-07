@@ -259,17 +259,12 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   if (!is.null(filter_universe)) {
     filter_universe <- unique(c(filter_universe, filter_require))
   }
-
+  
   do.filterByExpr <- !isFALSE(filter) &&
+    ainfo[["assay_type"]] %in% c("rnaseq", "pseudobulk", "umi", "isoseq") &&
     (isTRUE(filter) || (isTRUE(filter == "default") && isTRUE(default.filter)))
 
   if (do.filterByExpr) {
-    if (!ainfo[["assay_type"]] %in% c("rnaseq", "umi", "pseudobulk")) {
-      warning("Automatic filtering only implemented for `rnaseq` and `umi` ",
-              "assay types for now.\nFiltering step skipped",
-              immediate. = TRUE)
-      return(x)
-    }
     des.matrix <- design(model)[colnames(x),,drop=FALSE]
     # keep only the columns in the design matrix used for filtering that
     # correspond to the main groups. If this is a ttest, its
@@ -283,6 +278,11 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
     }
     x <- .filter_count_assay(x, des.matrix, filter.cols,
                              filter_universe, filter_require, ...)
+  } else {
+    if (filter == "default") {
+      # let's remove 0-variance filters
+      x <- .filter_zero_variance(x, filter_universe, filter_require, ...)
+    }
   }
   x
 }
@@ -324,3 +324,19 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   suppressWarnings(edgeR::calcNormFactors(x)) # partial match of `p` to `probs`
 }
 
+#' Removes features with 0 variance
+#' @noRd
+.filter_zero_variance <- function(x, filter_universe = NULL, 
+                                  filter_require = NULL, ...) {
+  if (!is(x, "EList")) {
+    warning("We are only filtering ELists", immediate. = TRUE)
+    return(x)
+  }
+  x <- x[rownames(x) %in% filter_universe,]
+  rv <- matrixStats::rowVars(x$E, na.rm = TRUE)
+  keep <- rv > 1e-3
+  if (is.character(filter_require)) {
+    keep <- keep & rownames(x) %in% filter_require
+  }
+  x[keep,]
+}
