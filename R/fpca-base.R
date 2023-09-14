@@ -579,7 +579,7 @@ samples.FacilePcaAnalysisResult <- function(x, ...) {
 
   pvar <- assert_numeric(x$percent_var, names = "unique")
   pc.names <- names(pvar)
-  rotation <- expect_matrix(x[["rotation"]], mode = "numeric",
+  rotation <- assert_matrix(x[["rotation"]], mode = "numeric",
                             ncols = length(pvar), col.names = "unique")
   assert_subset(pc.names, colnames(rotation))
   rotation <- bind_cols(tibble(feature_id = rownames(rotation)),
