@@ -126,23 +126,10 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     assert_facile_data_store(.fds)
   }
 
-  all_test_levels <- local({
-    vals <- x[[covariate]]
-    if (is.factor(vals)) levels(droplevels(vals)) else sort(unique(vals))
-  })
-  if (length(all_test_levels) == 2L && is.null(numer) && is.null(denom)) {
-    # If this is specified as an ANOVA (no numer or denom), we still run it as a
-    # t-test
-    numer <- all_test_levels[2L]
-    denom <- all_test_levels[1L]
-  }
-
-  test_levels <- assert_subset(c(numer, denom), all_test_levels)
-
   messages <- character()
   warnings <- character()
   errors <- character()
-
+  
   out <- list(
     # Standard FacileAnalysisResult things
     fds = .fds)
@@ -155,6 +142,28 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     class(out) <- c(clazz, class(out))
     return(out)
   })
+  
+  all_test_levels <- local({
+    vals <- x[[covariate]]
+    if (is.factor(vals)) levels(droplevels(vals)) else sort(unique(vals))
+  })
+  
+  if (length(all_test_levels) == 1L) {
+    # Setting up a linear model with a covarite that has a single level to 
+    # test against isn't a thing.
+    errors <- c("Testing covariate only has one level", errors)
+    return(out)
+  }
+  
+  if (length(all_test_levels) == 2L && is.null(numer) && is.null(denom)) {
+    # If this is specified as an ANOVA (no numer or denom), we still run it as a
+    # t-test
+    numer <- all_test_levels[2L]
+    denom <- all_test_levels[1L]
+  }
+
+  test_levels <- assert_subset(c(numer, denom), all_test_levels)
+
 
   if (is.null(test_levels) && is.null(contrast.)) {
     test_type <- "anova"
