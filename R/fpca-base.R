@@ -204,6 +204,10 @@ fpca.facile_frame <- function(x, assay_name = NULL,
       "be removed for downstream analysis.")
     warnings <- c(warnings, msg)
     x <- xs
+    
+    if (nrow(x) == 0L) {
+      stop("No samples left after filtering against assay availability")
+    }
   }
 
   dat <- biocbox(x, class = "list", assay_name = assay_name,
