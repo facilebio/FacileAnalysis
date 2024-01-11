@@ -75,6 +75,9 @@
 #'   (where appropriate) when testing (default is not to).
 #' @param weights a `sample_id,feature_id,weight` table of observation weights
 #'   to use when `method == "limma"`.
+#' @param treat_lfc If this is numeric, this activates limma's "treat"
+#'   functionality and tests for differential expression against this specified 
+#'   log2 fold change threshold.
 #' @examples
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- efds |>

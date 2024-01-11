@@ -252,6 +252,10 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' interactive points by setting `insignificant = "drop"`. Static plots keep the
 #' insignificant points. If you want to change this behavior, set `interactive`
 #' and `insignificant` as you please.
+#' 
+#' Use the tidy.FacileTtestComparisonAnalysisResult(labels, ...) parameter
+#' to rename the facet ribbons/tiles
+#' 
 #' @noRd
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(
@@ -259,12 +263,13 @@ viz.FacileTtestComparisonAnalysisResult <- function(
     color_quadrant = NULL, color_highlight = "red",
     cor.method = "spearman", title = "DGE Comparison",
     subtitle = NULL, with_cor = TRUE, interactive = TRUE,
-    insignificant = if (interactive) "drop" else "points",
-    facets_nrow = if (insignificant == "drop") 3 else 2, ...) {
+    insignificant = if (interactive) "drop" else "keep",
+    facets_nrow = if (insignificant == "drop") 3 else 2, 
+    alphas = NULL, ...) {
 
-  xdat <- tidy(x, ...)
-  labels <- attr(xdat, "labels")[c("none", "both", "x", "y")]
-  insignificant <- match.arg(insignificant, c("drop", "points"))
+  xdat.all <- tidy(x, ...)
+  labels <- attr(xdat.all, "labels")[c("none", "both", "x", "y")]
+  insignificant <- match.arg(insignificant, c("drop", "keep"))
 
   default.quadrant.cols <- setNames(
     c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
@@ -282,11 +287,26 @@ viz.FacileTtestComparisonAnalysisResult <- function(
       default.quadrant.cols,
       color_quadrant)
   }
-
+  
+  xdat.all$insig <- xdat.all$interaction_group == labels["none"]
   if (insignificant == "drop") {
-    xdat <- filter(xdat, interaction_group != labels["none"])
+    xdat <- filter(xdat.all, !insig)
     labels <- labels[-1]
     color_quadrant <- color_quadrant[-1]
+  } else {
+    xdat <- xdat.all
+  }
+  
+  alphas.in <- alphas
+  alphas <- stats::setNames(rep(1, length(labels)), labels)
+  alphas[labels["none"]] <- 0.1
+  if (test_numeric(alphas.in, names = "unique")) {
+    alphas.in <- pmin(alphas.in, 1)
+    alphas.in <- pmax(alphas.in, 0)
+    take <- intersect(labels, names(alphas.in))
+    if (length(take)) {
+      alphas[take] <- alphas.in[take]
+    }
   }
 
   xdat[["interaction_group"]] <- factor(xdat[["interaction_group"]],
@@ -312,7 +332,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
   } else {
     cors <- NULL
   }
-
+  
   lims.square <- range(c(xdat$logFC.x, xdat$logFC.y))
   lims.square <- c(-1, 1) * (max(abs(lims.square)) + 0.1)
 
@@ -330,22 +350,20 @@ viz.FacileTtestComparisonAnalysisResult <- function(
     ggplot2::ggplot(ggplot2::aes(x = logFC.x, y = logFC.y)) +
     ggplot2::geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
     ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed")
-  # if (insignificant == "density") {
-  #   gg.base <- gg.base +
-  #     ggplot2::geom_density2d(
-  #       alpha = 0.5,
-  #       data = filter(xdat, anti_join(xdat, xdat.points, by = "feature_id")))
-  # }
+  
   gg.base <- gg.base +
     suppressWarnings({
       ggplot2::geom_point(
-        ggplot2::aes(color = interaction_group, text = symbol))
+        ggplot2::aes(color = interaction_group, 
+                     alpha = interaction_group,
+                     text = symbol))
     })
 
   gg.base <- gg.base +
     ggplot2::geom_abline(intercept = 0, slope = 1, color = "red",
                          linetype = "dotted") +
     ggplot2::scale_color_manual(values = color_quadrant) +
+    ggplot2::scale_alpha_manual(values = alphas) +
     ggplot2::labs(
       x = sprintf("log2FC %s", labels["x"]),
       y = sprintf("log2FC %s", labels["y"]),
