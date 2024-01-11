@@ -46,7 +46,7 @@
 #'     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
 #'     nrow = 1)
 #'   viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
-#'       color_quadrant = "darkgrey")$plot_facets
+#'       colors = "darkgrey")$plot_facets
 #' }
 compare.FacileTtestAnalysisResult <- function(x, y,
                                               treat_lfc = param(x, "treat_lfc"),
@@ -260,7 +260,7 @@ samples.FacileTtestComparisonAnalysisResult <- function(x, ...) {
 #' @export
 viz.FacileTtestComparisonAnalysisResult <- function(
     x, features = NULL, highlight = NULL,
-    color_quadrant = NULL, color_highlight = "red",
+    colors = NULL, color_highlight = "red",
     cor.method = "spearman", title = "DGE Comparison",
     subtitle = NULL, with_cor = TRUE, interactive = TRUE,
     insignificant = if (interactive) "drop" else "keep",
@@ -271,28 +271,26 @@ viz.FacileTtestComparisonAnalysisResult <- function(
   labels <- attr(xdat.all, "labels")[c("none", "both", "x", "y")]
   insignificant <- match.arg(insignificant, c("drop", "keep"))
 
-  default.quadrant.cols <- setNames(
-    c("lightgrey", "darkgrey", "cornflowerblue", "orange"),
-    labels)
-  if (is.null(color_quadrant) || length(color_quadrant) == 0L) {
-    color_quadrant <- default.quadrant.cols
-  } else {
-    assert_character(color_quadrant, min.len = 1)
-    if (length(color_quadrant) == 1L) {
-      color_quadrant <- rep(color_quadrant, length(default.quadrant.cols))
-      names(color_quadrant) <- names(default.quadrant.cols)
-    }
-    color_quadrant <- ifelse(
-      is.na(color_quadrant[names(default.quadrant.cols)]),
-      default.quadrant.cols,
-      color_quadrant)
-  }
+  cols.default <- c("lightgrey", "darkgrey", "cornflowerblue", "orange")
+  names(cols.default) <- labels
   
+  if (length(colors) == 1L && is.null(names(colors))) {
+    colors <- stats::setNames(rep(1, length(labels)), labels)
+  }
+  if (test_character(colors, names = "unique", min.len = 1)) {
+    cq <- cols.default
+    take <- intersect(names(cq), names(colors))
+    cq[take] <- colors[take]
+    colors <- cq
+  } else {
+    colors <- cols.default
+  }
+
   xdat.all$insig <- xdat.all$interaction_group == labels["none"]
   if (insignificant == "drop") {
     xdat <- filter(xdat.all, !insig)
     labels <- labels[-1]
-    color_quadrant <- color_quadrant[-1]
+    colors <- colors[-1]
   } else {
     xdat <- xdat.all
   }
@@ -300,7 +298,7 @@ viz.FacileTtestComparisonAnalysisResult <- function(
   alphas.in <- alphas
   alphas <- stats::setNames(rep(1, length(labels)), labels)
   alphas[labels["none"]] <- 0.1
-  if (test_numeric(alphas.in, names = "unique")) {
+  if (test_numeric(alphas.in, names = "unique", min.len = 1)) {
     alphas.in <- pmin(alphas.in, 1)
     alphas.in <- pmax(alphas.in, 0)
     take <- intersect(labels, names(alphas.in))
@@ -358,11 +356,11 @@ viz.FacileTtestComparisonAnalysisResult <- function(
                      alpha = interaction_group,
                      text = symbol))
     })
-
+  
   gg.base <- gg.base +
     ggplot2::geom_abline(intercept = 0, slope = 1, color = "red",
                          linetype = "dotted") +
-    ggplot2::scale_color_manual(values = color_quadrant) +
+    ggplot2::scale_color_manual(values = colors) +
     ggplot2::scale_alpha_manual(values = alphas) +
     ggplot2::labs(
       x = sprintf("log2FC %s", labels["x"]),
