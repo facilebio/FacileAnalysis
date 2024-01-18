@@ -2,7 +2,9 @@
 
 #' @noRd
 #' @export
-viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
+viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
+                                        type = c("scatter", "scree"),
+                                        ..., color_aes = NULL,
                                         height = 400,
                                         width = 700,
                                         xlabel = "default",
@@ -10,6 +12,30 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
                                         zlabel = "default",
                                         event_source = "A",
                                         webgl = FALSE) {
+  type <- match.arg(type)
+  if (type == "scatter") {
+    res <- .viz_pca_scatter(x, dims = dims, color_aes = color_aes,
+                            height = height, width = width, xlabel = xlabel,
+                            ylabel = ylabel, zlabel = zlabel,
+                            event_source = event_source, webgl = webgl, ...)
+  } else {
+    res <- .viz_pca_scree(x, dims = dims, color_aes = color_aes,
+                          height = height, width = width, xlabel = xlabel,
+                          ylabel = ylabel, zlabel = zlabel,
+                          event_source = event_source, webgl = webgl, ...)
+  }
+  res
+}
+
+#' @noRd
+.viz_pca_scatter <- function(x, dims = NULL, ..., color_aes = NULL, height = 400,
+                             width = 700, xlabel = "default",
+                             ylabel = "default", zlabel = "default",
+                             event_source = "A", webgl = FALSE) {
+  if (is.null(dims)) {
+    dims <- 2
+  }
+  
   xx <- tidy(x)
   assert_integerish(dims, lower = 1L)
   if (length(dims) == 1L) {
@@ -58,6 +84,41 @@ viz.FacilePcaAnalysisResult <- function(x, dims = 2, color_aes = NULL, ...,
     webgl = webgl, height = height, width = width,
     color_aes = color_aes, ...)
   p
+}
+
+#' @noRd
+.viz_pca_scree <- function(x, dims = NULL, ..., title = "Scree Plot") {
+  xx <- tidy(x)
+  pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
+  pc.cols.req <- paste0("PC", dims)
+  pc.cols <- intersect(pc.cols.req, pc.cols.all)
+  
+  xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
+  xx <- select(xx, {{xx.cols}})
+  
+  pcv <- x$percent_var * 100
+  varexp <- dplyr::tibble(
+    component = names(pcv),
+    var_explained = unname(pcv),
+    var_cumulative = cumsum(var_explained))
+  
+  fig <- plotly::plot_ly(data = varexp) |> 
+    plotly::add_bars(x = ~component, y = ~var_explained) |> 
+    plotly::add_lines(x = ~component, y = ~var_cumulative) |> 
+    plotly::layout(
+      title = title,
+      xaxis = list(
+        title = "Component"),
+      yaxis = list(
+        title = "Variance explained (%)",
+        range = list(0, 100)))
+  
+  out <- list(
+    plot = fig,
+    input_data = varexp,
+    params = list())
+  class(out) <- c("FacileScreePlot", "FacileViz")
+  out
 }
 
 #' @export

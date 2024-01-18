@@ -129,6 +129,10 @@ features (genes) are removed from the dataset for testing, as well as if
 to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}}
 (where appropriate) when testing (default is not to).}
 
+\item{treat_lfc}{If this is numeric, this activates limma's "treat"
+functionality and tests for differential expression against this specified
+log2 fold change threshold.}
+
 \item{...}{passed down into inner methods, such as \code{biocbox} to tweak
 filtering criteria, for instance}
 
@@ -328,6 +332,6 @@ if (requireNamespace("patchwork")) {
     sviz$plot_facets + ggplot2::theme(legend.position = "none"),
     nrow = 1)
   viz(dge.comp, labels = c(x = "CRC", y = "BLCA"),
-      color_quadrant = "darkgrey")$plot_facets
+      colors = "darkgrey")$plot_facets
 }
 }
