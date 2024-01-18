@@ -103,10 +103,12 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
     var_cumulative = cumsum(var_explained))
   
   fig <- plotly::plot_ly(data = varexp) |> 
-    plotly::add_bars(x = ~component, y = ~var_explained) |> 
-    plotly::add_lines(x = ~component, y = ~var_cumulative) |> 
+    plotly::add_bars(x = ~component, y = ~var_explained, color = I("#1B62A6")) |> 
+    plotly::add_lines(x = ~component, y = ~var_cumulative, color = I("#FD690F")) |> 
+    plotly::add_markers(x = ~component, y = ~var_cumulative, color = I("#FD690F")) |> 
     plotly::layout(
       title = title,
+      showlegend = FALSE,
       xaxis = list(
         title = "Component"),
       yaxis = list(
