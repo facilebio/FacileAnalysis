@@ -218,7 +218,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
                  ...)
 
   if (!is.null(features) && missing(filter)) {
-    filter <- "none"
+    filter <- if (!missing(ntop)) "variance" else "none"
   }
 
   out <- fpca(dat[["assay_data"]], dims, features, filter, ntop,
