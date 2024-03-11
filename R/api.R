@@ -405,6 +405,25 @@ model <- function(x, ...) {
 #' @export
 model.NULL <- function(x, ...) NULL
 
+#' Extract the contrast defined.
+#' 
+#' @export
+#' @param x a facileanalysis result / FacileLinearModelDefinition
+contrast <- function(x, ...) {
+  UseMethod("contrast", x)
+}
+
+#' @noRd
+#' @export
+contrast.default <- function(x, ...) {
+  stop("contrast() not defined on object class: ", class(x)[1L])
+}
+
+#' @noRd
+#' @export
+contrast.NULL <- function(x, ...) NULL
+
+
 # Vizualization and Rmarkdon reporting =========================================
 
 #' Methods to interactively explore and report FacileAnalysisResults.

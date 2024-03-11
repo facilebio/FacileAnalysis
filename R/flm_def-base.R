@@ -469,10 +469,25 @@ result.FacileLinearModelDefinition <- function(x, ...) {
 #' @noRd
 #' @importFrom stats formula
 #' @export
-formula.FacileLinearModelDefinition <- function(x, ..., as.string = TRUE) {
+formula.FacileLinearModelDefinition <- function(x, ..., as_string = TRUE) {
   out <- x[["design_formula"]]
-  if (!as.string) {
+  if (!as_string) {
     stop("What should we be doing with this if not return the string?")
+  }
+  out
+}
+
+#' @noRd
+#' @export
+#' @param as_string if `FALSE` (default), returns a named contrast vector,
+#'   otherwise its the contrast string, ie. `numer - denom`
+#' @return if `is_anova(x)` returns `NULL`, otherwise the contrast specified.
+contrast.FacileLinearModelDefinition <- function(x, ..., as_string = FALSE) {
+  if (is_anova(x)) return(NULL)
+  if (as_string) {
+    out <- x$contrast_string
+  } else {
+    out <- x$contrast
   }
   out
 }

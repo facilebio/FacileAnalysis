@@ -589,6 +589,8 @@ print.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   cat(format(x, ...), "\n")
 }
 
+#' @noRd
+#' @export
 format.FacileTtestComparisonAnalysisResult <- function(x, ...) {
   has.istats <- !is.null(result(x))
   status <- if (has.istats) "with interaction" else "no interaction"

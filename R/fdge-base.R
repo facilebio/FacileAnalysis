@@ -433,6 +433,12 @@ design.FacileDgeAnalysisResult <- function(x, ...) {
 
 #' @noRd
 #' @export
+contrast.FacileDgeAnalysisResult <- function(x, ...) {
+  contrast(param(x, "model_def"), ...)
+}
+
+#' @noRd
+#' @export
 name.FacileTtestAnalysisResult <- function(x, ...) {
   m <- model(x)
   covname <- param(m, "covariate")
