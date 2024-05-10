@@ -241,6 +241,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
     as_tibble() |>
     select(dataset, sample_id, everything()) |>
     as_facile_frame(.fds)
+  class(out[["result"]]) <- c("facile_frame_pca", class(out[["result"]]))
+  
   out[["feature_stats"]] <- out[["feature_stats"]] |>
     as_tibble() |>
     as_facile_frame(.fds)
