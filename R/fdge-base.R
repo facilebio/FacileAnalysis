@@ -756,7 +756,7 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 #'
 #' @noRd
 #' @importFrom limma voom duplicateCorrelation
-.voom <- function(counts, design = NULL, block = NULL, ...) {
+.voom <- function(counts, design = NULL, block = NULL, save.plot = TRUE, ...) {
   args <- list(...)
   vm.args <- formals(limma::voom)
   take.args <- intersect(names(vm.args), names(args))

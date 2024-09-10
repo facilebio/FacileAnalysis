@@ -93,7 +93,7 @@ fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
       read.fn <- readRDS
     } else if (ext == "qs") {
       reqpkg("qs")
-      read.fn <- qs::qload
+      read.fn <- qs::qread
     } else {
       stop("Unknown filetype extension to load: ", ext)
     }
