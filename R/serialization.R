@@ -133,11 +133,19 @@ fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
     if (!is(fds, "FacileDataStore")) {
       stop("We expected a FacileDataStore by now")
     }
-    common.class <- intersect(fds.info[["fds_class"]], class(fds))
-    if (length(common.class) == 0L) {
-      stop("It doesn't look like the FacileDataStore you are trying to ",
-           "associate with this result is the one that was used")
+    # common.class <- intersect(fds.info[["fds_class"]], class(fds))
+    # if (length(common.class) == 0L) {
+    #   stop("It doesn't look like the FacileDataStore you are trying to ",
+    #        "associate with this result is the one that was used")
+    # }
+    
+    xs <- samples(x)
+    fs <- dplyr::collect(samples(fds), n = Inf)
+    xmissed <- dplyr::anti_join(xs, fs, by = c("dataset", "sample_id"))
+    if (nrow(xmissed) > 0L) {
+      stop(nrow(xmissed), " samples missing from the provided faciledatastore")
     }
+    
     x <- refds(x, fds)
   }
 
