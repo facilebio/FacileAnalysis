@@ -139,6 +139,9 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     out[["messages"]] <- messages
     out[["warnings"]] <- warnings
     out[["errors"]] <- errors
+    if (length(errors) > 0) {
+      stop(paste(errors, collapse = "\n"))
+    }
     class(out) <- c(clazz, class(out))
     return(out)
   })
@@ -149,7 +152,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   })
   
   if (length(all_test_levels) == 1L) {
-    # Setting up a linear model with a covarite that has a single level to 
+    # Setting up a linear model with a covariate that has a single level to 
     # test against isn't a thing.
     errors <- c("Testing covariate only has one level", errors)
     return(out)
@@ -164,13 +167,16 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   test_levels <- assert_subset(c(numer, denom), all_test_levels)
 
-
   if (is.null(test_levels) && is.null(contrast.)) {
     test_type <- "anova"
   } else {
     test_type <- "ttest"
+    if (setequal(numer, denom)) {
+      errors <- c("`numer` and `denom` cannot be the same value in ttest", errors)
+      return(errors)
+    }
   }
-
+  
   x <- distinct(x, dataset, sample_id, .keep_all = TRUE)
   
   # Build the design matrix ----------------------------------------------------

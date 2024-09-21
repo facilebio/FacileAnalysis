@@ -1,5 +1,42 @@
 # Interactivity and Vizualization over FacileDGEResults ========================
 
+#' Show QC level plots from a DGE model fit.
+#' 
+#' @noRd
+#' @examples
+#' afds <- FacileData::an_fds()
+#' dge <- samples(afds) |> 
+#'   flm_def("cell_abbrev", "CNT", "DCT") |>
+#'   fdge(method = "voom")
+#' FacileAnalysis:::.voom_plot(dge)
+.voom_plot <- function(x, ...) {
+  assert_class(x, "FacileDgeAnalysisResult")
+  bb <- biocbox(x)
+  assert_class(bb, "EList")
+  if (!test_list(bb$voom.xy) || !test_list(bb$voom.line)) {
+    stop("voom was run without save.plot = TRUE")
+  }
+  # plot(
+  #   bb$voom.xy$x, bb$voom.xy$y, 
+  #   xlab = "log2( count size + 0.5 )", 
+  #   ylab = "Sqrt( standard deviation )", 
+  #   pch = 16, cex = 0.25)
+  # title("voom: Mean-variance trend")
+  # lines(bb$voom.line, col = "red")
+  df <- data.frame(
+    x = bb$voom.xy$x,
+    y = bb$voom.xy$y,
+    xl = bb$voom.line$x,
+    yl = bb$voom.line$y)
+  ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
+    ggplot2::geom_point(alpha = 0.8) +
+    ggplot2::geom_line(ggplot2::aes(x = xl, y = yl), color = "red") +
+    ggplot2::labs(
+      title = "voom: Mean-variance tren",
+      x = "log2( count size + 0.5 )", 
+      y = "Sqrt( standard deviation )")
+}
+
 #' The most common visualization downstream from a DGE analysis is either
 #' a volcano plot, or the expression of signficant (or not) genes across the
 #' samples tested in the DGE analysis.
@@ -52,6 +89,10 @@ viz.FacileTtestAnalysisResult <- function(x, features = NULL, type = NULL,
 
   out
 }
+
+#' Draw the voom plot, if this was voom'd
+#' @export
+
 
 #' @export
 #' @noRd

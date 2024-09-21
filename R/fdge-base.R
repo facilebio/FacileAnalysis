@@ -761,7 +761,7 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
   vm.args <- formals(limma::voom)
   take.args <- intersect(names(vm.args), names(args))
 
-  call.args <- list(counts = counts, design = design)
+  call.args <- list(counts = counts, design = design, save.plot = save.plot)
   if (length(take.args)) call.args <- c(call.args, args[take.args])
 
   vm <- do.call(limma::voom, call.args)
