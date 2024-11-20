@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.30
+Version: 0.98.31
 Authors@R: c(
     person(
       "Steve", "Lianoglou",
@@ -13,7 +13,10 @@ Authors@R: c(
       role = c("ctb"), comment = c(ORCID = "0000-0002-1404-5264")),
     person(
       "Denali Therapeutics",
-      role = c("cph", "fnd"), comment = "2018 - 2021"))
+      role = c("cph", "fnd"), comment = "2018 - 2021"),
+    person(
+      "Aratus Informatics",
+      role = c("cph", "fnd"), comment = "2022+"))
 Description: Provides modularized analysis methods commonly performed over 
     genomics data. Analysis results can be interactively explored
     by analysts using the "viz" or "shine" functions, which produce JavaScript-
@@ -36,7 +39,7 @@ Imports:
     irlba,
     limma,
     matrixStats,
-    sparrow (>= 0.98.5),
+    sparrow (>= 1.13.2),
     statmod (>= 1.5.0),
     plotly (>= 4.9.0),
     stringr,

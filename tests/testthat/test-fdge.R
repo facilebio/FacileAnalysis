@@ -1,5 +1,18 @@
 if (!exists("FDS")) FDS <- FacileData::exampleFacileDataSet()
 
+# High level utility ===========================================================
+
+test_that("tidy(ANOVA) provides mean expression of all levels", {
+  adef <- FDS |> 
+    filter_samples(indication == "BLCA", !is.na(subtype_tcga)) |> 
+    flm_def("subtype_tcga")
+  adge <- fdge(adef, method = "voom")
+})
+
+test_that("tidy(simple ttest) provides mean expression of the levels tested", {
+  
+})
+
 # Simpler Linear Models ========================================================
 
 test_that("Simple fdge t-test matches explicit limma/edgeR tests", {

@@ -293,6 +293,8 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                 # default params for edgeR::filterByExpr
                                 filter_min_count = 10,
                                 filter_min_total_count = 15,
+                                filter_large_n = 15,
+                                filter_min_prop = 0.7,
                                 ...) {
   if (!is(x, "DGEList")) {
     warning("Automatic filtering only implemented for DGELists for now",
@@ -306,7 +308,9 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
   keep <- edgeR::filterByExpr(x[, rownames(dmatrix)], dmatrix,
                               min.count = filter_min_count,
-                              min.total.count = filter_min_total_count, ...)
+                              min.total.count = filter_min_total_count,
+                              large.n = filter_large_n,
+                              min.prop = filter_min_prop, ...)
   if (is.character(filter_require)) {
     keep <- keep | rownames(x) %in% filter_require
   }

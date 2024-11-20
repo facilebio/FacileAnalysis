@@ -93,7 +93,6 @@ flm_def <- function(x, covariate, numer = NULL, denom = NULL,
 #' @rdname flm_def
 #' @method flm_def data.frame
 #' @importFrom stats model.matrix
-#' @importFrom limma makeContrasts nonEstimable
 #' @importFrom FacileViz unselected
 #' @importFrom stringr str_detect
 #'
@@ -171,7 +170,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     test_type <- "anova"
   } else {
     test_type <- "ttest"
-    if (setequal(numer, denom)) {
+    if (!test_string(contrast.) && setequal(numer, denom)) {
       errors <- c("`numer` and `denom` cannot be the same value in ttest", errors)
       return(errors)
     }
@@ -227,7 +226,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   rownames(design) <- paste(x$dataset, x$sample_id, sep = "__")
 
-  non_estimable <- nonEstimable(design)
+  non_estimable <- limma::nonEstimable(design)
   if (!is.null(non_estimable)) {
     err <- paste("Design matrix is not full rank.",
                  "Cannot estimate these covariates:",
@@ -306,7 +305,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
     if (str_detect(contrast_string, iregex)) {
       clazz <- c("FacileInteractionTestModelDefinition", clazz)
     }
-    contrast <- makeContrasts(contrasts = contrast_string, levels = design)[,1L]
+    contrast <- limma::makeContrasts(contrasts = contrast_string, levels = design)[,1L]
   }
 
   out[["params"]] <- list(

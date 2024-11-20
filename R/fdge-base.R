@@ -38,9 +38,14 @@
 #'
 #' When `fdge` analysis is performed on count data, the filtering is precisely
 #' executed using this function, using `design(x)` as the design parameter to
-#' `filterByExpr`. You can modify the filtering behavior by passing any
-#' named parameters found in the [edgeR::filterByExpr()] function down to it via
-#' `fdge`'s `...` parameter (don't pass `design`, as this is already defined).
+#' `filterByExpr`. You can modify the filtering behavior by passing some named
+#' parameters found in the [edgeR::filterByExpr()] function down to it via
+#' `fdge`'s `...` parameter, with the exception of the `design` paremeter,
+#' because this is already defined. Use: 
+#' * `filter_min_count` for the `edgeR::filterByExpr(min.count)` parameter
+#' * `filter_min_total_count` for `edgeR::filterByExpr(min.total.count)`
+#' * `filter_large_n` for `edgeR::filterByExpr(large.n)`; and 
+#' * `filter_min_prop` for `edgeR::filterByExpr(min.prop)`.
 #'
 #' There are times when you want to tweak this behavior in ways that aren't
 #' exactly supported by `filterByExpr`. You can pass in a "feature descriptor"
@@ -124,6 +129,16 @@ fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                             with_sample_weights = FALSE, ...,
                                             verbose = FALSE) {
   res <- NextMethod(coef = x[["coef"]])
+  # rename .intercept. to mean.level
+  covariate <- param(x, "covariate")
+  vals <- samples(x)[[covariate]]
+  if (is.factor(vals)) {
+    intercept <- levels(vals)[1L]
+  } else {
+    intercept <- sort(unique(vals))[1L]
+  }
+  intercept <- paste0("mean.", intercept)
+  data.table::setnames(res$result, ".intercept.", intercept)
   res
 }
 
@@ -312,6 +327,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       treat.lfc = treat_lfc,
       trend.eBayes = trend.eBayes,
       robust.eBayes = robust.eBayes,
+      # with.fit = TRUE,
       block = block, correlation = dup.corr)
 
     # sparrow::calculateIndividualLogFC returns the stats table ordered by

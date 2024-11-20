@@ -4,7 +4,9 @@
 #' @export
 viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
                                         type = c("scatter", "scree"),
-                                        ..., color_aes = NULL,
+                                        ..., 
+                                        interactive = TRUE,
+                                        color_aes = NULL,
                                         height = 400,
                                         width = 700,
                                         xlabel = "default",
@@ -17,12 +19,14 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
     res <- .viz_pca_scatter(x, dims = dims, color_aes = color_aes,
                             height = height, width = width, xlabel = xlabel,
                             ylabel = ylabel, zlabel = zlabel,
-                            event_source = event_source, webgl = webgl, ...)
+                            event_source = event_source, webgl = webgl, ...,
+                            interactive = interactive)
   } else {
     res <- .viz_pca_scree(x, dims = dims, color_aes = color_aes,
                           height = height, width = width, xlabel = xlabel,
                           ylabel = ylabel, zlabel = zlabel,
-                          event_source = event_source, webgl = webgl, ...)
+                          event_source = event_source, webgl = webgl, ...,
+                          interactive = interactive)
   }
   res
 }
@@ -31,7 +35,8 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
 .viz_pca_scatter <- function(x, dims = NULL, ..., color_aes = NULL, height = 400,
                              width = 700, xlabel = "default",
                              ylabel = "default", zlabel = "default",
-                             event_source = "A", webgl = FALSE) {
+                             event_source = "A", webgl = FALSE,
+                             interactive = TRUE) {
   if (is.null(dims)) {
     dims <- 2
   }
@@ -87,7 +92,8 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
 }
 
 #' @noRd
-.viz_pca_scree <- function(x, dims = NULL, ..., title = "Scree Plot") {
+.viz_pca_scree <- function(x, dims = NULL, ..., title = "Scree Plot",
+                           interactive = TRUE) {
   xx <- tidy(x)
   pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
   pc.cols.req <- paste0("PC", dims)
