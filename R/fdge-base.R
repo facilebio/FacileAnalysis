@@ -802,14 +802,15 @@ format.FacileDgeAnalysisResult <- function(x, ...) {
 #' voom(...), but it doesn't accept ...
 #' @noRd
 #' @importFrom limma voomWithQualityWeights duplicateCorrelation
-.voomWithQualityWeights <- function(counts, design = NULL, block = block, ...) {
+.voomWithQualityWeights <- function(counts, design = NULL, block = block, 
+                                    save.plot = TRUE, ...) {
   args <- list(...)
   vm.args <- formals(limma::voom)
   vmw.args <- formals(limma::voomWithQualityWeights)
   all.formals <- c(vm.args, vmw.args)
   take.args <- intersect(names(args), names(all.formals))
 
-  call.args <- list(counts = counts, design = design)
+  call.args <- list(counts = counts, design = design, save.plot = save.plot)
   if (length(take.args)) call.args <- c(call.args, args[take.args])
 
   vm <- do.call(limma::voomWithQualityWeights, call.args)
