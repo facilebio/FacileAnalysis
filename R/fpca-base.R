@@ -133,7 +133,7 @@
 fpca <- function(x, assay_name = NULL, dims = 5, features = NULL,
                  filter = "variance", ntop = 1000, row_covariates = NULL,
                  col_covariates = NULL,
-                 batch = NULL, main = NULL, ...) {
+                 batch = NULL, main = NULL, ..., metadata = list()) {
   UseMethod("fpca", x)
 }
 
@@ -145,7 +145,7 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
                                  row_covariates = NULL,
                                  col_covariates = NULL, batch = NULL,
                                  main = NULL, custom_key = Sys.getenv("USER"),
-                                 ..., samples = NULL) {
+                                 ..., samples = NULL, metadata = list()) {
   assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
@@ -153,7 +153,8 @@ fpca.FacileDataStore <- function(x, assay_name = NULL, dims = 5,
     filter <- "none"
   }
   fpca(samples, assay_name, dims, features, filter, ntop,
-       row_covariates, col_covariates, batch, main, custom_key, ...)
+       row_covariates, col_covariates, batch, main, custom_key,
+       metadata = metadata, ...)
 }
 
 #' @section FacileDataStore (facile_frame):
@@ -171,7 +172,8 @@ fpca.facile_frame <- function(x, assay_name = NULL,
                               features = NULL, filter = "variance", ntop = 1000,
                               row_covariates = NULL,
                               col_covariates = NULL, batch = NULL, main = NULL,
-                              custom_key = Sys.getenv("USER"), ...) {
+                              custom_key = Sys.getenv("USER"), ..., 
+                              metadata = list()) {
   assert_int(dims, lower = 3L) # TODO: max = min(dim(x, assay_name = ??))
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
@@ -224,7 +226,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
   out <- fpca(dat[["assay_data"]], dims, features, filter, ntop,
               row_covariates = dat[["features"]],
               col_covariates = dat[["samples"]],
-              batch = batch, main = main, ...)
+              batch = batch, main = main, metadata = metadata, ...)
 
   out[["params"]][["assay_name"]] <- assay_name
   if (!is.null(batch)) out[["params"]][["batch"]] <- batch
@@ -265,7 +267,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
                         filter = "default", ntop = 1000,
                         row_covariates = NULL, col_covariates = NULL,
                         batch = NULL, main = NULL, use_irlba = dims < 7,
-                        center = TRUE, scale. = FALSE, ...) {
+                        center = TRUE, scale. = FALSE, ..., metadata = list()) {
   messages <- character()
   warnings <- character()
   errors <- character()
@@ -396,6 +398,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
                   use_irlba = use_irlba,
                   batch = batch, main = main,
                   center = center, scale. = scale.),
+    metadata = metadata,
     messages = messages,
     warnings = warnings,
     errors = errors)

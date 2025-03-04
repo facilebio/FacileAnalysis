@@ -16,7 +16,8 @@ flm_def(
   batch = NULL,
   block = NULL,
   on_missing = c("warning", "error"),
-  ...
+  ...,
+  metadata = list()
 )
 
 \method{flm_def}{data.frame}(
@@ -28,6 +29,7 @@ flm_def(
   block = NULL,
   on_missing = c("warning", "error"),
   ...,
+  metadata = list(),
   contrast. = NULL,
   .fds = NULL
 )
@@ -40,7 +42,8 @@ flm_def(
   batch = NULL,
   block = NULL,
   on_missing = c("warning", "error"),
-  ...
+  ...,
+  metadata = list()
 )
 
 \method{flm_def}{facile_frame}(
@@ -52,6 +55,7 @@ flm_def(
   block = NULL,
   on_missing = c("warning", "error"),
   ...,
+  metadata = list(),
   custom_key = NULL
 )
 
@@ -64,6 +68,7 @@ flm_def(
   block = NULL,
   on_missing = c("warning", "error"),
   ...,
+  metadata = list(),
   samples = NULL,
   custom_key = NULL
 )

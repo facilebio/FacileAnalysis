@@ -9,7 +9,7 @@
 \alias{result.FacileFseaAnalysisResult}
 \title{Performs Feature (Gene) Set Enrichment Analyses}
 \usage{
-ffsea(x, fsets, methods = NULL, ...)
+ffsea(x, fsets, methods = NULL, ..., metadata = list())
 
 \method{result}{FacileFseaAnalysisResult}(x, name = "object", ...)
 }

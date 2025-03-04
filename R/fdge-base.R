@@ -87,11 +87,12 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- efds |>
 #'   FacileData::filter_samples(indication == "BLCA") |>
-#'   dplyr::mutate(something = sample(c("a", "b"), n(), replace = TRUE))
+#'   dplyr::mutate(something = sample(c("a", "b"), dplyr::n(), replace = TRUE))
 #' mdef <- flm_def(samples, covariate = "sample_type",
 #'                 numer = "tumor", denom = "normal",
-#'                 batch = "sex")
-#' dge <- fdge(mdef, method = "voom")
+#'                 batch = "sex",
+#'                 metadata = list(label = "test flm"))
+#' dge <- fdge(mdef, method = "voom", metadata = list(label = "test dge"))
 #' if (interactive()) {
 #'   viz(dge)
 #'   viz(dge, "146909")
@@ -107,6 +108,7 @@
 fdge <- function(x, assay_name = NULL, method = NULL, features = NULL,
                  filter = "default", with_sample_weights = FALSE,
                  treat_lfc = NULL, ...,
+                 metadata = list(),
                  verbose = FALSE) {
   UseMethod("fdge", x)
 }
@@ -117,6 +119,7 @@ fdge.FacileFailedModelDefinition <- function(x, assay_name = NULL,
                                              method = NULL, features = NULL,
                                              filter = "default",
                                              with_sample_weights = FALSE, ...,
+                                             metadata = list(),
                                              verbose = FALSE) {
   stop("There are erros in this model:\n", paste(x$errors, collapse = "\n"))
 }
@@ -127,6 +130,7 @@ fdge.FacileFailedModelDefinition <- function(x, assay_name = NULL,
 fdge.FacileAnovaModelDefinition <- function(x, assay_name = NULL, method = NULL,
                                             features = NULL, filter = "default",
                                             with_sample_weights = FALSE, ...,
+                                            metadata = list(),
                                             verbose = FALSE) {
   res <- NextMethod(coef = x[["coef"]])
   # rename .intercept. to mean.level
@@ -150,6 +154,7 @@ fdge.FacileTtestDGEModelDefinition <- function(x, assay_name = NULL,
                                                with_sample_weights = FALSE,
                                                treat_lfc = NULL,
                                                ...,
+                                               metadata = list(),
                                                verbose = FALSE) {
   res <- NextMethod(contrast = x[["contrast"]])
   res
@@ -170,6 +175,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
                                              biocbox = NULL,
                                              trend.eBayes = FALSE,
                                              robust.eBayes = FALSE,
+                                             metadata = list(),
                                              verbose = FALSE) {
   messages <- character()
   warnings <- character()
@@ -382,6 +388,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       weights = weights),
     # Standard FacileAnalysisResult things
     fds = .fds,
+    metadata = metadata,
     messages = messages,
     warnings = warnings,
     errors = errors)

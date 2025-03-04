@@ -107,6 +107,17 @@ compare.FacileAnalysisResult <- function(x, y, ...) {
   ry <- ranks(y, ...)
 }
 
+#' @export
+#' @noRd
+metadata <- function(x, ...) {
+  UseMethod("metadata", x)
+}
+
+#' @export
+#' @noRd
+metadata.FacileAnalysisResult <- function(x, ...) {
+  x[["metadata"]]
+}
 
 #' @export
 #' @noRd

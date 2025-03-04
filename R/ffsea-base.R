@@ -127,7 +127,7 @@
 #'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-ffsea <- function(x, fsets, methods = NULL, ...) {
+ffsea <- function(x, fsets, methods = NULL, ..., metadata = list()) {
   UseMethod("ffsea", x)
 }
 
@@ -136,7 +136,8 @@ ffsea <- function(x, fsets, methods = NULL, ...) {
 #' of genes.
 #'
 #' @noRd
-ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL, ...) {
+ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL, 
+                                                ..., metadata = list()) {
   stop("Run fdge(x) |> ffsea() for now")
 }
 
@@ -164,7 +165,8 @@ ffsea.data.frame <- function(x, fsets, methods = NULL,
                              biased_by = NULL, ...,
                              feature.bias = "thebuckstopshere",
                              xmeta. = "thebuckstopshere",
-                             groups = "thebuckstopshere") {
+                             groups = "thebuckstopshere", 
+                             metadata = list()) {
   if (is.null(methods)) {
     stop("A gsea method name must be provided to the `methods` parameter.")
   }
@@ -238,7 +240,8 @@ ffsea.data.frame <- function(x, fsets, methods = NULL,
                   rank_order = rank_order,
                   group_by = group_by,
                   biased_by = biased_by,
-                  x = x, fsets = fsets))
+                  x = x, fsets = fsets),
+    metadata = metadata)
     fds = suppressWarnings(fds(x))
   class(out) <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
   out

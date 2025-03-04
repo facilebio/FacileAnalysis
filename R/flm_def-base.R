@@ -85,7 +85,7 @@
 #'   flm_def(covariate = "stage", batch = "sex")
 flm_def <- function(x, covariate, numer = NULL, denom = NULL,
                     batch = NULL, block = NULL,
-                    on_missing = c("warning", "error"), ...) {
+                    on_missing = c("warning", "error"), ..., metadata = list()) {
   UseMethod("flm_def", x)
 }
 
@@ -107,6 +107,7 @@ flm_def <- function(x, covariate, numer = NULL, denom = NULL,
 flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
                                batch = NULL, block = NULL,
                                on_missing = c("warning", "error"), ...,
+                               metadata = list(),
                                contrast. = NULL,
                                .fds = NULL) {
   on_missing <- match.arg(on_missing)
@@ -131,6 +132,7 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   
   out <- list(
     # Standard FacileAnalysisResult things
+    metadata = metadata,
     fds = .fds)
   class(out) <- c("FacileLinearModelDefinition", "FacileAnalysisResult")
   clazz <- "IncompleteModelDefintion"
@@ -333,7 +335,8 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
 #' @importFrom FacileViz unselected
 flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
                         batch = NULL, block = NULL,
-                        on_missing = c("warning", "error"), ...) {
+                        on_missing = c("warning", "error"), ...,
+                        metadata = list()) {
   x <- collect(x, n = Inf)
   if (unselected(numer)) numer <- NULL
   if (unselected(denom)) denom <- NULL
@@ -341,7 +344,7 @@ flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 
   flm_def.data.frame(x, covariate = covariate, numer = numer,
                      denom = denom, batch = batch, block = block,
-                     on_missing = on_missing, ...)
+                     on_missing = on_missing, metadata = metadata, ...)
 }
 
 #' @section facile_frame:
@@ -361,6 +364,7 @@ flm_def.tbl <- function(x, covariate, numer = NULL, denom = NULL,
 flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
                                  batch = NULL, block = NULL,
                                  on_missing = c("warning", "error"), ...,
+                                 metadata = list(),
                                  custom_key = NULL) {
   .fds <- assert_class(fds(x), "FacileDataStore")
   assert_sample_subset(x)
@@ -389,7 +393,8 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
 
   out <- flm_def.data.frame(x, covariate = covariate, numer = numer,
                             denom = denom, batch = batch, block = block,
-                            on_missing = on_missing, .fds = .fds, ...)
+                            on_missing = on_missing, .fds = .fds, 
+                            metadata = metadata, ...)
   out
 }
 
@@ -399,7 +404,8 @@ flm_def.facile_frame <- function(x, covariate, numer = NULL, denom = NULL,
 flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
                                     batch = NULL, block = NULL,
                                     on_missing = c("warning", "error"),
-                                    ..., samples = NULL, custom_key = NULL) {
+                                    ..., metadata = list(), 
+                                    samples = NULL, custom_key = NULL) {
   if (is.null(samples)) samples <- samples(x)
   samples <- collect(samples, n = Inf)
 
@@ -410,7 +416,7 @@ flm_def.FacileDataStore <- function(x, covariate, numer = NULL, denom = NULL,
 
   flm_def(samples, covariate = covariate, numer = numer, denom = denom,
           batch = batch, block = block, on_missing = on_missing,
-          custom_key = custom_key, ...)
+          custom_key = custom_key, metadata = metadata, ...)
 }
 
 # redo =========================================================================

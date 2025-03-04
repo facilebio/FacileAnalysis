@@ -21,6 +21,7 @@ fdge(
   with_sample_weights = FALSE,
   treat_lfc = NULL,
   ...,
+  metadata = list(),
   verbose = FALSE
 )
 
@@ -32,6 +33,7 @@ fdge(
   filter = "default",
   with_sample_weights = FALSE,
   ...,
+  metadata = list(),
   verbose = FALSE
 )
 
@@ -44,6 +46,7 @@ fdge(
   with_sample_weights = FALSE,
   treat_lfc = NULL,
   ...,
+  metadata = list(),
   verbose = FALSE
 )
 
@@ -61,6 +64,7 @@ fdge(
   biocbox = NULL,
   trend.eBayes = FALSE,
   robust.eBayes = FALSE,
+  metadata = list(),
   verbose = FALSE
 )
 
@@ -187,9 +191,16 @@ logic found in \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}}.
 
 When \code{fdge} analysis is performed on count data, the filtering is precisely
 executed using this function, using \code{design(x)} as the design parameter to
-\code{filterByExpr}. You can modify the filtering behavior by passing any
-named parameters found in the \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} function down to it via
-\code{fdge}'s \code{...} parameter (don't pass \code{design}, as this is already defined).
+\code{filterByExpr}. You can modify the filtering behavior by passing some named
+parameters found in the \code{\link[edgeR:filterByExpr]{edgeR::filterByExpr()}} function down to it via
+\code{fdge}'s \code{...} parameter, with the exception of the \code{design} paremeter,
+because this is already defined. Use:
+\itemize{
+\item \code{filter_min_count} for the \code{edgeR::filterByExpr(min.count)} parameter
+\item \code{filter_min_total_count} for \code{edgeR::filterByExpr(min.total.count)}
+\item \code{filter_large_n} for \code{edgeR::filterByExpr(large.n)}; and
+\item \code{filter_min_prop} for \code{edgeR::filterByExpr(min.prop)}.
+}
 
 There are times when you want to tweak this behavior in ways that aren't
 exactly supported by \code{filterByExpr}. You can pass in a "feature descriptor"
@@ -284,11 +295,12 @@ analysis, ie. \code{methods = "ora"}.
 efds <- FacileData::exampleFacileDataSet()
 samples <- efds |>
   FacileData::filter_samples(indication == "BLCA") |>
-  dplyr::mutate(something = sample(c("a", "b"), n(), replace = TRUE))
+  dplyr::mutate(something = sample(c("a", "b"), dplyr::n(), replace = TRUE))
 mdef <- flm_def(samples, covariate = "sample_type",
                 numer = "tumor", denom = "normal",
-                batch = "sex")
-dge <- fdge(mdef, method = "voom")
+                batch = "sex",
+                metadata = list(label = "test flm"))
+dge <- fdge(mdef, method = "voom", metadata = list(label = "test dge"))
 if (interactive()) {
   viz(dge)
   viz(dge, "146909")

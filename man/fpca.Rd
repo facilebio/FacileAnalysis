@@ -17,7 +17,8 @@ fpca(
   col_covariates = NULL,
   batch = NULL,
   main = NULL,
-  ...
+  ...,
+  metadata = list()
 )
 
 \method{fpca}{facile_frame}(
@@ -32,7 +33,8 @@ fpca(
   batch = NULL,
   main = NULL,
   custom_key = Sys.getenv("USER"),
-  ...
+  ...,
+  metadata = list()
 )
 
 \method{compare}{FacilePcaAnalysisResult}(x, y, run_all = TRUE, rerun = TRUE, ...)
