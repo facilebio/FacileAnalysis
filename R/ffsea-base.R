@@ -378,6 +378,35 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
   out
 }
 
+#' Extract geneset from ffsea result
+#' 
+#' This passes through sparrow functionality, but those are S4 methods, and we
+#' living in an s3 world here ...
+#' 
+#' @export
+#' @param x the `FacileFseaAnalysisResult`
+#' @param name the name of the geneset (string)
+#' @param collection (optional) often the name of the geneset is unique. If not
+#'   then the collection,name must be unique by GeneSetDb anyway.
+#' @param ... passed down to sparrow::geneSet
+geneset <- function(x, name, collection = NULL, ...) {
+  assert_class(x, "FacileFseaAnalysisResult")
+  sparrow::geneSet(x$result, name = name, collection = collection, ...)
+}
+
+#' Extract table of genesets used in analysis
+#' 
+#' This passes through sparrow functionality, but those are S4 methods, and we
+#' living in an s3 world here ...
+#' 
+#' @export
+#' @param x the `FacileFseaAnalysisResult`
+#' @param ... passed down to sparrow::geneSets
+genesets <- function(x, name, collection = NULL, ...) {
+  assert_class(x, "FacileFseaAnalysisResult")
+  sparrow::geneSets(x$result)
+}
+
 #' @noRd
 #' @param min_quadrant_count minimum number of significant genes in a quadrant
 #'   required to perform enrichment analysis.

@@ -87,6 +87,7 @@
 #' efds <- FacileData::exampleFacileDataSet()
 #' samples <- efds |>
 #'   FacileData::filter_samples(indication == "BLCA") |>
+#'   FacileData::with_sample_covariates() |> 
 #'   dplyr::mutate(something = sample(c("a", "b"), dplyr::n(), replace = TRUE))
 #' mdef <- flm_def(samples, covariate = "sample_type",
 #'                 numer = "tumor", denom = "normal",

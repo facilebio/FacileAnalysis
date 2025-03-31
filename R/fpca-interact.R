@@ -2,6 +2,10 @@
 
 #' @noRd
 #' @export
+#' @examples
+#' xpca <- fpca(FacileData::an_fds())
+#' iviz <- viz(xpca, color_aes = "cell_type")
+#' gg <- viz(xpca, color_aes = "cell_type", interactive = FALSE)
 viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
                                         type = c("scatter", "scree"),
                                         ..., 
@@ -32,11 +36,26 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
 }
 
 #' @noRd
-.viz_pca_scatter <- function(x, dims = NULL, ..., color_aes = NULL, height = 400,
-                             width = 700, xlabel = "default",
-                             ylabel = "default", zlabel = "default",
-                             event_source = "A", webgl = FALSE,
-                             interactive = TRUE) {
+#' @importFrom rlang .data
+.viz_pca_scatter <- function(
+    x, 
+    dims = NULL,
+    ..., 
+    title = NULL,
+    subtitle = NULL,
+    color_aes = NULL, 
+    color_map = NULL,
+    shape_aes = NULL,
+    shape_map = NULL,
+    height = 400,
+    width = 700, 
+    xlabel = "default",
+    ylabel = "default", 
+    zlabel = "default",
+    event_source = "A", 
+    webgl = FALSE,
+    interactive = TRUE,
+    point_size = 2.5) {
   if (is.null(dims)) {
     dims <- 2
   }
@@ -81,13 +100,55 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
   # expression as well.
   # https://github.com/facilebio/FacileAnalysis/issues/28
   if (!is.null(color_aes)) {
-
   }
-  p <- FacileViz::fscatterplot(
-    xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
-    zlabel = zlabel, event_source = event_source,
-    webgl = webgl, height = height, width = width,
-    color_aes = color_aes, ...)
+  if (!is.null(shape_aes)) {
+  }
+  
+  if (interactive) {
+    p <- FacileViz::fscatterplot(
+      xx, pc.cols, xlabel = xlabel, ylabel = ylabel,
+      zlabel = zlabel, event_source = event_source,
+      webgl = webgl, height = height, width = width,
+      color_aes = color_aes, color_map = color_map,
+      shape_aes = shape_aes, shape_map = shape_map, 
+      ...)
+  } else {
+    x. <- pc.cols[[1]]
+    y. <- pc.cols[[2]]
+    
+    p <- ggplot2::ggplot(xx) +
+      ggplot2::aes(x = .data[[x.]], y = .data[[y.]]) +
+      ggplot2::geom_point(size = point_size) +
+      ggplot2::labs(
+        title = title,
+        subtitle = subtitle,
+        x = xlabel,
+        y = ylabel
+      )
+    if (!is.null(color_aes)) {
+      checkmate::assert_choice(color_aes, colnames(xx))
+      p <- p + ggplot2::aes(color = .data[[color_aes]])
+      
+      if (is.null(color_map)) {
+        mapvals <- xx[[color_aes]]
+        if (!is.numeric(mapvals)) {
+          color_map <- FacileViz::create_color_map(xx[[color_aes]])
+        }
+      }
+      p <- p + ggplot2::scale_color_manual(values = color_map)
+    }
+    if (!is.null(shape_aes)) {
+      checkmate::assert_choice(shape_aes, colnames(xx))
+      p <- p + ggplot2::aes(shape = .data[[shape_aes]])
+      if (is.null(shape_map)) {
+        mapvals <- xx[[shape_aes]]
+        if (!is.numeric(mapvals)) {
+          shape_map <- FacileViz::create_shape_map(mapvals)
+          p <- p + ggplot2::scale_shape_manual(values = shape_map)
+        }
+      }
+    }
+  }
   p
 }
 
