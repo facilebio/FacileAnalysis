@@ -115,6 +115,12 @@ metadata <- function(x, ...) {
 
 #' @export
 #' @noRd
+metadata.default <- function(x, ...) {
+  list()
+}
+
+#' @export
+#' @noRd
 metadata.FacileAnalysisResult <- function(x, ...) {
   x[["metadata"]]
 }

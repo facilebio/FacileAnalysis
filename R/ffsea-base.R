@@ -95,10 +95,11 @@
 #'   FacileData::filter_samples(indication == "CRC") |>
 #'   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
 #'           batch = "sex") |>
-#'   fdge(method = "voom")
+#'   fdge(method = "voom", metadata = list(title = "an analysis"))
 #'
 #' ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
 #'                     biased_by = "effective_length")
+#' metadata(ttest.gsea)
 #' if (interactive()) {
 #'   viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
 #'   viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
@@ -127,7 +128,7 @@
 #'   FacileData::filter_samples(indication == "CRC") |>
 #'   fpca()
 #' pca1.gsea <- ffsea(pca.crc, gdb, dim = 1)
-ffsea <- function(x, fsets, methods = NULL, ..., metadata = list()) {
+ffsea <- function(x, fsets, methods = NULL, ..., metadata = metadata(x)) {
   UseMethod("ffsea", x)
 }
 
@@ -136,8 +137,12 @@ ffsea <- function(x, fsets, methods = NULL, ..., metadata = list()) {
 #' of genes.
 #'
 #' @noRd
-ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL, 
-                                                ..., metadata = list()) {
+ffsea.FacileTtestDGEModelDefinition <- function(
+    x, 
+    fsets, 
+    methods = NULL,
+    ..., 
+    metadata = FacileAnalysis::metadata(x)) {
   stop("Run fdge(x) |> ffsea() for now")
 }
 
@@ -159,14 +164,19 @@ ffsea.FacileTtestDGEModelDefinition <- function(x, fsets, methods = NULL,
 #'   Specifying `rank_by = "desc"` will rank `x` by `rank_by` in descending
 #'   order. If `"rankded"`, then we assume that the data.frame is already
 #'   ranked as desired.
-ffsea.data.frame <- function(x, fsets, methods = NULL,
-                             rank_by = NULL, select_by = NULL,
-                             rank_order = "descending", group_by = NULL,
-                             biased_by = NULL, ...,
-                             feature.bias = "thebuckstopshere",
-                             xmeta. = "thebuckstopshere",
-                             groups = "thebuckstopshere", 
-                             metadata = list()) {
+ffsea.data.frame <- function(
+    x, 
+    fsets, 
+    methods = NULL,
+    rank_by = NULL,
+    select_by = NULL,
+    rank_order = "descending",
+    group_by = NULL,
+    biased_by = NULL, ...,
+    feature.bias = "thebuckstopshere",
+    xmeta. = "thebuckstopshere",
+    groups = "thebuckstopshere", 
+    metadata = FacileAnalysis::metadata(x)) {
   if (is.null(methods)) {
     stop("A gsea method name must be provided to the `methods` parameter.")
   }
@@ -255,16 +265,20 @@ ffsea.data.frame <- function(x, fsets, methods = NULL,
 #'   knocked out (or over expressed) a particular gene in an experimental
 #'   group, you wouldn't want to include that gene's differential expression
 #'   in the ffsea analysis.
-ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods = NULL,
-                                            features = NULL,
-                                            min_logFC = param(x, "treat_lfc"),
-                                            max_padj = 0.10,
-                                            rank_by = "logFC",
-                                            signed = TRUE,
-                                            biased_by = NULL, ...,
-                                            rank_order = "ranked",
-                                            group_by = "direction",
-                                            select_by = "significant") {
+ffsea.FacileTtestAnalysisResult <- function(
+    x, 
+    fsets, 
+    methods = NULL,
+    features = NULL,
+    min_logFC = param(x, "treat_lfc"),
+    max_padj = 0.10,
+    rank_by = "logFC",
+    signed = TRUE,
+    biased_by = NULL, ...,
+    rank_order = "ranked",
+    group_by = "direction",
+    select_by = "significant",
+    metadata = FacileAnalysis::metadata(x)) {
   fsets <- sparrow::GeneSetDb(fsets)
 
   all.methods <- ffsea_methods(x)
@@ -319,7 +333,7 @@ ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods = NULL,
   out <- ffsea(input, fsets, methods = methods,
                rank_by = rank_by, rank_order = "ranked",
                select_by = "significant", group_by = "direction",
-               biased_by = biased_by, ...)
+               biased_by = biased_by, metadata = metadata, ...)
 
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]
   out[["params"]][["x"]] <- x
@@ -345,12 +359,21 @@ ffsea.FacileTtestAnalysisResult <- function(x, fsets, methods = NULL,
 #' Note that an analysis on (2) only lends itself to an overrepresentation
 #' analysis, ie. `methods = "ora"`.
 ffsea.FacileTtestComparisonAnalysisResult <- function(
-    x, fsets, methods = NULL,
+    x, 
+    fsets, 
+    methods = NULL,
     type = c("interaction", "quadrants"),
     features = NULL,
-    min_logFC = param(x, "treat_lfc"), max_padj = 0.10,
-    rank_by = "logFC", signed = TRUE, biased_by = NULL, ...,
-    rank_order = "ranked", group_by = "direction", select_by = "significant") {
+    min_logFC = param(x, "treat_lfc"),
+    max_padj = 0.10,
+    rank_by = "logFC",
+    signed = TRUE,
+    biased_by = NULL,
+    ...,
+    rank_order = "ranked", 
+    group_by = "direction", 
+    select_by = "significant",
+    metadata = FacileAnalysis::metadata(x)) {
   fsets <- sparrow::GeneSetDb(fsets)
   type <- match.arg(type)
 

@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.36
+Version: 0.98.37
 Authors@R: c(
     person(
       "Steve", "Lianoglou",

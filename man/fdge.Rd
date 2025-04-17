@@ -111,7 +111,8 @@ fdge(
   ...,
   rank_order = "ranked",
   group_by = "direction",
-  select_by = "significant"
+  select_by = "significant",
+  metadata = metadata(x)
 )
 }
 \arguments{
