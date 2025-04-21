@@ -133,10 +133,11 @@ ttest.res <- efds |>
   FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type", numer = "tumor", denom = "normal",
           batch = "sex") |>
-  fdge(method = "voom")
+  fdge(method = "voom", metadata = list(title = "an analysis"))
 
 ttest.gsea <- ffsea(ttest.res, gdb, methods = c("cameraPR", "ora"),
                     biased_by = "effective_length")
+metadata(ttest.gsea)
 if (interactive()) {
   viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
   viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
