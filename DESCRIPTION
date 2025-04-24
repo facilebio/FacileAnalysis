@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.38
+Version: 0.98.40
 Authors@R: c(
     person(
       "Steve", "Lianoglou",
@@ -58,7 +58,7 @@ Suggests:
     org.Mm.eg.db,
     patchwork,
     RColorBrewer,
-    qs,
+    qs2,
     rmarkdown,
     RnaSeqGeneEdgeRQL,
     SummarizedExperiment,
