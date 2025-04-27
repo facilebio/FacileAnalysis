@@ -12,10 +12,9 @@ fload(x, fds = NULL, anno = NULL, with_fds = TRUE, ...)
 \arguments{
 \item{x}{A \code{FacileAnalysisResult} object.}
 
-\item{file}{A path to a file to save. If filename ends with '\emph{.rds', then
-object will be serialized with \code{saveRDS}. If filename ends with '}.qs',
-then \code{qs::qsave} will be used. In teh future, we should support
-\code{base::connections}.}
+\item{file}{A directory named \code{file} will be created to serialize the bits
+required to reload this analysis result in another session. If \code{file}
+already exists, this function will throw an error.}
 
 \item{with_fds}{Serialize the FacileDataStore with the object? Default is
 \code{FALSE} and you should have a good reason to change this behavior.}
@@ -40,6 +39,18 @@ to be, instead of logging where it was removed from in \code{fsave()}) when
 brought back to life via \code{fload()}.
 }
 \details{
+fsave creates a directory with two elements, the actually analysis result
+(a qs2 object), and a \code{meta.yaml} that has metadata related to the
+FacileAnalysisResult object being saved. The details in the \code{meta.yaml}
+file will include the \code{metadata()} from \code{x}, and details about what
+FacileDataStore was used to serialize the result.
+
+metadata about the analysis result will be stored under the \verb{result:}
+section, and the \verb{datastore:} section will hold the elemnts that were
+previously associated with the \code{fsave_info} attribute from the v1
+*.qs object
+
+OLD:
 An \code{fsave_info} attribute will be attached to the serialized object before
 saving which will be a list that holds information required to materialize
 the analysis result successfully. Minimally this will include info about how

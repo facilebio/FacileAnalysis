@@ -1,3 +1,22 @@
+#' @noRd
+#' @export
+assay_name.FacileAnalysisResult <- function(x, ...) {
+  param(x, "assay_name")
+}
+
+#' @noRd
+#' @export
+assay_type.FacileAnalysisResult <- function(x, ...) {
+  assay_info(fds(x), assay_name(x))$assay_type
+}
+
+#' @noRd
+#' @export
+feature_type.FacileAnalysisResult <- function(x, ...) {
+  assay_info(fds(x), assay_name(x))$feature_type
+}
+
+
 # Universal FacileAnalysisResult methods =======================================
 
 #' Extract the internal (F)acile(A)nalysis(R)esult (O)bject from a container.
