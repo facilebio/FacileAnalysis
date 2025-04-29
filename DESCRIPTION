@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.41
+Version: 0.98.50
 Authors@R: c(
     person(
       "Steve", "Lianoglou",
@@ -39,6 +39,7 @@ Imports:
     irlba,
     limma,
     matrixStats,
+    qs2,
     sparrow (>= 1.13.2),
     statmod (>= 1.5.0),
     plotly (>= 4.9.0),
@@ -58,7 +59,6 @@ Suggests:
     org.Mm.eg.db,
     patchwork,
     RColorBrewer,
-    qs2,
     rmarkdown,
     RnaSeqGeneEdgeRQL,
     SummarizedExperiment,
