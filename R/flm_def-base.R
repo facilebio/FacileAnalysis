@@ -116,11 +116,11 @@ flm_def.data.frame <- function(x, covariate, numer = NULL, denom = NULL,
   assert_categorical(x[[covariate]])
   if (!is.null(contrast.)) assert_string(contrast.)
 
-  if (unselected(numer)) numer <- NULL
-  if (unselected(denom)) denom <- NULL
-  if (unselected(batch)) batch <- NULL
-  if (unselected(block)) block <- NULL
-
+  numer <- if (unselected(numer)) NULL else as.character(numer)
+  denom <- if (unselected(denom)) NULL else as.character(denom)
+  batch <- if (unselected(batch)) NULL else as.character(batch)
+  block <- if (unselected(block)) NULL else as.character(block)
+  
   assert_subset(batch, setdiff(colnames(x), c("sample_id")))
   if (!is.null(.fds)) {
     assert_facile_data_store(.fds)

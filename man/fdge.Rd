@@ -112,7 +112,7 @@ fdge(
   rank_order = "ranked",
   group_by = "direction",
   select_by = "significant",
-  metadata = metadata(x)
+  metadata = FacileAnalysis::metadata(x)
 )
 }
 \arguments{

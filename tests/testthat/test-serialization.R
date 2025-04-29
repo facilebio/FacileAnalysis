@@ -9,7 +9,7 @@ ttest.res <- FDS |>
   FacileData::filter_samples(indication == "CRC") |>
   flm_def(covariate = "sample_type",
           numer = "tumor", denom = "normal", batch = "sex") |>
-  fdge(method = "voom")
+  fdge(method = "voom", metadata = list(description = "example ttest result"))
 
 gsea.res <- ffsea(ttest.res, gdb, "cameraPR")
 

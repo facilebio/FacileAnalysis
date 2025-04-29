@@ -14,6 +14,18 @@
 #' brought back to life via `fload()`.
 #'
 #' @details
+#' fsave creates a directory with two elements, the actually analysis result
+#' (a qs2 object), and a `meta.yaml` that has metadata related to the 
+#' FacileAnalysisResult object being saved. The details in the `meta.yaml`
+#' file will include the `metadata()` from `x`, and details about what
+#' FacileDataStore was used to serialize the result.
+#' 
+#' metadata about the analysis result will be stored under the `result:`
+#' section, and the `datastore:` section will hold the elemnts that were
+#' previously associated with the `fsave_info` attribute from the v1
+#' *.qs object
+#' 
+#' OLD:
 #' An `fsave_info` attribute will be attached to the serialized object before
 #' saving which will be a list that holds information required to materialize
 #' the analysis result successfully. Minimally this will include info about how
@@ -34,10 +46,9 @@
 #' @rdname serialize
 #'
 #' @param x A `FacileAnalysisResult` object.
-#' @param file A path to a file to save. If filename ends with '*.rds', then
-#'   object will be serialized with `saveRDS`. If filename ends with '*.qs',
-#'   then `qs::qsave` will be used. In teh future, we should support
-#'   `base::connections`.
+#' @param file A directory named `file` will be created to serialize the bits
+#'   required to reload this analysis result in another session. If `file`
+#'   already exists, this function will throw an error.
 #' @param with_fds Serialize the FacileDataStore with the object? Default is
 #'   `FALSE` and you should have a good reason to change this behavior.
 #' @return `NULL` for `fsave`, the (correctly sublcassed) `FacileAnalysisResult`
@@ -57,28 +68,30 @@ fsave.FacileDgeAnalysisResult <- function(x, file, with_fds = FALSE,
 #' @noRd
 #' @export
 fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
-  ext <- tolower(tools::file_ext(file))
-  if (ext == "rds") {
-    save.fn <- saveRDS
-  } else if (ext == "qs") {
-    reqpkg("qs")
-    save.fn <- qs::qsave
-  } else {
-    stop("Unknown filetype extension to save: ", ext)
-  }
-
   lifecycle::signal_stage("experimental", "fsave()")
   fds. <- assert_class(fds(x), "FacileDataStore")
 
-  fds.info <- list(fds_class = class(fds.))
-  if ("FacileDataSet" %in% fds.info[["fds_class"]]) {
-    fds.info[["fds_path"]] <- fds.[["parent.dir"]]
-    fds.info[["fds_anno_dir"]] <- fds.[["anno.dir"]]
-  }
+  checkmate::assert_directory_exists(dirname(file), "w")
+  if (file.exists(file)) stop("Destination `", file, "` already exists")
+  if (!dir.create(file)) stop("Failed to create output directory: ", file)
+  
+  x.info <- metadata(x)
+  x.info$class <- class(x)
 
+  fds.info <- list(class = class(fds.))
+  if ("FacileDataSet" %in% fds.info[["class"]]) {
+    fds.info[["path"]] <- fds.[["parent.dir"]]
+    fds.info[["anno_dir"]] <- fds.[["anno.dir"]]
+  }
+  
+  info <- list(
+    result = x.info,
+    datastore = fds.info
+  )
+  yaml::write_yaml(info, file.path(file, "meta.yaml"))
+  
   x <- unfds(x)
-  attr(x, "fsave_info") <- fds.info
-  save.fn(x, file)
+  qs2::qs_save(x, file.path(file, "result.qs2"))
   invisible(file)
 }
 
@@ -87,31 +100,23 @@ fsave.FacileAnalysisResult <- function(x, file, with_fds = FALSE, ...) {
 #' @export
 #' @param fds The `FacileDataStore` the object was run on.
 fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
-  if (test_string(x)) {
-    ext <- tolower(tools::file_ext(x))
-    if (ext == "rds") {
-      read.fn <- readRDS
-    } else if (ext == "qs") {
-      reqpkg("qs")
-      read.fn <- qs::qread
-    } else {
-      stop("Unknown filetype extension to load: ", ext)
-    }
-    x <- read.fn(x)
-  }
-  assert_class(x, "FacileAnalysisResult")
+  checkmate::assert_directory_exists(x, "r")
+  res.fn <- checkmate::assert_file_exists(file.path(x, "result.qs2"))
+  meta.fn <- checkmate::assert_file_exists(file.path(x, "meta.yaml"))
+  meta <- yaml::read_yaml(meta.fn)
+  res <- qs2::qs_read(res.fn)
+  assert_class(res, "FacileAnalysisResult")
 
-  fds.info <- attr(x, "fsave_info")
+  fds.info <- meta[["datastore"]]
   if (is.null(fds.info)) {
     stop("Meta information about connected FacileDataStore not found, ",
          "did you save this object using the FacileAnalysis::fsave() function?")
   }
   assert_list(fds.info, names = "unique")
-  assert_subset(c("fds_class"), names(fds.info))
-  fds.class <- assert_character(fds.info[["fds_class"]], min.len = 1L)
+  fds.class <- checkmate::assert_character(fds.info[["class"]], min.len = 1L)
 
   if (with_fds) {
-    if (is.null(fds) || test_string(fds)) {
+    if (is.null(fds) || checkmate::test_string(fds)) {
       # Implicit FacileDataStores only work with FacileDataSet for now, since
       # it needs to exist in a serialized form on the filesystem anyway, so
       # there is somewhere we can retrieve it from
@@ -119,14 +124,14 @@ fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
         stop("FacileDataSet required if `fds` not provided")
       }
       if (is.null(fds)) {
-        fds <- fds.info[["fds_path"]]
+        fds <- fds.info[["path"]]
       }
       if (!test_directory_exists(fds, "r")) {
         stop("No path to linked FacileDataStore object found in `file`,
            please pass in a value for `fds` explicitly")
       }
       if (is.null(anno)) {
-        anno <- fds.info[["fds_anno_dir"]]
+        anno <- fds.info[["anno_dir"]]
       }
       fds <- FacileData::FacileDataSet(fds, anno.dir = anno)
     }
@@ -139,15 +144,15 @@ fload <- function(x, fds = NULL, anno = NULL, with_fds = TRUE, ...) {
     #        "associate with this result is the one that was used")
     # }
     
-    xs <- samples(x)
+    xs <- samples(res)
     fs <- dplyr::collect(samples(fds), n = Inf)
     xmissed <- dplyr::anti_join(xs, fs, by = c("dataset", "sample_id"))
     if (nrow(xmissed) > 0L) {
       stop(nrow(xmissed), " samples missing from the provided faciledatastore")
     }
     
-    x <- refds(x, fds)
+    res <- refds(res, fds)
   }
 
-  x
+  res
 }

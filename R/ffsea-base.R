@@ -401,6 +401,25 @@ ffsea.FacileTtestComparisonAnalysisResult <- function(
   out
 }
 
+#' @noRd
+#' @export
+assay_name.FacileDgeFseaAnalysisResult <- function(x, ...) {
+  assay_name(param(x, "x"))  
+}
+
+#' @noRd
+#' @export
+assay_type.FacileDgeFseaAnalysisResult <- function(x, ...) {
+  assay_type(param(x, "x"))
+}
+
+#' @noRd
+#' @export
+feature_type.FacileDgeFseaAnalysisResult <- function(x, ...) {
+  feature_type(param(x, "x"))
+}
+
+
 #' Extract geneset from ffsea result
 #' 
 #' This passes through sparrow functionality, but those are S4 methods, and we
