@@ -2,7 +2,8 @@
 #' @export
 viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
                                          name = NULL, collection = NULL,
-                                         rank_by = NULL, ...) {
+                                         rank_by = NULL, interactive = TRUE,
+                                         ...) {
   mgres <- assert_class(result(x), "SparrowResult")
   type <- match.arg(type)
 
@@ -39,7 +40,8 @@ viz.FacileFseaAnalysisResult <- function(x, type = c("density", "gsea"),
   # }
   # ........................................................................
   plt <- sparrow::iplot(mgres, name = name, collection = collection,
-                        type = type, value = rank_by, ...)
+                        type = type, value = rank_by,
+                        .plot_static = !interactive, ...)
 
   out <- list(
     plot = plt,

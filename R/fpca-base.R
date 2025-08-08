@@ -370,8 +370,10 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     pca$x <- pca$x[, 1:dims, drop = FALSE]
   }
 
-  pca$sdev <- setNames(pca$sdev, paste0("PC", seq(pca$sdev)))
-  percentVar <- pca$sdev^2 / sum(pca$sdev^2)
+  pca$std_dev <- setNames(pca$sdev, paste0("PC", seq(pca$sdev)))
+  pca$eigen_vals <- pca$std_dev^2
+  # percentVar <- pca$sdev^2 / sum(pca$sdev^2)
+  percentVar <- pca$eigen_vals / sum(pca$eigen_vals)
 
   dat <- as.data.frame(pca$x)
 
@@ -388,6 +390,8 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
     result = dat,
     dims = seq(dims),
     rotation = pca$rotation,
+    std_dev = pca$std_dev,
+    eigen_vals = pca$eigen_vals,
     percent_var = percentVar,
     row_covariates = as_tibble(row_covariates),
     taken = take,

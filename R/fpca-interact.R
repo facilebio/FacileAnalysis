@@ -69,18 +69,19 @@ viz.FacilePcaAnalysisResult <- function(x, dims = NULL,
   assert_int(length(dims), lower = 1L, upper = 3L)
   dims <- unique(dims)
 
-  pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
+  # pc.cols.all <- colnames(xx)[grep("^PC\\d+$", colnames(xx))]
+  # pc.cols.req <- paste0("PC", dims)
+  # pc.cols <- intersect(pc.cols.req, pc.cols.all)
   pc.cols.req <- paste0("PC", dims)
-  pc.cols <- intersect(pc.cols.req, pc.cols.all)
-
+  pc.cols <- intersect(pc.cols.req, colnames(xx))
   if (length(pc.cols) != length(dims)) {
     stop("There's something awry with the pc columns you requested")
   }
 
   # slimdown the data.frame to only include the PCs user asked for and rest
   # of the covariate data.
-  xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
-  xx <- select(xx, {{xx.cols}})
+  # xx.cols <- c(pc.cols, setdiff(colnames(xx), pc.cols.all))
+  # xx <- select(xx, {{xx.cols}})
 
   pcv <- x$percent_var * 100
 
