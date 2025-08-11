@@ -261,6 +261,7 @@ fpca.facile_frame <- function(x, assay_name = NULL,
 }
 
 #' @noRd
+#' @export
 #' @importFrom irlba prcomp_irlba
 #' @importFrom matrixStats rowVars
 fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
@@ -374,6 +375,7 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
   pca$eigen_vals <- pca$std_dev^2
   # percentVar <- pca$sdev^2 / sum(pca$sdev^2)
   percentVar <- pca$eigen_vals / sum(pca$eigen_vals)
+  names(pca$eigen_vals) <- paste0("EV", seq(pca$sdev))
 
   dat <- as.data.frame(pca$x)
 
