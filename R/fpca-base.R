@@ -381,6 +381,9 @@ fpca.matrix <- function(x, dims = min(5, ncol(x) - 1L), features = NULL,
 
   if (is(col_covariates, "data.frame")) {
     dat <- cbind(dat, col_covariates[rownames(dat),,drop = FALSE])
+    # I once passed in the tidy(pca) results to rerun PCA and batch correcting
+    # away "PC1" -- this returned many errors because of duplicated column names
+    colnames(dat) <- make.names(colnames(dat), unique = TRUE)
   }
   if (!"sample_id" %in% colnames(dat)) {
     dat[["sample_id"]] <- rownames(dat)
