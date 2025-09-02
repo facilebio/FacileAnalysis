@@ -8,6 +8,10 @@
 #'
 #' The filtering strategy in the interaction model dictates that the union
 #' of all features found in `x` are `y` are used in the test.
+#' 
+#' The logFC that is calculated by this model is the ratio of the logFC from `x`
+#' over the logFC from `y`, so positive logFC's here indicate higher logFC of
+#' the gene in the `x` comparison than the `y` comparison.
 #'
 #' @param rerun When comparing two results, the features analyzed in each may
 #'   differ, making comparisons between the two objects sparse, at times.
