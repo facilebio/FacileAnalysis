@@ -578,8 +578,16 @@ ffsea.FacileAnovaAnalysisResult <- function(x, fsets, methods = NULL,
 #'
 #' @noRd
 #' @export
-ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = NULL, dim = 1,
-                                          signed = TRUE, ...) {
+ffsea.FacilePcaAnalysisResult <- function(
+    x,
+    fsets,
+    methods = NULL,
+    dim = 1,
+    signed = TRUE,
+    score_by = c("loadings", "correlation"), 
+    ...
+) {
+  score_by <- match.arg(score_by)
   all.methods <- ffsea_methods(x)
   if (is.null(methods)) methods <- all.methods[["method"]][1L]
   assert_subset(methods, all.methods[["method"]], empty.ok = FALSE)
@@ -595,8 +603,15 @@ ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = NULL, dim = 1,
   classes <- c("FacileFseaAnalysisResult", "FacileAnalysisResult")
 
   out <- list(
-    params = list(dim = dim, signed = signed, methods = methods, x = x),
-    fds = fds.)
+    params = list(
+      dim = dim, 
+      signed = signed, 
+      methods = methods, 
+      score_by = score_by, 
+      x = x
+    ),
+    fds = fds.
+  )
 
   on.exit({
     out[["messages"]] <- messages
@@ -610,8 +625,14 @@ ffsea.FacilePcaAnalysisResult <- function(x, fsets, methods = NULL, dim = 1,
   rank.column <- if (!is.null(signed) && signed) "score" else "weight"
   pc.ranks <- tidy(ranks(x, dims = dim, signed = signed, ...))
 
-  out <- ffsea(pc.ranks, fsets, methods = methods, rank_by = rank.column,
-               rank_order = "descending", ...)
+  out <- ffsea(
+    pc.ranks,
+    fsets, 
+    methods = methods, 
+    rank_by = rank.column,
+    rank_order = "descending", 
+    ...
+  )
 
   out[["params"]][["xdf"]] <- out[["params"]][["x"]]
   out[["params"]][["x"]] <- x

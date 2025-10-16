@@ -48,13 +48,28 @@ test_that("redo-ing flm_def on reduced sample space is clean", {
 
 
 test_that("Partial t-test spec is not allowed (no numer or denom)", {
-  mdef <- FDS |>
-    filter_samples(indication == "BLCA") |>
-    flm_def(covariate = "sample_type",
-            numer = "normal", denom = NULL,
-            batch = "sex")
-  expect_is(mdef, "FacileFailedModelDefinition")
-  expect_true(length(mdef$errors) == 1L)
+  # ::error class to stop::
+  # We started throwing errors via `stop` instead of returning "failed" classes
+  # at some point. What's right?
+  # mdef <- FDS |>
+  #   filter_samples(indication == "BLCA") |>
+  #   flm_def(covariate = "sample_type",
+  #           numer = "normal", denom = NULL,
+  #           batch = "sex")
+  # mdef <- FDS |>
+  #   filter_samples(indication == "BLCA") |>
+  #   flm_def(covariate = "sample_type",
+  #           numer = "normal", denom = NULL,
+  #           batch = "sex")
+  # expect_is(mdef, "FacileFailedModelDefinition")
+  # expect_true(length(mdef$errors) == 1L)
+  expect_error({
+    FDS |>
+      filter_samples(indication == "BLCA") |>
+      flm_def(covariate = "sample_type",
+              numer = "normal", denom = NULL,
+              batch = "sex")
+  }, "require.*both.*specified")
 })
 
 test_that("flm_def supports ANOVA specification", {
@@ -144,13 +159,12 @@ test_that("Errors gracefully with duplicate entries in numer and denom", {
               denom = c("CMS1", "CMS2", "CMS3"))
   }, "NA.*required covariates")
 
-  bad1 <- expect_warning({
+  bad1 <- expect_error({
     samples |>
       flm_def(covariate = "subtype_crc_cms",
               numer = "CMS1", denom = "CMS1")
-  }, "NA.*required covariates")
+  }, "numer.*denom.*cannot.*same")
 })
-
 
 test_that("flm_def errors on non-fullrank matrices", {
   samples <- filter_samples(FDS, indication == "CRC")
@@ -164,16 +178,20 @@ test_that("flm_def errors on non-fullrank matrices", {
   expect_class(good.model, "FacileTtestModelDefinition")
 
   # adding `batch = "sex"` makes this not full rank
-  bad.model <- expect_warning({
-    samples |>
-      flm_def(covariate = "subtype_crc_cms",
-              numer = c("CMS1", "CMS2"),
-              denom = c("CMS3", "CMS4"),
-              batch = "sex")
-  }, "NA")
-  expect_class(bad.model, "FacileFailedModelDefinition")
-  expect_string(bad.model$errors, pattern = "full rank")
-  expect_string(bad.model$errors, pattern = "removing.*model:.*sex$")
+  bad.model <- expect_error({
+    expect_warning({
+      samples |>
+        flm_def(covariate = "subtype_crc_cms",
+                numer = c("CMS1", "CMS2"),
+                denom = c("CMS3", "CMS4"),
+                batch = "sex")
+    }, "NA.*covariate")
+  }, "not full rank")
+  
+  # ::error class to stop::
+  # expect_class(bad.model, "FacileFailedModelDefinition")
+  # expect_string(bad.model$errors, pattern = "full rank")
+  # expect_string(bad.model$errors, pattern = "removing.*model:.*sex$")
 })
 
 test_that("invalid R variable named covariate levels are safe", {

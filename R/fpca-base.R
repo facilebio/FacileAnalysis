@@ -449,49 +449,69 @@ features.FacilePcaAnalysisResult <- function(x, ...) {
 #' @param report_feature_as The column used to display in the returned
 #'   table for each feature when `type == "rankded"`
 #' @return A FacilePCAFeature(Rankings|Ranked) object
-ranks.FacilePcaAnalysisResult <- function(x, type = c("features", "samples"),
-                                          signed = TRUE, dims = x[["dims"]][1L],
-                                          ...) {
+#' @examples
+#' efds <- FacileData::exampleFacileDataSet()
+#'
+#' # A subset of samples ------------------------------------------------------
+#' pca.crc <- efds |>
+#'   FacileData::filter_samples(indication == "CRC") |>
+#'   fpca()
+#' gloadings <- tidy(ranks(pca.crc))
+#' corrgenes <- tidy(ranks(pca.crc, features = features(pca.crc)))
+ranks.FacilePcaAnalysisResult <- function(
+    x, 
+    # type = c("features", "samples"),
+    type = c("loadings", "correlation"),
+    signed = TRUE, 
+    dims = x[["dims"]][1L],
+    features = NULL,
+    ...
+) {
   type <- match.arg(type)
-  if (type == "samples") stop("What does sample-ranking even mean?")
-  if (!is.null(dims)) {
-    if (is.character(dims)) { # We can accept "PC1" or 1
-      dims <- as.integer(sub("^PC", "", dims))
-    }
-    dims <- assert_integerish(dims, lower = 1, any.missing = FALSE)
-    dims <- unique(dims)
+  
+  if (is.null(dims)) {
+    dims <- x[["dims"]]
   }
+  if (is.character(dims)) { # We can accept "PC1" or 1
+    dims <- as.integer(sub("^PC", "", dims))
+  }
+  dims <- assert_integerish(dims, lower = 1, any.missing = FALSE)
+  dims <- unique(dims)
 
-  if (type == "features") {
+  if (type == "loadings") {
     fstats <- x[["feature_stats"]]
     rcol <- if (signed) "rank_rotation" else "rank_weight"
     ranks. <- select(fstats, feature_id, feature_type,
                      dimension = PC, score = rotation,
                      weight, rank = {{rcol}})
-    # FacilePcaFeatureRanksSigned
-    clazz <- "FacilePcaFeatureRanks%s"
-    s <- if (signed) "Signed" else "Unsigned"
-    classes <- sprintf(clazz, c(s, ""))
-    classes <- c(classes,
-                 sub("Pca", "MultiDimensional", classes),
-                 "FacileFeatureRanks")
-  }
 
-  if (!is.null(dims)) {
     ranks. <- filter(ranks., dimension %in% sprintf("PC%d", dims))
     if (nrow(ranks.) == 0L) {
       stop("All PC dimensions have been filtered out.")
     }
+    rcovs <- x[["row_covariates"]]
+  } else {
+    # correlation of genes to PCs
+    if (is.null(features)) {
+      features <- FacileData::features(FacileData::fds(x))
+    }
+    rcovs <- features
   }
 
+  # FacilePcaFeatureRanksSigned
+  clazz <- "FacilePcaFeatureRanks%s"
+  s <- if (signed) "Signed" else "Unsigned"
+  classes <- sprintf(clazz, c(s, ""))
+  classes <- c(classes,
+               sub("Pca", "MultiDimensional", classes),
+               "FacileFeatureRanks")
+  
   # Order by PC and rank
   ranks. <- ranks. |>
     mutate(PC. = as.integer(sub("PC", "", ranks.$dimension))) |>
     arrange(PC., rank) |>
     mutate(PC. = NULL)
 
-  # Add metadata to ranks, if there.
-  rcovs <- x[["row_covariates"]]
   add.meta <- c("feature_id", setdiff(colnames(rcovs), colnames(ranks.)))
   if (length(add.meta)) {
     ranks. <- left_join(ranks., rcovs[, add.meta, drop = FALSE],
@@ -530,7 +550,7 @@ signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
     dims <- assert_integerish(dims, lower = 1)
     dims <- unique(dims)
     res. <- filter(res., dimension %in% sprintf("PC%d", dims))
-    if (nrow(ranks.) == 0L) {
+    if (nrow(res.) == 0L) {
       stop("All PC dimensions have been filtered out.")
     }
   }

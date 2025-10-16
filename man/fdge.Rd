@@ -230,6 +230,10 @@ interaction effect.
 
 The filtering strategy in the interaction model dictates that the union
 of all features found in \code{x} are \code{y} are used in the test.
+
+The logFC that is calculated by this model is the ratio of the logFC from \code{x}
+over the logFC from \code{y}, so positive logFC's here indicate higher logFC of
+the gene in the \code{x} comparison than the \code{y} comparison.
 }
 
 \section{Statistics Tables}{
