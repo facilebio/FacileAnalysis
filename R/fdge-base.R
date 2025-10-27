@@ -359,7 +359,7 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   if (!is.null(result) && !"feature_type" %in% colnames(result)) {
     feature_type <- FacileData::infer_feature_type(
       result[["feature_id"]], summarize = TRUE)
-    result[["feature_type"]] <- feature_type[["feature_type"]]
+    result[["feature_type"]] <- feature_type[["id_type"]]
     result <- select(result, feature_type, everything())
   }
 
