@@ -592,11 +592,18 @@ signature.FacilePcaFeatureRanks <- function(x, dims = NULL, ntop = 20,
 
 #' @noRd
 #' @export
-signature.FacilePcaAnalysisResult <- function(x, type = "features",
-                                              signed = TRUE,
-                                              dims = NULL, ntop = 20, ...) {
-  signature(ranks(x, type = type, signed = signed, dims = dims, ...),
-            ntop = ntop, ...)
+signature.FacilePcaAnalysisResult <- function(
+  x,
+  # type = "features",
+  type = c("loadings", "correlation"),
+  signed = TRUE,
+  dims = NULL, ntop = 20, ...
+) {
+  signature(
+    ranks(x, type = type, signed = signed, dims = dims, ...),
+    ntop = ntop,
+    ...
+  )
 }
 
 # Facile API ===================================================================
