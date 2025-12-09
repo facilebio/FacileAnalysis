@@ -131,6 +131,7 @@ test_that("ffsea(anova_result) runs enrichment test", {
   expect_equal(fres$pval, mgres$P.all, tolerance = 10e-4)
 })
 
+
 test_that("ffsea runs over dimensions of FacilePcaAnalysisResult", {
   pca1.gsea <- expect_warning({
     ffsea(pca.res, gdb, dim = 1)

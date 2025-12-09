@@ -7,12 +7,15 @@ anova.all <- samples(FDS) |>
   mutate(group = paste(indication, sample_type, sep = "_")) |>
   flm_def("group", batch = "sex") |>
   fdge()
+
 tvn.blca <- samples(anova.all) |>
   flm_def("group", "BLCA_tumor", "BLCA_normal", batch = "sex") |>
   fdge(features = features(anova.all))
+
 tvn.crc <- samples(anova.all) |>
   flm_def("group", "CRC_tumor", "CRC_normal", batch = "sex") |>
   fdge(features = features(anova.all))
+
 tvn.compare <- compare(tvn.blca, tvn.crc)
 istats <- tidy(tvn.compare)
 
@@ -84,7 +87,11 @@ if (!exists("gdb.go")) {
   # needs to be?
   if (!exists("gdb.go.bp")) {
     gdb.go.bp <- sparrow::getMSigGeneSetDb("c5", "human", id.type = "entrez")
-    gdb.go.bp <- gdb.go.bp[sparrow::geneSets(gdb.go.bp)$subcategory == "GO:BP"]
+    gdb.go.bp <- gdb.go.bp[sparrow::geneSets(gdb.go.bp)$subcollection == "GO:BP"]
+    gdb.go.bp <- suppressWarnings({
+      sparrow::conform(gdb.go.bp, tidy(tvn.compare)$feature_id)
+    })
+    gdb.go.bp <- gdb.go.bp[gdb.go.bp@table$n >= 5]
   }
   set.seed(0xBEEF)
   .pselected <- 0.05

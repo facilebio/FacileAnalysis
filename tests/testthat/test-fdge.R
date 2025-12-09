@@ -81,7 +81,9 @@ test_that("Simple fdge ANOVA matches explicit limma/edgeR tests", {
     flm_def(covariate = "stage", batch = "sex")
 
   # Test edgeR quasilikelihood
-  qlf_test <- fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
+  qlf_test <- expect_warning({
+    fdge(mdef, assay_name = "rnaseq", method = "edgeR-qlf")
+  }, "shallow copy")
   qlf_dge <- tidy(qlf_test)
 
   y <- biocbox(qlf_test)
