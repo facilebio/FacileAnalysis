@@ -10,8 +10,8 @@
 .ffsea_methods <- function(type = NULL) {
   opts <- dplyr::tribble(
     ~type,        ~method,
-    "ranks",  "cameraPR",
     "ranks",  "fgsea",
+    "ranks",  "cameraPR",
     "ora",    "ora")
   opts[["type"]] <- factor(opts[["type"]], c("ranks", "ora"))
   if (!is.null(type)) {

@@ -101,8 +101,11 @@
 #'                     biased_by = "effective_length")
 #' metadata(ttest.gsea)
 #' if (interactive()) {
-#'   viz(ttest.gsea, type = "density", name = "HALLMARK_HEDGEHOG_SIGNALING")
-#'   viz(ttest.gsea, type = "gsea", name = "HALLMARK_HEDGEHOG_SIGNALING")
+#'   viz(ttest.gsea, type = "density", name = "CAHOY_NEURONAL")
+#'   viz(ttest.gsea, type = "density", name = "CAHOY_NEURONAL", interactive = FALSE)
+#'   
+#'   viz(ttest.gsea, type = "gsea", name = "CAHOY_NEURONAL")
+#'   viz(ttest.gsea, type = "gsea", name = "CAHOY_NEURONAL", interactive = FALSE)
 #'
 #'   shine(ttest.igsea)
 #'   ttest.igsea <- ffseaGadget(ttest.res, gdb)
