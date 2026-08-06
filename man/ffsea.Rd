@@ -19,7 +19,7 @@ statistics, minimally with a \code{"feature_id"} column as well as one or more
 \code{numeric} columns to rank features on.}
 
 \item{fsets}{The feature sets (likely genesets) to use for testing. This
-object will be passed through the \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} constructor to
+object will be passed through the \code{\link[sparrow:GeneSetDb]{sparrow::GeneSetDb()}} constructor to
 create a \code{GeneSetDb} object that will be used for testing.}
 
 \item{methods}{A character vector of GSEA methods to use on \code{x}. Chose any
@@ -65,13 +65,13 @@ Lastly, the user can provide the name of another numeric column in \code{x} with
 \code{biased_by} which can be used to account for bias in the enrichment tests,
 such as gene length, GC content, etc.
 
-Gene sets must be supplied as a \code{\link[sparrow:GeneSetDb-class]{sparrow::GeneSetDb()}} object.
+Gene sets must be supplied as a \code{\link[sparrow:GeneSetDb]{sparrow::GeneSetDb()}} object.
 }
 \section{GSEA Methods}{
 
 Currently, only the following GSEA methods are supported:
 \itemize{
-\item \code{"cameraPR"}: Delegates to \code{\link[limma:camera]{limma::cameraPR()}} to perform a competitive
+\item \code{"cameraPR"}: Delegates to \code{\link[limma:cameraPR]{limma::cameraPR()}} to perform a competitive
 gene set test based on feature ranks imposed downstream of an analysis
 \item \code{"fgsea"}: Delegates to \code{\link[fgsea:fgsea]{fgsea::fgsea()}} to perform another version of
 a competitive gene set test based on ranks.
@@ -116,7 +116,7 @@ being the de-facto way to answer "tidy" like results (instead of result()).
 This is not to say that \code{result()} can't also return something that's
 "tidy", but in this case, result(ffsea.result) will return the
 SparrowResult object itself, and \code{tidy(ffsea.result)} will dispatch
-to \code{\link[sparrow:results]{sparrow::result()}} to fetch the gsea statistcs for the method
+to \code{\link[sparrow:result]{sparrow::result()}} to fetch the gsea statistcs for the method
 requested.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{mgres <- result(ffsea.res) # returns the SparrowResult object

@@ -8,3 +8,5 @@
 ^codecov\.yml$
 ^pkgdown$
 ^vignettes-wip$
+^\.positai$
+^\.claude$

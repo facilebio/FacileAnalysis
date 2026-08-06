@@ -129,7 +129,7 @@ valid choices are defined by the type of assay \code{assay_name}is. Refer to the
 then the \code{filter} criteria (to remove low abundance features, for instance)
 is skipped. By default this is \code{NULL}}
 
-\item{filter, with_sample_weights}{Passed into \code{\link[=biocbox]{biocbox()}} to determine which
+\item{filter, with_sample_weights}{Passed into \code{\link[FacileData:biocbox]{biocbox()}} to determine which
 features (genes) are removed from the dataset for testing, as well as if
 to use \code{\link[limma:arrayWeights]{limma::arrayWeights()}} or \code{\link[limma:voomWithQualityWeights]{limma::voomWithQualityWeights()}}
 (where appropriate) when testing (default is not to).}
@@ -308,7 +308,7 @@ mdef <- flm_def(samples, covariate = "sample_type",
                 metadata = list(label = "test flm"))
 dge <- fdge(mdef, method = "voom", metadata = list(label = "test dge"))
 if (interactive()) {
-  viz(dge)
+  viz(dge, type = "volcano")
   viz(dge, "146909")
   shine(dge)
 }

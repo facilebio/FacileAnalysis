@@ -14,10 +14,10 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{FacileData}{\code{\link[FacileData]{features}}, \code{\link[FacileData]{samples}}}
+  \item{FacileData}{\code{\link[FacileData:features]{features()}}, \code{\link[FacileData:samples]{samples()}}}
 
-  \item{FacileViz}{\code{\link[FacileViz]{plot_data}}}
+  \item{FacileViz}{\code{\link[FacileViz:plot_data]{plot_data()}}}
 
-  \item{broom}{\code{\link[broom:reexports]{tidy}}}
+  \item{broom}{\code{\link[broom:tidy]{tidy}}}
 }}
 

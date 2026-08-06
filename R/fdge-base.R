@@ -95,7 +95,7 @@
 #'                 metadata = list(label = "test flm"))
 #' dge <- fdge(mdef, method = "voom", metadata = list(label = "test dge"))
 #' if (interactive()) {
-#'   viz(dge)
+#'   viz(dge, type = "volcano")
 #'   viz(dge, "146909")
 #'   shine(dge)
 #' }

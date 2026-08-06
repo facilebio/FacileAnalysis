@@ -217,7 +217,7 @@ ffsea.data.frame <- function(
     }
   }
 
-  if ("enrichment" %in% types) {
+  if ("ora" %in% types) {
     assert_choice(select_by, colnames(x))
     assert_logical(xx[[select_by]])
     if (select_by != "significant") {
