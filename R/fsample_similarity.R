@@ -17,8 +17,13 @@
 #' xs.all <- FacileData::samples(afds) |> FacileData::with_sample_covariates()
 #' xs <- xs.all |> dplyr::filter(cond == "DKD")
 #' ss <- fsample_similarity(xs)
-#' viz(ss, "corr", annotate = "cell_abbrev")
-#' viz(ss, "dist", annotate = "cell_abbrev")
+#' 
+#' ctypes <- unique(xs$cell_abbrev)
+#' cell.cols <- scales::pal_brewer(palette = "Set3")(length(ctypes))
+#' names(cell.cols) <- ctypes
+#' 
+#' viz(ss, "corr", annotate = "cell_abbrev", color_map = cell.cols)
+#' viz(ss, "dist", annotate = "cell_abbrev", color_map = cell.cols)
 fsample_similarity <- function(
     x,
     assay_name = NULL,
@@ -242,6 +247,7 @@ fsample_similarity.matrix <- function(
     correlation = cormat,
     distance = distances,
     features = rownames(xx),
+    metadata = metadata,
     params = list(
       cor_method = cor_method,
       dist_method = dist_method,
@@ -281,15 +287,27 @@ viz.FacileSimilarityResult <- function(
     name = c("distance", "correlation"),
     annotate = NULL,
     corrplot_method = "circle",
-    hclust_method = "ward.D2",
+    hclust_method = NULL,
     color_map = NULL,
+    strip_dataset_prefix = TRUE,
+    corr_coef_size = 8, # set to 0 if you don't want to include
+    title = NULL,
+    legend_position = c("bottom", "side"),
     ...
 ) {
   name <- match.arg(name)
+  legend_position <- match.arg(legend_position)
   xx <- result(x, name)
   xm <- if (name == "distance") as.matrix(xx) else xx
+  if (is.null(title)) title <- name
+  checkmate::assert_string(title)
+
+  if (is.null(hclust_method)) {
+    hclust_method <- if (name == "distance") "ward.D2" else "complete"
+  }
+  hclust_method <- match.arg(hclust_method, c("ward.D2", "complete", "none"))
   
-  adf <- NA
+  adf <- NULL
   if (checkmate::test_character(annotate)) {
     xs <- samples(x)
     amissing <- setdiff(annotate, colnames(xs))
@@ -307,50 +325,149 @@ viz.FacileSimilarityResult <- function(
     stopifnot(setequal(rownames(adf), rownames(xm)))
     adf <- adf[rownames(xm), , drop = FALSE]
   }
+
+  if (strip_dataset_prefix) {
+    rownames(xm) <- sub(".*?__", "", rownames(xm))
+    colnames(xm) <- rownames(xm)
+    rownames(adf) <- rownames(xm)
+  }
+  
+  if (checkmate::test_character(color_map) && length(annotate) == 1L) {
+    color_map <- list(colors = color_map)
+    names(color_map) <- annotate
+  }
+  if (!checkmate::test_list(color_map, names = "unique")) {
+    warning("Can't parse color_map correctly, setting to NULL")
+    color_map <- NULL
+  }
+  
+  col.anno <- ComplexHeatmap::HeatmapAnnotation(
+    df = adf,
+    col = color_map
+  )
+  
+  if (legend_position == "bottom") {
+    hm_legend_param <- list(legend_direction = "horizontal")
+  } else {
+    hm_legend_param <- list(legend_direction = "verticalks")
+  }
   
   if (name == "distance") {
     dcols <- colorRampPalette(rev(RColorBrewer::brewer.pal(9, "Blues")))(200)
-    # out <- pheatmap::pheatmap(
+    # out <- ComplexHeatmap::pheatmap(
     #   xm,
     #   clustering_distance_rows = xx,
     #   clustering_distance_cols = xx,
     #   col = dcols,
-    #   annotation_col = adf
+    #   annotation_col = adf,
+    #   annotation_colors = color_map
     # )
-    out <- ComplexHeatmap::pheatmap(
+    
+    out <- ComplexHeatmap::Heatmap(
       xm,
+      col = circlize::colorRamp2(
+        # c(0, quantile(as.vector(xm), 0.98)),
+        c(0, max(xm)),
+        c("#08306B", "#F7FBFF")
+      ),
+      name = "Distance",
       clustering_distance_rows = xx,
-      clustering_distance_cols = xx,
-      col = dcols,
-      annotation_col = adf
+      clustering_distance_columns = xx,
+      top_annotation = col.anno,
+      column_title = title,
+      heatmap_legend_param = hm_legend_param
     )
   } else {
-    if (checkmate::test_data_frame(adf)) {
-      snames <- do.call(paste, c(as.list(adf), list(sep = "__")))
-      snames <- make.names(snames, unique = TRUE)
-      colnames(xm) <- snames
-      rownames(xm) <- snames
-    }
-    # -1 to 1 should be blue (low) and red (high)
-    # but default in corrplot is the opposite, this color code was taken from
-    # the corrplot::COL2("RdBu") option, but I reversed the colors
-    cor.cols <- c(
-      "#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
-      "#FFFFFF",
-      "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"
-    )
-    cor.pal <- colorRampPalette(rev(cor.cols))(200)
-    
-    out <- corrplot::corrplot(
+      # if (checkmate::test_data_frame(adf)) {
+      #   snames <- do.call(paste, c(as.list(adf), list(sep = "__")))
+      #   snames <- sprintf("%s (%s)", snames, sub(".*?__", "", rownames(adf)))
+      #   colnames(xm) <- snames
+      #   rownames(xm) <- snames
+      # }
+      # # -1 to 1 should be blue (low) and red (high)
+      # # but default in corrplot is the opposite, this color code was taken from
+      # # the corrplot::COL2("RdBu") option, but I reversed the colors
+      # cor.cols <- c(
+      #   "#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
+      #   "#FFFFFF",
+      #   "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"
+      # )
+      # cor.pal <- colorRampPalette(rev(cor.cols))(200)
+      # 
+      # out <- corrplot::corrplot(
+      #   xm,
+      #   col = cor.pal,
+      #   method = corrplot_method,
+      #   hclust.method = "ward.D2",
+      #   tl.col = "grey30"
+      # )
+
+    out <- ComplexHeatmap::Heatmap(
       xm,
-      col = cor.pal,
-      method = corrplot_method,
-      hclust.method = "ward.D2",
-      tl.col = "grey30"
+      col = circlize::colorRamp2(
+        c(-1, 0, 1),
+        c("navy", "white", "firebrick")
+      ),
+      name = "Correlation",
+
+      # cell_fun = function(j, i, x, y, width, height, fill) {
+      #   # Add text labels for correlation values inside cells
+      #   grid::grid.text(
+      #     sprintf("%.2f", xm[i, j]),
+      #     x,
+      #     y,
+      #     gp = grid::gpar(fontsize = 8)
+      #   )
+      # },
+      # rect_gp = grid::gpar(col = "white", lwd = 1), # White grid lines
+      
+      rect_gp = grid::gpar(type = "none"), # Turn off default background rectangles
+      cell_fun = function(j, i, x, y, width, height, fill) {
+        # Get absolute value for diameter scaling
+        r <- abs(xm[i, j])
+        # Draw background white grid cells for clean layout
+        grid::grid.rect(
+          x,
+          y,
+          width,
+          height,
+          gp = grid::gpar(col = "#eeeeee", fill = "white")
+        )
+        
+        # Draw circle with diameter proportional to the absolute correlation
+        # Max diameter is min(width, height) when abs(r) = 1
+        grid::grid.circle(
+          x, y, 
+          # r = r * 0.5 * min(grid::unit.c(width, height)),
+          # from corrplot
+          #             circles = asp_rescale_factor * 0.9 * abs(DAT) ^ 0.5 / 2,
+          r = r^0.5/2 * min(grid::unit.c(width, height)),
+          gp = grid::gpar(fill = fill, col = NA)
+        )
+        
+        if (checkmate::test_int(corr_coef_size, lower = 1)) {
+          grid::grid.text(
+            sprintf("%.2f", r),
+            x,
+            y,
+            gp = grid::gpar(fontsize = corr_coef_size)
+          )
+        }
+      },
+      
+      cluster_rows = hclust_method != "none",
+      clustering_method_rows = hclust_method,
+
+      cluster_columns = hclust_method != "none",
+      clustering_method_columns = hclust_method,
+
+      top_annotation = col.anno,
+      column_title = title,
+      heatmap_legend_param = hm_legend_param
     )
   }
   
-  if (name == "correlation") invisible(out) else out
+  out
 }
 
 .dist.methods <- function() {

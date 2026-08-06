@@ -44,6 +44,11 @@ afds <- FacileData::an_fds()
 xs.all <- FacileData::samples(afds) |> FacileData::with_sample_covariates()
 xs <- xs.all |> dplyr::filter(cond == "DKD")
 ss <- fsample_similarity(xs)
-viz(ss, "corr", annotate = "cell_abbrev")
-viz(ss, "dist", annotate = "cell_abbrev")
+
+ctypes <- unique(xs$cell_abbrev)
+cell.cols <- scales::pal_brewer(palette = "Set3")(length(ctypes))
+names(cell.cols) <- ctypes
+
+viz(ss, "corr", annotate = "cell_abbrev", color_map = cell.cols)
+viz(ss, "dist", annotate = "cell_abbrev", color_map = cell.cols)
 }
