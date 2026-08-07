@@ -378,22 +378,7 @@ viz.FacileSimilarityResult <- function(
       heatmap_legend_param = hm_legend_param
     )
   } else {
-      # if (checkmate::test_data_frame(adf)) {
-      #   snames <- do.call(paste, c(as.list(adf), list(sep = "__")))
-      #   snames <- sprintf("%s (%s)", snames, sub(".*?__", "", rownames(adf)))
-      #   colnames(xm) <- snames
-      #   rownames(xm) <- snames
-      # }
-      # # -1 to 1 should be blue (low) and red (high)
-      # # but default in corrplot is the opposite, this color code was taken from
-      # # the corrplot::COL2("RdBu") option, but I reversed the colors
-      # cor.cols <- c(
-      #   "#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
-      #   "#FFFFFF",
-      #   "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"
-      # )
       # cor.pal <- colorRampPalette(rev(cor.cols))(200)
-      # 
       # out <- corrplot::corrplot(
       #   xm,
       #   col = cor.pal,
@@ -409,19 +394,8 @@ viz.FacileSimilarityResult <- function(
         c("navy", "white", "firebrick")
       ),
       name = "Correlation",
-
-      # cell_fun = function(j, i, x, y, width, height, fill) {
-      #   # Add text labels for correlation values inside cells
-      #   grid::grid.text(
-      #     sprintf("%.2f", xm[i, j]),
-      #     x,
-      #     y,
-      #     gp = grid::gpar(fontsize = 8)
-      #   )
-      # },
-      # rect_gp = grid::gpar(col = "white", lwd = 1), # White grid lines
-      
       rect_gp = grid::gpar(type = "none"), # Turn off default background rectangles
+
       cell_fun = function(j, i, x, y, width, height, fill) {
         # Get absolute value for diameter scaling
         r <- abs(xm[i, j])
@@ -433,7 +407,6 @@ viz.FacileSimilarityResult <- function(
           height,
           gp = grid::gpar(col = "#eeeeee", fill = "white")
         )
-        
         # Draw circle with diameter proportional to the absolute correlation
         # Max diameter is min(width, height) when abs(r) = 1
         grid::grid.circle(
@@ -444,7 +417,7 @@ viz.FacileSimilarityResult <- function(
           r = r^0.5/2 * min(grid::unit.c(width, height)),
           gp = grid::gpar(fill = fill, col = NA)
         )
-        
+        # include correlation coefficient
         if (checkmate::test_int(corr_coef_size, lower = 1)) {
           grid::grid.text(
             sprintf("%.2f", r),
