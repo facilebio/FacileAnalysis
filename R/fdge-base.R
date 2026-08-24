@@ -265,7 +265,6 @@ fdge.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       errors <- c(errors, fbits[["errors"]])
     } else {
       ftrace("... retrieving expression data")
-      
       bb <- biocbox(x, assay_name, method, features, filter,
                     with_sample_weights = with_sample_weights,
                     weights = weights, ...)

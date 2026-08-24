@@ -1,3 +1,7 @@
+
+
+# S3 Methods -------------------------------------------------------------------
+
 #' Checks to see if fdge analysis results are from a ttest or anova
 #' 
 #' @rdname fdge-helpers
