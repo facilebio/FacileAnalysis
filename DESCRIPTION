@@ -1,7 +1,7 @@
 Package: FacileAnalysis
 Type: Package
 Title: Modularized and interactive analyses over a FacileDataStore
-Version: 0.98.56
+Version: 0.98.57
 Authors@R: c(
     person(
       "Steve", "Lianoglou",
@@ -31,7 +31,7 @@ Imports:
     checkmate,
     crosstalk,
     dplyr,
-    edgeR,
+    edgeR (>= 3.42.0),
     FacileData (>= 0.98.8),
     FacileViz (>= 0.98.0),
     ggplot2,

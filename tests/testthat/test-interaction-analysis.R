@@ -24,7 +24,7 @@ test_that("ttest compare() over same covariate/numer/denom, disjoint samples", {
   y.all <- anova.all |>
     samples() |>
     biocbox("DGEList", features = features(anova.all))
-  y.all <- suppressWarnings(edgeR::calcNormFactors(y.all))
+  y.all <- suppressWarnings(edgeR::normLibSizes(y.all))
 
   des <- model.matrix(~ 0 + group + sex, y.all$samples)
   colnames(des) <- sub("group", "", colnames(des))

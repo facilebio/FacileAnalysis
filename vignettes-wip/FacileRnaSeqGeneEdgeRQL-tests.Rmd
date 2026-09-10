@@ -55,7 +55,7 @@ theme_set(theme_bw())
 ```{r}
 source(system.file("scripts", "edgeRQLF-workflow.R", package = "FacileAnalysis"))
 y <- assemble_edgeRQLF_DGEList()
-y <- calcNormFactors(y)
+y <- normLibSizes(y)
 
 # Do gene filtering
 

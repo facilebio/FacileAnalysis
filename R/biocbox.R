@@ -130,7 +130,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   } else {
     bb <- bb.all
     if (is(bb, "DGEList") && all(bb[["samples"]][["norm.factors"]] == 1)) {
-      bb <- edgeR::calcNormFactors(bb)
+      bb <- edgeR::normLibSizes(bb)
     }
   }
   
@@ -250,7 +250,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
       update_normfactors <- all(x[["samples"]][["norm.factors"]] == 1)
     }
     if (isTRUE(update_normfactors)) {
-      x <- edgeR::calcNormFactors(x)
+      x <- edgeR::normLibSizes(x)
     }
   }
 
@@ -325,7 +325,7 @@ biocbox.FacileLinearModelDefinition <- function(x, assay_name = NULL,
   }
 
   x <- x[keep,,keep.lib.sizes = FALSE]
-  suppressWarnings(edgeR::calcNormFactors(x)) # partial match of `p` to `probs`
+  suppressWarnings(edgeR::normLibSizes(x)) # partial match of `p` to `probs`
 }
 
 #' Removes features with 0 variance

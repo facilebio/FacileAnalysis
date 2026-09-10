@@ -206,7 +206,7 @@ test_that("duplicateCorrelation is supported with voom", {
   # Test against two-pass voom/duplicateCorrelation mojo
   y <- samples(flm) |>
     biocbox(class = "DGEList", features = features(vm.fdge)) |>
-    edgeR::calcNormFactors()
+    edgeR::normLibSizes()
   expect_equal(nrow(y), nrow(vm.res))
   des <- model.matrix(~ 0 + sample_type, data = y$samples)
 
